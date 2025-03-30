@@ -1,0 +1,48 @@
+name: Publish Python distribution to PyPI
+on:
+  release:
+    types: [ published ]
+
+jobs:
+  build:
+      name: Build distribution
+      runs-on: ubuntu-latest
+      steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ">=3.8"
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+      - name: Build a binary wheel and a source tarball
+        run: uv build
+      - name: Store the distribution packages
+        uses: actions/upload-artifact@v4
+        with:
+          name: python-package-distributions
+          path: dist/
+
+  publish-to-pypi:
+      name: Publish Python distribution to PyPI
+      needs:
+      - build
+      runs-on: ubuntu-latest
+      environment:
+          name: pypi
+          url: https://pypi.org/project/llm-tracekit/
+      permissions:
+          id-token: write
+      steps:
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+      - name: Download all the dists
+        uses: actions/download-artifact@v4
+        with:
+          name: python-package-distributions
+          path: dist/
+      - name: Publish distribution to PyPI
+        run: uv publish
+        env:
+          UV_PUBLISH_TOKEN: ${{ secrets.PYPI_TOKEN }}
+          UV_PUBLISH_URL: https://upload.pypi.org/legacy/

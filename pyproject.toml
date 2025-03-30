@@ -1,0 +1,67 @@
+[project]
+name = "llm-tracekit"
+version = "1.0.2"
+description = "Collect and send GenAI calls as spans for development and production observability."
+readme = "README.md"
+authors = [
+    { name="Coralogix Ltd.", email="info@coralogix.com" },
+]
+license = "Apache-2.0"
+license-files = ["LICENSE.md"]
+requires-python = ">=3.8, <4.0"
+dependencies = [
+    "openai>=1.26.0",
+    "opentelemetry-api~=1.30.0",
+    "opentelemetry-exporter-otlp>=1.30.0",
+    "opentelemetry-instrumentation~=0.51b0",
+    "opentelemetry-sdk>=1.30.0",
+    "opentelemetry-semantic-conventions~=0.51b0",
+]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Framework :: OpenTelemetry :: Instrumentations",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+]
+
+[project.urls]
+homepage = "https://coralogix.com"
+repository = "https://github.com/coralogix/llm-tracekit.git"
+
+
+[project.entry-points.opentelemetry_instrumentor]
+openai = "llm_tracekit:OpenAIInstrumentor"
+
+[dependency-groups]
+dev = [
+    "mypy>=1.14.1",
+    "pytest>=8.3.4",
+    "pytest-asyncio>=0.24.0",
+    "pytest-vcr>=1.0.2",
+    "pyyaml>=6.0.2",
+    "ruff>=0.9.7",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.pytest.ini_options]
+asyncio_default_fixture_loop_scope = "function"
+
+[[tool.mypy.overrides]]
+module = ["wrapt", "opentelemetry.exporter.otlp.proto.grpc.trace_exporter"]
+ignore_missing_imports = true
+
+[tool.hatch.build.targets.sdist]
+only-include = [
+    "src",
+    "tests",
+]
