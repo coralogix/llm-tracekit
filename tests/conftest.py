@@ -7,8 +7,8 @@ import pytest
 import yaml
 from openai import AsyncOpenAI, OpenAI
 
-from llm_tracekit import OpenAIInstrumentor
-from llm_tracekit.utils import (
+from llm_tracekit.openai.instrumentor import OpenAIInstrumentor
+from llm_tracekit.instrumentation_utils import (
     OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT,
 )
 from opentelemetry.sdk.metrics import (

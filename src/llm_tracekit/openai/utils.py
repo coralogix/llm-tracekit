@@ -13,7 +13,6 @@
 # limitations under the License.
 
 import json
-from os import environ
 from typing import Any, Mapping, Optional, Union
 from urllib.parse import urlparse
 
@@ -30,19 +29,7 @@ from opentelemetry.semconv.attributes import (
 )
 from opentelemetry.trace.status import Status, StatusCode
 
-from . import extended_gen_ai_attributes as ExtendedGenAIAttributes
-
-OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT = (
-    "OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT"
-)
-
-
-def is_content_enabled() -> bool:
-    capture_content = environ.get(
-        OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT, "false"
-    )
-
-    return capture_content.lower() == "true"
+from llm_tracekit import extended_gen_ai_attributes as ExtendedGenAIAttributes
 
 
 def get_tool_call_attributes(item, capture_content: bool, base_path: str) -> dict:
