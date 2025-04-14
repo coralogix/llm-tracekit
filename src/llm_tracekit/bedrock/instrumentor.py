@@ -1,4 +1,4 @@
-# Copyright The OpenTelemetry Authors
+# Copyright Coralogix Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -59,7 +59,7 @@ from llm_tracekit.instruments import Instruments
 from llm_tracekit.openai.patch import async_chat_completions_create, chat_completions_create
 
 
-class OpenAIInstrumentor(BaseInstrumentor):
+class BedrockInstrumentor(BaseInstrumentor):
     def __init__(self):
         self._meter = None
 

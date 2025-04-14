@@ -25,7 +25,7 @@ from opentelemetry.semconv._incubating.attributes import (
 from opentelemetry.trace import Span, SpanKind, Tracer
 
 from llm_tracekit import extended_gen_ai_attributes as ExtendedGenAIAttributes
-from llm_tracekit.openai.instruments import Instruments
+from llm_tracekit.instruments import Instruments
 from llm_tracekit.openai.utils import (
     choices_to_span_attributes,
     get_llm_request_attributes,
