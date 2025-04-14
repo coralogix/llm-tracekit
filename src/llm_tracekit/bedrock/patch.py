@@ -1,15 +1,53 @@
+import json
 from functools import wraps
 from typing import Callable
 
 from opentelemetry.trace import Span, SpanKind, Tracer
 from llm_tracekit.instruments import Instruments
+# TODO: importing botocore at module-scope will not work if it's not installed
+from botocore.response import StreamingBody
 
 
 def invoke_model_wrapper(original_function: Callable, tracer: Tracer, instruments: Instruments, capture_content: bool):
     @wraps(original_function)
     def wrapper(*args, **kwargs):
-        # TODO: instrumentation
-        return original_function(*args, **kwargs)
+        span_attributes = {}
+
+        span_name="TODO"
+        with tracer.start_as_current_span(
+            name=span_name,
+            kind=SpanKind.CLIENT,
+            attributes=span_attributes,
+            end_on_exit=False,
+        ):
+            model_id = kwargs.get("modelId")
+            body = kwargs.get("body")
+            if body is not None:
+                try:
+                    # TODO: consider orjson
+                    parsed_body = json.loads(body)
+                    # TODO: handle parsed body based on model type
+                except json.JSONDecodeError:
+                    # TODO:
+                    pass
+
+            
+            invoke_model_result = original_function(*args, **kwargs)
+            if invoke_model_result["ResponseMetadata"]["HTTPStatusCode"] == 200:
+                # TODO: 
+                # The response body is a stream, and reading the stream consumes it, so we have to recreate
+                # it to keep the original response usable
+                response_body = invoke_model_result["body"].read()
+                invoke_model_result["body"] = StreamingBody(response_body, len(response_body))
+                try:
+                    parsed_response_body = json.loads(response_body)
+                except json.JSONDecodeError:
+                    # TODO:
+                    pass
+
+                # TODO: handle parsed response based on model type
+
+        return invoke_model_result
     
     return wrapper
 

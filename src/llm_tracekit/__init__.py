@@ -16,4 +16,5 @@ from llm_tracekit.coralogix import setup_export_to_coralogix
 from llm_tracekit.openai.instrumentor import OpenAIInstrumentor
 
 
+# TODO: do we want to import all instrumentations here? it might cause import problems since most people only need 1 instrumentation
 __all__ = ["setup_export_to_coralogix", "OpenAIInstrumentor"]
