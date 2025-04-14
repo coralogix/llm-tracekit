@@ -544,13 +544,19 @@ name = "llm-tracekit"
 version = "1.0.2"
 source = { editable = "." }
 dependencies = [
-    { name = "boto3" },
-    { name = "openai" },
     { name = "opentelemetry-api" },
     { name = "opentelemetry-exporter-otlp" },
     { name = "opentelemetry-instrumentation" },
     { name = "opentelemetry-sdk" },
     { name = "opentelemetry-semantic-conventions" },
+]
+
+[package.optional-dependencies]
+bedrock = [
+    { name = "boto3" },
+]
+openai = [
+    { name = "openai" },
 ]
 
 [package.dev-dependencies]
@@ -567,8 +573,8 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "boto3", specifier = ">=1.37.31" },
-    { name = "openai", specifier = ">=1.26.0" },
+    { name = "boto3", marker = "extra == 'bedrock'", specifier = ">=1.37.31" },
+    { name = "openai", marker = "extra == 'openai'", specifier = ">=1.26.0" },
     { name = "opentelemetry-api", specifier = "~=1.30.0" },
     { name = "opentelemetry-exporter-otlp", specifier = ">=1.30.0" },
     { name = "opentelemetry-instrumentation", specifier = "~=0.51b0" },

@@ -12,37 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""
-OpenAI client instrumentation supporting `openai`, it can be enabled by
-using ``OpenAIInstrumentor``.
-
-.. _openai: https://pypi.org/project/openai/
-
-Usage
------
-
-.. code:: python
-
-    from openai import OpenAI
-    from llm_tracekit import OpenAIInstrumentor
-
-    OpenAIInstrumentor().instrument()
-
-    client = OpenAI()
-    response = client.chat.completions.create(
-        model="gpt-4o-mini",
-        messages=[
-            {"role": "user", "content": "Write a short poem on open telemetry."},
-        ],
-    )
-
-API
----
-"""
-
 from typing import Collection
 
-from opentelemetry.instrumentation.instrumentor import (  # type: ignore[attr-defined] # Mypy doesn't recognize the attribute
+from opentelemetry.instrumentation.instrumentor import (
     BaseInstrumentor,
 )
 from opentelemetry.instrumentation.utils import unwrap
@@ -52,11 +24,11 @@ from opentelemetry.semconv.schemas import Schemas
 from opentelemetry.trace import get_tracer
 from wrapt import wrap_function_wrapper
 
-from llm_tracekit.openai.package import _instruments
+from llm_tracekit.bedrock.package import _instruments
 from llm_tracekit.instrumentation_utils import is_content_enabled
 
 from llm_tracekit.instruments import Instruments
-from llm_tracekit.openai.patch import async_chat_completions_create, chat_completions_create
+from llm_tracekit.bedrock.patch import create_client_wrapper
 
 
 class BedrockInstrumentor(BaseInstrumentor):
@@ -86,22 +58,23 @@ class BedrockInstrumentor(BaseInstrumentor):
         instruments = Instruments(self._meter)
 
         wrap_function_wrapper(
-            module="openai.resources.chat.completions",
-            name="Completions.create",
-            wrapper=chat_completions_create(tracer, instruments, is_content_enabled()),
+            module="botocore.client",
+            name="ClientCreator.create_client",
+            wrapper=create_client_wrapper(tracer, instruments, is_content_enabled()),
         )
 
         wrap_function_wrapper(
-            module="openai.resources.chat.completions",
-            name="AsyncCompletions.create",
-            wrapper=async_chat_completions_create(
+            module="botocore.session",
+            name="Session.create_client",
+            wrapper=create_client_wrapper(
                 tracer, instruments, is_content_enabled()
             ),
         )
 
     def _uninstrument(self, **kwargs):
-        import openai  # pylint: disable=import-outside-toplevel
+        import botocore.client  # pylint: disable=import-outside-toplevel
+        import botocore.session  # pylint: disable=import-outside-toplevel
 
-        unwrap(openai.resources.chat.completions.Completions, "create")
-        unwrap(openai.resources.chat.completions.AsyncCompletions, "create")
+        unwrap(botocore.client.ClientCreator, "create_client")
+        unwrap(botocore.session.Session, "create_client")
 
