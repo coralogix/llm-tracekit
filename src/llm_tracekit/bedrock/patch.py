@@ -10,6 +10,8 @@ def invoke_model_wrapper(original_function: Callable, tracer: Tracer, instrument
     def wrapper(*args, **kwargs):
         # TODO: instrumentation
         return original_function(*args, **kwargs)
+    
+    return wrapper
 
 
 def converse_wrapper(original_function: Callable, tracer: Tracer, instruments: Instruments, capture_content: bool):
@@ -17,6 +19,8 @@ def converse_wrapper(original_function: Callable, tracer: Tracer, instruments: I
     def wrapper(*args, **kwargs):
         # TODO: instrumentation
         return original_function(*args, **kwargs)
+    
+    return wrapper
 
 
 def converse_stream_wrapper(original_function: Callable, tracer: Tracer, instruments: Instruments, capture_content: bool):
@@ -24,6 +28,8 @@ def converse_stream_wrapper(original_function: Callable, tracer: Tracer, instrum
     def wrapper(*args, **kwargs):
         # TODO: instrumentation
         return original_function(*args, **kwargs)
+    
+    return wrapper
 
 
 def invoke_agent_wrapper(original_function: Callable, tracer: Tracer, instruments: Instruments, capture_content: bool):
@@ -31,6 +37,8 @@ def invoke_agent_wrapper(original_function: Callable, tracer: Tracer, instrument
     def wrapper(*args, **kwargs):
         # TODO: instrumentation
         return original_function(*args, **kwargs)
+    
+    return wrapper
 
 
 def create_client_wrapper(
