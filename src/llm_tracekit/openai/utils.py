@@ -30,6 +30,7 @@ from opentelemetry.semconv.attributes import (
 from opentelemetry.trace.status import Status, StatusCode
 
 from llm_tracekit import extended_gen_ai_attributes as ExtendedGenAIAttributes
+from llm_tracekit.span_builder import generate_base_attributes, generate_request_attributes, remove_attributes_with_null_values
 
 
 def get_tool_call_attributes(item, capture_content: bool, base_path: str) -> dict:
@@ -182,18 +183,16 @@ def non_numerical_value_is_set(value: Optional[Union[bool, str]]):
 def get_llm_request_attributes(
     kwargs,
     client_instance,
-    operation_name=GenAIAttributes.GenAiOperationNameValues.CHAT.value,
 ):
     attributes = {
-        GenAIAttributes.GEN_AI_OPERATION_NAME: operation_name,
-        GenAIAttributes.GEN_AI_SYSTEM: GenAIAttributes.GenAiSystemValues.OPENAI.value,
-        GenAIAttributes.GEN_AI_REQUEST_MODEL: kwargs.get("model"),
-        GenAIAttributes.GEN_AI_REQUEST_TEMPERATURE: kwargs.get("temperature"),
-        GenAIAttributes.GEN_AI_REQUEST_TOP_P: kwargs.get("p") or kwargs.get("top_p"),
-        GenAIAttributes.GEN_AI_REQUEST_MAX_TOKENS: kwargs.get("max_tokens"),
-        GenAIAttributes.GEN_AI_REQUEST_PRESENCE_PENALTY: kwargs.get("presence_penalty"),
-        GenAIAttributes.GEN_AI_REQUEST_FREQUENCY_PENALTY: kwargs.get(
-            "frequency_penalty"
+        **generate_base_attributes(system=GenAIAttributes.GenAiSystemValues.OPENAI),
+        **generate_request_attributes(
+            model=kwargs.get("model"),
+            temperature=kwargs.get("temperature"),
+            top_p=kwargs.get("p") or kwargs.get("top_p"),
+            max_tokens=kwargs.get("max_tokens"),
+            presence_penalty=kwargs.get("presence_penalty"),
+            frequency_penalty=kwargs.get("frequency_penalty"),
         ),
         GenAIAttributes.GEN_AI_OPENAI_REQUEST_SEED: kwargs.get("seed"),
         ExtendedGenAIAttributes.GEN_AI_OPENAI_REQUEST_USER: kwargs.get("user"),
@@ -251,7 +250,7 @@ def get_llm_request_attributes(
     )
 
     # filter out None values
-    return {k: v for k, v in attributes.items() if v is not None}
+    return remove_attributes_with_null_values(attributes)
 
 
 def handle_span_exception(span, error):

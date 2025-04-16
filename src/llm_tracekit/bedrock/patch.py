@@ -6,6 +6,10 @@ from opentelemetry.trace import Span, SpanKind, Tracer
 from llm_tracekit.instruments import Instruments
 # TODO: importing botocore at module-scope will not work if it's not installed
 from botocore.response import StreamingBody
+from llm_tracekit.span_builder import generate_base_attributes, generate_request_attributes, generate_response_attributes
+from opentelemetry.semconv._incubating.attributes import (
+    gen_ai_attributes as GenAIAttributes,
+)
 
 
 def invoke_model_wrapper(original_function: Callable, tracer: Tracer, instruments: Instruments, capture_content: bool):
@@ -56,7 +60,37 @@ def converse_wrapper(original_function: Callable, tracer: Tracer, instruments: I
     @wraps(original_function)
     def wrapper(*args, **kwargs):
         # TODO: instrumentation
-        return original_function(*args, **kwargs)
+        inference_config = kwargs.get("inferenceConfig", {})
+        span_attributes = {
+            **generate_base_attributes(system=GenAIAttributes.GenAiSystemValues.AWS_BEDROCK),
+            **generate_request_attributes(
+                model=kwargs.get("modelId"),
+                temperature=inference_config.get("temperature"),
+                top_p=inference_config.get("topP"),
+                max_tokens=inference_config.get("maxTokens"),
+            )
+        }
+        with tracer.start_as_current_span(
+            name="bedrock.converse",
+            kind=SpanKind.CLIENT,
+            attributes=span_attributes,
+            end_on_exit=False,
+        ) as span:
+            response = original_function(*args, **kwargs)
+
+            finish_reasons = []
+            if "stopReason" in response:
+                finish_reasons = [response["stopReason"]]
+            
+            usage_data = response.get("usage", {})
+
+            response_attributes = generate_response_attributes(
+                model=kwargs.get("modelId"),
+                finish_reasons=finish_reasons,
+                usage_input_tokens=usage_data.get("inputTokens"),
+                usage_output_tokens=usage_data.get("outputTokens")
+            )
+            span.set_attributes(response_attributes)
     
     return wrapper
 
