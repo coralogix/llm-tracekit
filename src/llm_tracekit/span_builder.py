@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 from typing import Any, Dict, List, Optional
 
 from opentelemetry.semconv._incubating.attributes import (
@@ -5,6 +6,22 @@ from opentelemetry.semconv._incubating.attributes import (
 )
 from llm_tracekit import extended_gen_ai_attributes as ExtendedGenAIAttributes
 
+
+
+@dataclass
+class ToolCall:
+    id: Optional[str] = None
+    type: Optional[str] = None
+    function_name: Optional[str] = None
+    function_arguments: Optional[str] = None
+
+
+@dataclass
+class Message:
+    role: Optional[str] = None
+    content: Optional[str] = None
+    tool_call_id: Optional[str] = None
+    tool_calls: Optional[List[ToolCall]] = None
 
 
 def remove_attributes_with_null_values(attributes: dict[str, Any]) -> dict[str, Any]:
@@ -40,64 +57,25 @@ def generate_request_attributes(
     }
     return remove_attributes_with_null_values(attributes)
 
-def get_tool_call_attributes(item, capture_content: bool, base_path: str) -> dict:
-    attributes = {}
 
-    tool_calls = get_property_value(item, "tool_calls")
-    if tool_calls is None:
-        return {}
-
-    for index, tool_call in enumerate(tool_calls):
-        call_id = get_property_value(tool_call, "id")
-        if call_id:
-            attributes[f"{base_path}.tool_calls.{index}.id"] = call_id
-
-        tool_type = get_property_value(tool_call, "type")
-        if tool_type:
-            attributes[f"{base_path}.tool_calls.{index}.type"] = tool_type
-
-        func = get_property_value(tool_call, "function")
-        if func:
-            name = get_property_value(func, "name")
-            if name:
-                attributes[f"{base_path}.tool_calls.{index}.function.name"] = name
-
-            arguments = get_property_value(func, "arguments")
-            if capture_content and arguments:
-                if isinstance(arguments, str):
-                    arguments = arguments.replace("\n", "")
-
-                attributes[f"{base_path}.tool_calls.{index}.function.arguments"] = (
-                    arguments
-                )
-
-    return attributes
-
-# TODO: consider adding a dataclass / pydantic model for message
-def generate_message_attributes(messages: List[Dict[str, Any]], capture_content: bool) -> Dict[str, Any]:
+def generate_message_attributes(messages: List[Message], capture_content: bool) -> Dict[str, Any]:
     attributes = {}
     for index, message in enumerate(messages):
-        role = message.get("role")
-        attributes[ExtendedGenAIAttributes.GEN_AI_PROMPT_ROLE.format(prompt_index=index)] = role
+        attributes[ExtendedGenAIAttributes.GEN_AI_PROMPT_ROLE.format(prompt_index=index)] = message.role
         
-        content = message.get("content")
-        if capture_content and isinstance(content, str) and content:
+        if capture_content and message.content is not None:
             attributes[
                 ExtendedGenAIAttributes.GEN_AI_PROMPT_CONTENT.format(prompt_index=index)
-            ] = content
-        if role == "assistant":
-            tool_call_attributes = get_tool_call_attributes(
-                message, capture_content, f"gen_ai.prompt.{index}"
-            )
-            span_attributes.update(tool_call_attributes)
-        elif role == "tool":
-            tool_call_id = get_property_value(message, "tool_call_id")
-            if tool_call_id:
-                span_attributes[
-                    ExtendedGenAIAttributes.GEN_AI_PROMPT_TOOL_CALL_ID.format(
-                        prompt_index=index
-                    )
-                ] = tool_call_id
+            ] = message.content
+
+        attributes[ExtendedGenAIAttributes.GEN_AI_PROMPT_TOOL_CALL_ID.format(prompt_index=index)] = message.tool_call_id
+        if message.tool_calls is not None:
+            for tool_index, tool_call in enumerate(message.tool_calls):
+                attributes[ExtendedGenAIAttributes.GEN_AI_PROMPT_TOOL_CALLS_ID.format(prompt_index=index, tool_call_index=tool_index)] = tool_call.id
+                attributes[ExtendedGenAIAttributes.GEN_AI_PROMPT_TOOL_CALLS_TYPE.format(prompt_index=index, tool_call_index=tool_index)] = tool_call.type
+                attributes[ExtendedGenAIAttributes.GEN_AI_PROMPT_TOOL_CALLS_FUNCTION_NAME.format(prompt_index=index, tool_call_index=tool_index)] = tool_call.function_name
+                if capture_content:
+                    attributes[ExtendedGenAIAttributes.GEN_AI_PROMPT_TOOL_CALLS_FUNCTION_ARGUMENTS.format(prompt_index=index, tool_call_index=tool_index)] = tool_call.function_arguments
 
     return remove_attributes_with_null_values(attributes)
 

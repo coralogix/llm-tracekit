@@ -6,10 +6,11 @@ from opentelemetry.trace import Span, SpanKind, Tracer
 from llm_tracekit.instruments import Instruments
 # TODO: importing botocore at module-scope will not work if it's not installed
 from botocore.response import StreamingBody
-from llm_tracekit.span_builder import generate_base_attributes, generate_request_attributes, generate_response_attributes
+from llm_tracekit.span_builder import generate_base_attributes, generate_request_attributes, generate_response_attributes, Message, generate_message_attributes
 from opentelemetry.semconv._incubating.attributes import (
     gen_ai_attributes as GenAIAttributes,
 )
+from llm_tracekit.bedrock.utils import parse_converse_message
 
 
 def invoke_model_wrapper(original_function: Callable, tracer: Tracer, instruments: Instruments, capture_content: bool):
@@ -59,8 +60,14 @@ def invoke_model_wrapper(original_function: Callable, tracer: Tracer, instrument
 def converse_wrapper(original_function: Callable, tracer: Tracer, instruments: Instruments, capture_content: bool):
     @wraps(original_function)
     def wrapper(*args, **kwargs):
-        # TODO: instrumentation
         inference_config = kwargs.get("inferenceConfig", {})
+        messages = []
+        for system_message in kwargs.get("system", []):
+            messages.append(Message(role="system", content=system_message.get("text")))
+
+        for message in kwargs.get("messages", []):
+            messages.append(parse_converse_message(role=message.get("role"), content_parts=message.get("content")))
+
         span_attributes = {
             **generate_base_attributes(system=GenAIAttributes.GenAiSystemValues.AWS_BEDROCK),
             **generate_request_attributes(
@@ -68,7 +75,8 @@ def converse_wrapper(original_function: Callable, tracer: Tracer, instruments: I
                 temperature=inference_config.get("temperature"),
                 top_p=inference_config.get("topP"),
                 max_tokens=inference_config.get("maxTokens"),
-            )
+            ),
+            **generate_message_attributes(messages=messages, capture_content=capture_content),
         }
         with tracer.start_as_current_span(
             name="bedrock.converse",
@@ -91,6 +99,10 @@ def converse_wrapper(original_function: Callable, tracer: Tracer, instruments: I
                 usage_output_tokens=usage_data.get("outputTokens")
             )
             span.set_attributes(response_attributes)
+
+            # TODO: handle choices
+            # TODO: handle errors
+            # TODO: record metrics
     
     return wrapper
 

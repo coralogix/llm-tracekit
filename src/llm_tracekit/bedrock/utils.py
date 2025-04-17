@@ -1,29 +1,7 @@
-from typing import Any, List, Dict, Union, Optional
-from dataclasses import dataclass
+from typing import Any, List, Dict, Optional
 import json
 
-
-@dataclass
-class TextMessage:
-    content: str
-
-
-@dataclass
-class ToolCall:
-    tool_call_id: Optional[str]
-    function: Optional[str]
-    arguments: Optional[str]
-
-
-@dataclass
-class ToolCallMessage:
-    tool_calls: List[ToolCall]
-
-
-@dataclass
-class ToolCallResultMessage:
-    tool_call_id: Optional[str]
-    content: Optional[str]
+from llm_tracekit.span_builder import Message, ToolCall
 
 
 def _combine_tool_call_content_parts(content_parts: List[Dict[str, Any]]) -> Optional[str]:
@@ -41,8 +19,8 @@ def _combine_tool_call_content_parts(content_parts: List[Dict[str, Any]]) -> Opt
     return None
 
 
-def combine_message_content_parts(content_parts: List[Dict[str, Any]]) -> Optional[Union[TextMessage, ToolCallMessage, ToolCallResultMessage]]:
-    # TODO: this is best-effort to extract anything possible, document it
+def parse_converse_message(role: Optional[str], content_parts: List[Dict[str, Any]]) -> Message:
+    """Attempts to combine the content parts of a `converse` API message to a single message."""
     text_parts = []
     tool_calls = []
     tool_call_results = []
@@ -58,29 +36,42 @@ def combine_message_content_parts(content_parts: List[Dict[str, Any]]) -> Option
         if "toolResult" in content_part:
             tool_call_results.append(content_part["toolResult"])
 
-    message = None
+    # Theoretically, in the cases we support we don't expect to see multiple types of content
+    # in the same message, but in case that happens we follow the hierarchy
+    # of text > tool_calls > tool_call_result
     if len(text_parts) > 0:
-        message = TextMessage(content='\n'.join(text_parts))
+        return Message(
+            role=role,
+            content='\n'.join(text_parts)
+        )
     elif len(tool_calls) > 0:
-        message = ToolCallMessage(tool_calls=[])
+        message_tool_calls = []
         for tool_call in tool_calls:
             arguments = None
             if "input" in tool_call:
                 arguments = json.dumps(tool_call["input"])
-            message.tool_calls.append(ToolCall(
-                tool_call_id=tool_call.get("toolUseId"),
-                function=tool_call.get("name"),
-                arguments=arguments,
+
+            message_tool_calls.append(ToolCall(
+                id=tool_call.get("toolUseId"),
+                type="function",
+                function_name=tool_call.get("name"),
+                function_arguments=arguments,
             ))
+        
+        return Message(
+            role=role,
+            tool_calls=message_tool_calls,
+        )
     # We don't support multiple tool call results, so we take the first one
     elif len(tool_call_results) > 0:
         content = None
         if "content" in tool_call_results[0]:
             content = _combine_tool_call_content_parts(tool_call_results[0]["content"])
 
-        message = ToolCallResultMessage(
+        return Message(
+            role=role,
             tool_call_id=tool_call_results[0].get("toolUseId"),
             content=content,
         )
     
-    return message
+    return Message(role=role)
