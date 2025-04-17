@@ -47,16 +47,17 @@ from opentelemetry.instrumentation.instrumentor import (  # type: ignore[attr-de
 )
 from opentelemetry.instrumentation.utils import unwrap
 from opentelemetry.metrics import get_meter
-
 from opentelemetry.semconv.schemas import Schemas
 from opentelemetry.trace import get_tracer
 from wrapt import wrap_function_wrapper
 
-from llm_tracekit.openai.package import _instruments
 from llm_tracekit.instrumentation_utils import is_content_enabled
-
 from llm_tracekit.instruments import Instruments
-from llm_tracekit.openai.patch import async_chat_completions_create, chat_completions_create
+from llm_tracekit.openai.package import _instruments
+from llm_tracekit.openai.patch import (
+    async_chat_completions_create,
+    chat_completions_create,
+)
 
 
 class OpenAIInstrumentor(BaseInstrumentor):
@@ -104,4 +105,3 @@ class OpenAIInstrumentor(BaseInstrumentor):
 
         unwrap(openai.resources.chat.completions.Completions, "create")
         unwrap(openai.resources.chat.completions.AsyncCompletions, "create")
-

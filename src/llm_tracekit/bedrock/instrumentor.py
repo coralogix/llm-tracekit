@@ -19,16 +19,14 @@ from opentelemetry.instrumentation.instrumentor import (
 )
 from opentelemetry.instrumentation.utils import unwrap
 from opentelemetry.metrics import get_meter
-
 from opentelemetry.semconv.schemas import Schemas
 from opentelemetry.trace import get_tracer
 from wrapt import wrap_function_wrapper
 
 from llm_tracekit.bedrock.package import _instruments
-from llm_tracekit.instrumentation_utils import is_content_enabled
-
-from llm_tracekit.instruments import Instruments
 from llm_tracekit.bedrock.patch import create_client_wrapper
+from llm_tracekit.instrumentation_utils import is_content_enabled
+from llm_tracekit.instruments import Instruments
 
 
 class BedrockInstrumentor(BaseInstrumentor):
@@ -66,9 +64,7 @@ class BedrockInstrumentor(BaseInstrumentor):
         wrap_function_wrapper(
             module="botocore.session",
             name="Session.create_client",
-            wrapper=create_client_wrapper(
-                tracer, instruments, is_content_enabled()
-            ),
+            wrapper=create_client_wrapper(tracer, instruments, is_content_enabled()),
         )
 
     def _uninstrument(self, **kwargs):
@@ -77,4 +73,3 @@ class BedrockInstrumentor(BaseInstrumentor):
 
         unwrap(botocore.client.ClientCreator, "create_client")
         unwrap(botocore.session.Session, "create_client")
-

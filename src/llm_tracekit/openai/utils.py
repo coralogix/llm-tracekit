@@ -26,7 +26,11 @@ from opentelemetry.semconv._incubating.attributes import (
 )
 
 from llm_tracekit import extended_gen_ai_attributes as ExtendedGenAIAttributes
-from llm_tracekit.span_builder import generate_base_attributes, generate_request_attributes, remove_attributes_with_null_values
+from llm_tracekit.span_builder import (
+    generate_base_attributes,
+    generate_request_attributes,
+    remove_attributes_with_null_values,
+)
 
 
 def get_tool_call_attributes(item, capture_content: bool, base_path: str) -> dict:

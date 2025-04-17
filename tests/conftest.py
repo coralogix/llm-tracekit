@@ -6,11 +6,6 @@ import os
 import pytest
 import yaml
 from openai import AsyncOpenAI, OpenAI
-
-from llm_tracekit.openai.instrumentor import OpenAIInstrumentor
-from llm_tracekit.instrumentation_utils import (
-    OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT,
-)
 from opentelemetry.sdk.metrics import (
     MeterProvider,
 )
@@ -23,6 +18,11 @@ from opentelemetry.sdk.trace.export.in_memory_span_exporter import (
     InMemorySpanExporter,
 )
 from opentelemetry.sdk.trace.sampling import ALWAYS_OFF
+
+from llm_tracekit.instrumentation_utils import (
+    OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT,
+)
+from llm_tracekit.openai.instrumentor import OpenAIInstrumentor
 
 
 @pytest.fixture(scope="function", name="span_exporter")

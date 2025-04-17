@@ -1,10 +1,12 @@
-from typing import Any, List, Dict, Optional
 import json
+from typing import Any, Dict, List, Optional
 
 from llm_tracekit.span_builder import Message, ToolCall
 
 
-def _combine_tool_call_content_parts(content_parts: List[Dict[str, Any]]) -> Optional[str]:
+def _combine_tool_call_content_parts(
+    content_parts: List[Dict[str, Any]],
+) -> Optional[str]:
     text_parts = []
     for content_part in content_parts:
         if "text" in content_part:
@@ -14,12 +16,14 @@ def _combine_tool_call_content_parts(content_parts: List[Dict[str, Any]]) -> Opt
             return json.dumps(content_part["json"])
 
     if len(text_parts) > 0:
-        return '\n'.join(text_parts)
-    
+        return "\n".join(text_parts)
+
     return None
 
 
-def parse_converse_message(role: Optional[str], content_parts: Optional[List[Dict[str, Any]]]) -> Message:
+def parse_converse_message(
+    role: Optional[str], content_parts: Optional[List[Dict[str, Any]]]
+) -> Message:
     """Attempts to combine the content parts of a `converse` API message to a single message."""
     if content_parts is None:
         return Message(role=role)
@@ -43,10 +47,7 @@ def parse_converse_message(role: Optional[str], content_parts: Optional[List[Dic
     # in the same message, but in case that happens we follow the hierarchy
     # of text > tool_calls > tool_call_result
     if len(text_parts) > 0:
-        return Message(
-            role=role,
-            content='\n'.join(text_parts)
-        )
+        return Message(role=role, content="\n".join(text_parts))
     elif len(tool_calls) > 0:
         message_tool_calls = []
         for tool_call in tool_calls:
@@ -54,13 +55,15 @@ def parse_converse_message(role: Optional[str], content_parts: Optional[List[Dic
             if "input" in tool_call:
                 arguments = json.dumps(tool_call["input"])
 
-            message_tool_calls.append(ToolCall(
-                id=tool_call.get("toolUseId"),
-                type="function",
-                function_name=tool_call.get("name"),
-                function_arguments=arguments,
-            ))
-        
+            message_tool_calls.append(
+                ToolCall(
+                    id=tool_call.get("toolUseId"),
+                    type="function",
+                    function_name=tool_call.get("name"),
+                    function_arguments=arguments,
+                )
+            )
+
         return Message(
             role=role,
             tool_calls=message_tool_calls,
@@ -76,5 +79,5 @@ def parse_converse_message(role: Optional[str], content_parts: Optional[List[Dic
             tool_call_id=tool_call_results[0].get("toolUseId"),
             content=content,
         )
-    
+
     return Message(role=role)

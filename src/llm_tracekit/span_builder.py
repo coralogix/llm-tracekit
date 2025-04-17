@@ -4,8 +4,8 @@ from typing import Any, Dict, List, Optional
 from opentelemetry.semconv._incubating.attributes import (
     gen_ai_attributes as GenAIAttributes,
 )
-from llm_tracekit import extended_gen_ai_attributes as ExtendedGenAIAttributes
 
+from llm_tracekit import extended_gen_ai_attributes as ExtendedGenAIAttributes
 
 
 @dataclass
@@ -37,9 +37,9 @@ def remove_attributes_with_null_values(attributes: dict[str, Any]) -> dict[str, 
 
 
 def generate_base_attributes(
-        system: GenAIAttributes.GenAiSystemValues,
-        operation: GenAIAttributes.GenAiOperationNameValues = GenAIAttributes.GenAiOperationNameValues.CHAT
-    ) -> Dict[str, Any]:
+    system: GenAIAttributes.GenAiSystemValues,
+    operation: GenAIAttributes.GenAiOperationNameValues = GenAIAttributes.GenAiOperationNameValues.CHAT,
+) -> Dict[str, Any]:
     attributes = {
         GenAIAttributes.GEN_AI_OPERATION_NAME: operation.value,
         GenAIAttributes.GEN_AI_SYSTEM: system.value,
@@ -53,7 +53,7 @@ def generate_request_attributes(
     top_p: Optional[float] = None,
     max_tokens: Optional[int] = None,
     presence_penalty: Optional[float] = None,
-    frequency_penalty: Optional[float] = None
+    frequency_penalty: Optional[float] = None,
 ) -> Dict[str, Any]:
     attributes = {
         GenAIAttributes.GEN_AI_REQUEST_MODEL: model,
@@ -61,29 +61,53 @@ def generate_request_attributes(
         GenAIAttributes.GEN_AI_REQUEST_TOP_P: top_p,
         GenAIAttributes.GEN_AI_REQUEST_MAX_TOKENS: max_tokens,
         GenAIAttributes.GEN_AI_REQUEST_PRESENCE_PENALTY: presence_penalty,
-        GenAIAttributes.GEN_AI_REQUEST_FREQUENCY_PENALTY: frequency_penalty
+        GenAIAttributes.GEN_AI_REQUEST_FREQUENCY_PENALTY: frequency_penalty,
     }
     return remove_attributes_with_null_values(attributes)
 
 
-def generate_message_attributes(messages: List[Message], capture_content: bool) -> Dict[str, Any]:
+def generate_message_attributes(
+    messages: List[Message], capture_content: bool
+) -> Dict[str, Any]:
     attributes = {}
     for index, message in enumerate(messages):
-        attributes[ExtendedGenAIAttributes.GEN_AI_PROMPT_ROLE.format(prompt_index=index)] = message.role
-        
+        attributes[
+            ExtendedGenAIAttributes.GEN_AI_PROMPT_ROLE.format(prompt_index=index)
+        ] = message.role
+
         if capture_content and message.content is not None:
             attributes[
                 ExtendedGenAIAttributes.GEN_AI_PROMPT_CONTENT.format(prompt_index=index)
             ] = message.content
 
-        attributes[ExtendedGenAIAttributes.GEN_AI_PROMPT_TOOL_CALL_ID.format(prompt_index=index)] = message.tool_call_id
+        attributes[
+            ExtendedGenAIAttributes.GEN_AI_PROMPT_TOOL_CALL_ID.format(
+                prompt_index=index
+            )
+        ] = message.tool_call_id
         if message.tool_calls is not None:
             for tool_index, tool_call in enumerate(message.tool_calls):
-                attributes[ExtendedGenAIAttributes.GEN_AI_PROMPT_TOOL_CALLS_ID.format(prompt_index=index, tool_call_index=tool_index)] = tool_call.id
-                attributes[ExtendedGenAIAttributes.GEN_AI_PROMPT_TOOL_CALLS_TYPE.format(prompt_index=index, tool_call_index=tool_index)] = tool_call.type
-                attributes[ExtendedGenAIAttributes.GEN_AI_PROMPT_TOOL_CALLS_FUNCTION_NAME.format(prompt_index=index, tool_call_index=tool_index)] = tool_call.function_name
+                attributes[
+                    ExtendedGenAIAttributes.GEN_AI_PROMPT_TOOL_CALLS_ID.format(
+                        prompt_index=index, tool_call_index=tool_index
+                    )
+                ] = tool_call.id
+                attributes[
+                    ExtendedGenAIAttributes.GEN_AI_PROMPT_TOOL_CALLS_TYPE.format(
+                        prompt_index=index, tool_call_index=tool_index
+                    )
+                ] = tool_call.type
+                attributes[
+                    ExtendedGenAIAttributes.GEN_AI_PROMPT_TOOL_CALLS_FUNCTION_NAME.format(
+                        prompt_index=index, tool_call_index=tool_index
+                    )
+                ] = tool_call.function_name
                 if capture_content:
-                    attributes[ExtendedGenAIAttributes.GEN_AI_PROMPT_TOOL_CALLS_FUNCTION_ARGUMENTS.format(prompt_index=index, tool_call_index=tool_index)] = tool_call.function_arguments
+                    attributes[
+                        ExtendedGenAIAttributes.GEN_AI_PROMPT_TOOL_CALLS_FUNCTION_ARGUMENTS.format(
+                            prompt_index=index, tool_call_index=tool_index
+                        )
+                    ] = tool_call.function_arguments
 
     return remove_attributes_with_null_values(attributes)
 
@@ -105,23 +129,49 @@ def generate_response_attributes(
     return remove_attributes_with_null_values(attributes)
 
 
-def generate_choice_attributes(choices: List[Choice], capture_content: bool) -> Dict[str, Any]:
+def generate_choice_attributes(
+    choices: List[Choice], capture_content: bool
+) -> Dict[str, Any]:
     attributes = {}
     for index, choice in enumerate(choices):
-        attributes[ExtendedGenAIAttributes.GEN_AI_COMPLETION_FINISH_REASON.format(prompt_index=index)] = choice.finish_reason
-        attributes[ExtendedGenAIAttributes.GEN_AI_COMPLETION_ROLE.format(prompt_index=index)] = choice.role
-        
+        attributes[
+            ExtendedGenAIAttributes.GEN_AI_COMPLETION_FINISH_REASON.format(
+                prompt_index=index
+            )
+        ] = choice.finish_reason
+        attributes[
+            ExtendedGenAIAttributes.GEN_AI_COMPLETION_ROLE.format(prompt_index=index)
+        ] = choice.role
+
         if capture_content and choice.content is not None:
             attributes[
-                ExtendedGenAIAttributes.GEN_AI_COMPLETION_CONTENT.format(prompt_index=index)
+                ExtendedGenAIAttributes.GEN_AI_COMPLETION_CONTENT.format(
+                    prompt_index=index
+                )
             ] = choice.content
 
         if choice.tool_calls is not None:
             for tool_index, tool_call in enumerate(choice.tool_calls):
-                attributes[ExtendedGenAIAttributes.GEN_AI_COMPLETION_TOOL_CALLS_ID.format(prompt_index=index, tool_call_index=tool_index)] = tool_call.id
-                attributes[ExtendedGenAIAttributes.GEN_AI_COMPLETION_TOOL_CALLS_TYPE.format(prompt_index=index, tool_call_index=tool_index)] = tool_call.type
-                attributes[ExtendedGenAIAttributes.GEN_AI_COMPLETION_TOOL_CALLS_FUNCTION_NAME.format(prompt_index=index, tool_call_index=tool_index)] = tool_call.function_name
+                attributes[
+                    ExtendedGenAIAttributes.GEN_AI_COMPLETION_TOOL_CALLS_ID.format(
+                        prompt_index=index, tool_call_index=tool_index
+                    )
+                ] = tool_call.id
+                attributes[
+                    ExtendedGenAIAttributes.GEN_AI_COMPLETION_TOOL_CALLS_TYPE.format(
+                        prompt_index=index, tool_call_index=tool_index
+                    )
+                ] = tool_call.type
+                attributes[
+                    ExtendedGenAIAttributes.GEN_AI_COMPLETION_TOOL_CALLS_FUNCTION_NAME.format(
+                        prompt_index=index, tool_call_index=tool_index
+                    )
+                ] = tool_call.function_name
                 if capture_content:
-                    attributes[ExtendedGenAIAttributes.GEN_AI_COMPLETION_TOOL_CALLS_FUNCTION_ARGUMENTS.format(prompt_index=index, tool_call_index=tool_index)] = tool_call.function_arguments
+                    attributes[
+                        ExtendedGenAIAttributes.GEN_AI_COMPLETION_TOOL_CALLS_FUNCTION_ARGUMENTS.format(
+                            prompt_index=index, tool_call_index=tool_index
+                        )
+                    ] = tool_call.function_arguments
 
     return remove_attributes_with_null_values(attributes)

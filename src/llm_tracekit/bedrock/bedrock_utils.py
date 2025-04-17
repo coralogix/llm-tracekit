@@ -19,15 +19,15 @@ from os import environ
 from typing import Any, Callable, Dict, Iterator, Sequence, Union
 
 from botocore.eventstream import EventStream, EventStreamError
-from wrapt import ObjectProxy
-
 from opentelemetry._events import Event
-from llm_tracekit.instrumentation_utils import (
-    OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT,
-)
 from opentelemetry.semconv._incubating.attributes.gen_ai_attributes import (
     GEN_AI_SYSTEM,
     GenAiSystemValues,
+)
+from wrapt import ObjectProxy
+
+from llm_tracekit.instrumentation_utils import (
+    OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT,
 )
 
 _StreamDoneCallableT = Callable[[Dict[str, Union[int, str]]], None]
@@ -327,26 +327,20 @@ class InvokeModelWithResponseStreamWrapper(ObjectProxy):
             # {'type': 'content_block_stop', 'index': 0}
             if self._tool_json_input_buf:
                 self._content_block["input"] = self._tool_json_input_buf
-            self._message["content"].append(
-                _decode_tool_use(self._content_block)
-            )
+            self._message["content"].append(_decode_tool_use(self._content_block))
             self._content_block = {}
             self._tool_json_input_buf = ""
             return
 
         if message_type == "message_delta":
             # {'type': 'message_delta', 'delta': {'stop_reason': 'end_turn', 'stop_sequence': None}, 'usage': {'output_tokens': 123}}
-            if (
-                stop_reason := chunk.get("delta", {}).get("stop_reason")
-            ) is not None:
+            if (stop_reason := chunk.get("delta", {}).get("stop_reason")) is not None:
                 self._response["stopReason"] = stop_reason
             return
 
         if message_type == "message_stop":
             # {'type': 'message_stop', 'amazon-bedrock-invocationMetrics': {'inputTokenCount': 18, 'outputTokenCount': 123, 'invocationLatency': 5250, 'firstByteLatency': 290}}
-            if invocation_metrics := chunk.get(
-                "amazon-bedrock-invocationMetrics"
-            ):
+            if invocation_metrics := chunk.get("amazon-bedrock-invocationMetrics"):
                 self._process_invocation_metrics(invocation_metrics)
 
             if self._record_message:
@@ -374,9 +368,7 @@ def extract_tool_calls(
 
     tool_uses = [item["toolUse"] for item in content if "toolUse" in item]
     if not tool_uses:
-        tool_uses = [
-            item for item in content if item.get("type") == "tool_use"
-        ]
+        tool_uses = [item for item in content if item.get("type") == "tool_use"]
         tool_id_key = "id"
     else:
         tool_id_key = "toolUseId"
@@ -413,14 +405,10 @@ def extract_tool_results(
         return
 
     # Converse format
-    tool_results = [
-        item["toolResult"] for item in content if "toolResult" in item
-    ]
+    tool_results = [item["toolResult"] for item in content if "toolResult" in item]
     # InvokeModel anthropic.claude format
     if not tool_results:
-        tool_results = [
-            item for item in content if item.get("type") == "tool_result"
-        ]
+        tool_results = [item for item in content if item.get("type") == "tool_result"]
         tool_id_key = "tool_use_id"
     else:
         tool_id_key = "toolUseId"
@@ -441,9 +429,7 @@ def extract_tool_results(
         yield body
 
 
-def message_to_event(
-    message: dict[str, Any], capture_content: bool
-) -> Iterator[Event]:
+def message_to_event(message: dict[str, Any], capture_content: bool) -> Iterator[Event]:
     attributes = {GEN_AI_SYSTEM: GenAiSystemValues.AWS_BEDROCK.value}
     role = message.get("role")
     content = message.get("content")
@@ -472,17 +458,13 @@ def message_to_event(
 
 
 class _Choice:
-    def __init__(
-        self, message: dict[str, Any], finish_reason: str, index: int
-    ):
+    def __init__(self, message: dict[str, Any], finish_reason: str, index: int):
         self.message = message
         self.finish_reason = finish_reason
         self.index = index
 
     @classmethod
-    def from_converse(
-        cls, response: dict[str, Any], capture_content: bool
-    ) -> _Choice:
+    def from_converse(cls, response: dict[str, Any], capture_content: bool) -> _Choice:
         orig_message = response["output"]["message"]
         if role := orig_message.get("role"):
             message = {"role": role}
