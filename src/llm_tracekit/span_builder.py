@@ -24,6 +24,14 @@ class Message:
     tool_calls: Optional[List[ToolCall]] = None
 
 
+@dataclass
+class Choice:
+    finish_reason: Optional[str] = None
+    role: Optional[str] = None
+    content: Optional[str] = None
+    tool_calls: Optional[List[ToolCall]] = None
+
+
 def remove_attributes_with_null_values(attributes: dict[str, Any]) -> dict[str, Any]:
     return {attr: value for attr, value in attributes.items() if value is not None}
 
@@ -97,8 +105,23 @@ def generate_response_attributes(
     return remove_attributes_with_null_values(attributes)
 
 
-def generate_choice_attributes() -> Dict[str, Any]:
-    attributes = {
+def generate_choice_attributes(choices: List[Choice], capture_content: bool) -> Dict[str, Any]:
+    attributes = {}
+    for index, choice in enumerate(choices):
+        attributes[ExtendedGenAIAttributes.GEN_AI_COMPLETION_FINISH_REASON.format(prompt_index=index)] = choice.finish_reason
+        attributes[ExtendedGenAIAttributes.GEN_AI_COMPLETION_ROLE.format(prompt_index=index)] = choice.role
+        
+        if capture_content and choice.content is not None:
+            attributes[
+                ExtendedGenAIAttributes.GEN_AI_COMPLETION_CONTENT.format(prompt_index=index)
+            ] = choice.content
 
-    }
+        if choice.tool_calls is not None:
+            for tool_index, tool_call in enumerate(choice.tool_calls):
+                attributes[ExtendedGenAIAttributes.GEN_AI_COMPLETION_TOOL_CALLS_ID.format(prompt_index=index, tool_call_index=tool_index)] = tool_call.id
+                attributes[ExtendedGenAIAttributes.GEN_AI_COMPLETION_TOOL_CALLS_TYPE.format(prompt_index=index, tool_call_index=tool_index)] = tool_call.type
+                attributes[ExtendedGenAIAttributes.GEN_AI_COMPLETION_TOOL_CALLS_FUNCTION_NAME.format(prompt_index=index, tool_call_index=tool_index)] = tool_call.function_name
+                if capture_content:
+                    attributes[ExtendedGenAIAttributes.GEN_AI_COMPLETION_TOOL_CALLS_FUNCTION_ARGUMENTS.format(prompt_index=index, tool_call_index=tool_index)] = tool_call.function_arguments
+
     return remove_attributes_with_null_values(attributes)

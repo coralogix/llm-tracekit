@@ -26,10 +26,10 @@ from opentelemetry.trace import Span, SpanKind, Tracer
 
 from llm_tracekit import extended_gen_ai_attributes as ExtendedGenAIAttributes
 from llm_tracekit.instruments import Instruments
+from llm_tracekit.instrumentation_utils import handle_span_exception
 from llm_tracekit.openai.utils import (
     choices_to_span_attributes,
     get_llm_request_attributes,
-    handle_span_exception,
     is_streaming,
     messages_to_span_attributes,
     set_span_attribute,

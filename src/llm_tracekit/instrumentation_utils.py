@@ -14,6 +14,11 @@
 
 import os
 
+from opentelemetry.semconv.attributes import (
+    error_attributes as ErrorAttributes,
+)
+from opentelemetry.trace.status import Status, StatusCode
+
 
 OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT = (
     "OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT"
@@ -32,3 +37,10 @@ def is_content_enabled() -> bool:
 def enable_capture_content():
     """Enables capturing message content."""
     os.environ[OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT] = "true"
+
+
+def handle_span_exception(span, error):
+    span.set_status(Status(StatusCode.ERROR, str(error)))
+    if span.is_recording():
+        span.set_attribute(ErrorAttributes.ERROR_TYPE, type(error).__qualname__)
+    span.end()

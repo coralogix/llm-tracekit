@@ -19,8 +19,11 @@ def _combine_tool_call_content_parts(content_parts: List[Dict[str, Any]]) -> Opt
     return None
 
 
-def parse_converse_message(role: Optional[str], content_parts: List[Dict[str, Any]]) -> Message:
+def parse_converse_message(role: Optional[str], content_parts: Optional[List[Dict[str, Any]]]) -> Message:
     """Attempts to combine the content parts of a `converse` API message to a single message."""
+    if content_parts is None:
+        return Message(role=role)
+
     text_parts = []
     tool_calls = []
     tool_call_results = []

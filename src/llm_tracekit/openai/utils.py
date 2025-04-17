@@ -24,10 +24,6 @@ from opentelemetry.semconv._incubating.attributes import (
 from opentelemetry.semconv._incubating.attributes import (
     server_attributes as ServerAttributes,
 )
-from opentelemetry.semconv.attributes import (
-    error_attributes as ErrorAttributes,
-)
-from opentelemetry.trace.status import Status, StatusCode
 
 from llm_tracekit import extended_gen_ai_attributes as ExtendedGenAIAttributes
 from llm_tracekit.span_builder import generate_base_attributes, generate_request_attributes, remove_attributes_with_null_values
@@ -251,10 +247,3 @@ def get_llm_request_attributes(
 
     # filter out None values
     return remove_attributes_with_null_values(attributes)
-
-
-def handle_span_exception(span, error):
-    span.set_status(Status(StatusCode.ERROR, str(error)))
-    if span.is_recording():
-        span.set_attribute(ErrorAttributes.ERROR_TYPE, type(error).__qualname__)
-    span.end()

@@ -1,16 +1,66 @@
 import json
 from functools import wraps
-from typing import Callable
+from typing import Callable, Optional
 
+from timeit import default_timer
 from opentelemetry.trace import Span, SpanKind, Tracer
 from llm_tracekit.instruments import Instruments
 # TODO: importing botocore at module-scope will not work if it's not installed
 from botocore.response import StreamingBody
-from llm_tracekit.span_builder import generate_base_attributes, generate_request_attributes, generate_response_attributes, Message, generate_message_attributes
+from llm_tracekit.span_builder import generate_base_attributes, generate_request_attributes, generate_response_attributes, Message, generate_message_attributes, Choice, generate_choice_attributes
 from opentelemetry.semconv._incubating.attributes import (
     gen_ai_attributes as GenAIAttributes,
 )
+from llm_tracekit.instrumentation_utils import handle_span_exception
 from llm_tracekit.bedrock.utils import parse_converse_message
+
+
+def _record_metrics(
+    instruments: Instruments,
+    duration: float,
+    model: Optional[str],
+    usage_input_tokens: Optional[int],
+    usage_output_tokens: Optional[int],
+    error_type: Optional[str],
+):
+    common_attributes = {
+        GenAIAttributes.GEN_AI_OPERATION_NAME: GenAIAttributes.GenAiOperationNameValues.CHAT.value,
+        GenAIAttributes.GEN_AI_SYSTEM: GenAIAttributes.GenAiSystemValues.AWS_BEDROCK.value,
+    }
+
+    if model is not None:
+        common_attributes.update({
+            GenAIAttributes.GEN_AI_REQUEST_MODEL: model,
+            GenAIAttributes.GEN_AI_RESPONSE_MODEL: model,
+        })
+
+    if error_type:
+        common_attributes["error.type"] = error_type
+
+    instruments.operation_duration_histogram.record(
+        duration,
+        attributes=common_attributes,
+    )
+
+    if usage_input_tokens is not None:
+        input_attributes = {
+            **common_attributes,
+            GenAIAttributes.GEN_AI_TOKEN_TYPE: GenAIAttributes.GenAiTokenTypeValues.INPUT.value,
+        }
+        instruments.token_usage_histogram.record(
+            usage_input_tokens,
+            attributes=input_attributes,
+        )
+
+    if usage_output_tokens is not None:
+        completion_attributes = {
+            **common_attributes,
+            GenAIAttributes.GEN_AI_TOKEN_TYPE: GenAIAttributes.GenAiTokenTypeValues.COMPLETION.value,
+        }
+        instruments.token_usage_histogram.record(
+            usage_output_tokens,
+            attributes=completion_attributes,
+        )
 
 
 def invoke_model_wrapper(original_function: Callable, tracer: Tracer, instruments: Instruments, capture_content: bool):
@@ -60,6 +110,7 @@ def invoke_model_wrapper(original_function: Callable, tracer: Tracer, instrument
 def converse_wrapper(original_function: Callable, tracer: Tracer, instruments: Instruments, capture_content: bool):
     @wraps(original_function)
     def wrapper(*args, **kwargs):
+        model = kwargs.get("modelId")
         inference_config = kwargs.get("inferenceConfig", {})
         messages = []
         for system_message in kwargs.get("system", []):
@@ -71,7 +122,7 @@ def converse_wrapper(original_function: Callable, tracer: Tracer, instruments: I
         span_attributes = {
             **generate_base_attributes(system=GenAIAttributes.GenAiSystemValues.AWS_BEDROCK),
             **generate_request_attributes(
-                model=kwargs.get("modelId"),
+                model=model,
                 temperature=inference_config.get("temperature"),
                 top_p=inference_config.get("topP"),
                 max_tokens=inference_config.get("maxTokens"),
@@ -84,25 +135,56 @@ def converse_wrapper(original_function: Callable, tracer: Tracer, instruments: I
             attributes=span_attributes,
             end_on_exit=False,
         ) as span:
-            response = original_function(*args, **kwargs)
+            start = default_timer()
+            usage_input_tokens = None
+            usage_output_tokens = None
+            error_type = None
+            try:
+                result = original_function(*args, **kwargs)
 
-            finish_reasons = []
-            if "stopReason" in response:
-                finish_reasons = [response["stopReason"]]
-            
-            usage_data = response.get("usage", {})
+                finish_reason = result.get("stopReason")
+                if "stopReason" in result:
+                    finish_reason = result["stopReason"]
+                
+                usage_data = result.get("usage", {})
+                usage_input_tokens = usage_data.get("inputTokens")
+                usage_output_tokens = usage_data.get("outputTokens")
 
-            response_attributes = generate_response_attributes(
-                model=kwargs.get("modelId"),
-                finish_reasons=finish_reasons,
-                usage_input_tokens=usage_data.get("inputTokens"),
-                usage_output_tokens=usage_data.get("outputTokens")
-            )
-            span.set_attributes(response_attributes)
+                response_attributes = generate_response_attributes(
+                    model=model,
+                    finish_reasons=None if finish_reason is None else [finish_reason],
+                    usage_input_tokens=usage_input_tokens,
+                    usage_output_tokens=usage_output_tokens
+                )
+                span.set_attributes(response_attributes)
 
-            # TODO: handle choices
-            # TODO: handle errors
-            # TODO: record metrics
+                response_message = result.get("output", {}).get("message")
+                if response_message is not None:
+                    parsed_response_message = parse_converse_message(role=response_message.get("role"), content_parts=response_message.get("content"))
+                    choice = Choice(
+                        finish_reason=finish_reason,
+                        role=parsed_response_message.role,
+                        content=parsed_response_message.content,
+                        tool_calls=parsed_response_message.tool_calls,
+                    )
+                    span.set_attributes(generate_choice_attributes(choices=[choice], capture_content=capture_content))
+
+                span.end()
+                return result
+            except Exception as error:
+                error_type = type(error).__qualname__
+                handle_span_exception(span, error)
+                raise
+            finally:
+                duration = max((default_timer() - start), 0)
+                _record_metrics(
+                    instruments=instruments,
+                    duration=duration,
+                    model=model,
+                    usage_input_tokens=usage_input_tokens,
+                    usage_output_tokens=usage_output_tokens,
+                    error_type=error_type,
+                )
     
     return wrapper
 
