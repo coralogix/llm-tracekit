@@ -136,17 +136,17 @@ def generate_choice_attributes(
     for index, choice in enumerate(choices):
         attributes[
             ExtendedGenAIAttributes.GEN_AI_COMPLETION_FINISH_REASON.format(
-                prompt_index=index
+                completion_index=index
             )
         ] = choice.finish_reason
         attributes[
-            ExtendedGenAIAttributes.GEN_AI_COMPLETION_ROLE.format(prompt_index=index)
+            ExtendedGenAIAttributes.GEN_AI_COMPLETION_ROLE.format(completion_index=index)
         ] = choice.role
 
         if capture_content and choice.content is not None:
             attributes[
                 ExtendedGenAIAttributes.GEN_AI_COMPLETION_CONTENT.format(
-                    prompt_index=index
+                    completion_index=index
                 )
             ] = choice.content
 
@@ -154,23 +154,23 @@ def generate_choice_attributes(
             for tool_index, tool_call in enumerate(choice.tool_calls):
                 attributes[
                     ExtendedGenAIAttributes.GEN_AI_COMPLETION_TOOL_CALLS_ID.format(
-                        prompt_index=index, tool_call_index=tool_index
+                        completion_index=index, tool_call_index=tool_index
                     )
                 ] = tool_call.id
                 attributes[
                     ExtendedGenAIAttributes.GEN_AI_COMPLETION_TOOL_CALLS_TYPE.format(
-                        prompt_index=index, tool_call_index=tool_index
+                        completion_index=index, tool_call_index=tool_index
                     )
                 ] = tool_call.type
                 attributes[
                     ExtendedGenAIAttributes.GEN_AI_COMPLETION_TOOL_CALLS_FUNCTION_NAME.format(
-                        prompt_index=index, tool_call_index=tool_index
+                        completion_index=index, tool_call_index=tool_index
                     )
                 ] = tool_call.function_name
                 if capture_content:
                     attributes[
                         ExtendedGenAIAttributes.GEN_AI_COMPLETION_TOOL_CALLS_FUNCTION_ARGUMENTS.format(
-                            prompt_index=index, tool_call_index=tool_index
+                            completion_index=index, tool_call_index=tool_index
                         )
                     ] = tool_call.function_arguments
 

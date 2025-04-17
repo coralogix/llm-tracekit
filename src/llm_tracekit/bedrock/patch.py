@@ -1,3 +1,4 @@
+from io import BytesIO
 import json
 from functools import wraps
 from timeit import default_timer
@@ -22,6 +23,7 @@ from llm_tracekit.span_builder import (
     generate_request_attributes,
     generate_response_attributes,
 )
+from llm_tracekit.bedrock.stream_wrappers import ConverseStreamWrapper
 
 
 def _record_metrics(
@@ -83,10 +85,56 @@ def invoke_model_wrapper(
     @wraps(original_function)
     def wrapper(*args, **kwargs):
         span_attributes = {}
-
-        span_name = "TODO"
         with tracer.start_as_current_span(
-            name=span_name,
+            name="bedrock.invoke_model",
+            kind=SpanKind.CLIENT,
+            attributes=span_attributes,
+            end_on_exit=False,
+        ):
+            model_id = kwargs.get("modelId")
+            body = kwargs.get("body")
+            if body is not None:
+                try:
+                    # TODO: consider orjson
+                    parsed_body = json.loads(body)
+                    # TODO: handle parsed body based on model type
+                except json.JSONDecodeError:
+                    # TODO:
+                    pass
+
+            invoke_model_result = original_function(*args, **kwargs)
+            if invoke_model_result["ResponseMetadata"]["HTTPStatusCode"] == 200:
+                # TODO:
+                # The response body is a stream, and reading the stream consumes it, so we have to recreate
+                # it to keep the original response usable
+                response_body = invoke_model_result["body"].read()
+                invoke_model_result["body"] = StreamingBody(
+                    BytesIO(response_body), len(response_body)
+                )
+                try:
+                    parsed_response_body = json.loads(response_body)
+                except json.JSONDecodeError:
+                    # TODO:
+                    pass
+
+                # TODO: handle parsed response based on model type
+
+        return invoke_model_result
+
+    return wrapper
+
+
+def invoke_model_with_response_stream_wrapper(
+    original_function: Callable,
+    tracer: Tracer,
+    instruments: Instruments,
+    capture_content: bool,
+):
+    @wraps(original_function)
+    def wrapper(*args, **kwargs):
+        span_attributes = {}
+        with tracer.start_as_current_span(
+            name="bedrock.invoke_model_with_response_stream",
             kind=SpanKind.CLIENT,
             attributes=span_attributes,
             end_on_exit=False,
@@ -282,11 +330,17 @@ def create_client_wrapper(
 ):
     def traced_method(wrapped, instance, args, kwargs):
         service_name = kwargs.get("service_name")
+        client = wrapped(*args, **kwargs)
         # TODO: error handling
         if service_name == "bedrock-runtime":
-            client = wrapped(*args, **kwargs)
             client.invoke_model = invoke_model_wrapper(
                 original_function=client.invoke_model,
+                tracer=tracer,
+                instruments=instruments,
+                capture_content=capture_content,
+            )
+            client.invoke_model_with_response_stream = invoke_model_with_response_stream_wrapper(
+                original_function=client.invoke_model_with_response_stream,
                 tracer=tracer,
                 instruments=instruments,
                 capture_content=capture_content,
@@ -303,13 +357,14 @@ def create_client_wrapper(
                 instruments=instruments,
                 capture_content=capture_content,
             )
-        elif service_name == "bedrock-agent-runtime":
-            client = wrapped(*args, **kwargs)
+        elif service_name == "bedrock-agent-runtime":            
             client.invoke_agent = invoke_agent_wrapper(
                 original_function=client.invoke_agent,
                 tracer=tracer,
                 instruments=instruments,
                 capture_content=capture_content,
             )
+
+        return client
 
     return traced_method
