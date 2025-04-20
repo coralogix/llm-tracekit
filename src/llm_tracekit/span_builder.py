@@ -140,7 +140,9 @@ def generate_choice_attributes(
             )
         ] = choice.finish_reason
         attributes[
-            ExtendedGenAIAttributes.GEN_AI_COMPLETION_ROLE.format(completion_index=index)
+            ExtendedGenAIAttributes.GEN_AI_COMPLETION_ROLE.format(
+                completion_index=index
+            )
         ] = choice.role
 
         if capture_content and choice.content is not None:

@@ -1,6 +1,6 @@
-from io import BytesIO
 import json
-from functools import wraps, partial
+from functools import partial, wraps
+from io import BytesIO
 from timeit import default_timer
 from typing import Any, Callable, Dict, Optional
 
@@ -12,7 +12,12 @@ from opentelemetry.semconv._incubating.attributes import (
 )
 from opentelemetry.trace import Span, SpanKind, Tracer
 
-from llm_tracekit.bedrock.utils import parse_converse_message
+from llm_tracekit.bedrock.converse import (
+    ConverseStreamWrapper,
+    generate_attributes_from_converse_input,
+    record_converse_result_attributes,
+)
+from llm_tracekit.bedrock.utils import parse_converse_message, record_metrics
 from llm_tracekit.instrumentation_utils import handle_span_exception
 from llm_tracekit.instruments import Instruments
 from llm_tracekit.span_builder import (
@@ -24,57 +29,39 @@ from llm_tracekit.span_builder import (
     generate_request_attributes,
     generate_response_attributes,
 )
-from llm_tracekit.bedrock.stream_wrappers import ConverseStreamWrapper
 
 
-def _record_metrics(
-    instruments: Instruments,
-    duration: float,
-    model: Optional[str] = None,
-    usage_input_tokens: Optional[int] = None,
-    usage_output_tokens: Optional[int] = None,
-    error_type: Optional[str] = None,
-):
-    common_attributes = {
-        GenAIAttributes.GEN_AI_OPERATION_NAME: GenAIAttributes.GenAiOperationNameValues.CHAT.value,
-        GenAIAttributes.GEN_AI_SYSTEM: GenAIAttributes.GenAiSystemValues.AWS_BEDROCK.value,
+def _generate_attributes_from_invoke_input(
+    model_id: str, body: Dict[str, Any], capture_content: bool
+) -> Dict[str, Any]:
+    return {
+        **generate_base_attributes(
+            system=GenAIAttributes.GenAiSystemValues.AWS_BEDROCK
+        ),
+        **generate_request_attributes(
+            model=model_id,
+            temperature=inference_config.get("temperature"),
+            top_p=inference_config.get("topP"),
+            max_tokens=inference_config.get("maxTokens"),
+        ),
     }
 
-    if model is not None:
-        common_attributes.update(
-            {
-                GenAIAttributes.GEN_AI_REQUEST_MODEL: model,
-                GenAIAttributes.GEN_AI_RESPONSE_MODEL: model,
-            }
-        )
 
-    if error_type:
-        common_attributes["error.type"] = error_type
-
-    instruments.operation_duration_histogram.record(
-        duration,
-        attributes=common_attributes,
+def _handle_error(
+    error: Exception,
+    span: Span,
+    start_time: float,
+    instruments: Instruments,
+    model: Optional[str],
+):
+    duration = max((default_timer() - start_time), 0)
+    handle_span_exception(span, error)
+    record_metrics(
+        instruments=instruments,
+        duration=duration,
+        model=model,
+        error_type=error.__qualname__,
     )
-
-    if usage_input_tokens is not None:
-        input_attributes = {
-            **common_attributes,
-            GenAIAttributes.GEN_AI_TOKEN_TYPE: GenAIAttributes.GenAiTokenTypeValues.INPUT.value,
-        }
-        instruments.token_usage_histogram.record(
-            usage_input_tokens,
-            attributes=input_attributes,
-        )
-
-    if usage_output_tokens is not None:
-        completion_attributes = {
-            **common_attributes,
-            GenAIAttributes.GEN_AI_TOKEN_TYPE: GenAIAttributes.GenAiTokenTypeValues.COMPLETION.value,
-        }
-        instruments.token_usage_histogram.record(
-            usage_output_tokens,
-            attributes=completion_attributes,
-        )
 
 
 def invoke_model_wrapper(
@@ -173,38 +160,6 @@ def invoke_model_with_response_stream_wrapper(
     return wrapper
 
 
-def _generate_attributes_from_converse_input(
-    kwargs: Dict[str, Any], capture_content: bool
-) -> Dict[str, Any]:
-    inference_config = kwargs.get("inferenceConfig", {})
-    messages = []
-    for system_message in kwargs.get("system", []):
-        messages.append(Message(role="system", content=system_message.get("text")))
-
-    for message in kwargs.get("messages", []):
-        messages.append(
-            parse_converse_message(
-                role=message.get("role"), content_parts=message.get("content")
-            )
-        )
-
-    # TODO: record tool definitions
-    return {
-        **generate_base_attributes(
-            system=GenAIAttributes.GenAiSystemValues.AWS_BEDROCK
-        ),
-        **generate_request_attributes(
-            model=kwargs.get("modelId"),
-            temperature=inference_config.get("temperature"),
-            top_p=inference_config.get("topP"),
-            max_tokens=inference_config.get("maxTokens"),
-        ),
-        **generate_message_attributes(
-            messages=messages, capture_content=capture_content
-        ),
-    }
-
-
 def converse_wrapper(
     original_function: Callable,
     tracer: Tracer,
@@ -214,7 +169,7 @@ def converse_wrapper(
     @wraps(original_function)
     def wrapper(*args, **kwargs):
         model = kwargs.get("modelId")
-        span_attributes = _generate_attributes_from_converse_input(
+        span_attributes = generate_attributes_from_converse_input(
             kwargs=kwargs, capture_content=capture_content
         )
 
@@ -224,137 +179,29 @@ def converse_wrapper(
             attributes=span_attributes,
             end_on_exit=False,
         ) as span:
-            start = default_timer()
-            usage_input_tokens = None
-            usage_output_tokens = None
-            error_type = None
+            start_time = default_timer()
             try:
                 result = original_function(*args, **kwargs)
-
-                finish_reason = result.get("stopReason")
-                if "stopReason" in result:
-                    finish_reason = result["stopReason"]
-
-                usage_data = result.get("usage", {})
-                usage_input_tokens = usage_data.get("inputTokens")
-                usage_output_tokens = usage_data.get("outputTokens")
-
-                response_attributes = generate_response_attributes(
+                record_converse_result_attributes(
+                    result=result,
+                    span=span,
+                    start_time=start_time,
+                    instruments=instruments,
+                    capture_content=capture_content,
                     model=model,
-                    finish_reasons=None if finish_reason is None else [finish_reason],
-                    usage_input_tokens=usage_input_tokens,
-                    usage_output_tokens=usage_output_tokens,
                 )
-                span.set_attributes(response_attributes)
-
-                response_message = result.get("output", {}).get("message")
-                if response_message is not None:
-                    parsed_response_message = parse_converse_message(
-                        role=response_message.get("role"),
-                        content_parts=response_message.get("content"),
-                    )
-                    choice = Choice(
-                        finish_reason=finish_reason,
-                        role=parsed_response_message.role,
-                        content=parsed_response_message.content,
-                        tool_calls=parsed_response_message.tool_calls,
-                    )
-                    span.set_attributes(
-                        generate_choice_attributes(
-                            choices=[choice], capture_content=capture_content
-                        )
-                    )
-
-                span.end()
                 return result
             except Exception as error:
-                error_type = type(error).__qualname__
-                handle_span_exception(span, error)
-                raise
-            finally:
-                duration = max((default_timer() - start), 0)
-                _record_metrics(
+                _handle_error(
+                    error=error,
+                    span=span,
+                    start_time=start_time,
                     instruments=instruments,
-                    duration=duration,
                     model=model,
-                    usage_input_tokens=usage_input_tokens,
-                    usage_output_tokens=usage_output_tokens,
-                    error_type=error_type,
                 )
+                raise
 
     return wrapper
-
-
-def _stream_error_callback(
-    error: Exception,
-    span: Span,
-    start_time: float,
-    instruments: Instruments,
-    model: Optional[str],
-):
-    duration = max((default_timer() - start_time), 0)
-    handle_span_exception(span, error)
-    _record_metrics(
-        instruments=instruments,
-        duration=duration,
-        model=model,
-        error_type=error.__qualname__,
-    )
-
-
-def _stream_success_callback(
-    result: dict,
-    span: Span,
-    start_time: float,
-    instruments: Instruments,
-    capture_content: bool,
-    model: Optional[str],
-):
-    # TODO: combine with converse wrapper function
-    finish_reason = result.get("stopReason")
-    if "stopReason" in result:
-        finish_reason = result["stopReason"]
-
-    usage_data = result.get("usage", {})
-    usage_input_tokens = usage_data.get("inputTokens")
-    usage_output_tokens = usage_data.get("outputTokens")
-
-    response_attributes = generate_response_attributes(
-        model=model,
-        finish_reasons=None if finish_reason is None else [finish_reason],
-        usage_input_tokens=usage_input_tokens,
-        usage_output_tokens=usage_output_tokens,
-    )
-    span.set_attributes(response_attributes)
-
-    response_message = result.get("output", {}).get("message")
-    if response_message is not None:
-        parsed_response_message = parse_converse_message(
-            role=response_message.get("role"),
-            content_parts=response_message.get("content"),
-        )
-        choice = Choice(
-            finish_reason=finish_reason,
-            role=parsed_response_message.role,
-            content=parsed_response_message.content,
-            tool_calls=parsed_response_message.tool_calls,
-        )
-        span.set_attributes(
-            generate_choice_attributes(
-                choices=[choice], capture_content=capture_content
-            )
-        )
-
-    span.end()
-
-    duration = max((default_timer() - start_time), 0)
-    _record_metrics(
-        instruments=instruments,
-        duration=duration,
-        model=model,
-        usage_input_tokens=usage_input_tokens,
-        usage_output_tokens=usage_output_tokens,
-    )
 
 
 def converse_stream_wrapper(
@@ -366,7 +213,7 @@ def converse_stream_wrapper(
     @wraps(original_function)
     def wrapper(*args, **kwargs):
         model = kwargs.get("modelId")
-        span_attributes = _generate_attributes_from_converse_input(
+        span_attributes = generate_attributes_from_converse_input(
             kwargs=kwargs, capture_content=capture_content
         )
 
@@ -376,32 +223,38 @@ def converse_stream_wrapper(
             attributes=span_attributes,
             end_on_exit=False,
         ) as span:
-            start = default_timer()
+            start_time = default_timer()
             try:
                 result = original_function(*args, **kwargs)
                 if "stream" in result and isinstance(result["stream"], EventStream):
                     result["stream"] = ConverseStreamWrapper(
                         stream=result["stream"],
                         stream_done_callback=partial(
-                            _stream_success_callback,
+                            record_converse_result_attributes,
                             span=span,
-                            start_time=start,
+                            start_time=start_time,
                             instruments=instruments,
                             capture_content=capture_content,
                             model=model,
                         ),
                         stream_error_callback=partial(
-                            _stream_error_callback,
+                            _handle_error,
                             span=span,
-                            start_time=start,
+                            start_time=start_time,
                             instruments=instruments,
-                            model=model
+                            model=model,
                         ),
                     )
-                    
+
                 return result
             except Exception as error:
-                handle_span_exception(span, error)
+                _handle_error(
+                    error=error,
+                    span=span,
+                    start_time=start_time,
+                    instruments=instruments,
+                    model=model,
+                )
                 raise
 
     return wrapper
@@ -437,11 +290,13 @@ def create_client_wrapper(
                 instruments=instruments,
                 capture_content=capture_content,
             )
-            client.invoke_model_with_response_stream = invoke_model_with_response_stream_wrapper(
-                original_function=client.invoke_model_with_response_stream,
-                tracer=tracer,
-                instruments=instruments,
-                capture_content=capture_content,
+            client.invoke_model_with_response_stream = (
+                invoke_model_with_response_stream_wrapper(
+                    original_function=client.invoke_model_with_response_stream,
+                    tracer=tracer,
+                    instruments=instruments,
+                    capture_content=capture_content,
+                )
             )
             client.converse = converse_wrapper(
                 original_function=client.converse,
@@ -455,7 +310,7 @@ def create_client_wrapper(
                 instruments=instruments,
                 capture_content=capture_content,
             )
-        elif service_name == "bedrock-agent-runtime":            
+        elif service_name == "bedrock-agent-runtime":
             client.invoke_agent = invoke_agent_wrapper(
                 original_function=client.invoke_agent,
                 tracer=tracer,

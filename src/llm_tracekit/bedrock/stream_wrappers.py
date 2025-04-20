@@ -15,20 +15,10 @@
 from __future__ import annotations
 
 import json
-from os import environ
-from typing import Any, Callable, Dict, Iterator, Sequence, Union
+from typing import Callable, Dict, Union
 
 from botocore.eventstream import EventStream, EventStreamError
-from opentelemetry._events import Event
-from opentelemetry.semconv._incubating.attributes.gen_ai_attributes import (
-    GEN_AI_SYSTEM,
-    GenAiSystemValues,
-)
 from wrapt import ObjectProxy
-
-from llm_tracekit.instrumentation_utils import (
-    OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT,
-)
 
 _StreamDoneCallableT = Callable[[Dict[str, Union[int, str]]], None]
 _StreamErrorCallableT = Callable[[Exception], None]
@@ -42,99 +32,6 @@ def _decode_tool_use(tool_use):
         except json.JSONDecodeError:
             pass
     return tool_use
-
-
-class ConverseStreamWrapper(ObjectProxy):
-    """Wrapper for botocore.eventstream.EventStream"""
-
-    def __init__(
-        self,
-        stream: EventStream,
-        stream_done_callback: _StreamDoneCallableT,
-        stream_error_callback: _StreamErrorCallableT,
-    ):
-        super().__init__(stream)
-
-        self._stream_done_callback = stream_done_callback
-        self._stream_error_callback = stream_error_callback
-        # accumulating things in the same shape of non-streaming version
-        # {"usage": {"inputTokens": 0, "outputTokens": 0}, "stopReason": "finish", "output": {"message": {"role": "", "content": [{"text": ""}]}
-        self._response = {}
-        self._message = None
-        self._content_block = {}
-        self._record_message = False
-
-    def __iter__(self):
-        try:
-            for event in self.__wrapped__:
-                self._process_event(event)
-                yield event
-        except EventStreamError as exc:
-            self._stream_error_callback(exc)
-            raise
-
-    def _process_event(self, event):
-        # pylint: disable=too-many-branches
-        if "messageStart" in event:
-            # {'messageStart': {'role': 'assistant'}}
-            if event["messageStart"].get("role") == "assistant":
-                self._record_message = True
-                self._message = {"role": "assistant", "content": []}
-            return
-
-        if "contentBlockStart" in event:
-            # {'contentBlockStart': {'start': {'toolUse': {'toolUseId': 'id', 'name': 'func_name'}}, 'contentBlockIndex': 1}}
-            start = event["contentBlockStart"].get("start", {})
-            if "toolUse" in start:
-                tool_use = _decode_tool_use(start["toolUse"])
-                self._content_block = {"toolUse": tool_use}
-            return
-
-        if "contentBlockDelta" in event:
-            # {'contentBlockDelta': {'delta': {'text': "Hello"}, 'contentBlockIndex': 0}}
-            # {'contentBlockDelta': {'delta': {'toolUse': {'input': '{"location":"Seattle"}'}}, 'contentBlockIndex': 1}}
-            if self._record_message:
-                delta = event["contentBlockDelta"].get("delta", {})
-                if "text" in delta:
-                    self._content_block.setdefault("text", "")
-                    self._content_block["text"] += delta["text"]
-                elif "toolUse" in delta:
-                    tool_use = _decode_tool_use(delta["toolUse"])
-                    self._content_block["toolUse"].update(tool_use)
-            return
-
-        if "contentBlockStop" in event:
-            # {'contentBlockStop': {'contentBlockIndex': 0}}
-            if self._record_message:
-                self._message["content"].append(self._content_block)
-                self._content_block = {}
-            return
-
-        if "messageStop" in event:
-            # {'messageStop': {'stopReason': 'end_turn'}}
-            if stop_reason := event["messageStop"].get("stopReason"):
-                self._response["stopReason"] = stop_reason
-
-            if self._record_message:
-                self._response["output"] = {"message": self._message}
-                self._record_message = False
-                self._message = None
-
-            return
-
-        if "metadata" in event:
-            # {'metadata': {'usage': {'inputTokens': 12, 'outputTokens': 15, 'totalTokens': 27}, 'metrics': {'latencyMs': 2980}}}
-            if usage := event["metadata"].get("usage"):
-                self._response["usage"] = {}
-                if input_tokens := usage.get("inputTokens"):
-                    self._response["usage"]["inputTokens"] = input_tokens
-
-                if output_tokens := usage.get("outputTokens"):
-                    self._response["usage"]["outputTokens"] = output_tokens
-
-            self._stream_done_callback(self._response)
-
-            return
 
 
 class InvokeModelWithResponseStreamWrapper(ObjectProxy):
