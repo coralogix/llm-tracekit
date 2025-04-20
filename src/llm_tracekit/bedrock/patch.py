@@ -1,10 +1,11 @@
 from io import BytesIO
 import json
-from functools import wraps
+from functools import wraps, partial
 from timeit import default_timer
 from typing import Any, Callable, Dict, Optional
 
 # TODO: importing botocore at module-scope will not work if it's not installed
+from botocore.eventstream import EventStream
 from botocore.response import StreamingBody
 from opentelemetry.semconv._incubating.attributes import (
     gen_ai_attributes as GenAIAttributes,
@@ -29,10 +30,10 @@ from llm_tracekit.bedrock.stream_wrappers import ConverseStreamWrapper
 def _record_metrics(
     instruments: Instruments,
     duration: float,
-    model: Optional[str],
-    usage_input_tokens: Optional[int],
-    usage_output_tokens: Optional[int],
-    error_type: Optional[str],
+    model: Optional[str] = None,
+    usage_input_tokens: Optional[int] = None,
+    usage_output_tokens: Optional[int] = None,
+    error_type: Optional[str] = None,
 ):
     common_attributes = {
         GenAIAttributes.GEN_AI_OPERATION_NAME: GenAIAttributes.GenAiOperationNameValues.CHAT.value,
@@ -284,6 +285,78 @@ def converse_wrapper(
     return wrapper
 
 
+def _stream_error_callback(
+    error: Exception,
+    span: Span,
+    start_time: float,
+    instruments: Instruments,
+    model: Optional[str],
+):
+    duration = max((default_timer() - start_time), 0)
+    handle_span_exception(span, error)
+    _record_metrics(
+        instruments=instruments,
+        duration=duration,
+        model=model,
+        error_type=error.__qualname__,
+    )
+
+
+def _stream_success_callback(
+    result: dict,
+    span: Span,
+    start_time: float,
+    instruments: Instruments,
+    capture_content: bool,
+    model: Optional[str],
+):
+    # TODO: combine with converse wrapper function
+    finish_reason = result.get("stopReason")
+    if "stopReason" in result:
+        finish_reason = result["stopReason"]
+
+    usage_data = result.get("usage", {})
+    usage_input_tokens = usage_data.get("inputTokens")
+    usage_output_tokens = usage_data.get("outputTokens")
+
+    response_attributes = generate_response_attributes(
+        model=model,
+        finish_reasons=None if finish_reason is None else [finish_reason],
+        usage_input_tokens=usage_input_tokens,
+        usage_output_tokens=usage_output_tokens,
+    )
+    span.set_attributes(response_attributes)
+
+    response_message = result.get("output", {}).get("message")
+    if response_message is not None:
+        parsed_response_message = parse_converse_message(
+            role=response_message.get("role"),
+            content_parts=response_message.get("content"),
+        )
+        choice = Choice(
+            finish_reason=finish_reason,
+            role=parsed_response_message.role,
+            content=parsed_response_message.content,
+            tool_calls=parsed_response_message.tool_calls,
+        )
+        span.set_attributes(
+            generate_choice_attributes(
+                choices=[choice], capture_content=capture_content
+            )
+        )
+
+    span.end()
+
+    duration = max((default_timer() - start_time), 0)
+    _record_metrics(
+        instruments=instruments,
+        duration=duration,
+        model=model,
+        usage_input_tokens=usage_input_tokens,
+        usage_output_tokens=usage_output_tokens,
+    )
+
+
 def converse_stream_wrapper(
     original_function: Callable,
     tracer: Tracer,
@@ -303,8 +376,33 @@ def converse_stream_wrapper(
             attributes=span_attributes,
             end_on_exit=False,
         ) as span:
-            # TODO: handle response, metrics, errors
-            return original_function(*args, **kwargs)
+            start = default_timer()
+            try:
+                result = original_function(*args, **kwargs)
+                if "stream" in result and isinstance(result["stream"], EventStream):
+                    result["stream"] = ConverseStreamWrapper(
+                        stream=result["stream"],
+                        stream_done_callback=partial(
+                            _stream_success_callback,
+                            span=span,
+                            start_time=start,
+                            instruments=instruments,
+                            capture_content=capture_content,
+                            model=model,
+                        ),
+                        stream_error_callback=partial(
+                            _stream_error_callback,
+                            span=span,
+                            start_time=start,
+                            instruments=instruments,
+                            model=model
+                        ),
+                    )
+                    
+                return result
+            except Exception as error:
+                handle_span_exception(span, error)
+                raise
 
     return wrapper
 
