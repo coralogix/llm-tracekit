@@ -7,9 +7,6 @@ from typing import Any, Callable, Dict, Optional
 # TODO: importing botocore at module-scope will not work if it's not installed
 from botocore.eventstream import EventStream
 from botocore.response import StreamingBody
-from opentelemetry.semconv._incubating.attributes import (
-    gen_ai_attributes as GenAIAttributes,
-)
 from opentelemetry.trace import Span, SpanKind, Tracer
 
 from llm_tracekit.bedrock.converse import (
@@ -17,34 +14,10 @@ from llm_tracekit.bedrock.converse import (
     generate_attributes_from_converse_input,
     record_converse_result_attributes,
 )
-from llm_tracekit.bedrock.utils import parse_converse_message, record_metrics
+from llm_tracekit.bedrock.invoke_model import generate_attributes_from_invoke_input
+from llm_tracekit.bedrock.utils import record_metrics
 from llm_tracekit.instrumentation_utils import handle_span_exception
 from llm_tracekit.instruments import Instruments
-from llm_tracekit.span_builder import (
-    Choice,
-    Message,
-    generate_base_attributes,
-    generate_choice_attributes,
-    generate_message_attributes,
-    generate_request_attributes,
-    generate_response_attributes,
-)
-
-
-def _generate_attributes_from_invoke_input(
-    model_id: str, body: Dict[str, Any], capture_content: bool
-) -> Dict[str, Any]:
-    return {
-        **generate_base_attributes(
-            system=GenAIAttributes.GenAiSystemValues.AWS_BEDROCK
-        ),
-        **generate_request_attributes(
-            model=model_id,
-            temperature=inference_config.get("temperature"),
-            top_p=inference_config.get("topP"),
-            max_tokens=inference_config.get("maxTokens"),
-        ),
-    }
 
 
 def _handle_error(
@@ -72,42 +45,46 @@ def invoke_model_wrapper(
 ):
     @wraps(original_function)
     def wrapper(*args, **kwargs):
-        span_attributes = {}
+        model = kwargs.get("modelId")
+        span_attributes = generate_attributes_from_invoke_input(
+            kwargs=kwargs,
+            capture_content=capture_content
+        )
         with tracer.start_as_current_span(
             name="bedrock.invoke_model",
             kind=SpanKind.CLIENT,
             attributes=span_attributes,
             end_on_exit=False,
-        ):
-            model_id = kwargs.get("modelId")
-            body = kwargs.get("body")
-            if body is not None:
-                try:
-                    # TODO: consider orjson
-                    parsed_body = json.loads(body)
-                    # TODO: handle parsed body based on model type
-                except json.JSONDecodeError:
-                    # TODO:
-                    pass
+        ) as span:
+            start_time = default_timer()
+            try:
+                result = original_function(*args, **kwargs)
 
-            invoke_model_result = original_function(*args, **kwargs)
-            if invoke_model_result["ResponseMetadata"]["HTTPStatusCode"] == 200:
-                # TODO:
-                # The response body is a stream, and reading the stream consumes it, so we have to recreate
-                # it to keep the original response usable
-                response_body = invoke_model_result["body"].read()
-                invoke_model_result["body"] = StreamingBody(
-                    BytesIO(response_body), len(response_body)
+                # if invoke_model_result["ResponseMetadata"]["HTTPStatusCode"] == 200:
+                #     # TODO:
+                #     # The response body is a stream, and reading the stream consumes it, so we have to recreate
+                #     # it to keep the original response usable
+                #     response_body = invoke_model_result["body"].read()
+                #     invoke_model_result["body"] = StreamingBody(
+                #         BytesIO(response_body), len(response_body)
+                #     )
+                #     try:
+                #         parsed_response_body = json.loads(response_body)
+                #     except json.JSONDecodeError:
+                #         # TODO:
+                #         pass
+
+
+                return result
+            except Exception as error:
+                _handle_error(
+                    error=error,
+                    span=span,
+                    start_time=start_time,
+                    instruments=instruments,
+                    model=model,
                 )
-                try:
-                    parsed_response_body = json.loads(response_body)
-                except json.JSONDecodeError:
-                    # TODO:
-                    pass
-
-                # TODO: handle parsed response based on model type
-
-        return invoke_model_result
+                raise
 
     return wrapper
 
@@ -120,42 +97,42 @@ def invoke_model_with_response_stream_wrapper(
 ):
     @wraps(original_function)
     def wrapper(*args, **kwargs):
-        span_attributes = {}
+        model = kwargs.get("modelId")
+        span_attributes = generate_attributes_from_invoke_input(
+            kwargs=kwargs,
+            capture_content=capture_content
+        )
         with tracer.start_as_current_span(
             name="bedrock.invoke_model_with_response_stream",
             kind=SpanKind.CLIENT,
             attributes=span_attributes,
             end_on_exit=False,
-        ):
-            model_id = kwargs.get("modelId")
-            body = kwargs.get("body")
-            if body is not None:
-                try:
-                    # TODO: consider orjson
-                    parsed_body = json.loads(body)
-                    # TODO: handle parsed body based on model type
-                except json.JSONDecodeError:
-                    # TODO:
-                    pass
-
-            invoke_model_result = original_function(*args, **kwargs)
-            if invoke_model_result["ResponseMetadata"]["HTTPStatusCode"] == 200:
-                # TODO:
-                # The response body is a stream, and reading the stream consumes it, so we have to recreate
-                # it to keep the original response usable
-                response_body = invoke_model_result["body"].read()
-                invoke_model_result["body"] = StreamingBody(
-                    response_body, len(response_body)
+        ) as span:
+            start_time = default_timer()
+            try:
+                result = original_function(*args, **kwargs)
+                # if invoke_model_result["ResponseMetadata"]["HTTPStatusCode"] == 200:
+                #     # TODO:
+                #     # The response body is a stream, and reading the stream consumes it, so we have to recreate
+                #     # it to keep the original response usable
+                #     response_body = invoke_model_result["body"].read()
+                #     invoke_model_result["body"] = StreamingBody(
+                #         response_body, len(response_body)
+                #     )
+                #     try:
+                #         parsed_response_body = json.loads(response_body)
+                #     except json.JSONDecodeError:
+                #         # TODO:
+                #         pass
+            except Exception as error:
+                _handle_error(
+                    error=error,
+                    span=span,
+                    start_time=start_time,
+                    instruments=instruments,
+                    model=model,
                 )
-                try:
-                    parsed_response_body = json.loads(response_body)
-                except json.JSONDecodeError:
-                    # TODO:
-                    pass
-
-                # TODO: handle parsed response based on model type
-
-        return invoke_model_result
+                raise
 
     return wrapper
 
