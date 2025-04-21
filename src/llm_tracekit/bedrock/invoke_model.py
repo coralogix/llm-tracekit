@@ -88,22 +88,6 @@ def _generate_claude_request_and_message_attributes(
     parsed_body: Dict[str, Any],
     capture_content: bool
 ) -> Dict[str, Any]:
-    # Handle the old text-completions API
-    if "prompt" in parsed_body:
-        return {
-            **generate_request_attributes(
-                model=model_id,
-                max_tokens=parsed_body.get("max_tokens_to_sample"),
-                temperature=parsed_body.get("temperature"),
-                top_p=parsed_body.get("top_p"),
-            ),
-            **generate_message_attributes(
-                messages=[Message(role="user", content=parsed_body["prompt"])],
-                capture_content=capture_content
-            ),
-        }
-
-    # Handle the messages API
     # TODO: record tools
     messages = []
     if "system" in parsed_body and isinstance(parsed_body["system"], str):
@@ -124,29 +108,10 @@ def _generate_claude_request_and_message_attributes(
 
 
 def _generate_claude_response_and_choice_attributes(
-    model_id: Optional[str],
     parsed_body: Dict[str, Any],
     capture_content: bool
 ) -> Dict[str, Any]:
     finish_reason = parsed_body.get("stop_reason")
-    finish_reasons = []
-    if finish_reason is not None:
-        finish_reasons = [finish_reason]
-
-    # Handle the old text-completions API
-    if "completion" in parsed_body:
-        return {
-            **generate_response_attributes(
-                model=model_id,
-                finish_reasons=finish_reasons,
-            ),
-            **generate_choice_attributes(
-                choices=[Choice(role="assistant", content=parsed_body["completion"])],
-                capture_content=capture_content
-            ),
-        }
-
-    # Handle the messages API
     usage_data = parsed_body.get("usage", {})
     parsed_response_message = _parse_claude_message(role=parsed_body.get("role"), content=parsed_body.get("content"))
     choice = Choice(
@@ -159,7 +124,7 @@ def _generate_claude_response_and_choice_attributes(
     return {
         **generate_response_attributes(
             model=parsed_body.get("model"),
-            finish_reasons=finish_reasons,
+            finish_reasons=[] if finish_reason is None else [finish_reason],
             id=parsed_body.get("id"),
             usage_input_tokens=usage_data.get("input_tokens"),
             usage_output_tokens=usage_data.get("output_tokens"),
@@ -253,7 +218,7 @@ def generate_attributes_from_invoke_input(
 
 
 def record_invoke_model_result_attributes(
-    result_body: str,
+    result_body: Union[str, Dict[str, Any]],
     span: Span,
     start_time: float,
     instruments: Instruments,
@@ -267,15 +232,17 @@ def record_invoke_model_result_attributes(
         if model_type is None:
             return
 
-        try:
-            parsed_body = json.loads(result_body)
-        except json.JSONDecodeError:
-            return
+        parsed_body = result_body
+        if isinstance(result_body, str):
+            try:
+                parsed_body = json.loads(result_body)
+            except json.JSONDecodeError:
+                return
 
         if model_type is _ModelType.LLAMA3:
             span.set_attributes(_generate_llama_response_and_choice_attributes(model_id=model_id, parsed_body=parsed_body, capture_content=capture_content))
         elif model_type is _ModelType.CLAUDE:
-            span.set_attributes(_generate_claude_response_and_choice_attributes(model_id=model_id, parsed_body=parsed_body, capture_content=capture_content))
+            span.set_attributes(_generate_claude_response_and_choice_attributes(parsed_body=parsed_body, capture_content=capture_content))
 
     finally:
         duration = max((default_timer() - start_time), 0)
@@ -307,7 +274,7 @@ class InvokeModelWithResponseStreamWrapper(ObjectProxy):
         stream: EventStream,
         stream_done_callback: Callable[[Dict[str, Union[int, str]]], None],
         stream_error_callback: Callable[[Exception], None],
-        model_id: str,
+        model_id: Optional[str],
     ):
         super().__init__(stream)
 
@@ -343,104 +310,41 @@ class InvokeModelWithResponseStreamWrapper(ObjectProxy):
         except json.JSONDecodeError:
             return
 
-        if "amazon.titan" in self._model_id:
-            self._process_amazon_titan_chunk(chunk)
-        elif "amazon.nova" in self._model_id:
-            self._process_amazon_nova_chunk(chunk)
-        elif "anthropic.claude" in self._model_id:
+        model_type = _get_model_type_from_model_id(self._model_id)
+
+        if model_type is _ModelType.LLAMA3:
+            self._process_meta_llama_chunk(chunk)
+        elif model_type is _ModelType.CLAUDE:
             self._process_anthropic_claude_chunk(chunk)
 
-    def _process_invocation_metrics(self, invocation_metrics):
-        self._response["usage"] = {}
+    def _process_meta_llama_invocation_metrics(self, invocation_metrics):
         if input_tokens := invocation_metrics.get("inputTokenCount"):
-            self._response["usage"]["inputTokens"] = input_tokens
+            self._response["prompt_token_count"] = input_tokens
 
         if output_tokens := invocation_metrics.get("outputTokenCount"):
-            self._response["usage"]["outputTokens"] = output_tokens
+            self._response["generation_token_count"] = output_tokens
 
-    def _process_amazon_titan_chunk(self, chunk):
-        if (stop_reason := chunk.get("completionReason")) is not None:
-            self._response["stopReason"] = stop_reason
+    def _process_anthropic_claude_invocation_metrics(self, invocation_metrics):
+        self._response["usage"] = {}
+        if input_tokens := invocation_metrics.get("inputTokenCount"):
+            self._response["usage"]["input_tokens"] = input_tokens
 
-        if invocation_metrics := chunk.get("amazon-bedrock-invocationMetrics"):
-            # "amazon-bedrock-invocationMetrics":{
-            #     "inputTokenCount":9,"outputTokenCount":128,"invocationLatency":3569,"firstByteLatency":2180
-            # }
-            self._process_invocation_metrics(invocation_metrics)
+        if output_tokens := invocation_metrics.get("outputTokenCount"):
+            self._response["usage"]["output_tokens"] = output_tokens
 
-            # transform the shape of the message to match other models
-            self._response["output"] = {
-                "message": {"content": [{"text": chunk["outputText"]}]}
-            }
-            self._stream_done_callback(self._response)
+    def _process_meta_llama_chunk(self, chunk):
+        if self._message is None:
+            self._message = {"generation": ""}
+            
+        self._message["generation"] += chunk.get("generation", "")
 
-    def _process_amazon_nova_chunk(self, chunk):
-        # pylint: disable=too-many-branches
-        if "messageStart" in chunk:
-            # {'messageStart': {'role': 'assistant'}}
-            if chunk["messageStart"].get("role") == "assistant":
-                self._record_message = True
-                self._message = {"role": "assistant", "content": []}
-            return
+        if chunk.get("stop_reason") is not None and self._message is not None:
+            if invocation_metrics := chunk.get("amazon-bedrock-invocationMetrics"):
+                self._process_meta_llama_invocation_metrics(invocation_metrics)
 
-        if "contentBlockStart" in chunk:
-            # {'contentBlockStart': {'start': {'toolUse': {'toolUseId': 'id', 'name': 'name'}}, 'contentBlockIndex': 31}}
-            if self._record_message:
-                self._message["content"].append(self._content_block)
-
-                start = chunk["contentBlockStart"].get("start", {})
-                if "toolUse" in start:
-                    self._content_block = start
-                else:
-                    self._content_block = {}
-            return
-
-        if "contentBlockDelta" in chunk:
-            # {'contentBlockDelta': {'delta': {'text': "Hello"}, 'contentBlockIndex': 0}}
-            # {'contentBlockDelta': {'delta': {'toolUse': {'input': '{"location":"San Francisco"}'}}, 'contentBlockIndex': 31}}
-            if self._record_message:
-                delta = chunk["contentBlockDelta"].get("delta", {})
-                if "text" in delta:
-                    self._content_block.setdefault("text", "")
-                    self._content_block["text"] += delta["text"]
-                elif "toolUse" in delta:
-                    self._content_block.setdefault("toolUse", {})
-                    self._content_block["toolUse"]["input"] = json.loads(
-                        delta["toolUse"]["input"]
-                    )
-            return
-
-        if "contentBlockStop" in chunk:
-            # {'contentBlockStop': {'contentBlockIndex': 0}}
-            if self._record_message:
-                # create a new content block only for tools
-                if "toolUse" in self._content_block:
-                    self._message["content"].append(self._content_block)
-                    self._content_block = {}
-            return
-
-        if "messageStop" in chunk:
-            # {'messageStop': {'stopReason': 'end_turn'}}
-            if stop_reason := chunk["messageStop"].get("stopReason"):
-                self._response["stopReason"] = stop_reason
-
-            if self._record_message:
-                self._message["content"].append(self._content_block)
-                self._content_block = {}
-                self._response["output"] = {"message": self._message}
-                self._record_message = False
-                self._message = None
-            return
-
-        if "metadata" in chunk:
-            # {'metadata': {'usage': {'inputTokens': 8, 'outputTokens': 117}, 'metrics': {}, 'trace': {}}}
-            if usage := chunk["metadata"].get("usage"):
-                self._response["usage"] = {}
-                if input_tokens := usage.get("inputTokens"):
-                    self._response["usage"]["inputTokens"] = input_tokens
-
-                if output_tokens := usage.get("outputTokens"):
-                    self._response["usage"]["outputTokens"] = output_tokens
+            self._response["stop_reason"] = chunk["stop_reason"]
+            self._response["generation"] = self._message["generation"]
+            self._message = None
 
             self._stream_done_callback(self._response)
             return
@@ -487,7 +391,9 @@ class InvokeModelWithResponseStreamWrapper(ObjectProxy):
             # {'type': 'content_block_stop', 'index': 0}
             if self._tool_json_input_buf:
                 self._content_block["input"] = self._tool_json_input_buf
-            self._message["content"].append(_decode_tool_use(self._content_block))
+
+            if self._message is not None:
+                self._message["content"].append(_decode_tool_use(self._content_block))
             self._content_block = {}
             self._tool_json_input_buf = ""
             return
@@ -495,16 +401,17 @@ class InvokeModelWithResponseStreamWrapper(ObjectProxy):
         if message_type == "message_delta":
             # {'type': 'message_delta', 'delta': {'stop_reason': 'end_turn', 'stop_sequence': None}, 'usage': {'output_tokens': 123}}
             if (stop_reason := chunk.get("delta", {}).get("stop_reason")) is not None:
-                self._response["stopReason"] = stop_reason
+                self._response["stop_reason"] = stop_reason
             return
 
         if message_type == "message_stop":
             # {'type': 'message_stop', 'amazon-bedrock-invocationMetrics': {'inputTokenCount': 18, 'outputTokenCount': 123, 'invocationLatency': 5250, 'firstByteLatency': 290}}
             if invocation_metrics := chunk.get("amazon-bedrock-invocationMetrics"):
-                self._process_invocation_metrics(invocation_metrics)
+                self._process_anthropic_claude_invocation_metrics(invocation_metrics)
 
-            if self._record_message:
-                self._response["output"] = {"message": self._message}
+            if self._record_message and self._message is not None:
+                self._response["role"] = self._message["role"]
+                self._response["content"] = self._message["content"]
                 self._record_message = False
                 self._message = None
 
