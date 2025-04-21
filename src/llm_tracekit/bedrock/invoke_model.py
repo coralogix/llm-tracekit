@@ -1,17 +1,3 @@
-# Copyright The OpenTelemetry Authors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-
 import json
 from typing import Any, Callable, Dict, Union, Optional
 from enum import Enum
@@ -20,7 +6,7 @@ from botocore.eventstream import EventStream, EventStreamError
 from opentelemetry.semconv._incubating.attributes import (
     gen_ai_attributes as GenAIAttributes,
 )
-from llm_tracekit.span_builder import generate_base_attributes, generate_request_attributes, generate_message_attributes, generate_response_attributes, generate_choice_attributes, Message
+from llm_tracekit.span_builder import generate_base_attributes, generate_request_attributes, generate_message_attributes, generate_response_attributes, generate_choice_attributes, Message, ToolCall
 from wrapt import ObjectProxy
 
 
@@ -42,6 +28,59 @@ def _get_model_type_from_model_id(model_id: Optional[str]) -> Optional[_ModelTyp
     return None
 
 
+def _parse_claude_message(
+    message: Dict[str, Any]
+) -> Message:
+    """Attempts to combine the content parts of a `converse` API message to a single message."""
+    role = message.get("role")
+    content = message.get("content")
+    if isinstance(content, str):
+        return Message(role=role, content=content)
+    elif isinstance(content, list):
+        # Theoretically, in the cases we support we don't expect to see multiple types of content
+        # in the same message, but in case that happens we follow the hierarchy
+        # of text > tool_calls > tool_call_result
+        content_blocks_by_type = {block.get("type"): block for block in content}
+        if "text" in content_blocks_by_type:
+            text_parts = [block["text"] for block in content_blocks_by_type["text"] if block.get("text") is not None]
+            return Message(role=role, content="\n".join(text_parts))
+        elif "tool_use" in content_blocks_by_type:
+            tool_calls = []
+            for block in content_blocks_by_type["tool_use"]:
+                arguments = None
+                if "input" in block:
+                    arguments = json.dumps(block["input"])
+
+                tool_calls.append(
+                    ToolCall(
+                        id=block.get("id"),
+                        type="function",
+                        function_name=block.get("name"),
+                        function_arguments=arguments,
+                    )
+                )
+            
+            return Message(
+                role=role,
+                tool_calls=tool_calls
+            )
+
+        elif "tool_result" in content_blocks_by_type:
+            # We don't support multiple tool call results, so we take the first one
+            tool_result = content_blocks_by_type["tool_result"][0]
+            tool_result_content = tool_result.get("content")
+            if not isinstance(tool_result_content, str):
+                tool_result_content = None
+
+            return Message(
+                role=role,
+                tool_call_id=tool_result.get("tool_use_id"),
+                content=tool_result_content
+            )
+        
+    return Message(role=role)
+
+
 def _generate_claude_request_and_message_attributes(
     model_id: Optional[str],
     parsed_body: Dict[str, Any],
@@ -49,7 +88,6 @@ def _generate_claude_request_and_message_attributes(
 ) -> Dict[str, Any]:
     # Handle the old text-completions API
     if "prompt" in parsed_body:
-        messages = [Message(role="user", content=parsed_body["prompt"])]
         return {
             **generate_request_attributes(
                 model=model_id,
@@ -57,21 +95,29 @@ def _generate_claude_request_and_message_attributes(
                 temperature=parsed_body.get("temperature"),
                 top_p=parsed_body.get("top_p"),
             ),
-            **generate_message_attributes(messages=messages, capture_content=capture_content),
+            **generate_message_attributes(
+                messages=[Message(role="user", content=parsed_body["prompt"])],
+                capture_content=capture_content
+            ),
         }
 
     # Handle the messages API
-    request_attributes = generate_request_attributes(
-        model=model_id,
-        max_tokens=parsed_body.get("max_tokens"),
-        temperature=parsed_body.get("temperature"),
-        top_p=parsed_body.get("top_p"),
-    )
     # TODO: record tools
-    # TODO: extract messages & tools
+    messages = []
+    if "system" in parsed_body and isinstance(parsed_body["system"], str):
+        messages.append(Message(role="system", content=parsed_body["system"]))
+
+    for message in parsed_body.get("messages", []):
+        messages.append(_parse_claude_message(message))
 
     return {
-        **request_attributes,
+        **generate_request_attributes(
+            model=model_id,
+            max_tokens=parsed_body.get("max_tokens"),
+            temperature=parsed_body.get("temperature"),
+            top_p=parsed_body.get("top_p"),
+        ),
+        **generate_message_attributes(messages=messages, capture_content=capture_content),
     }
 
 
