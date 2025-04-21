@@ -14,7 +14,7 @@ from llm_tracekit.bedrock.converse import (
     generate_attributes_from_converse_input,
     record_converse_result_attributes,
 )
-from llm_tracekit.bedrock.invoke_model import generate_attributes_from_invoke_input
+from llm_tracekit.bedrock.invoke_model import generate_attributes_from_invoke_input, record_invoke_model_result_attributes
 from llm_tracekit.bedrock.utils import record_metrics
 from llm_tracekit.instrumentation_utils import handle_span_exception
 from llm_tracekit.instruments import Instruments
@@ -59,21 +59,21 @@ def invoke_model_wrapper(
             start_time = default_timer()
             try:
                 result = original_function(*args, **kwargs)
-
-                # if invoke_model_result["ResponseMetadata"]["HTTPStatusCode"] == 200:
-                #     # TODO:
-                #     # The response body is a stream, and reading the stream consumes it, so we have to recreate
-                #     # it to keep the original response usable
-                #     response_body = invoke_model_result["body"].read()
-                #     invoke_model_result["body"] = StreamingBody(
-                #         BytesIO(response_body), len(response_body)
-                #     )
-                #     try:
-                #         parsed_response_body = json.loads(response_body)
-                #     except json.JSONDecodeError:
-                #         # TODO:
-                #         pass
-
+                body = result.get("body")
+                if body is not None:
+                    body_content = body.read()
+                    # The response body is a stream, and reading the stream consumes it, so we have to recreate
+                    # it to keep the original response usable
+                    result["body"] = StreamingBody(BytesIO(body_content), len(body_content))
+                
+                    record_invoke_model_result_attributes(
+                        result_body=body_content,
+                        span=span,
+                        start_time=start_time,
+                        instruments=instruments,
+                        capture_content=capture_content,
+                        model_id=model,
+                    )
 
                 return result
             except Exception as error:

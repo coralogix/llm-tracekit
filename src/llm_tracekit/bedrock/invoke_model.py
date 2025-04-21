@@ -2,12 +2,16 @@ import json
 from typing import Any, Callable, Dict, Union, Optional
 from enum import Enum
 
+from timeit import default_timer
 from botocore.eventstream import EventStream, EventStreamError
 from opentelemetry.semconv._incubating.attributes import (
     gen_ai_attributes as GenAIAttributes,
 )
-from llm_tracekit.span_builder import generate_base_attributes, generate_request_attributes, generate_message_attributes, generate_response_attributes, generate_choice_attributes, Message, ToolCall
+from opentelemetry.trace import Span
+from llm_tracekit.instruments import Instruments
+from llm_tracekit.span_builder import generate_base_attributes, generate_request_attributes, generate_message_attributes, generate_response_attributes, generate_choice_attributes, Message, ToolCall, Choice
 from wrapt import ObjectProxy
+from llm_tracekit.bedrock.utils import record_metrics
 
 
 
@@ -29,11 +33,9 @@ def _get_model_type_from_model_id(model_id: Optional[str]) -> Optional[_ModelTyp
 
 
 def _parse_claude_message(
-    message: Dict[str, Any]
+    role: Optional[str], content: Optional[Union[str, list]]
 ) -> Message:
     """Attempts to combine the content parts of a `converse` API message to a single message."""
-    role = message.get("role")
-    content = message.get("content")
     if isinstance(content, str):
         return Message(role=role, content=content)
     elif isinstance(content, list):
@@ -108,7 +110,7 @@ def _generate_claude_request_and_message_attributes(
         messages.append(Message(role="system", content=parsed_body["system"]))
 
     for message in parsed_body.get("messages", []):
-        messages.append(_parse_claude_message(message))
+        messages.append(_parse_claude_message(role=message.get("role"), content=message.get("content")))
 
     return {
         **generate_request_attributes(
@@ -118,6 +120,51 @@ def _generate_claude_request_and_message_attributes(
             top_p=parsed_body.get("top_p"),
         ),
         **generate_message_attributes(messages=messages, capture_content=capture_content),
+    }
+
+
+def _generate_claude_response_and_choice_attributes(
+    model_id: Optional[str],
+    parsed_body: Dict[str, Any],
+    capture_content: bool
+) -> Dict[str, Any]:
+    finish_reason = parsed_body.get("stop_reason")
+    finish_reasons = []
+    if finish_reason is not None:
+        finish_reasons = [finish_reason]
+
+    # Handle the old text-completions API
+    if "completion" in parsed_body:
+        return {
+            **generate_response_attributes(
+                model=model_id,
+                finish_reasons=finish_reasons,
+            ),
+            **generate_choice_attributes(
+                choices=[Choice(role="assistant", content=parsed_body["completion"])],
+                capture_content=capture_content
+            ),
+        }
+
+    # Handle the messages API
+    usage_data = parsed_body.get("usage", {})
+    parsed_response_message = _parse_claude_message(role=parsed_body.get("role"), content=parsed_body.get("content"))
+    choice = Choice(
+        finish_reason=finish_reason,
+        role=parsed_response_message.role,
+        content=parsed_response_message.content,
+        tool_calls=parsed_response_message.tool_calls,
+    )
+
+    return {
+        **generate_response_attributes(
+            model=parsed_body.get("model"),
+            finish_reasons=finish_reasons,
+            id=parsed_body.get("id"),
+            usage_input_tokens=usage_data.get("input_tokens"),
+            usage_output_tokens=usage_data.get("output_tokens"),
+        ),
+        **generate_choice_attributes(choices=[choice], capture_content=capture_content),
     }
 
 
@@ -138,6 +185,24 @@ def _generate_llama_request_and_message_attributes(
 
     return attributes
 
+
+def _generate_llama_response_and_choice_attributes(
+    model_id: Optional[str],
+    parsed_body: Dict[str, Any],
+    capture_content: bool
+) -> Dict[str, Any]:
+    finish_reason = parsed_body.get("stop_reason")
+    usage_input_tokens = parsed_body.get("prompt_token_count")
+    usage_output_tokens = parsed_body.get("generation_token_count")
+    return {
+        **generate_response_attributes(
+            model=model_id,
+            finish_reasons=None if finish_reason is None else [finish_reason],
+            usage_input_tokens=usage_input_tokens,
+            usage_output_tokens=usage_output_tokens
+        ),
+        **generate_choice_attributes(choices=[Choice(finish_reason=finish_reason, role="assistant", content=parsed_body.get("generation"))], capture_content=capture_content)
+    }
 
 
 def generate_attributes_from_invoke_input(
@@ -185,6 +250,43 @@ def generate_attributes_from_invoke_input(
         }
 
     return partial_attributes
+
+
+def record_invoke_model_result_attributes(
+    result_body: str,
+    span: Span,
+    start_time: float,
+    instruments: Instruments,
+    capture_content: bool,
+    model_id: Optional[str],
+):
+    usage_input_tokens = None
+    usage_output_tokens = None
+    try:
+        model_type = _get_model_type_from_model_id(model_id)
+        if model_type is None:
+            return
+
+        try:
+            parsed_body = json.loads(result_body)
+        except json.JSONDecodeError:
+            return
+
+        if model_type is _ModelType.LLAMA3:
+            span.set_attributes(_generate_llama_response_and_choice_attributes(model_id=model_id, parsed_body=parsed_body, capture_content=capture_content))
+        elif model_type is _ModelType.CLAUDE:
+            span.set_attributes(_generate_claude_response_and_choice_attributes(model_id=model_id, parsed_body=parsed_body, capture_content=capture_content))
+
+    finally:
+        duration = max((default_timer() - start_time), 0)
+        span.end()
+        record_metrics(
+            instruments=instruments,
+            duration=duration,
+            model=model_id,
+            usage_input_tokens=usage_input_tokens,
+            usage_output_tokens=usage_output_tokens,
+        )
 
 
 def _decode_tool_use(tool_use):

@@ -148,9 +148,6 @@ def record_converse_result_attributes(
     model: Optional[str],
 ):
     finish_reason = result.get("stopReason")
-    if "stopReason" in result:
-        finish_reason = result["stopReason"]
-
     usage_data = result.get("usage", {})
     usage_input_tokens = usage_data.get("inputTokens")
     usage_output_tokens = usage_data.get("outputTokens")
