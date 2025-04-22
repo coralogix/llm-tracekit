@@ -1,3 +1,4 @@
+import json
 from typing import Optional
 
 from opentelemetry.semconv._incubating.attributes import (
@@ -55,3 +56,13 @@ def record_metrics(
             usage_output_tokens,
             attributes=completion_attributes,
         )
+
+
+def decode_tool_use_in_stream(tool_use):
+    # input get sent encoded in json
+    if "input" in tool_use:
+        try:
+            tool_use["input"] = json.loads(tool_use["input"])
+        except json.JSONDecodeError:
+            pass
+    return tool_use

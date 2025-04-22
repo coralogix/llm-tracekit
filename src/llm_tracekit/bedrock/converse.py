@@ -11,7 +11,7 @@ from opentelemetry.semconv._incubating.attributes import (
 from opentelemetry.trace import Span
 from wrapt import ObjectProxy
 
-from llm_tracekit.bedrock.utils import record_metrics
+from llm_tracekit.bedrock.utils import decode_tool_use_in_stream, record_metrics
 from llm_tracekit.instruments import Instruments
 from llm_tracekit.span_builder import (
     Choice,
@@ -23,7 +23,6 @@ from llm_tracekit.span_builder import (
     generate_request_attributes,
     generate_response_attributes,
 )
-
 
 # TODO: cleanup
 
@@ -190,16 +189,6 @@ def record_converse_result_attributes(
     )
 
 
-def _decode_tool_use(tool_use):
-    # input get sent encoded in json
-    if "input" in tool_use:
-        try:
-            tool_use["input"] = json.loads(tool_use["input"])
-        except json.JSONDecodeError:
-            pass
-    return tool_use
-
-
 class ConverseStreamWrapper(ObjectProxy):
     """Wrapper for botocore.eventstream.EventStream"""
 
@@ -242,7 +231,7 @@ class ConverseStreamWrapper(ObjectProxy):
             # {'contentBlockStart': {'start': {'toolUse': {'toolUseId': 'id', 'name': 'func_name'}}, 'contentBlockIndex': 1}}
             start = event["contentBlockStart"].get("start", {})
             if "toolUse" in start:
-                tool_use = _decode_tool_use(start["toolUse"])
+                tool_use = decode_tool_use_in_stream(start["toolUse"])
                 self._content_block = {"toolUse": tool_use}
             return
 
@@ -255,7 +244,7 @@ class ConverseStreamWrapper(ObjectProxy):
                     self._content_block.setdefault("text", "")
                     self._content_block["text"] += delta["text"]
                 elif "toolUse" in delta:
-                    tool_use = _decode_tool_use(delta["toolUse"])
+                    tool_use = decode_tool_use_in_stream(delta["toolUse"])
                     self._content_block["toolUse"].update(tool_use)
             return
 

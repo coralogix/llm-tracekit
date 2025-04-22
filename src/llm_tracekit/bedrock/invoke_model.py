@@ -1,18 +1,27 @@
 import json
-from typing import Any, Callable, Dict, Union, Optional
 from enum import Enum
-
 from timeit import default_timer
+from typing import Any, Callable, Dict, Optional, Union
+
 from botocore.eventstream import EventStream, EventStreamError
 from opentelemetry.semconv._incubating.attributes import (
     gen_ai_attributes as GenAIAttributes,
 )
 from opentelemetry.trace import Span
-from llm_tracekit.instruments import Instruments
-from llm_tracekit.span_builder import generate_base_attributes, generate_request_attributes, generate_message_attributes, generate_response_attributes, generate_choice_attributes, Message, ToolCall, Choice
 from wrapt import ObjectProxy
-from llm_tracekit.bedrock.utils import record_metrics
 
+from llm_tracekit.bedrock.utils import decode_tool_use_in_stream, record_metrics
+from llm_tracekit.instruments import Instruments
+from llm_tracekit.span_builder import (
+    Choice,
+    Message,
+    ToolCall,
+    generate_base_attributes,
+    generate_choice_attributes,
+    generate_message_attributes,
+    generate_request_attributes,
+    generate_response_attributes,
+)
 
 
 class _ModelType(Enum):
@@ -25,10 +34,10 @@ def _get_model_type_from_model_id(model_id: Optional[str]) -> Optional[_ModelTyp
         return None
 
     if "anthropic.claude" in model_id:
-            return _ModelType.CLAUDE
+        return _ModelType.CLAUDE
     elif "meta.llama3" in model_id:
         return _ModelType.LLAMA3
-    
+
     return None
 
 
@@ -44,7 +53,11 @@ def _parse_claude_message(
         # of text > tool_calls > tool_call_result
         content_blocks_by_type = {block.get("type"): block for block in content}
         if "text" in content_blocks_by_type:
-            text_parts = [block["text"] for block in content_blocks_by_type["text"] if block.get("text") is not None]
+            text_parts = [
+                block["text"]
+                for block in content_blocks_by_type["text"]
+                if block.get("text") is not None
+            ]
             return Message(role=role, content="\n".join(text_parts))
         elif "tool_use" in content_blocks_by_type:
             tool_calls = []
@@ -61,11 +74,8 @@ def _parse_claude_message(
                         function_arguments=arguments,
                     )
                 )
-            
-            return Message(
-                role=role,
-                tool_calls=tool_calls
-            )
+
+            return Message(role=role, tool_calls=tool_calls)
 
         elif "tool_result" in content_blocks_by_type:
             # We don't support multiple tool call results, so we take the first one
@@ -77,16 +87,14 @@ def _parse_claude_message(
             return Message(
                 role=role,
                 tool_call_id=tool_result.get("tool_use_id"),
-                content=tool_result_content
+                content=tool_result_content,
             )
-        
+
     return Message(role=role)
 
 
 def _generate_claude_request_and_message_attributes(
-    model_id: Optional[str],
-    parsed_body: Dict[str, Any],
-    capture_content: bool
+    model_id: Optional[str], parsed_body: Dict[str, Any], capture_content: bool
 ) -> Dict[str, Any]:
     # TODO: record tools
     messages = []
@@ -94,7 +102,11 @@ def _generate_claude_request_and_message_attributes(
         messages.append(Message(role="system", content=parsed_body["system"]))
 
     for message in parsed_body.get("messages", []):
-        messages.append(_parse_claude_message(role=message.get("role"), content=message.get("content")))
+        messages.append(
+            _parse_claude_message(
+                role=message.get("role"), content=message.get("content")
+            )
+        )
 
     return {
         **generate_request_attributes(
@@ -103,17 +115,20 @@ def _generate_claude_request_and_message_attributes(
             temperature=parsed_body.get("temperature"),
             top_p=parsed_body.get("top_p"),
         ),
-        **generate_message_attributes(messages=messages, capture_content=capture_content),
+        **generate_message_attributes(
+            messages=messages, capture_content=capture_content
+        ),
     }
 
 
 def _generate_claude_response_and_choice_attributes(
-    parsed_body: Dict[str, Any],
-    capture_content: bool
+    parsed_body: Dict[str, Any], capture_content: bool
 ) -> Dict[str, Any]:
     finish_reason = parsed_body.get("stop_reason")
     usage_data = parsed_body.get("usage", {})
-    parsed_response_message = _parse_claude_message(role=parsed_body.get("role"), content=parsed_body.get("content"))
+    parsed_response_message = _parse_claude_message(
+        role=parsed_body.get("role"), content=parsed_body.get("content")
+    )
     choice = Choice(
         finish_reason=finish_reason,
         role=parsed_response_message.role,
@@ -134,9 +149,7 @@ def _generate_claude_response_and_choice_attributes(
 
 
 def _generate_llama_request_and_message_attributes(
-    model_id: Optional[str],
-    parsed_body: Dict[str, Any],
-    capture_content: bool
+    model_id: Optional[str], parsed_body: Dict[str, Any], capture_content: bool
 ) -> Dict[str, Any]:
     attributes = generate_request_attributes(
         model=model_id,
@@ -146,15 +159,17 @@ def _generate_llama_request_and_message_attributes(
     )
     if "prompt" in parsed_body:
         messages = [Message(role="user", content=parsed_body["prompt"])]
-        attributes.update(generate_message_attributes(messages=messages, capture_content=capture_content))
+        attributes.update(
+            generate_message_attributes(
+                messages=messages, capture_content=capture_content
+            )
+        )
 
     return attributes
 
 
 def _generate_llama_response_and_choice_attributes(
-    model_id: Optional[str],
-    parsed_body: Dict[str, Any],
-    capture_content: bool
+    model_id: Optional[str], parsed_body: Dict[str, Any], capture_content: bool
 ) -> Dict[str, Any]:
     finish_reason = parsed_body.get("stop_reason")
     usage_input_tokens = parsed_body.get("prompt_token_count")
@@ -164,9 +179,18 @@ def _generate_llama_response_and_choice_attributes(
             model=model_id,
             finish_reasons=None if finish_reason is None else [finish_reason],
             usage_input_tokens=usage_input_tokens,
-            usage_output_tokens=usage_output_tokens
+            usage_output_tokens=usage_output_tokens,
         ),
-        **generate_choice_attributes(choices=[Choice(finish_reason=finish_reason, role="assistant", content=parsed_body.get("generation"))], capture_content=capture_content)
+        **generate_choice_attributes(
+            choices=[
+                Choice(
+                    finish_reason=finish_reason,
+                    role="assistant",
+                    content=parsed_body.get("generation"),
+                )
+            ],
+            capture_content=capture_content,
+        ),
     }
 
 
@@ -185,11 +209,11 @@ def generate_attributes_from_invoke_input(
 
     if model_type is None:
         return partial_attributes
-    
+
     body = kwargs.get("body")
     if body is None:
         return partial_attributes
-    
+
     try:
         parsed_body = json.loads(body)
     except json.JSONDecodeError:
@@ -240,9 +264,19 @@ def record_invoke_model_result_attributes(
                 return
 
         if model_type is _ModelType.LLAMA3:
-            span.set_attributes(_generate_llama_response_and_choice_attributes(model_id=model_id, parsed_body=parsed_body, capture_content=capture_content))
+            span.set_attributes(
+                _generate_llama_response_and_choice_attributes(
+                    model_id=model_id,
+                    parsed_body=parsed_body,
+                    capture_content=capture_content,
+                )
+            )
         elif model_type is _ModelType.CLAUDE:
-            span.set_attributes(_generate_claude_response_and_choice_attributes(parsed_body=parsed_body, capture_content=capture_content))
+            span.set_attributes(
+                _generate_claude_response_and_choice_attributes(
+                    parsed_body=parsed_body, capture_content=capture_content
+                )
+            )
 
     finally:
         duration = max((default_timer() - start_time), 0)
@@ -254,16 +288,6 @@ def record_invoke_model_result_attributes(
             usage_input_tokens=usage_input_tokens,
             usage_output_tokens=usage_output_tokens,
         )
-
-
-def _decode_tool_use(tool_use):
-    # input get sent encoded in json
-    if "input" in tool_use:
-        try:
-            tool_use["input"] = json.loads(tool_use["input"])
-        except json.JSONDecodeError:
-            pass
-    return tool_use
 
 
 class InvokeModelWithResponseStreamWrapper(ObjectProxy):
@@ -320,7 +344,6 @@ class InvokeModelWithResponseStreamWrapper(ObjectProxy):
     def _process_meta_llama_invocation_metrics(self, invocation_metrics):
         if input_tokens := invocation_metrics.get("inputTokenCount"):
             self._response["prompt_token_count"] = input_tokens
-
         if output_tokens := invocation_metrics.get("outputTokenCount"):
             self._response["generation_token_count"] = output_tokens
 
@@ -335,7 +358,7 @@ class InvokeModelWithResponseStreamWrapper(ObjectProxy):
     def _process_meta_llama_chunk(self, chunk):
         if self._message is None:
             self._message = {"generation": ""}
-            
+
         self._message["generation"] += chunk.get("generation", "")
 
         if chunk.get("stop_reason") is not None and self._message is not None:
@@ -393,7 +416,9 @@ class InvokeModelWithResponseStreamWrapper(ObjectProxy):
                 self._content_block["input"] = self._tool_json_input_buf
 
             if self._message is not None:
-                self._message["content"].append(_decode_tool_use(self._content_block))
+                self._message["content"].append(
+                    decode_tool_use_in_stream(self._content_block)
+                )
             self._content_block = {}
             self._tool_json_input_buf = ""
             return

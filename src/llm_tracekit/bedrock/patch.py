@@ -1,8 +1,7 @@
-import json
 from functools import partial, wraps
 from io import BytesIO
 from timeit import default_timer
-from typing import Any, Callable, Dict, Optional
+from typing import Callable, Optional
 
 # TODO: importing botocore at module-scope will not work if it's not installed
 from botocore.eventstream import EventStream
@@ -14,7 +13,11 @@ from llm_tracekit.bedrock.converse import (
     generate_attributes_from_converse_input,
     record_converse_result_attributes,
 )
-from llm_tracekit.bedrock.invoke_model import generate_attributes_from_invoke_input, record_invoke_model_result_attributes, InvokeModelWithResponseStreamWrapper
+from llm_tracekit.bedrock.invoke_model import (
+    InvokeModelWithResponseStreamWrapper,
+    generate_attributes_from_invoke_input,
+    record_invoke_model_result_attributes,
+)
 from llm_tracekit.bedrock.utils import record_metrics
 from llm_tracekit.instrumentation_utils import handle_span_exception
 from llm_tracekit.instruments import Instruments
@@ -47,8 +50,7 @@ def invoke_model_wrapper(
     def wrapper(*args, **kwargs):
         model = kwargs.get("modelId")
         span_attributes = generate_attributes_from_invoke_input(
-            kwargs=kwargs,
-            capture_content=capture_content
+            kwargs=kwargs, capture_content=capture_content
         )
         with tracer.start_as_current_span(
             name="bedrock.invoke_model",
@@ -64,8 +66,10 @@ def invoke_model_wrapper(
                     body_content = body.read()
                     # The response body is a stream, and reading the stream consumes it, so we have to recreate
                     # it to keep the original response usable
-                    result["body"] = StreamingBody(BytesIO(body_content), len(body_content))
-                
+                    result["body"] = StreamingBody(
+                        BytesIO(body_content), len(body_content)
+                    )
+
                     record_invoke_model_result_attributes(
                         result_body=body_content,
                         span=span,
@@ -99,8 +103,7 @@ def invoke_model_with_response_stream_wrapper(
     def wrapper(*args, **kwargs):
         model = kwargs.get("modelId")
         span_attributes = generate_attributes_from_invoke_input(
-            kwargs=kwargs,
-            capture_content=capture_content
+            kwargs=kwargs, capture_content=capture_content
         )
         with tracer.start_as_current_span(
             name="bedrock.invoke_model_with_response_stream",
@@ -116,11 +119,11 @@ def invoke_model_with_response_stream_wrapper(
                         stream=result["body"],
                         stream_done_callback=partial(
                             record_invoke_model_result_attributes,
-                                span=span,
-                                start_time=start_time,
-                                instruments=instruments,
-                                capture_content=capture_content,
-                                model_id=model,
+                            span=span,
+                            start_time=start_time,
+                            instruments=instruments,
+                            capture_content=capture_content,
+                            model_id=model,
                         ),
                         stream_error_callback=partial(
                             _handle_error,
