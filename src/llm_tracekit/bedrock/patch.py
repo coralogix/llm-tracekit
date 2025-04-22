@@ -18,6 +18,7 @@ from llm_tracekit.bedrock.invoke_model import (
     generate_attributes_from_invoke_input,
     record_invoke_model_result_attributes,
 )
+from llm_tracekit.bedrock.invoke_agent import generate_attributes_from_invoke_agent_input, record_invoke_agent_result_attributes
 from llm_tracekit.bedrock.utils import record_metrics
 from llm_tracekit.instrumentation_utils import handle_span_exception
 from llm_tracekit.instruments import Instruments
@@ -28,7 +29,7 @@ def _handle_error(
     span: Span,
     start_time: float,
     instruments: Instruments,
-    model: Optional[str],
+    model: Optional[str] = None,
 ):
     duration = max((default_timer() - start_time), 0)
     handle_span_exception(span, error)
@@ -255,8 +256,34 @@ def invoke_agent_wrapper(
 ):
     @wraps(original_function)
     def wrapper(*args, **kwargs):
-        # TODO: instrumentation
-        return original_function(*args, **kwargs)
+        span_attributes = generate_attributes_from_invoke_agent_input(
+            kwargs=kwargs, capture_content=capture_content
+        )
+        with tracer.start_as_current_span(
+            name="bedrock.invoke_agent",
+            kind=SpanKind.CLIENT,
+            attributes=span_attributes,
+            end_on_exit=False,
+        ) as span:
+            start_time = default_timer()
+            try:
+                result = original_function(*args, **kwargs)
+                if "completion" in result:
+                    record_invoke_agent_result_attributes(
+                        result=result["completion"],
+                        span=span,
+                        start_time=start_time,
+                        instruments=instruments,
+                        capture_content=capture_content,
+                    )
+            except Exception as error:
+                _handle_error(
+                    error=error,
+                    span=span,
+                    start_time=start_time,
+                    instruments=instruments,
+                )
+                raise
 
     return wrapper
 
