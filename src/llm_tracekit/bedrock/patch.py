@@ -18,7 +18,7 @@ from llm_tracekit.bedrock.invoke_model import (
     generate_attributes_from_invoke_input,
     record_invoke_model_result_attributes,
 )
-from llm_tracekit.bedrock.invoke_agent import generate_attributes_from_invoke_agent_input, record_invoke_agent_result_attributes
+from llm_tracekit.bedrock.invoke_agent import generate_attributes_from_invoke_agent_input, record_invoke_agent_result_attributes, InvokeAgentStreamWrapper
 from llm_tracekit.bedrock.utils import record_metrics
 from llm_tracekit.instrumentation_utils import handle_span_exception
 from llm_tracekit.instruments import Instruments
@@ -269,12 +269,21 @@ def invoke_agent_wrapper(
             try:
                 result = original_function(*args, **kwargs)
                 if "completion" in result:
-                    record_invoke_agent_result_attributes(
-                        result=result["completion"],
-                        span=span,
-                        start_time=start_time,
-                        instruments=instruments,
-                        capture_content=capture_content,
+                    result["completion"] = InvokeAgentStreamWrapper(
+                        stream=result["completion"],
+                        stream_done_callback=partial(
+                            record_invoke_agent_result_attributes,
+                            span=span,
+                            start_time=start_time,
+                            instruments=instruments,
+                            capture_content=capture_content,
+                        ),
+                        stream_error_callback=partial(
+                            _handle_error,
+                            span=span,
+                            start_time=start_time,
+                            instruments=instruments,
+                        ),
                     )
             except Exception as error:
                 _handle_error(
