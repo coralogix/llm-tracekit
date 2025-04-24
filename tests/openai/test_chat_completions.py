@@ -13,8 +13,9 @@
 # limitations under the License.
 # pylint: disable=too-many-locals
 
+
 import pytest
-from openai import APIConnectionError, AsyncOpenAI, NotFoundError
+from openai import APIConnectionError, NotFoundError, OpenAI
 from opentelemetry.semconv._incubating.attributes import (
     error_attributes as ErrorAttributes,
 )
@@ -24,9 +25,10 @@ from opentelemetry.semconv._incubating.attributes import (
 from opentelemetry.semconv._incubating.attributes import (
     server_attributes as ServerAttributes,
 )
+from opentelemetry.semconv._incubating.metrics import gen_ai_metrics
 
 import llm_tracekit.extended_gen_ai_attributes as ExtendedGenAIAttributes
-from tests.utils import (
+from tests.openai.utils import (
     assert_all_attributes,
     assert_choices_in_span,
     assert_completion_attributes,
@@ -36,14 +38,13 @@ from tests.utils import (
 
 
 @pytest.mark.vcr()
-@pytest.mark.asyncio()
-async def test_async_chat_completion_with_content(
-    span_exporter, async_openai_client, instrument_with_content
+def test_chat_completion_with_content(
+    span_exporter, openai_client, instrument_with_content
 ):
     llm_model_value = "gpt-4o-mini"
     messages_value = [{"role": "user", "content": "Say this is a test"}]
 
-    response = await async_openai_client.chat.completions.create(
+    response = openai_client.chat.completions.create(
         messages=messages_value, model=llm_model_value, stream=False
     )
 
@@ -64,16 +65,18 @@ async def test_async_chat_completion_with_content(
 
 
 @pytest.mark.vcr()
-@pytest.mark.asyncio()
-async def test_async_chat_completion_with_content_array(
-    span_exporter, async_openai_client, instrument_with_content
+def test_chat_completion_with_content_array(
+    span_exporter, openai_client, instrument_with_content
 ):
     llm_model_value = "gpt-4o-mini"
     messages_value = [
-        {"role": "user", "content": [{"type": "text", "text": "Say this is a test"}]}
+        {
+            "role": "user",
+            "content": [{"type": "text", "text": "Say this is a test"}],
+        }
     ]
 
-    response = await async_openai_client.chat.completions.create(
+    response = openai_client.chat.completions.create(
         messages=messages_value, model=llm_model_value, stream=False
     )
 
@@ -94,14 +97,13 @@ async def test_async_chat_completion_with_content_array(
 
 
 @pytest.mark.vcr()
-@pytest.mark.asyncio()
-async def test_async_chat_completion_no_content(
-    span_exporter, async_openai_client, instrument_no_content
+def test_chat_completion_no_content(
+    span_exporter, openai_client, instrument_no_content
 ):
     llm_model_value = "gpt-4o-mini"
     messages_value = [{"role": "user", "content": "Say this is a test"}]
 
-    response = await async_openai_client.chat.completions.create(
+    response = openai_client.chat.completions.create(
         messages=messages_value, model=llm_model_value, stream=False
     )
 
@@ -110,22 +112,20 @@ async def test_async_chat_completion_no_content(
 
     assert_messages_in_span(spans[0], [{"role": "user"}])
 
-    choice = {
-        "finish_reason": "stop",
-        "message": {"role": "assistant"},
-    }
+    choice = {"finish_reason": "stop", "message": {"role": "assistant"}}
     assert_choices_in_span(spans[0], [choice])
 
 
-@pytest.mark.asyncio()
-async def test_async_chat_completion_bad_endpoint(span_exporter, instrument_no_content):
+def test_chat_completion_bad_endpoint(
+    span_exporter, metric_reader, instrument_no_content
+):
     llm_model_value = "gpt-4o-mini"
     messages_value = [{"role": "user", "content": "Say this is a test"}]
 
-    client = AsyncOpenAI(base_url="http://localhost:4242")
+    client = OpenAI(base_url="http://localhost:4242")
 
     with pytest.raises(APIConnectionError):
-        await client.chat.completions.create(
+        client.chat.completions.create(
             messages=messages_value,
             model=llm_model_value,
             timeout=0.1,
@@ -136,17 +136,35 @@ async def test_async_chat_completion_bad_endpoint(span_exporter, instrument_no_c
     assert 4242 == spans[0].attributes[ServerAttributes.SERVER_PORT]
     assert "APIConnectionError" == spans[0].attributes[ErrorAttributes.ERROR_TYPE]
 
+    metrics = metric_reader.get_metrics_data().resource_metrics
+    assert len(metrics) == 1
+
+    metric_data = metrics[0].scope_metrics[0].metrics
+    duration_metric = next(
+        (
+            m
+            for m in metric_data
+            if m.name == gen_ai_metrics.GEN_AI_CLIENT_OPERATION_DURATION
+        ),
+        None,
+    )
+    assert duration_metric is not None
+    assert duration_metric.data.data_points[0].sum > 0
+    assert (
+        duration_metric.data.data_points[0].attributes[ErrorAttributes.ERROR_TYPE]
+        == "APIConnectionError"
+    )
+
 
 @pytest.mark.vcr()
-@pytest.mark.asyncio()
-async def test_async_chat_completion_404(
-    span_exporter, async_openai_client, instrument_no_content
+def test_chat_completion_404(
+    span_exporter, openai_client, metric_reader, instrument_no_content
 ):
     llm_model_value = "this-model-does-not-exist"
     messages_value = [{"role": "user", "content": "Say this is a test"}]
 
     with pytest.raises(NotFoundError):
-        await async_openai_client.chat.completions.create(
+        openai_client.chat.completions.create(
             messages=messages_value,
             model=llm_model_value,
         )
@@ -156,16 +174,34 @@ async def test_async_chat_completion_404(
     assert_all_attributes(spans[0], llm_model_value)
     assert "NotFoundError" == spans[0].attributes[ErrorAttributes.ERROR_TYPE]
 
+    metrics = metric_reader.get_metrics_data().resource_metrics
+    assert len(metrics) == 1
+
+    metric_data = metrics[0].scope_metrics[0].metrics
+    duration_metric = next(
+        (
+            m
+            for m in metric_data
+            if m.name == gen_ai_metrics.GEN_AI_CLIENT_OPERATION_DURATION
+        ),
+        None,
+    )
+    assert duration_metric is not None
+    assert duration_metric.data.data_points[0].sum > 0
+    assert (
+        duration_metric.data.data_points[0].attributes[ErrorAttributes.ERROR_TYPE]
+        == "NotFoundError"
+    )
+
 
 @pytest.mark.vcr()
-@pytest.mark.asyncio()
-async def test_async_chat_completion_extra_params(
-    span_exporter, async_openai_client, instrument_no_content
+def test_chat_completion_extra_params(
+    span_exporter, openai_client, instrument_no_content
 ):
     llm_model_value = "gpt-4o-mini"
     messages_value = [{"role": "user", "content": "Say this is a test"}]
 
-    response = await async_openai_client.chat.completions.create(
+    response = openai_client.chat.completions.create(
         messages=messages_value,
         model=llm_model_value,
         seed=42,
@@ -197,14 +233,13 @@ async def test_async_chat_completion_extra_params(
 
 
 @pytest.mark.vcr()
-@pytest.mark.asyncio()
-async def test_async_chat_completion_multiple_choices(
-    span_exporter, async_openai_client, instrument_with_content
+def test_chat_completion_multiple_choices(
+    span_exporter, openai_client, instrument_with_content
 ):
     llm_model_value = "gpt-4o-mini"
     messages_value = [{"role": "user", "content": "Say this is a test"}]
 
-    response = await async_openai_client.chat.completions.create(
+    response = openai_client.chat.completions.create(
         messages=messages_value, model=llm_model_value, n=2, stream=False
     )
 
@@ -234,22 +269,20 @@ async def test_async_chat_completion_multiple_choices(
 
 
 @pytest.mark.vcr()
-@pytest.mark.asyncio()
-async def test_async_chat_completion_tool_calls_with_content(
-    span_exporter, async_openai_client, instrument_with_content
+def test_chat_completion_tool_calls_with_content(
+    span_exporter, openai_client, instrument_with_content
 ):
-    await chat_completion_tool_call(span_exporter, async_openai_client, True)
+    chat_completion_tool_call(span_exporter, openai_client, True)
 
 
 @pytest.mark.vcr()
-@pytest.mark.asyncio()
-async def test_async_chat_completion_tool_calls_no_content(
-    span_exporter, async_openai_client, instrument_no_content
+def test_chat_completion_tool_calls_no_content(
+    span_exporter, openai_client, instrument_no_content
 ):
-    await chat_completion_tool_call(span_exporter, async_openai_client, False)
+    chat_completion_tool_call(span_exporter, openai_client, False)
 
 
-async def chat_completion_tool_call(span_exporter, async_openai_client, expect_content):
+def chat_completion_tool_call(span_exporter, openai_client, expect_content):
     llm_model_value = "gpt-4o-mini"
     messages_value = [
         {"role": "system", "content": "You're a helpful assistant."},
@@ -259,7 +292,7 @@ async def chat_completion_tool_call(span_exporter, async_openai_client, expect_c
         },
     ]
 
-    response_0 = await async_openai_client.chat.completions.create(
+    response_0 = openai_client.chat.completions.create(
         messages=messages_value,
         model=llm_model_value,
         tool_choice="auto",
@@ -291,7 +324,7 @@ async def chat_completion_tool_call(span_exporter, async_openai_client, expect_c
     messages_value.append(tool_call_result_0)
     messages_value.append(tool_call_result_1)
 
-    response_1 = await async_openai_client.chat.completions.create(
+    response_1 = openai_client.chat.completions.create(
         messages=messages_value, model=llm_model_value
     )
 
@@ -380,7 +413,9 @@ async def chat_completion_tool_call(span_exporter, async_openai_client, expect_c
 
     choice = {
         "finish_reason": "stop",
-        "message": {"role": "assistant"},
+        "message": {
+            "role": "assistant",
+        },
     }
     if expect_content:
         choice["message"]["content"] = response_1.choices[0].message.content
@@ -389,9 +424,8 @@ async def chat_completion_tool_call(span_exporter, async_openai_client, expect_c
 
 
 @pytest.mark.vcr()
-@pytest.mark.asyncio()
-async def test_async_chat_completion_streaming(
-    span_exporter, async_openai_client, instrument_with_content
+def test_chat_completion_streaming(
+    span_exporter, openai_client, instrument_with_content
 ):
     llm_model_value = "gpt-4"
     messages_value = [{"role": "user", "content": "Say this is a test"}]
@@ -407,8 +441,8 @@ async def test_async_chat_completion_streaming(
     response_stream_model = None
     response_stream_id = None
     response_stream_result = ""
-    response = await async_openai_client.chat.completions.create(**kwargs)
-    async for chunk in response:
+    response = openai_client.chat.completions.create(**kwargs)
+    for chunk in response:
         if chunk.choices:
             response_stream_result += chunk.choices[0].delta.content or ""
 
@@ -439,9 +473,8 @@ async def test_async_chat_completion_streaming(
 
 
 @pytest.mark.vcr()
-@pytest.mark.asyncio()
-async def test_async_chat_completion_streaming_not_complete(
-    span_exporter, async_openai_client, instrument_with_content
+def test_chat_completion_streaming_not_complete(
+    span_exporter, openai_client, instrument_with_content
 ):
     llm_model_value = "gpt-4"
     messages_value = [{"role": "user", "content": "Say this is a test"}]
@@ -455,9 +488,8 @@ async def test_async_chat_completion_streaming_not_complete(
     response_stream_model = None
     response_stream_id = None
     response_stream_result = ""
-    response = await async_openai_client.chat.completions.create(**kwargs)
-    idx = 0
-    async for chunk in response:
+    response = openai_client.chat.completions.create(**kwargs)
+    for idx, chunk in enumerate(response):
         if chunk.choices:
             response_stream_result += chunk.choices[0].delta.content or ""
         if idx == 1:
@@ -468,9 +500,8 @@ async def test_async_chat_completion_streaming_not_complete(
             response_stream_model = chunk.model
         if chunk.id:
             response_stream_id = chunk.id
-        idx += 1
 
-    await response.aclose()
+    response.close()
     spans = span_exporter.get_finished_spans()
     assert_all_attributes(
         spans[0], llm_model_value, response_stream_id, response_stream_model, 0, 0
@@ -487,9 +518,8 @@ async def test_async_chat_completion_streaming_not_complete(
 
 
 @pytest.mark.vcr()
-@pytest.mark.asyncio()
-async def test_async_chat_completion_multiple_choices_streaming(
-    span_exporter, async_openai_client, instrument_with_content
+def test_chat_completion_multiple_choices_streaming(
+    span_exporter, openai_client, instrument_with_content
 ):
     llm_model_value = "gpt-4o-mini"
     messages_value = [
@@ -500,7 +530,7 @@ async def test_async_chat_completion_multiple_choices_streaming(
         },
     ]
 
-    response_0 = await async_openai_client.chat.completions.create(
+    response_0 = openai_client.chat.completions.create(
         messages=messages_value,
         model=llm_model_value,
         n=2,
@@ -511,7 +541,7 @@ async def test_async_chat_completion_multiple_choices_streaming(
     # two strings for each choice
     response_stream_result = ["", ""]
     finish_reasons = ["", ""]
-    async for chunk in response_0:
+    for chunk in response_0:
         if chunk.choices:
             for choice in chunk.choices:
                 response_stream_result[choice.index] += choice.delta.content or ""
@@ -566,54 +596,38 @@ async def test_async_chat_completion_multiple_choices_streaming(
 
 
 @pytest.mark.vcr()
-@pytest.mark.asyncio()
-async def test_async_chat_completion_multiple_tools_streaming_with_content(
-    span_exporter, async_openai_client, instrument_with_content
+def test_chat_completion_multiple_tools_streaming_with_content(
+    span_exporter, openai_client, instrument_with_content
 ):
-    await async_chat_completion_multiple_tools_streaming(
-        span_exporter, async_openai_client, True
-    )
+    chat_completion_multiple_tools_streaming(span_exporter, openai_client, True)
 
 
 @pytest.mark.vcr()
-@pytest.mark.asyncio()
-async def test_async_chat_completion_multiple_tools_streaming_no_content(
-    span_exporter, async_openai_client, instrument_no_content
+def test_chat_completion_multiple_tools_streaming_no_content(
+    span_exporter, openai_client, instrument_no_content
 ):
-    await async_chat_completion_multiple_tools_streaming(
-        span_exporter, async_openai_client, False
-    )
+    chat_completion_multiple_tools_streaming(span_exporter, openai_client, False)
 
 
 @pytest.mark.vcr()
-@pytest.mark.asyncio()
-async def test_async_chat_completion_streaming_unsampled(
+def test_chat_completion_with_content_span_unsampled(
     span_exporter,
-    async_openai_client,
+    openai_client,
     instrument_with_content_unsampled,
 ):
-    llm_model_value = "gpt-4"
+    llm_model_value = "gpt-4o-mini"
     messages_value = [{"role": "user", "content": "Say this is a test"}]
 
-    kwargs = {
-        "model": llm_model_value,
-        "messages": messages_value,
-        "stream": True,
-        "stream_options": {"include_usage": True},
-    }
-
-    response_stream_result = ""
-    response = await async_openai_client.chat.completions.create(**kwargs)
-    async for chunk in response:
-        if chunk.choices:
-            response_stream_result += chunk.choices[0].delta.content or ""
+    openai_client.chat.completions.create(
+        messages=messages_value, model=llm_model_value, stream=False
+    )
 
     spans = span_exporter.get_finished_spans()
     assert len(spans) == 0
 
 
-async def async_chat_completion_multiple_tools_streaming(
-    span_exporter, async_openai_client, expect_content
+def chat_completion_multiple_tools_streaming(
+    span_exporter, openai_client, expect_content
 ):
     llm_model_value = "gpt-4o-mini"
     messages_value = [
@@ -624,7 +638,7 @@ async def async_chat_completion_multiple_tools_streaming(
         },
     ]
 
-    response = await async_openai_client.chat.completions.create(
+    response = openai_client.chat.completions.create(
         messages=messages_value,
         model=llm_model_value,
         tool_choice="auto",
@@ -638,7 +652,7 @@ async def async_chat_completion_multiple_tools_streaming(
     tool_names = ["", ""]
     tool_call_ids = ["", ""]
     tool_args = ["", ""]
-    async for chunk in response:
+    for chunk in response:
         if chunk.choices:
             if chunk.choices[0].finish_reason:
                 finish_reason = chunk.choices[0].finish_reason
@@ -695,7 +709,6 @@ async def async_chat_completion_multiple_tools_streaming(
             "name": tool_names[1],
         },
     }
-
     if expect_content:
         tool_call_0["function"]["arguments"] = tool_args[0].replace("\n", "")
         tool_call_1["function"]["arguments"] = tool_args[1].replace("\n", "")
