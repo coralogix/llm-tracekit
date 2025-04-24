@@ -37,6 +37,10 @@ openai = [
 bedrock = [
     "boto3>=1.37.31",
 ]
+all = [
+    "openai>=1.26.0",
+    "boto3>=1.37.31",
+]
 
 
 [project.urls]

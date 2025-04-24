@@ -12,8 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from llm_tracekit.coralogix import setup_export_to_coralogix
-from llm_tracekit.openai.instrumentor import OpenAIInstrumentor
+from contextlib import suppress
 
-# TODO: do we want to import all instrumentations here? it might cause import problems since most people only need 1 instrumentation
-__all__ = ["setup_export_to_coralogix", "OpenAIInstrumentor"]
+from llm_tracekit.coralogix import setup_export_to_coralogix as setup_export_to_coralogix
+
+with suppress(ImportError):
+    from llm_tracekit.openai.instrumentor import OpenAIInstrumentor as OpenAIInstrumentor
+
+with suppress(ImportError):
+    from llm_tracekit.bedrock.instrumentor import BedrockInstrumentor as BedrockInstrumentor

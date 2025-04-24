@@ -1,15 +1,15 @@
 import os
 
-import pytest
 import boto3
+import pytest
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import SimpleSpanProcessor
 from opentelemetry.sdk.trace.sampling import ALWAYS_OFF
 
+from llm_tracekit.bedrock.instrumentor import BedrockInstrumentor
 from llm_tracekit.instrumentation_utils import (
     OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT,
 )
-from llm_tracekit.bedrock.instrumentor import BedrockInstrumentor
 
 
 @pytest.fixture(autouse=True)
@@ -18,7 +18,7 @@ def bedrock_env_vars():
         "AWS_ACCESS_KEY_ID",
         "AWS_SECRET_ACCESS_KEY",
         "AWS_SESSION_TOKEN",
-        "AWS_DEFAULT_REGION"
+        "AWS_DEFAULT_REGION",
     ]:
         if not os.getenv(env_var_name):
             os.environ[env_var_name] = f"test_{env_var_name.lower()}"
