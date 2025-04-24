@@ -1,4 +1,5 @@
 import json
+from contextlib import suppress
 from enum import Enum
 from timeit import default_timer
 from typing import Any, Callable, Dict, Optional, Union
@@ -10,6 +11,7 @@ from opentelemetry.semconv._incubating.attributes import (
 from opentelemetry.trace import Span
 from wrapt import ObjectProxy
 
+from llm_tracekit import extended_gen_ai_attributes as ExtendedGenAIAttributes
 from llm_tracekit.bedrock.utils import decode_tool_use_in_stream, record_metrics
 from llm_tracekit.instruments import Instruments
 from llm_tracekit.span_builder import (
@@ -21,6 +23,7 @@ from llm_tracekit.span_builder import (
     generate_message_attributes,
     generate_request_attributes,
     generate_response_attributes,
+    remove_attributes_with_null_values,
 )
 
 
@@ -96,7 +99,6 @@ def _parse_claude_message(
 def _generate_claude_request_and_message_attributes(
     model_id: Optional[str], parsed_body: Dict[str, Any], capture_content: bool
 ) -> Dict[str, Any]:
-    # TODO: record tools
     messages = []
     if "system" in parsed_body and isinstance(parsed_body["system"], str):
         messages.append(Message(role="system", content=parsed_body["system"]))
@@ -106,6 +108,31 @@ def _generate_claude_request_and_message_attributes(
             _parse_claude_message(
                 role=message.get("role"), content=message.get("content")
             )
+        )
+
+    tool_attributes = {}
+    tools = parsed_body.get("tools", [])
+    for index, tool_definition in enumerate(tools):
+        tool_params = None
+        if (
+            "input_schema" in tool_definition
+            and "properties" in tool_definition["input_schema"]
+        ):
+            with suppress(TypeError):
+                tool_params = json.dumps(tool_definition["input_schema"]["properties"])
+
+        tool_attributes.update(
+            {
+                ExtendedGenAIAttributes.GEN_AI_BEDROCK_REQUEST_TOOLS_FUNCTION_NAME.format(
+                    tool_index=index
+                ): tool_definition.get("name"),
+                ExtendedGenAIAttributes.GEN_AI_BEDROCK_REQUEST_TOOLS_FUNCTION_DESCRIPTION.format(
+                    tool_index=index
+                ): tool_definition.get("description"),
+                ExtendedGenAIAttributes.GEN_AI_BEDROCK_REQUEST_TOOLS_FUNCTION_PARAMETERS.format(
+                    tool_index=index
+                ): tool_params,
+            }
         )
 
     return {
@@ -118,6 +145,7 @@ def _generate_claude_request_and_message_attributes(
         **generate_message_attributes(
             messages=messages, capture_content=capture_content
         ),
+        **remove_attributes_with_null_values(tool_attributes),
     }
 
 

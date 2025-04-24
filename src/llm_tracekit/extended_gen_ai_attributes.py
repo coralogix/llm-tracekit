@@ -47,6 +47,27 @@ GEN_AI_OPENAI_REQUEST_TOOLS_FUNCTION_PARAMETERS: Final = (
 The parameters of the tool function in JSON format.
 """
 
+GEN_AI_BEDROCK_REQUEST_TOOLS_FUNCTION_NAME: Final = (
+    "gen_ai.bedrock.request.tools.{tool_index}.function.name"
+)
+"""
+The name of the tool function.
+"""
+
+GEN_AI_BEDROCK_REQUEST_TOOLS_FUNCTION_DESCRIPTION: Final = (
+    "gen_ai.bedrock.request.tools.{tool_index}.function.description"
+)
+"""
+The description of the tool function.
+"""
+
+GEN_AI_BEDROCK_REQUEST_TOOLS_FUNCTION_PARAMETERS: Final = (
+    "gen_ai.bedrock.request.tools.{tool_index}.function.parameters"
+)
+"""
+The parameters of the tool function in JSON format.
+"""
+
 GEN_AI_PROMPT_ROLE: Final = "gen_ai.prompt.{prompt_index}.role"
 """
 The role of the prompt.

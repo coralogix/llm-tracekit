@@ -1,28 +1,24 @@
-import json
-from enum import Enum
 from timeit import default_timer
-from typing import Any, Dict, Optional, Union, Callable
+from typing import Any, Callable, Dict, Optional
 
+from botocore.eventstream import EventStream, EventStreamError
 from opentelemetry.semconv._incubating.attributes import (
     gen_ai_attributes as GenAIAttributes,
 )
 from opentelemetry.trace import Span
+from wrapt import ObjectProxy
 
 from llm_tracekit.bedrock.utils import record_metrics
 from llm_tracekit.instruments import Instruments
 from llm_tracekit.span_builder import (
-    remove_attributes_with_null_values,
     Choice,
     Message,
-    ToolCall,
     generate_base_attributes,
     generate_choice_attributes,
     generate_message_attributes,
-    generate_request_attributes,
     generate_response_attributes,
+    remove_attributes_with_null_values,
 )
-from wrapt import ObjectProxy
-from botocore.eventstream import EventStream, EventStreamError
 
 
 def generate_attributes_from_invoke_agent_input(
@@ -84,7 +80,9 @@ class InvokeAgentStreamWrapper(ObjectProxy):
     def __init__(
         self,
         stream: EventStream,
-        stream_done_callback: Callable[[Optional[str], Optional[int], Optional[int]], None],
+        stream_done_callback: Callable[
+            [Optional[str], Optional[int], Optional[int]], None
+        ],
         stream_error_callback: Callable[[Exception], None],
     ):
         super().__init__(stream)
@@ -101,7 +99,9 @@ class InvokeAgentStreamWrapper(ObjectProxy):
                 self._process_event(event)
                 yield event
 
-            self._stream_done_callback(self._content, self._usage_input_tokens, self._usage_output_tokens)
+            self._stream_done_callback(
+                self._content, self._usage_input_tokens, self._usage_output_tokens
+            )
         except EventStreamError as exc:
             self._stream_error_callback(exc)
             raise
@@ -123,15 +123,25 @@ class InvokeAgentStreamWrapper(ObjectProxy):
         if "chunk" in event:
             if self._content is None:
                 self._content = ""
-                
+
             encoded_content = event["chunk"].get("bytes")
             if encoded_content is not None:
                 # TODO: check if we need to handle b64 decoding
                 self._content += encoded_content.decode()
-        
+
         if "trace" in event:
-            for key in ["preProcessingTrace", "postProcessingTrace", "orchestrationTrace", "routingClassifierTrace"]:
-                usage_data = event["trace"].get(key, {}).get("modelInvocationOutput", {}).get("metadata", {}).get("usage")
+            for key in [
+                "preProcessingTrace",
+                "postProcessingTrace",
+                "orchestrationTrace",
+                "routingClassifierTrace",
+            ]:
+                usage_data = (
+                    event["trace"]
+                    .get(key, {})
+                    .get("modelInvocationOutput", {})
+                    .get("metadata", {})
+                    .get("usage")
+                )
                 if usage_data is not None:
                     self._process_usage_data(usage_data)
-

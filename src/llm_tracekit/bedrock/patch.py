@@ -3,7 +3,6 @@ from io import BytesIO
 from timeit import default_timer
 from typing import Callable, Optional
 
-# TODO: importing botocore at module-scope will not work if it's not installed
 from botocore.eventstream import EventStream
 from botocore.response import StreamingBody
 from opentelemetry.trace import Span, SpanKind, Tracer
@@ -13,12 +12,16 @@ from llm_tracekit.bedrock.converse import (
     generate_attributes_from_converse_input,
     record_converse_result_attributes,
 )
+from llm_tracekit.bedrock.invoke_agent import (
+    InvokeAgentStreamWrapper,
+    generate_attributes_from_invoke_agent_input,
+    record_invoke_agent_result_attributes,
+)
 from llm_tracekit.bedrock.invoke_model import (
     InvokeModelWithResponseStreamWrapper,
     generate_attributes_from_invoke_input,
     record_invoke_model_result_attributes,
 )
-from llm_tracekit.bedrock.invoke_agent import generate_attributes_from_invoke_agent_input, record_invoke_agent_result_attributes, InvokeAgentStreamWrapper
 from llm_tracekit.bedrock.utils import record_metrics
 from llm_tracekit.instrumentation_utils import handle_span_exception
 from llm_tracekit.instruments import Instruments
@@ -305,7 +308,6 @@ def create_client_wrapper(
     def traced_method(wrapped, instance, args, kwargs):
         service_name = kwargs.get("service_name")
         client = wrapped(*args, **kwargs)
-        # TODO: error handling
         if service_name == "bedrock-runtime":
             client.invoke_model = invoke_model_wrapper(
                 original_function=client.invoke_model,

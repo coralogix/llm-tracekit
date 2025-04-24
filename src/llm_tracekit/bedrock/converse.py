@@ -1,16 +1,16 @@
 import json
+from contextlib import suppress
 from timeit import default_timer
 from typing import Any, Callable, Dict, List, Optional, Union
 
 from botocore.eventstream import EventStream, EventStreamError
-
-# TODO: importing botocore at module-scope will not work if it's not installed
 from opentelemetry.semconv._incubating.attributes import (
     gen_ai_attributes as GenAIAttributes,
 )
 from opentelemetry.trace import Span
 from wrapt import ObjectProxy
 
+from llm_tracekit import extended_gen_ai_attributes as ExtendedGenAIAttributes
 from llm_tracekit.bedrock.utils import decode_tool_use_in_stream, record_metrics
 from llm_tracekit.instruments import Instruments
 from llm_tracekit.span_builder import (
@@ -22,9 +22,8 @@ from llm_tracekit.span_builder import (
     generate_message_attributes,
     generate_request_attributes,
     generate_response_attributes,
+    remove_attributes_with_null_values,
 )
-
-# TODO: cleanup
 
 
 def _combine_tool_call_content_parts(
@@ -121,7 +120,29 @@ def generate_attributes_from_converse_input(
             )
         )
 
-    # TODO: record tool definitions
+    tool_attributes = {}
+    tool_configs = kwargs.get("toolConfig", {}).get("tools", [])
+    tool_specs = [tool["toolSpec"] for tool in tool_configs if "toolSpec" in tool]
+    for index, tool_spec in enumerate(tool_specs):
+        tool_params = None
+        if "inputSchema" in tool_spec and "json" in tool_spec["inputSchema"]:
+            with suppress(TypeError):
+                tool_params = json.dumps(tool_spec["inputSchema"]["json"])
+
+        tool_attributes.update(
+            {
+                ExtendedGenAIAttributes.GEN_AI_BEDROCK_REQUEST_TOOLS_FUNCTION_NAME.format(
+                    tool_index=index
+                ): tool_spec.get("name"),
+                ExtendedGenAIAttributes.GEN_AI_BEDROCK_REQUEST_TOOLS_FUNCTION_DESCRIPTION.format(
+                    tool_index=index
+                ): tool_spec.get("description"),
+                ExtendedGenAIAttributes.GEN_AI_BEDROCK_REQUEST_TOOLS_FUNCTION_PARAMETERS.format(
+                    tool_index=index
+                ): tool_params,
+            }
+        )
+
     return {
         **generate_base_attributes(
             system=GenAIAttributes.GenAiSystemValues.AWS_BEDROCK
@@ -135,6 +156,7 @@ def generate_attributes_from_converse_input(
         **generate_message_attributes(
             messages=messages, capture_content=capture_content
         ),
+        **remove_attributes_with_null_values(tool_attributes),
     }
 
 
