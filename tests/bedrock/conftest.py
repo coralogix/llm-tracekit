@@ -1,4 +1,5 @@
 import os
+from base64 import b64encode
 
 import boto3
 import pytest
@@ -18,11 +19,12 @@ def bedrock_env_vars():
         "AWS_ACCESS_KEY_ID",
         "AWS_SECRET_ACCESS_KEY",
         "AWS_SESSION_TOKEN",
-        "AWS_DEFAULT_REGION",
     ]:
         if not os.getenv(env_var_name):
             os.environ[env_var_name] = f"test_{env_var_name.lower()}"
 
+    if not os.getenv("AWS_DEFAULT_REGION"):
+        os.environ["AWS_DEFAULT_REGION"] = "us-east-1"
 
 @pytest.fixture
 def bedrock_client():
@@ -34,15 +36,24 @@ def bedrock_agent_client():
     return boto3.client("bedrock-agent-runtime")
 
 
+@pytest.fixture
+def claude_model_id() -> str:
+    return "anthropic.claude-3-5-sonnet-20240620-v1:0"
+
+
+@pytest.fixture
+def llama_model_id() -> str:
+    return "meta.llama3-8b-instruct-v1:0"
+
+
 @pytest.fixture(scope="module")
 def vcr_config():
-    # TODO: edit these
     return {
         "filter_headers": [
-            ("cookie", "test_cookie"),
+            ("X-Amz-Security-Token", 'test-security-token'),
+            ("Authorization", 'test-auth'),
         ],
         "decode_compressed_response": True,
-        "before_record_response": scrub_response_headers,
     }
 
 
@@ -91,12 +102,3 @@ def instrument_with_content_unsampled(span_exporter, meter_provider):
     yield instrumentor
     os.environ.pop(OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT, None)
     instrumentor.uninstrument()
-
-
-def scrub_response_headers(response):
-    """
-    This scrubs sensitive response headers. Note they are case-sensitive!
-    """
-    # TODO: edit these
-    response["headers"]["Set-Cookie"] = "test_set_cookie"
-    return response

@@ -1,8 +1,25 @@
 import pytest
 
 
-def test_converse_with_content():
-    pytest.fail("TODO")
+@pytest.mark.vcr()
+def test_converse_with_content(bedrock_client, claude_model_id: str, span_exporter, instrument_with_content):
+    try:
+        result = bedrock_client.converse(
+            modelId=claude_model_id,
+            messages=[
+                {"role": "user", "content": [{"text": "say this is a test"}]}
+            ],
+            system=[{"text": "you are a helpful assistant"}],
+            inferenceConfig={
+                "maxTokens": 300,
+                "temperature": 0,
+                "topP": 1,
+            },
+
+        )
+    except Exception:
+        pass
+    spans = span_exporter.get_finished_spans()
 
 
 def test_converse_no_content():
