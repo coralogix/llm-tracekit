@@ -1,4 +1,5 @@
 import json
+from typing import Generator
 
 import pytest
 import yaml
@@ -16,26 +17,26 @@ from opentelemetry.sdk.trace.export.in_memory_span_exporter import (
 
 
 @pytest.fixture(scope="function", name="span_exporter")
-def fixture_span_exporter():
+def fixture_span_exporter() -> Generator[InMemorySpanExporter, None, None]:
     exporter = InMemorySpanExporter()
     yield exporter
 
 
 @pytest.fixture(scope="function", name="metric_reader")
-def fixture_metric_reader():
+def fixture_metric_reader() -> Generator[InMemoryMetricReader, None, None]:
     exporter = InMemoryMetricReader()
     yield exporter
 
 
 @pytest.fixture(scope="function", name="tracer_provider")
-def fixture_tracer_provider(span_exporter):
+def fixture_tracer_provider(span_exporter) -> TracerProvider:
     provider = TracerProvider()
     provider.add_span_processor(SimpleSpanProcessor(span_exporter))
     return provider
 
 
 @pytest.fixture(scope="function", name="meter_provider")
-def fixture_meter_provider(metric_reader):
+def fixture_meter_provider(metric_reader) -> MeterProvider:
     meter_provider = MeterProvider(
         metric_readers=[metric_reader],
     )
