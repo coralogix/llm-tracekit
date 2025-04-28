@@ -40,7 +40,7 @@ def _handle_error(
         instruments=instruments,
         duration=duration,
         model=model,
-        error_type=error.__qualname__,
+        error_type=type(error).__qualname__,
     )
 
 
