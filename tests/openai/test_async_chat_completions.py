@@ -80,8 +80,7 @@ async def test_async_chat_completion_with_content_array(
     assert_completion_attributes(spans[0], llm_model_value, response)
 
     user_message = {"role": "user"}
-    # We don't support content array
-    assert_messages_in_span(span=spans[0], expected_messages=[user_message], expect_content=False)
+    assert_messages_in_span(span=spans[0], expected_messages=[user_message], expect_content=True)
 
     choice = {
         "finish_reason": "stop",
