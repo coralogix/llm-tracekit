@@ -1,5 +1,4 @@
 import os
-from base64 import b64encode
 
 import boto3
 import pytest
@@ -11,6 +10,9 @@ from llm_tracekit.bedrock.instrumentor import BedrockInstrumentor
 from llm_tracekit.instrumentation_utils import (
     OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT,
 )
+
+
+pytest.register_assert_rewrite("tests.bedrock.utils")
 
 
 @pytest.fixture(autouse=True)
@@ -26,13 +28,24 @@ def bedrock_env_vars():
     if not os.getenv("AWS_DEFAULT_REGION"):
         os.environ["AWS_DEFAULT_REGION"] = "us-east-1"
 
+
 @pytest.fixture
-def bedrock_client():
+def bedrock_client_with_content(instrument_with_content):
     return boto3.client("bedrock-runtime")
 
 
 @pytest.fixture
-def bedrock_agent_client():
+def bedrock_client_no_content(instrument_no_content):
+    return boto3.client("bedrock-runtime")
+
+
+@pytest.fixture
+def bedrock_agent_client_with_content(instrument_with_content):
+    return boto3.client("bedrock-agent-runtime")
+
+
+@pytest.fixture
+def bedrock_agent_client_no_content(instrument_no_content):
     return boto3.client("bedrock-agent-runtime")
 
 

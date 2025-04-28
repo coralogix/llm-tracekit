@@ -30,11 +30,10 @@ from opentelemetry.semconv._incubating.metrics import gen_ai_metrics
 import llm_tracekit.extended_gen_ai_attributes as ExtendedGenAIAttributes
 from tests.openai.utils import (
     assert_all_attributes,
-    assert_choices_in_span,
     assert_completion_attributes,
-    assert_messages_in_span,
     get_current_weather_tool_definition,
 )
+from tests.utils import assert_messages_in_span, assert_choices_in_span
 
 
 @pytest.mark.vcr()

@@ -16,6 +16,9 @@ from opentelemetry.sdk.trace.export.in_memory_span_exporter import (
 )
 
 
+pytest.register_assert_rewrite("tests.utils")
+
+
 @pytest.fixture(scope="function", name="span_exporter")
 def fixture_span_exporter() -> Generator[InMemorySpanExporter, None, None]:
     exporter = InMemorySpanExporter()

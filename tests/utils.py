@@ -1,0 +1,199 @@
+from opentelemetry.sdk.trace import ReadableSpan
+
+import llm_tracekit.extended_gen_ai_attributes as ExtendedGenAIAttributes
+
+
+def assert_messages_in_span(span: ReadableSpan, expected_messages: list):
+    assert span.attributes is not None
+
+    for index, message in enumerate(expected_messages):
+        assert (
+            span.attributes[
+                ExtendedGenAIAttributes.GEN_AI_PROMPT_ROLE.format(prompt_index=index)
+            ]
+            == message["role"]
+        )
+
+        if "content" in message:
+            assert (
+                span.attributes[
+                    ExtendedGenAIAttributes.GEN_AI_PROMPT_CONTENT.format(
+                        prompt_index=index
+                    )
+                ]
+                == message["content"]
+            )
+        else:
+            assert (
+                ExtendedGenAIAttributes.GEN_AI_PROMPT_CONTENT.format(prompt_index=index)
+                not in span.attributes
+            )
+
+        if "tool_calls" in message:
+            for tool_index, tool_call in enumerate(message["tool_calls"]):
+                assert (
+                    span.attributes[
+                        ExtendedGenAIAttributes.GEN_AI_PROMPT_TOOL_CALLS_ID.format(
+                            prompt_index=index, tool_call_index=tool_index
+                        )
+                    ]
+                    == tool_call["id"]
+                )
+                assert (
+                    span.attributes[
+                        ExtendedGenAIAttributes.GEN_AI_PROMPT_TOOL_CALLS_TYPE.format(
+                            prompt_index=index, tool_call_index=tool_index
+                        )
+                    ]
+                    == tool_call["type"]
+                )
+                assert (
+                    span.attributes[
+                        ExtendedGenAIAttributes.GEN_AI_PROMPT_TOOL_CALLS_FUNCTION_NAME.format(
+                            prompt_index=index, tool_call_index=tool_index
+                        )
+                    ]
+                    == tool_call["function"]["name"]
+                )
+                if "arguments" in tool_call["function"]:
+                    assert (
+                        span.attributes[
+                            ExtendedGenAIAttributes.GEN_AI_PROMPT_TOOL_CALLS_FUNCTION_ARGUMENTS.format(
+                                prompt_index=index, tool_call_index=tool_index
+                            )
+                        ]
+                        == tool_call["function"]["arguments"]
+                    )
+                else:
+                    assert (
+                        ExtendedGenAIAttributes.GEN_AI_PROMPT_TOOL_CALLS_FUNCTION_ARGUMENTS.format(
+                            prompt_index=index, tool_call_index=tool_index
+                        )
+                        not in span.attributes
+                    )
+        else:
+            assert (
+                ExtendedGenAIAttributes.GEN_AI_PROMPT_TOOL_CALLS_ID.format(
+                    prompt_index=index, tool_call_index=0
+                )
+                not in span.attributes
+            )
+
+        if "tool_call_id" in message:
+            assert (
+                span.attributes[
+                    ExtendedGenAIAttributes.GEN_AI_PROMPT_TOOL_CALL_ID.format(
+                        prompt_index=index
+                    )
+                ]
+                == message["tool_call_id"]
+            )
+        else:
+            assert (
+                ExtendedGenAIAttributes.GEN_AI_PROMPT_TOOL_CALL_ID.format(
+                    prompt_index=index
+                )
+                not in span.attributes
+            )
+
+    # Check that there aren't any additional messages
+    assert (
+        ExtendedGenAIAttributes.GEN_AI_PROMPT_ROLE.format(prompt_index=index + 1)
+        not in span.attributes
+    )
+
+
+def assert_choices_in_span(span: ReadableSpan, expected_choices: list):
+    assert span.attributes is not None
+
+    for index, choice in enumerate(expected_choices):
+        assert (
+            span.attributes[
+                ExtendedGenAIAttributes.GEN_AI_COMPLETION_FINISH_REASON.format(
+                    completion_index=index
+                )
+            ]
+            == choice["finish_reason"]
+        )
+        assert (
+            span.attributes[
+                ExtendedGenAIAttributes.GEN_AI_COMPLETION_ROLE.format(
+                    completion_index=index
+                )
+            ]
+            == choice["message"]["role"]
+        )
+        if "content" in choice["message"]:
+            assert (
+                span.attributes[
+                    ExtendedGenAIAttributes.GEN_AI_COMPLETION_CONTENT.format(
+                        completion_index=index
+                    )
+                ]
+                == choice["message"]["content"]
+            )
+        else:
+            assert (
+                ExtendedGenAIAttributes.GEN_AI_COMPLETION_CONTENT.format(
+                    completion_index=index
+                )
+                not in span.attributes
+            )
+
+        if "tool_calls" in choice["message"]:
+            for tool_index, tool_call in enumerate(choice["message"]["tool_calls"]):
+                assert (
+                    span.attributes[
+                        ExtendedGenAIAttributes.GEN_AI_COMPLETION_TOOL_CALLS_ID.format(
+                            completion_index=index, tool_call_index=tool_index
+                        )
+                    ]
+                    == tool_call["id"]
+                )
+                assert (
+                    span.attributes[
+                        ExtendedGenAIAttributes.GEN_AI_COMPLETION_TOOL_CALLS_TYPE.format(
+                            completion_index=index, tool_call_index=tool_index
+                        )
+                    ]
+                    == tool_call["type"]
+                )
+                assert (
+                    span.attributes[
+                        ExtendedGenAIAttributes.GEN_AI_COMPLETION_TOOL_CALLS_FUNCTION_NAME.format(
+                            completion_index=index, tool_call_index=tool_index
+                        )
+                    ]
+                    == tool_call["function"]["name"]
+                )
+                if "arguments" in tool_call["function"]:
+                    assert (
+                        span.attributes[
+                            ExtendedGenAIAttributes.GEN_AI_COMPLETION_TOOL_CALLS_FUNCTION_ARGUMENTS.format(
+                                completion_index=index, tool_call_index=tool_index
+                            )
+                        ]
+                        == tool_call["function"]["arguments"]
+                    )
+                else:
+                    assert (
+                        ExtendedGenAIAttributes.GEN_AI_COMPLETION_TOOL_CALLS_FUNCTION_ARGUMENTS.format(
+                            completion_index=index, tool_call_index=tool_index
+                        )
+                        not in span.attributes
+                    )
+        else:
+            assert (
+                ExtendedGenAIAttributes.GEN_AI_COMPLETION_TOOL_CALLS_ID.format(
+                    completion_index=index, tool_call_index=0
+                )
+                not in span.attributes
+            )
+
+    # Check that there aren't any additional choices
+    assert (
+        ExtendedGenAIAttributes.GEN_AI_COMPLETION_ROLE.format(
+            completion_index=index + 1
+        )
+        not in span.attributes
+    )

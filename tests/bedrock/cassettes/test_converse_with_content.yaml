@@ -1,0 +1,90 @@
+interactions:
+- request:
+    body: |-
+      {
+        "messages": [
+          {
+            "role": "user",
+            "content": [
+              {
+                "text": "say this is a test"
+              }
+            ]
+          }
+        ],
+        "system": [
+          {
+            "text": "you are a helpful assistant"
+          }
+        ],
+        "inferenceConfig": {
+          "maxTokens": 300,
+          "temperature": 0,
+          "topP": 1
+        }
+      }
+    headers:
+      Authorization:
+      - test-auth
+      Content-Length:
+      - '198'
+      Content-Type:
+      - !!binary |
+        YXBwbGljYXRpb24vanNvbg==
+      User-Agent:
+      - !!binary |
+        Qm90bzMvMS4zOC4wIG1kL0JvdG9jb3JlIzEuMzguMCB1YS8yLjEgb3MvbWFjb3MjMjQuNC4wIG1k
+        L2FyY2gjYXJtNjQgbGFuZy9weXRob24jMy4xMi45IG1kL3B5aW1wbCNDUHl0aG9uIGNmZy9yZXRy
+        eS1tb2RlI2xlZ2FjeSBCb3RvY29yZS8xLjM4LjA=
+      X-Amz-Date:
+      - !!binary |
+        MjAyNTA0MjhUMTIxMTM2Wg==
+      X-Amz-Security-Token:
+      - test-security-token
+      amz-sdk-invocation-id:
+      - !!binary |
+        YmEwMzg3ZGEtMmExYy00Yjk3LThjOTYtODg5YTE2ZGE2MTBj
+      amz-sdk-request:
+      - !!binary |
+        YXR0ZW1wdD0x
+    method: POST
+    uri: https://bedrock-runtime.us-east-1.amazonaws.com/model/anthropic.claude-3-5-sonnet-20240620-v1%3A0/converse
+  response:
+    body:
+      string: |-
+        {
+          "metrics": {
+            "latencyMs": 368
+          },
+          "output": {
+            "message": {
+              "content": [
+                {
+                  "text": "This is a test."
+                }
+              ],
+              "role": "assistant"
+            }
+          },
+          "stopReason": "end_turn",
+          "usage": {
+            "inputTokens": 17,
+            "outputTokens": 8,
+            "totalTokens": 25
+          }
+        }
+    headers:
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '195'
+      Content-Type:
+      - application/json
+      Date:
+      - Mon, 28 Apr 2025 12:11:37 GMT
+      x-amzn-RequestId:
+      - bab35d13-87c4-41bb-990c-3bcaa79de5ba
+    status:
+      code: 200
+      message: OK
+version: 1
