@@ -3,7 +3,7 @@ from opentelemetry.sdk.trace import ReadableSpan
 import llm_tracekit.extended_gen_ai_attributes as ExtendedGenAIAttributes
 
 
-def assert_messages_in_span(span: ReadableSpan, expected_messages: list):
+def assert_messages_in_span(span: ReadableSpan, expected_messages: list, expect_content: bool):
     assert span.attributes is not None
 
     for index, message in enumerate(expected_messages):
@@ -15,19 +15,20 @@ def assert_messages_in_span(span: ReadableSpan, expected_messages: list):
         )
 
         if "content" in message:
-            assert (
-                span.attributes[
-                    ExtendedGenAIAttributes.GEN_AI_PROMPT_CONTENT.format(
-                        prompt_index=index
-                    )
-                ]
-                == message["content"]
-            )
-        else:
-            assert (
-                ExtendedGenAIAttributes.GEN_AI_PROMPT_CONTENT.format(prompt_index=index)
-                not in span.attributes
-            )
+            if expect_content:
+                assert (
+                    span.attributes[
+                        ExtendedGenAIAttributes.GEN_AI_PROMPT_CONTENT.format(
+                            prompt_index=index
+                        )
+                    ]
+                    == message["content"]
+                )
+            else:
+                assert (
+                    ExtendedGenAIAttributes.GEN_AI_PROMPT_CONTENT.format(prompt_index=index)
+                    not in span.attributes
+                )
 
         if "tool_calls" in message:
             for tool_index, tool_call in enumerate(message["tool_calls"]):
@@ -55,7 +56,7 @@ def assert_messages_in_span(span: ReadableSpan, expected_messages: list):
                     ]
                     == tool_call["function"]["name"]
                 )
-                if "arguments" in tool_call["function"]:
+                if expect_content:
                     assert (
                         span.attributes[
                             ExtendedGenAIAttributes.GEN_AI_PROMPT_TOOL_CALLS_FUNCTION_ARGUMENTS.format(
@@ -103,7 +104,7 @@ def assert_messages_in_span(span: ReadableSpan, expected_messages: list):
     )
 
 
-def assert_choices_in_span(span: ReadableSpan, expected_choices: list):
+def assert_choices_in_span(span: ReadableSpan, expected_choices: list, expect_content: bool):
     assert span.attributes is not None
 
     for index, choice in enumerate(expected_choices):
@@ -123,22 +124,23 @@ def assert_choices_in_span(span: ReadableSpan, expected_choices: list):
             ]
             == choice["message"]["role"]
         )
-        if "content" in choice["message"]:
-            assert (
-                span.attributes[
+        if "content" in choice:
+            if expect_content:
+                assert (
+                    span.attributes[
+                        ExtendedGenAIAttributes.GEN_AI_COMPLETION_CONTENT.format(
+                            completion_index=index
+                        )
+                    ]
+                    == choice["message"]["content"]
+                )
+            else:
+                assert (
                     ExtendedGenAIAttributes.GEN_AI_COMPLETION_CONTENT.format(
                         completion_index=index
                     )
-                ]
-                == choice["message"]["content"]
-            )
-        else:
-            assert (
-                ExtendedGenAIAttributes.GEN_AI_COMPLETION_CONTENT.format(
-                    completion_index=index
+                    not in span.attributes
                 )
-                not in span.attributes
-            )
 
         if "tool_calls" in choice["message"]:
             for tool_index, tool_call in enumerate(choice["message"]["tool_calls"]):
@@ -166,7 +168,7 @@ def assert_choices_in_span(span: ReadableSpan, expected_choices: list):
                     ]
                     == tool_call["function"]["name"]
                 )
-                if "arguments" in tool_call["function"]:
+                if expect_content:
                     assert (
                         span.attributes[
                             ExtendedGenAIAttributes.GEN_AI_COMPLETION_TOOL_CALLS_FUNCTION_ARGUMENTS.format(
