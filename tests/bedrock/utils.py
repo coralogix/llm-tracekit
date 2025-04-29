@@ -22,6 +22,8 @@ def assert_attributes_in_span(
     max_tokens: Optional[int] = None,
     temperature: Optional[float] = None,
     top_p: Optional[float] = None,
+    agent_id: Optional[str] = None,
+    agent_alias_id: Optional[str] = None,
 ):
     assert span.name == span_name
     assert span.attributes is not None
@@ -38,6 +40,8 @@ def assert_attributes_in_span(
         GenAIAttributes.GEN_AI_REQUEST_MAX_TOKENS: max_tokens,
         GenAIAttributes.GEN_AI_REQUEST_TEMPERATURE: temperature,
         GenAIAttributes.GEN_AI_REQUEST_TOP_P: top_p,
+        GenAIAttributes.GEN_AI_AGENT_ID: agent_id,
+        GenAIAttributes.GEN_AI_AGENT_NAME: agent_alias_id,
     }
     for attribute, expected_value in attributes_to_expected_values.items():
         if expected_value is not None:
