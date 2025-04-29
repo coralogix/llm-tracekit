@@ -2,32 +2,25 @@ interactions:
 - request:
     body: |-
       {
-        "system": [
-          {
-            "text": "you are a helpful assistant"
-          }
-        ],
         "messages": [
           {
             "role": "user",
             "content": [
               {
-                "text": "say this is a test"
+                "text": "say this"
+              },
+              {
+                "text": " is a test"
               }
             ]
           }
-        ],
-        "inferenceConfig": {
-          "maxTokens": 300,
-          "temperature": 0,
-          "topP": 1
-        }
+        ]
       }
     headers:
       Authorization:
       - test-auth
       Content-Length:
-      - '198'
+      - '91'
       Content-Type:
       - !!binary |
         YXBwbGljYXRpb24vanNvbg==
@@ -38,12 +31,12 @@ interactions:
         eS1tb2RlI2xlZ2FjeSBCb3RvY29yZS8xLjM4LjA=
       X-Amz-Date:
       - !!binary |
-        MjAyNTA0MjlUMTExMjE2Wg==
+        MjAyNTA0MjlUMTExMjE5Wg==
       X-Amz-Security-Token:
       - test-security-token
       amz-sdk-invocation-id:
       - !!binary |
-        NmI3YTliMzgtMjAwOS00ZGFmLWI5YWQtODI3YWU4NGJhMzQx
+        OWQ1YTFiYzYtY2I3Ny00MzhiLWFhYjgtZjk1MWNhYjc4MDlm
       amz-sdk-request:
       - !!binary |
         YXR0ZW1wdD0x
@@ -54,7 +47,7 @@ interactions:
       string: |-
         {
           "metrics": {
-            "latencyMs": 550
+            "latencyMs": 908
           },
           "output": {
             "message": {
@@ -68,9 +61,9 @@ interactions:
           },
           "stopReason": "end_turn",
           "usage": {
-            "inputTokens": 17,
+            "inputTokens": 12,
             "outputTokens": 8,
-            "totalTokens": 25
+            "totalTokens": 20
           }
         }
     headers:
@@ -81,9 +74,9 @@ interactions:
       Content-Type:
       - application/json
       Date:
-      - Tue, 29 Apr 2025 11:12:17 GMT
+      - Tue, 29 Apr 2025 11:12:21 GMT
       x-amzn-RequestId:
-      - 181d89a2-25d7-4d7a-9c15-b752dc5a9ccd
+      - f18cd0ab-3888-4d66-b684-890678638005
     status:
       code: 200
       message: OK

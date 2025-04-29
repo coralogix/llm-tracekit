@@ -2,32 +2,33 @@ interactions:
 - request:
     body: |-
       {
-        "system": [
-          {
-            "text": "you are a helpful assistant"
-          }
-        ],
         "messages": [
           {
             "role": "user",
             "content": [
               {
-                "text": "say this is a test"
+                "text": "say this"
+              },
+              {
+                "image": {
+                  "format": "png",
+                  "source": {
+                    "bytes": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABAQAAAAA3bvkkAAAACklEQVR4AWNgAAAAAgABc3UBGAAAAABJRU5ErkJggg=="
+                  }
+                }
+              },
+              {
+                "text": " is a test"
               }
             ]
           }
-        ],
-        "inferenceConfig": {
-          "maxTokens": 300,
-          "temperature": 0,
-          "topP": 1
-        }
+        ]
       }
     headers:
       Authorization:
       - test-auth
       Content-Length:
-      - '198'
+      - '238'
       Content-Type:
       - !!binary |
         YXBwbGljYXRpb24vanNvbg==
@@ -38,12 +39,12 @@ interactions:
         eS1tb2RlI2xlZ2FjeSBCb3RvY29yZS8xLjM4LjA=
       X-Amz-Date:
       - !!binary |
-        MjAyNTA0MjlUMTExMjE2Wg==
+        MjAyNTA0MjlUMTExMjIxWg==
       X-Amz-Security-Token:
       - test-security-token
       amz-sdk-invocation-id:
       - !!binary |
-        NmI3YTliMzgtMjAwOS00ZGFmLWI5YWQtODI3YWU4NGJhMzQx
+        N2QzNTk1NjEtYWM4ZC00ZDE2LTkyOWYtNDBhYTY1NmJkNDlj
       amz-sdk-request:
       - !!binary |
         YXR0ZW1wdD0x
@@ -54,13 +55,13 @@ interactions:
       string: |-
         {
           "metrics": {
-            "latencyMs": 550
+            "latencyMs": 1905
           },
           "output": {
             "message": {
               "content": [
                 {
-                  "text": "This is a test."
+                  "text": "The image shows a white rectangular sticky note or small piece of paper with handwritten text on it. The text appears to say \"this is a test\" in dark ink, written in a casual handwriting style."
                 }
               ],
               "role": "assistant"
@@ -69,21 +70,21 @@ interactions:
           "stopReason": "end_turn",
           "usage": {
             "inputTokens": 17,
-            "outputTokens": 8,
-            "totalTokens": 25
+            "outputTokens": 46,
+            "totalTokens": 63
           }
         }
     headers:
       Connection:
       - keep-alive
       Content-Length:
-      - '195'
+      - '377'
       Content-Type:
       - application/json
       Date:
-      - Tue, 29 Apr 2025 11:12:17 GMT
+      - Tue, 29 Apr 2025 11:12:23 GMT
       x-amzn-RequestId:
-      - 181d89a2-25d7-4d7a-9c15-b752dc5a9ccd
+      - d0151985-fec9-46ae-8966-e956064f9752
     status:
       code: 200
       message: OK

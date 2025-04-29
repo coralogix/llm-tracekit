@@ -28,12 +28,12 @@ interactions:
         eS1tb2RlI2xlZ2FjeSBCb3RvY29yZS8xLjM4LjA=
       X-Amz-Date:
       - !!binary |
-        MjAyNTA0MjlUMDk0NzE5Wg==
+        MjAyNTA0MjlUMTExMjE4Wg==
       X-Amz-Security-Token:
       - test-security-token
       amz-sdk-invocation-id:
       - !!binary |
-        MmM3ZGFmMGYtMjAzMC00NzJiLWFjN2MtYjUwMzIyZmU0NjAx
+        YjFiNDRkZjQtN2E2Mi00OGI4LTlmNjMtMjhkODYzODg2NDgx
       amz-sdk-request:
       - !!binary |
         YXR0ZW1wdD0x
@@ -53,11 +53,11 @@ interactions:
       Content-Type:
       - application/json
       Date:
-      - Tue, 29 Apr 2025 09:47:19 GMT
+      - Tue, 29 Apr 2025 11:12:19 GMT
       x-amzn-ErrorType:
       - ValidationException:http://internal.amazon.com/coral/com.amazon.bedrock/
       x-amzn-RequestId:
-      - c2ca5839-fe06-4279-815e-404de68d842f
+      - 6142a0d8-7ce7-4391-a727-1060f61cf728
     status:
       code: 400
       message: Bad Request

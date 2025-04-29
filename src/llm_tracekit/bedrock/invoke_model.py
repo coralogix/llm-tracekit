@@ -61,7 +61,7 @@ def _parse_claude_message(
                 for block in content_blocks_by_type["text"]
                 if block.get("text") is not None
             ]
-            return Message(role=role, content="\n".join(text_parts))
+            return Message(role=role, content="".join(text_parts))
         elif "tool_use" in content_blocks_by_type:
             tool_calls = []
             for block in content_blocks_by_type["tool_use"]:

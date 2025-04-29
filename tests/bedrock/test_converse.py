@@ -6,6 +6,9 @@ from tests.bedrock.utils import assert_attributes_in_span, assert_expected_metri
 from tests.utils import assert_messages_in_span, assert_choices_in_span
 
 
+IMAGE_DATA = b'\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01\x01\x00\x00\x00\x007n\xf9$\x00\x00\x00\nIDATx\x01c`\x00\x00\x00\x02\x00\x01su\x01\x18\x00\x00\x00\x00IEND\xaeB`\x82'
+
+
 def _run_and_check_converse(
     bedrock_client,
     model_id: str,
@@ -179,17 +182,45 @@ def test_converse_bad_auth(instrument_with_content, claude_model_id: str, span_e
     )
 
 
-def test_converse_mixed_content_blocks():
-    pytest.fail("TODO")
+@pytest.mark.vcr()
+def test_converse_content_blocks(bedrock_client_with_content, claude_model_id: str, span_exporter):
+    bedrock_client_with_content.converse(
+        modelId=claude_model_id,
+        messages=[
+            {"role": "user", "content": [{"text": "say this"}, {"text": " is a test"}]}
+        ],
+
+    )
+
+    spans = span_exporter.get_finished_spans()
+    assert len(spans) == 1
+
+    expected_messages = [
+        {"role": "user", "content": "say this is a test"},
+    ]
+    assert_messages_in_span(span=spans[0], expected_messages=expected_messages, expect_content=True)
 
 
-def test_converse_unsupported_content_blocks():
-    pytest.fail("TODO")
+@pytest.mark.vcr()
+def test_converse_unsupported_content_blocks(bedrock_client_with_content, claude_model_id: str, span_exporter):
+    bedrock_client_with_content.converse(
+        modelId=claude_model_id,
+        messages=[
+            {"role": "user", "content": [
+                {"text": "say this"},
+                {"image": {"format": "png", "source": {"bytes": IMAGE_DATA}}},
+                {"text": " is a test"},
+            ]}
+        ],
+    )
 
+    spans = span_exporter.get_finished_spans()
+    assert len(spans) == 1
 
-# TODO: consider making this part of the regular test, or in a separate test file entirely
-def test_converse_metrics():
-    pytest.fail("TODO")
+    expected_messages = [
+        {"role": "user", "content": "say this is a test"},
+    ]
+    assert_messages_in_span(span=spans[0], expected_messages=expected_messages, expect_content=True)
 
 
 def test_converse_stream_with_content():
@@ -287,9 +318,48 @@ def test_converse_stream_bad_auth(instrument_with_content, claude_model_id: str,
     )
 
 
-def test_converse_stream_mixed_content_blocks():
-    pytest.fail("TODO")
+@pytest.mark.vcr()
+def test_converse_stream_content_blocks(bedrock_client_with_content, claude_model_id: str, span_exporter):
+    result = bedrock_client_with_content.converse_stream(
+        modelId=claude_model_id,
+        system=[{"text": "you are a helpful assistant"}],
+        messages=[
+            {"role": "user", "content": [{"text": "say this"}, {"text": " is a test"}]}
+        ],
+    )
+    # Consume the stream
+    for event in result["stream"]:
+        pass
+
+    spans = span_exporter.get_finished_spans()
+    assert len(spans) == 1
+
+    expected_messages = [
+        {"role": "user", "content": "say this is a test"},
+    ]
+    assert_messages_in_span(span=spans[0], expected_messages=expected_messages, expect_content=True)
 
 
-def test_converse_stream_unsupported_content_blocks():
-    pytest.fail("TODO")
+@pytest.mark.vcr()
+def test_converse_stream_unsupported_content_blocks(bedrock_client_with_content, claude_model_id: str, span_exporter):
+    result = bedrock_client_with_content.converse_stream(
+        modelId=claude_model_id,
+        messages=[
+            {"role": "user", "content": [
+                {"text": "say this"},
+                {"image": {"format": "png", "source": {"bytes": IMAGE_DATA}}},
+                {"text": " is a test"},
+            ]}
+        ],
+    )
+    # Consume the stream
+    for event in result["stream"]:
+        pass
+
+    spans = span_exporter.get_finished_spans()
+    assert len(spans) == 1
+
+    expected_messages = [
+        {"role": "user", "content": "say this is a test"},
+    ]
+    assert_messages_in_span(span=spans[0], expected_messages=expected_messages, expect_content=True)

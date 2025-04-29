@@ -7,6 +7,7 @@ from opentelemetry.semconv._incubating.metrics import gen_ai_metrics
 
 from opentelemetry.semconv.attributes import error_attributes as ErrorAttributes
 import llm_tracekit.extended_gen_ai_attributes as ExtendedGenAIAttributes
+from llm_tracekit.instruments import GEN_AI_CLIENT_OPERATION_DURATION_BUCKETS, GEN_AI_CLIENT_TOKEN_USAGE_BUCKETS
 
 
 def assert_attributes_in_span(
@@ -71,6 +72,7 @@ def assert_expected_metrics(
 
     assert duration_metric is not None
     assert duration_metric.data.data_points[0].sum > 0
+    assert list(duration_metric.data.data_points[0].explicit_bounds) == GEN_AI_CLIENT_OPERATION_DURATION_BUCKETS
     metric_data_points.append(duration_metric.data.data_points[0])
 
     if usage_input_tokens is not None:
@@ -86,6 +88,7 @@ def assert_expected_metrics(
         )
         assert input_token_usage is not None
         assert input_token_usage.sum == usage_input_tokens
+        assert list(input_token_usage.explicit_bounds) == GEN_AI_CLIENT_TOKEN_USAGE_BUCKETS
         metric_data_points.append(input_token_usage)
 
     if usage_output_tokens is not None:
@@ -101,6 +104,7 @@ def assert_expected_metrics(
         )
         assert output_token_usage is not None
         assert output_token_usage.sum == usage_output_tokens
+        assert list(output_token_usage.explicit_bounds) == GEN_AI_CLIENT_TOKEN_USAGE_BUCKETS
         metric_data_points.append(output_token_usage)
 
     # Assert that all data points have all the expected attributes

@@ -1,0 +1,71 @@
+interactions:
+- request:
+    body: |-
+      {
+        "messages": [
+          {
+            "role": "user",
+            "content": [
+              {
+                "text": "say this"
+              },
+              {
+                "image": {
+                  "format": "png",
+                  "source": {
+                    "bytes": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABAQAAAAA3bvkkAAAACklEQVR4AWNgAAAAAgABc3UBGAAAAABJRU5ErkJggg=="
+                  }
+                }
+              },
+              {
+                "text": " is a test"
+              }
+            ]
+          }
+        ]
+      }
+    headers:
+      Authorization:
+      - test-auth
+      Content-Length:
+      - '238'
+      Content-Type:
+      - !!binary |
+        YXBwbGljYXRpb24vanNvbg==
+      User-Agent:
+      - !!binary |
+        Qm90bzMvMS4zOC4wIG1kL0JvdG9jb3JlIzEuMzguMCB1YS8yLjEgb3MvbWFjb3MjMjQuNC4wIG1k
+        L2FyY2gjYXJtNjQgbGFuZy9weXRob24jMy4xMi45IG1kL3B5aW1wbCNDUHl0aG9uIGNmZy9yZXRy
+        eS1tb2RlI2xlZ2FjeSBCb3RvY29yZS8xLjM4LjA=
+      X-Amz-Date:
+      - !!binary |
+        MjAyNTA0MjlUMTExMjI1Wg==
+      X-Amz-Security-Token:
+      - test-security-token
+      amz-sdk-invocation-id:
+      - !!binary |
+        MWVkMTI1YWEtMzM2NC00NTM1LTlkZDktNmFlOWQ1YjljZmYz
+      amz-sdk-request:
+      - !!binary |
+        YXR0ZW1wdD0x
+    method: POST
+    uri: https://bedrock-runtime.us-east-1.amazonaws.com/model/anthropic.claude-3-5-sonnet-20240620-v1%3A0/converse-stream
+  response:
+    body:
+      string: |-
+        b'\x00\x00\x00\x83\x00\x00\x00R\x16\x01%\xf3\x0b:event-type\x07\x00\x0cmessageStart\r:content-type\x07\x00\x10application/json\r:message-type\x07\x00\x05event{"p":"abcdef","role":"assistant"}\x0c\xd6)\xac\x00\x00\x00\xb1\x00\x00\x00W\xbd\x8a:\x9a\x0b:event-type\x07\x00\x11contentBlockDelta\r:content-type\x07\x00\x10application/json\r:message-type\x07\x00\x05event{"contentBlockIndex":0,"delta":{"text":"The"},"p":"abcdefghijklmnopqrstu"}6\xd4\xbfr\x00\x00\x00\xda\x00\x00\x00WSh|\xc6\x0b:event-type\x07\x00\x11contentBlockDelta\r:content-type\x07\x00\x10application/json\r:message-type\x07\x00\x05event{"contentBlockIndex":0,"delta":{"text":" image you\'ve shared appears"},"p":"abcdefghijklmnopqrstuvwxyzABCDEFGHIJK"}\xa8x\xdb\xe1\x00\x00\x00\xbc\x00\x00\x00WE\x1a\xfe+\x0b:event-type\x07\x00\x11contentBlockDelta\r:content-type\x07\x00\x10application/json\r:message-type\x07\x00\x05event{"contentBlockIndex":0,"delta":{"text":" to be a small white"},"p":"abcdefghijklmno"}f\x04y\xc3\x00\x00\x00\xd8\x00\x00\x00W)\xa8/\xa6\x0b:event-type\x07\x00\x11contentBlockDelta\r:content-type\x07\x00\x10application/json\r:message-type\x07\x00\x05event{"contentBlockIndex":0,"delta":{"text":" arrow or pointer icon"},"p":"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNO"}\xfdJ\x18@\x00\x00\x00\xde\x00\x00\x00W\xa6\xe8\xda\x06\x0b:event-type\x07\x00\x11contentBlockDelta\r:content-type\x07\x00\x10application/json\r:message-type\x07\x00\x05event{"contentBlockIndex":0,"delta":{"text":" against a light gray"},"p":"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUV"}\x85\xa12Z\x00\x00\x00\xd2\x00\x00\x00Wc\x187\x07\x0b:event-type\x07\x00\x11contentBlockDelta\r:content-type\x07\x00\x10application/json\r:message-type\x07\x00\x05event{"contentBlockIndex":0,"delta":{"text":" background. This type of icon"},"p":"abcdefghijklmnopqrstuvwxyzA"}\x8d\xe0\xba\x95\x00\x00\x00\xe9\x00\x00\x00W\xb5\xe9\xbe\x90\x0b:event-type\x07\x00\x11contentBlockDelta\r:content-type\x07\x00\x10application/json\r:message-type\x07\x00\x05event{"contentBlockIndex":0,"delta":{"text":" is commonly used in user"},"p":"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ012"}\x16G\xf1\xd7\x00\x00\x00\xbe\x00\x00\x00W?\xda\xadK\x0b:event-type\x07\x00\x11contentBlockDelta\r:content-type\x07\x00\x10application/json\r:message-type\x07\x00\x05event{"contentBlockIndex":0,"delta":{"text":" interfaces to indicate a click"},"p":"abcdef"}\xcaH>/\x00\x00\x00\xd1\x00\x00\x00W$\xb8M\xd7\x0b:event-type\x07\x00\x11contentBlockDelta\r:content-type\x07\x00\x10application/json\r:message-type\x07\x00\x05event{"contentBlockIndex":0,"delta":{"text":"able element or to draw"},"p":"abcdefghijklmnopqrstuvwxyzABCDEFG"}\xc9\xa1{\xce\x00\x00\x00\xc2\x00\x00\x00W\x03\xf8\xa0\x85\x0b:event-type\x07\x00\x11contentBlockDelta\r:content-type\x07\x00\x10application/json\r:message-type\x07\x00\x05event{"contentBlockIndex":0,"delta":{"text":" attention to a particular area. The"},"p":"abcde"}\x11d\x8e%\x00\x00\x00\xbc\x00\x00\x00WE\x1a\xfe+\x0b:event-type\x07\x00\x11contentBlockDelta\r:content-type\x07\x00\x10application/json\r:message-type\x07\x00\x05event{"contentBlockIndex":0,"delta":{"text":" arrow is pointing"},"p":"abcdefghijklmnopq"}W\xd1-\xc5\x00\x00\x00\xb1\x00\x00\x00W\xbd\x8a:\x9a\x0b:event-type\x07\x00\x11contentBlockDelta\r:content-type\x07\x00\x10application/json\r:message-type\x07\x00\x05event{"contentBlockIndex":0,"delta":{"text":" to the right"},"p":"abcdefghijk"}\xb0\xa9\x80\xc2\x00\x00\x00\xc4\x00\x00\x00W\x8c\xb8U%\x0b:event-type\x07\x00\x11contentBlockDelta\r:content-type\x07\x00\x10application/json\r:message-type\x07\x00\x05event{"contentBlockIndex":0,"delta":{"text":", which often suggests forwar"},"p":"abcdefghijklmn"}\x8eC\xb4\x83\x00\x00\x00\xce\x00\x00\x00W\xc6\x08M\x84\x0b:event-type\x07\x00\x11contentBlockDelta\r:content-type\x07\x00\x10application/json\r:message-type\x07\x00\x05event{"contentBlockIndex":0,"delta":{"text":"d motion or progression to the next"},"p":"abcdefghijklmnopqr"}5\xc0\xd2\x86\x00\x00\x00\xd5\x00\x00\x00W\xd18\xeb\x17\x0b:event-type\x07\x00\x11contentBlockDelta\r:content-type\x07\x00\x10application/json\r:message-type\x07\x00\x05event{"contentBlockIndex":0,"delta":{"text":" item or step in"},"p":"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQR"}u\xbd\\M\x00\x00\x00\xb6\x00\x00\x00W\x0f\xaa\xe6\x8a\x0b:event-type\x07\x00\x11contentBlockDelta\r:content-type\x07\x00\x10application/json\r:message-type\x07\x00\x05event{"contentBlockIndex":0,"delta":{"text":" a digital context."},"p":"abcdefghij"}\x1c\x07+\x83\x00\x00\x00\x9f\x00\x00\x00V\xb4|\x9bi\x0b:event-type\x07\x00\x10contentBlockStop\r:content-type\x07\x00\x10application/json\r:message-type\x07\x00\x05event{"contentBlockIndex":0,"p":"abcdefghijklmnopqrstuvwxyzA"}\x82k\xb1\x01\x00\x00\x00\xb7\x00\x00\x00Q\xdb\xa9j\x0f\x0b:event-type\x07\x00\x0bmessageStop\r:content-type\x07\x00\x10application/json\r:message-type\x07\x00\x05event{"p":"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ01","stopReason":"end_turn"}\xe0a\x81\x9d\x00\x00\x00\xc9\x00\x00\x00N\x10C9T\x0b:event-type\x07\x00\x08metadata\r:content-type\x07\x00\x10application/json\r:message-type\x07\x00\x05event{"metrics":{"latencyMs":2623},"p":"abcdefgh","usage":{"inputTokens":17,"outputTokens":75,"totalTokens":92}}\x9a\xe1\xed\xb0'
+    headers:
+      Connection:
+      - keep-alive
+      Content-Type:
+      - application/vnd.amazon.eventstream
+      Date:
+      - Tue, 29 Apr 2025 11:12:26 GMT
+      Transfer-Encoding:
+      - chunked
+      x-amzn-RequestId:
+      - 3e580ce4-42b6-48f1-8aad-4c81c371cd79
+    status:
+      code: 200
+      message: OK
+version: 1

@@ -1,0 +1,68 @@
+interactions:
+- request:
+    body: |-
+      {
+        "system": [
+          {
+            "text": "you are a helpful assistant"
+          }
+        ],
+        "messages": [
+          {
+            "role": "user",
+            "content": [
+              {
+                "text": "say this"
+              },
+              {
+                "text": " is a test"
+              }
+            ]
+          }
+        ]
+      }
+    headers:
+      Authorization:
+      - test-auth
+      Content-Length:
+      - '144'
+      Content-Type:
+      - !!binary |
+        YXBwbGljYXRpb24vanNvbg==
+      User-Agent:
+      - !!binary |
+        Qm90bzMvMS4zOC4wIG1kL0JvdG9jb3JlIzEuMzguMCB1YS8yLjEgb3MvbWFjb3MjMjQuNC4wIG1k
+        L2FyY2gjYXJtNjQgbGFuZy9weXRob24jMy4xMi45IG1kL3B5aW1wbCNDUHl0aG9uIGNmZy9yZXRy
+        eS1tb2RlI2xlZ2FjeSBCb3RvY29yZS8xLjM4LjA=
+      X-Amz-Date:
+      - !!binary |
+        MjAyNTA0MjlUMTExMjI0Wg==
+      X-Amz-Security-Token:
+      - test-security-token
+      amz-sdk-invocation-id:
+      - !!binary |
+        NzVkNGQzZGYtMzI1ZS00YzIzLWE2MDItYmQ5YTMzODQ1NWNi
+      amz-sdk-request:
+      - !!binary |
+        YXR0ZW1wdD0x
+    method: POST
+    uri: https://bedrock-runtime.us-east-1.amazonaws.com/model/anthropic.claude-3-5-sonnet-20240620-v1%3A0/converse-stream
+  response:
+    body:
+      string: |-
+        b'\x00\x00\x00\xa8\x00\x00\x00R\xa0\x10;\xe6\x0b:event-type\x07\x00\x0cmessageStart\r:content-type\x07\x00\x10application/json\r:message-type\x07\x00\x05event{"p":"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQ","role":"assistant"}|\xf6(8\x00\x00\x00\xb3\x00\x00\x00W\xc7Ji\xfa\x0b:event-type\x07\x00\x11contentBlockDelta\r:content-type\x07\x00\x10application/json\r:message-type\x07\x00\x05event{"contentBlockIndex":0,"delta":{"text":"This"},"p":"abcdefghijklmnopqrstuv"}\xcbn\x0e\x17\x00\x00\x00\xdd\x00\x00\x00W\xe1H\xa0\xd6\x0b:event-type\x07\x00\x11contentBlockDelta\r:content-type\x07\x00\x10application/json\r:message-type\x07\x00\x05event{"contentBlockIndex":0,"delta":{"text":" is a test."},"p":"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ01234"}\xcdu)\xae\x00\x00\x00\xa3\x00\x00\x00V\xd0\xad\xce\xee\x0b:event-type\x07\x00\x10contentBlockStop\r:content-type\x07\x00\x10application/json\r:message-type\x07\x00\x05event{"contentBlockIndex":0,"p":"abcdefghijklmnopqrstuvwxyzABCDE"}C\xe2\xa0j\x00\x00\x00\x9b\x00\x00\x00Q\xdf\x98\xa8\n\x0b:event-type\x07\x00\x0bmessageStop\r:content-type\x07\x00\x10application/json\r:message-type\x07\x00\x05event{"p":"abcdefghijklmnopqrstuvwxyz","stopReason":"end_turn"}\x04\x81\x81\xa3\x00\x00\x00\xf3\x00\x00\x00N\xfb\xd2\x99s\x0b:event-type\x07\x00\x08metadata\r:content-type\x07\x00\x10application/json\r:message-type\x07\x00\x05event{"metrics":{"latencyMs":492},"p":"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ","usage":{"inputTokens":17,"outputTokens":8,"totalTokens":25}}\x83I-\xb5'
+    headers:
+      Connection:
+      - keep-alive
+      Content-Type:
+      - application/vnd.amazon.eventstream
+      Date:
+      - Tue, 29 Apr 2025 11:12:25 GMT
+      Transfer-Encoding:
+      - chunked
+      x-amzn-RequestId:
+      - 122611a7-9373-49b8-8a61-1cb474c32751
+    status:
+      code: 200
+      message: OK
+version: 1

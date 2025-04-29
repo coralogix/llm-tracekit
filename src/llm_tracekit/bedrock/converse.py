@@ -38,7 +38,7 @@ def _combine_tool_call_content_parts(
             return json.dumps(content_part["json"])
 
     if len(text_parts) > 0:
-        return "\n".join(text_parts)
+        return "".join(text_parts)
 
     return None
 
@@ -69,7 +69,7 @@ def _parse_converse_message(
     # in the same message, but in case that happens we follow the hierarchy
     # of text > tool_calls > tool_call_result
     if len(text_parts) > 0:
-        return Message(role=role, content="\n".join(text_parts))
+        return Message(role=role, content="".join(text_parts))
     elif len(tool_calls) > 0:
         message_tool_calls = []
         for tool_call in tool_calls:

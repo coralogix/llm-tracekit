@@ -28,12 +28,12 @@ interactions:
         eS1tb2RlI2xlZ2FjeSBCb3RvY29yZS8xLjM4LjA=
       X-Amz-Date:
       - !!binary |
-        MjAyNTA0MjlUMDk0NzIwWg==
+        MjAyNTA0MjlUMTExMjI0Wg==
       X-Amz-Security-Token:
       - test-security-token
       amz-sdk-invocation-id:
       - !!binary |
-        NjAyODk1MzEtYzU3ZC00ODk3LTk0ZTMtYzFiN2ZlODRjMjBh
+        NDI3MWNjNmMtMGNjYy00MzgxLTg1YmYtODM3N2NlYjVhMjgw
       amz-sdk-request:
       - !!binary |
         YXR0ZW1wdD0x
@@ -53,11 +53,11 @@ interactions:
       Content-Type:
       - application/json
       Date:
-      - Tue, 29 Apr 2025 09:47:21 GMT
+      - Tue, 29 Apr 2025 11:12:24 GMT
       x-amzn-ErrorType:
       - UnrecognizedClientException:http://internal.amazon.com/coral/com.amazon.coral.service/
       x-amzn-RequestId:
-      - 9d23b6e8-c9e7-4ac4-a900-6f919e7bd4a1
+      - f6a01355-16af-449b-a474-e9a74b47792e
     status:
       code: 403
       message: Forbidden
