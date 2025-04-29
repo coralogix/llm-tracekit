@@ -3,6 +3,7 @@ from opentelemetry.sdk.trace import ReadableSpan
 from opentelemetry.semconv._incubating.attributes import (
     gen_ai_attributes as GenAIAttributes,
 )
+from opentelemetry.semconv._incubating.metrics import gen_ai_metrics
 
 from opentelemetry.semconv.attributes import error_attributes as ErrorAttributes
 import llm_tracekit.extended_gen_ai_attributes as ExtendedGenAIAttributes
@@ -17,6 +18,9 @@ def assert_attributes_in_span(
     usage_output_tokens: Optional[int] = None,
     finish_reasons: Optional[Iterable[str]] = None,
     error: Optional[str] = None,
+    max_tokens: Optional[int] = None,
+    temperature: Optional[float] = None,
+    top_p: Optional[float] = None,
 ):
     assert span.name == span_name
     assert span.attributes is not None
@@ -30,9 +34,79 @@ def assert_attributes_in_span(
         GenAIAttributes.GEN_AI_USAGE_OUTPUT_TOKENS: usage_output_tokens,
         GenAIAttributes.GEN_AI_RESPONSE_FINISH_REASONS: finish_reasons,
         ErrorAttributes.ERROR_TYPE: error,
+        GenAIAttributes.GEN_AI_REQUEST_MAX_TOKENS: max_tokens,
+        GenAIAttributes.GEN_AI_REQUEST_TEMPERATURE: temperature,
+        GenAIAttributes.GEN_AI_REQUEST_TOP_P: top_p,
     }
     for attribute, expected_value in attributes_to_expected_values.items():
         if expected_value is not None:
             assert span.attributes[attribute] == expected_value
         else:
             assert attribute not in span.attributes
+
+
+def assert_expected_metrics(
+    metrics,
+    usage_input_tokens: Optional[int] = None,
+    usage_output_tokens: Optional[int] = None,
+    error: Optional[str] = None,
+    model: Optional[str] = None,
+):
+    attributes = {
+        GenAIAttributes.GEN_AI_OPERATION_NAME: GenAIAttributes.GenAiOperationNameValues.CHAT.value,
+        GenAIAttributes.GEN_AI_SYSTEM: GenAIAttributes.GenAiSystemValues.AWS_BEDROCK.value,
+        GenAIAttributes.GEN_AI_REQUEST_MODEL: model,
+        GenAIAttributes.GEN_AI_RESPONSE_MODEL: model,
+        ErrorAttributes.ERROR_TYPE: error
+    }
+
+    metric_data_points = []
+    duration_metric = None
+    usage_metric = None
+    for metric in metrics:
+        if metric.name == gen_ai_metrics.GEN_AI_CLIENT_OPERATION_DURATION:
+            duration_metric = metric
+        elif metric.name == gen_ai_metrics.GEN_AI_CLIENT_TOKEN_USAGE:
+            usage_metric = metric
+
+    assert duration_metric is not None
+    assert duration_metric.data.data_points[0].sum > 0
+    metric_data_points.append(duration_metric.data.data_points[0])
+
+    if usage_input_tokens is not None:
+        assert usage_metric is not None
+        input_token_usage = next(
+            (
+                data_point
+                for data_point in usage_metric.data.data_points
+                if data_point.attributes[GenAIAttributes.GEN_AI_TOKEN_TYPE]
+                == GenAIAttributes.GenAiTokenTypeValues.INPUT.value
+            ),
+            None,
+        )
+        assert input_token_usage is not None
+        assert input_token_usage.sum == usage_input_tokens
+        metric_data_points.append(input_token_usage)
+
+    if usage_output_tokens is not None:
+        assert usage_metric is not None
+        output_token_usage = next(
+            (
+                data_point
+                for data_point in usage_metric.data.data_points
+                if data_point.attributes[GenAIAttributes.GEN_AI_TOKEN_TYPE]
+                == GenAIAttributes.GenAiTokenTypeValues.OUTPUT.value
+            ),
+            None,
+        )
+        assert output_token_usage is not None
+        assert output_token_usage.sum == usage_output_tokens
+        metric_data_points.append(output_token_usage)
+
+    # Assert that all data points have all the expected attributes
+    for data_point in metric_data_points:
+        for attribute, expected_value in attributes.items():
+            if expected_value is not None:
+                assert data_point.attributes[attribute] == expected_value
+            else:
+                assert attribute not in data_point.attributes

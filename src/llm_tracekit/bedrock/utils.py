@@ -4,6 +4,7 @@ from typing import Optional
 from opentelemetry.semconv._incubating.attributes import (
     gen_ai_attributes as GenAIAttributes,
 )
+from opentelemetry.semconv.attributes import error_attributes as ErrorAttributes
 
 from llm_tracekit.instruments import Instruments
 
@@ -30,7 +31,7 @@ def record_metrics(
         )
 
     if error_type:
-        common_attributes["error.type"] = error_type
+        common_attributes[ErrorAttributes.ERROR_TYPE] = error_type
 
     instruments.operation_duration_histogram.record(
         duration,
