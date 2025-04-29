@@ -31,12 +31,12 @@ interactions:
         eS1tb2RlI2xlZ2FjeSBCb3RvY29yZS8xLjM4LjA=
       X-Amz-Date:
       - !!binary |
-        MjAyNTA0MjlUMTExMjE5Wg==
+        MjAyNTA0MjlUMTIyOTMxWg==
       X-Amz-Security-Token:
       - test-security-token
       amz-sdk-invocation-id:
       - !!binary |
-        OWQ1YTFiYzYtY2I3Ny00MzhiLWFhYjgtZjk1MWNhYjc4MDlm
+        NWE1YmMxNjctNzE1ZS00Yjg3LWEzNjYtM2FiNGIzY2IwNjMx
       amz-sdk-request:
       - !!binary |
         YXR0ZW1wdD0x
@@ -47,7 +47,7 @@ interactions:
       string: |-
         {
           "metrics": {
-            "latencyMs": 908
+            "latencyMs": 440
           },
           "output": {
             "message": {
@@ -74,9 +74,9 @@ interactions:
       Content-Type:
       - application/json
       Date:
-      - Tue, 29 Apr 2025 11:12:21 GMT
+      - Tue, 29 Apr 2025 12:29:32 GMT
       x-amzn-RequestId:
-      - f18cd0ab-3888-4d66-b684-890678638005
+      - b30f24f0-a3cc-41d2-ab27-d9d2114e7c64
     status:
       code: 200
       message: OK

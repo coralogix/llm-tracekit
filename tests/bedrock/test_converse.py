@@ -5,7 +5,7 @@ import pytest
 from tests.bedrock.utils import assert_attributes_in_span, assert_expected_metrics
 from tests.utils import assert_messages_in_span, assert_choices_in_span
 
-
+# This is a PNG of a single black pixel
 IMAGE_DATA = b'\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01\x01\x00\x00\x00\x007n\xf9$\x00\x00\x00\nIDATx\x01c`\x00\x00\x00\x02\x00\x01su\x01\x18\x00\x00\x00\x00IEND\xaeB`\x82'
 
 
@@ -15,26 +15,51 @@ def _run_and_check_converse(
     span_exporter,
     metric_reader,
     expect_content: bool,
+    stream: bool,
 ):
-    result = bedrock_client.converse(
-        modelId=model_id,
-        system=[{"text": "you are a helpful assistant"}],
-        messages=[
+    args = {
+        "modelId": model_id,
+        "system": [{"text": "you are a helpful assistant"}],
+        "messages": [
             {"role": "user", "content": [{"text": "say this is a test"}]}
         ],
-        inferenceConfig={
+        "inferenceConfig": {
             "maxTokens": 300,
             "temperature": 0,
             "topP": 1,
         },
-    )
+    }
+    if stream:
+        span_name = "bedrock.converse_stream"
+        stream_result = bedrock_client.converse_stream(**args)
+        result = {
+            "stopReason": "",
+            "output": {
+                "usage": {},
+                "message": {
+                    "content": [{"text": ""}],
+                }
+            }
+        }
+        for event in stream_result["stream"]:
+            if "messageStart" in event:
+                result["output"]["message"]["role"] = event["messageStart"]["role"]
+            if "contentBlockDelta" in event:
+                result["output"]["message"]["content"][0]["text"] += event["contentBlockDelta"]["delta"]["text"]
+            if "metadata" in event:
+                result["usage"] = event["metadata"]["usage"]
+            if "messageStop" in event:
+                result["stopReason"] = event["messageStop"]["stopReason"]
+    else:
+        span_name = "bedrock.converse"
+        result = bedrock_client.converse(**args)
 
     spans = span_exporter.get_finished_spans()
     assert len(spans) == 1
 
     assert_attributes_in_span(
         span=spans[0],
-        span_name="bedrock.converse",
+        span_name=span_name,
         request_model=model_id,
         response_model=model_id,
         usage_input_tokens=result["usage"]["inputTokens"],
@@ -81,6 +106,7 @@ def test_converse_with_content(bedrock_client_with_content, claude_model_id: str
         span_exporter=span_exporter,
         metric_reader=metric_reader,
         expect_content=True,
+        stream=False,
     )
 
 
@@ -92,6 +118,7 @@ def test_converse_no_content(bedrock_client_no_content, claude_model_id: str, sp
         span_exporter=span_exporter,
         metric_reader=metric_reader,
         expect_content=False,
+        stream=False,
     )
 
 
@@ -223,12 +250,28 @@ def test_converse_unsupported_content_blocks(bedrock_client_with_content, claude
     assert_messages_in_span(span=spans[0], expected_messages=expected_messages, expect_content=True)
 
 
-def test_converse_stream_with_content():
-    pytest.fail("TODO")
+@pytest.mark.vcr()
+def test_converse_stream_with_content(bedrock_client_with_content, claude_model_id: str, span_exporter, metric_reader):
+    _run_and_check_converse(
+        bedrock_client=bedrock_client_with_content,
+        model_id=claude_model_id,
+        span_exporter=span_exporter,
+        metric_reader=metric_reader,
+        expect_content=True,
+        stream=True,
+    )
 
 
-def test_converse_stream_no_content():
-    pytest.fail("TODO")
+@pytest.mark.vcr()
+def test_converse_stream_no_content(bedrock_client_no_content, claude_model_id: str, span_exporter, metric_reader):
+    _run_and_check_converse(
+        bedrock_client=bedrock_client_no_content,
+        model_id=claude_model_id,
+        span_exporter=span_exporter,
+        metric_reader=metric_reader,
+        expect_content=False,
+        stream=True,
+    )
 
 
 def test_converse_stream_tool_calls_with_content():
@@ -322,7 +365,6 @@ def test_converse_stream_bad_auth(instrument_with_content, claude_model_id: str,
 def test_converse_stream_content_blocks(bedrock_client_with_content, claude_model_id: str, span_exporter):
     result = bedrock_client_with_content.converse_stream(
         modelId=claude_model_id,
-        system=[{"text": "you are a helpful assistant"}],
         messages=[
             {"role": "user", "content": [{"text": "say this"}, {"text": " is a test"}]}
         ],

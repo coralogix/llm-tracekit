@@ -39,12 +39,12 @@ interactions:
         eS1tb2RlI2xlZ2FjeSBCb3RvY29yZS8xLjM4LjA=
       X-Amz-Date:
       - !!binary |
-        MjAyNTA0MjlUMTExMjIxWg==
+        MjAyNTA0MjlUMTIyOTMyWg==
       X-Amz-Security-Token:
       - test-security-token
       amz-sdk-invocation-id:
       - !!binary |
-        N2QzNTk1NjEtYWM4ZC00ZDE2LTkyOWYtNDBhYTY1NmJkNDlj
+        NDU3MmIyNmQtOTJhNi00Zjk5LWIzNmMtZWMzYjJmMzQ5ZGFj
       amz-sdk-request:
       - !!binary |
         YXR0ZW1wdD0x
@@ -55,13 +55,13 @@ interactions:
       string: |-
         {
           "metrics": {
-            "latencyMs": 1905
+            "latencyMs": 1939
           },
           "output": {
             "message": {
               "content": [
                 {
-                  "text": "The image shows a white rectangular sticky note or small piece of paper with handwritten text on it. The text appears to say \"this is a test\" in dark ink, written in a casual handwriting style."
+                  "text": "The image appears to show a handwritten note on a white background. The text is written in black ink and reads \"is a test\". The handwriting looks somewhat casual or informal in style. The note seems to be written on a plain white surface, possibly a piece of paper."
                 }
               ],
               "role": "assistant"
@@ -70,21 +70,21 @@ interactions:
           "stopReason": "end_turn",
           "usage": {
             "inputTokens": 17,
-            "outputTokens": 46,
-            "totalTokens": 63
+            "outputTokens": 60,
+            "totalTokens": 77
           }
         }
     headers:
       Connection:
       - keep-alive
       Content-Length:
-      - '377'
+      - '449'
       Content-Type:
       - application/json
       Date:
-      - Tue, 29 Apr 2025 11:12:23 GMT
+      - Tue, 29 Apr 2025 12:29:35 GMT
       x-amzn-RequestId:
-      - d0151985-fec9-46ae-8966-e956064f9752
+      - e2ee74cf-aeac-451e-bf67-2214b0bc0040
     status:
       code: 200
       message: OK
