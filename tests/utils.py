@@ -3,7 +3,9 @@ from opentelemetry.sdk.trace import ReadableSpan
 import llm_tracekit.extended_gen_ai_attributes as ExtendedGenAIAttributes
 
 
-def assert_messages_in_span(span: ReadableSpan, expected_messages: list, expect_content: bool):
+def assert_messages_in_span(
+    span: ReadableSpan, expected_messages: list, expect_content: bool
+):
     assert span.attributes is not None
 
     for index, message in enumerate(expected_messages):
@@ -26,7 +28,9 @@ def assert_messages_in_span(span: ReadableSpan, expected_messages: list, expect_
                 )
             else:
                 assert (
-                    ExtendedGenAIAttributes.GEN_AI_PROMPT_CONTENT.format(prompt_index=index)
+                    ExtendedGenAIAttributes.GEN_AI_PROMPT_CONTENT.format(
+                        prompt_index=index
+                    )
                     not in span.attributes
                 )
 
@@ -104,7 +108,9 @@ def assert_messages_in_span(span: ReadableSpan, expected_messages: list, expect_
     )
 
 
-def assert_choices_in_span(span: ReadableSpan, expected_choices: list, expect_content: bool):
+def assert_choices_in_span(
+    span: ReadableSpan, expected_choices: list, expect_content: bool
+):
     assert span.attributes is not None
 
     for index, choice in enumerate(expected_choices):

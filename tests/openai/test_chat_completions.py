@@ -33,7 +33,7 @@ from tests.openai.utils import (
     assert_completion_attributes,
     get_current_weather_tool_definition,
 )
-from tests.utils import assert_messages_in_span, assert_choices_in_span
+from tests.utils import assert_choices_in_span, assert_messages_in_span
 
 
 @pytest.mark.vcr()
@@ -51,7 +51,9 @@ def test_chat_completion_with_content(
     assert_completion_attributes(spans[0], llm_model_value, response)
 
     user_message = {"role": "user", "content": messages_value[0]["content"]}
-    assert_messages_in_span(span=spans[0], expected_messages=[user_message], expect_content=True)
+    assert_messages_in_span(
+        span=spans[0], expected_messages=[user_message], expect_content=True
+    )
 
     choice = {
         "finish_reason": "stop",
@@ -60,7 +62,9 @@ def test_chat_completion_with_content(
             "content": response.choices[0].message.content,
         },
     }
-    assert_choices_in_span(span=spans[0], expected_choices=[choice], expect_content=True)
+    assert_choices_in_span(
+        span=spans[0], expected_choices=[choice], expect_content=True
+    )
 
 
 @pytest.mark.vcr()
@@ -83,7 +87,9 @@ def test_chat_completion_with_content_array(
     assert_completion_attributes(spans[0], llm_model_value, response)
 
     user_message = {"role": "user"}
-    assert_messages_in_span(span=spans[0], expected_messages=[user_message], expect_content=True)
+    assert_messages_in_span(
+        span=spans[0], expected_messages=[user_message], expect_content=True
+    )
 
     choice = {
         "finish_reason": "stop",
@@ -92,7 +98,9 @@ def test_chat_completion_with_content_array(
             "content": response.choices[0].message.content,
         },
     }
-    assert_choices_in_span(span=spans[0], expected_choices=[choice], expect_content=True)
+    assert_choices_in_span(
+        span=spans[0], expected_choices=[choice], expect_content=True
+    )
 
 
 @pytest.mark.vcr()
@@ -109,10 +117,14 @@ def test_chat_completion_no_content(
     spans = span_exporter.get_finished_spans()
     assert_completion_attributes(spans[0], llm_model_value, response)
 
-    assert_messages_in_span(span=spans[0], expected_messages=[{"role": "user"}], expect_content=False)
+    assert_messages_in_span(
+        span=spans[0], expected_messages=[{"role": "user"}], expect_content=False
+    )
 
     choice = {"finish_reason": "stop", "message": {"role": "assistant"}}
-    assert_choices_in_span(span=spans[0], expected_choices=[choice], expect_content=False)
+    assert_choices_in_span(
+        span=spans[0], expected_choices=[choice], expect_content=False
+    )
 
 
 def test_chat_completion_bad_endpoint(
@@ -246,7 +258,9 @@ def test_chat_completion_multiple_choices(
     assert_completion_attributes(spans[0], llm_model_value, response)
 
     user_message = {"role": "user", "content": messages_value[0]["content"]}
-    assert_messages_in_span(span=spans[0], expected_messages=[user_message], expect_content=True)
+    assert_messages_in_span(
+        span=spans[0], expected_messages=[user_message], expect_content=True
+    )
 
     choices = [
         {
@@ -339,7 +353,11 @@ def chat_completion_tool_call(span_exporter, openai_client, expect_content):
     # call one
     system_message = {"role": "system", "content": messages_value[0]["content"]}
     user_message = {"role": "user", "content": messages_value[1]["content"]}
-    assert_messages_in_span(span=spans[0], expected_messages=[system_message, user_message], expect_content=expect_content)
+    assert_messages_in_span(
+        span=spans[0],
+        expected_messages=[system_message, user_message],
+        expect_content=expect_content,
+    )
 
     function_call_0 = {
         "name": "get_current_weather",
@@ -376,7 +394,9 @@ def chat_completion_tool_call(span_exporter, openai_client, expect_content):
             ],
         },
     }
-    assert_choices_in_span(span=spans[0], expected_choices=[choice], expect_content=expect_content)
+    assert_choices_in_span(
+        span=spans[0], expected_choices=[choice], expect_content=expect_content
+    )
 
     # call two
     assistant_tool_call = {
@@ -386,7 +406,7 @@ def chat_completion_tool_call(span_exporter, openai_client, expect_content):
     tool_message_0 = {
         "role": "tool",
         "tool_call_id": tool_call_result_0["tool_call_id"],
-        "content":  tool_call_result_0["content"],
+        "content": tool_call_result_0["content"],
     }
     tool_message_1 = {
         "role": "tool",
@@ -414,7 +434,9 @@ def chat_completion_tool_call(span_exporter, openai_client, expect_content):
         },
     }
 
-    assert_choices_in_span(span=spans[1], expected_choices=[choice], expect_content=expect_content)
+    assert_choices_in_span(
+        span=spans[1], expected_choices=[choice], expect_content=expect_content
+    )
 
 
 @pytest.mark.vcr()
@@ -457,13 +479,17 @@ def test_chat_completion_streaming(
     )
 
     user_message = {"role": "user", "content": "Say this is a test"}
-    assert_messages_in_span(span=spans[0], expected_messages=[user_message], expect_content=True)
+    assert_messages_in_span(
+        span=spans[0], expected_messages=[user_message], expect_content=True
+    )
 
     choice = {
         "finish_reason": "stop",
         "message": {"role": "assistant", "content": response_stream_result},
     }
-    assert_choices_in_span(span=spans[0], expected_choices=[choice], expect_content=True)
+    assert_choices_in_span(
+        span=spans[0], expected_choices=[choice], expect_content=True
+    )
 
 
 @pytest.mark.vcr()
@@ -502,13 +528,17 @@ def test_chat_completion_streaming_not_complete(
     )
 
     user_message = {"role": "user", "content": "Say this is a test"}
-    assert_messages_in_span(span=spans[0], expected_messages=[user_message], expect_content=True)
+    assert_messages_in_span(
+        span=spans[0], expected_messages=[user_message], expect_content=True
+    )
 
     choice = {
         "finish_reason": "error",
         "message": {"role": "assistant", "content": response_stream_result},
     }
-    assert_choices_in_span(span=spans[0], expected_choices=[choice], expect_content=True)
+    assert_choices_in_span(
+        span=spans[0], expected_choices=[choice], expect_content=True
+    )
 
 
 @pytest.mark.vcr()
@@ -568,7 +598,9 @@ def test_chat_completion_multiple_choices_streaming(
             "content": "What's the weather in Seattle and San Francisco today?",
         },
     ]
-    assert_messages_in_span(span=spans[0], expected_messages=messages, expect_content=True)
+    assert_messages_in_span(
+        span=spans[0], expected_messages=messages, expect_content=True
+    )
 
     choices = [
         {
@@ -680,9 +712,16 @@ def chat_completion_multiple_tools_streaming(
     )
 
     system_message = {"role": "system", "content": messages_value[0]["content"]}
-    user_message = {"role": "user", "content": "What's the weather in Seattle and San Francisco today?"}
+    user_message = {
+        "role": "user",
+        "content": "What's the weather in Seattle and San Francisco today?",
+    }
 
-    assert_messages_in_span(span=spans[0], expected_messages=[system_message, user_message], expect_content=expect_content)
+    assert_messages_in_span(
+        span=spans[0],
+        expected_messages=[system_message, user_message],
+        expect_content=expect_content,
+    )
 
     tool_call_0 = {
         "id": tool_call_ids[0],
@@ -708,4 +747,6 @@ def chat_completion_multiple_tools_streaming(
             "tool_calls": [tool_call_0, tool_call_1],
         },
     }
-    assert_choices_in_span(span=spans[0], expected_choices=[choice], expect_content=expect_content)
+    assert_choices_in_span(
+        span=spans[0], expected_choices=[choice], expect_content=expect_content
+    )

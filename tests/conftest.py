@@ -15,7 +15,6 @@ from opentelemetry.sdk.trace.export.in_memory_span_exporter import (
     InMemorySpanExporter,
 )
 
-
 pytest.register_assert_rewrite("tests.utils")
 
 

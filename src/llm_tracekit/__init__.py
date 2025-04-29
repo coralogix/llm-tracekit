@@ -14,10 +14,16 @@
 
 from contextlib import suppress
 
-from llm_tracekit.coralogix import setup_export_to_coralogix as setup_export_to_coralogix
+from llm_tracekit.coralogix import (
+    setup_export_to_coralogix as setup_export_to_coralogix,
+)
 
 with suppress(ImportError):
-    from llm_tracekit.openai.instrumentor import OpenAIInstrumentor as OpenAIInstrumentor
+    from llm_tracekit.openai.instrumentor import (
+        OpenAIInstrumentor as OpenAIInstrumentor,
+    )
 
 with suppress(ImportError):
-    from llm_tracekit.bedrock.instrumentor import BedrockInstrumentor as BedrockInstrumentor
+    from llm_tracekit.bedrock.instrumentor import (
+        BedrockInstrumentor as BedrockInstrumentor,
+    )

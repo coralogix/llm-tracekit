@@ -1,11 +1,11 @@
 import json
 
 import boto3
-from botocore.exceptions import ClientError
 import pytest
+from botocore.exceptions import ClientError
 
 from tests.bedrock.utils import assert_attributes_in_span, assert_expected_metrics
-from tests.utils import assert_messages_in_span, assert_choices_in_span
+from tests.utils import assert_choices_in_span, assert_messages_in_span
 
 
 def _run_and_check_invoke_model_llama(
@@ -20,12 +20,14 @@ def _run_and_check_invoke_model_llama(
         "modelId": model_id,
         "contentType": "application/json",
         "accept": "application/json",
-        "body": json.dumps({
-            "prompt": "say this is a test",
-            "temperature": 0,
-            "max_gen_len": 300,
-            "top_p": 1,
-        })
+        "body": json.dumps(
+            {
+                "prompt": "say this is a test",
+                "temperature": 0,
+                "max_gen_len": 300,
+                "top_p": 1,
+            }
+        ),
     }
     if stream:
         span_name = "bedrock.invoke_model_with_response_stream"
@@ -54,17 +56,22 @@ def _run_and_check_invoke_model_llama(
     expected_messages = [
         {"role": "user", "content": "say this is a test"},
     ]
-    assert_messages_in_span(span=spans[0], expected_messages=expected_messages, expect_content=expect_content)
+    assert_messages_in_span(
+        span=spans[0],
+        expected_messages=expected_messages,
+        expect_content=expect_content,
+    )
 
     expected_choice = {
         "finish_reason": result["stop_reason"],
         "message": {
             "role": "assistant",
             "content": result["generation"],
-        }
+        },
     }
-    assert_choices_in_span(span=spans[0], expected_choices=[expected_choice], expect_content=expect_content)
-
+    assert_choices_in_span(
+        span=spans[0], expected_choices=[expected_choice], expect_content=expect_content
+    )
 
     metrics = metric_reader.get_metrics_data().resource_metrics
     assert len(metrics) == 1
@@ -103,7 +110,9 @@ def test_invoke_model_calude_unsupported_content_blocks():
 
 
 @pytest.mark.vcr()
-def test_invoke_model_llama_with_content(bedrock_client_with_content, llama_model_id: str, span_exporter, metric_reader):
+def test_invoke_model_llama_with_content(
+    bedrock_client_with_content, llama_model_id: str, span_exporter, metric_reader
+):
     _run_and_check_invoke_model_llama(
         bedrock_client=bedrock_client_with_content,
         model_id=llama_model_id,
@@ -115,7 +124,9 @@ def test_invoke_model_llama_with_content(bedrock_client_with_content, llama_mode
 
 
 @pytest.mark.vcr()
-def test_invoke_model_llama_no_content(bedrock_client_no_content, llama_model_id: str, span_exporter, metric_reader):
+def test_invoke_model_llama_no_content(
+    bedrock_client_no_content, llama_model_id: str, span_exporter, metric_reader
+):
     _run_and_check_invoke_model_llama(
         bedrock_client=bedrock_client_no_content,
         model_id=llama_model_id,
@@ -131,7 +142,9 @@ def test_invoke_model_non_existing_model():
 
 
 @pytest.mark.vcr()
-def test_invoke_model_bad_auth(instrument_with_content, llama_model_id: str, span_exporter, metric_reader):
+def test_invoke_model_bad_auth(
+    instrument_with_content, llama_model_id: str, span_exporter, metric_reader
+):
     client = boto3.client(
         "bedrock-runtime",
         aws_access_key_id="test",
@@ -143,7 +156,7 @@ def test_invoke_model_bad_auth(instrument_with_content, llama_model_id: str, spa
             modelId=llama_model_id,
             contentType="application/json",
             accept="application/json",
-            body=json.dumps({"prompt": "say this is a test"})
+            body=json.dumps({"prompt": "say this is a test"}),
         )
 
     spans = span_exporter.get_finished_spans()
@@ -159,7 +172,9 @@ def test_invoke_model_bad_auth(instrument_with_content, llama_model_id: str, spa
     expected_messages = [
         {"role": "user", "content": "say this is a test"},
     ]
-    assert_messages_in_span(span=spans[0], expected_messages=expected_messages, expect_content=True)
+    assert_messages_in_span(
+        span=spans[0], expected_messages=expected_messages, expect_content=True
+    )
 
     metrics = metric_reader.get_metrics_data().resource_metrics
     assert len(metrics) == 1
@@ -209,7 +224,9 @@ def test_invoke_model_with_response_stream_non_existing_model():
 
 
 @pytest.mark.vcr()
-def test_invoke_model_with_response_stream_bad_auth(instrument_with_content, llama_model_id: str, span_exporter, metric_reader):
+def test_invoke_model_with_response_stream_bad_auth(
+    instrument_with_content, llama_model_id: str, span_exporter, metric_reader
+):
     client = boto3.client(
         "bedrock-runtime",
         aws_access_key_id="test",
@@ -221,7 +238,7 @@ def test_invoke_model_with_response_stream_bad_auth(instrument_with_content, lla
             modelId=llama_model_id,
             contentType="application/json",
             accept="application/json",
-            body=json.dumps({"prompt": "say this is a test"})
+            body=json.dumps({"prompt": "say this is a test"}),
         )
 
     spans = span_exporter.get_finished_spans()
@@ -237,7 +254,9 @@ def test_invoke_model_with_response_stream_bad_auth(instrument_with_content, lla
     expected_messages = [
         {"role": "user", "content": "say this is a test"},
     ]
-    assert_messages_in_span(span=spans[0], expected_messages=expected_messages, expect_content=True)
+    assert_messages_in_span(
+        span=spans[0], expected_messages=expected_messages, expect_content=True
+    )
 
     metrics = metric_reader.get_metrics_data().resource_metrics
     assert len(metrics) == 1

@@ -307,8 +307,8 @@ def record_invoke_model_result_attributes(
                     parsed_body=parsed_body, capture_content=capture_content
                 )
             )
-            usage_input_tokens=parsed_body.get("usage", {}).get("input_tokens")
-            usage_output_tokens=parsed_body.get("usage", {}).get("output_tokens")
+            usage_input_tokens = parsed_body.get("usage", {}).get("input_tokens")
+            usage_output_tokens = parsed_body.get("usage", {}).get("output_tokens")
 
     finally:
         duration = max((default_timer() - start_time), 0)
