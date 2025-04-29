@@ -14,7 +14,7 @@
 
 from typing import Collection
 
-from opentelemetry.instrumentation.instrumentor import (
+from opentelemetry.instrumentation.instrumentor import (  # type: ignore[attr-defined] # Mypy doesn't recognize the attribute
     BaseInstrumentor,
 )
 from opentelemetry.instrumentation.utils import unwrap

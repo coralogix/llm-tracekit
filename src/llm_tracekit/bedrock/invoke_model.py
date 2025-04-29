@@ -340,9 +340,9 @@ class InvokeModelWithResponseStreamWrapper(ObjectProxy):
 
         # accumulating things in the same shape of the Converse API
         # {"usage": {"inputTokens": 0, "outputTokens": 0}, "stopReason": "finish", "output": {"message": {"role": "", "content": [{"text": ""}]}
-        self._response = {}
+        self._response: Dict[str, Any] = {}
         self._message = None
-        self._content_block = {}
+        self._content_block: Dict[str, Any] = {}
         self._tool_json_input_buf = ""
         self._record_message = False
 

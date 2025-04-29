@@ -90,8 +90,8 @@ class InvokeAgentStreamWrapper(ObjectProxy):
         self._stream_done_callback = stream_done_callback
         self._stream_error_callback = stream_error_callback
         self._content = None
-        self._usage_input_tokens = None
-        self._usage_output_tokens = None
+        self._usage_input_tokens: Optional[int] = None
+        self._usage_output_tokens: Optional[int] = None
 
     def __iter__(self):
         try:
