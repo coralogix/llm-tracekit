@@ -284,8 +284,8 @@ def record_invoke_model_result_attributes(
         if model_type is None:
             return
 
-        parsed_body = result_body
-        if isinstance(result_body, str):
+        parsed_body = {}
+        if isinstance(result_body, (str, bytes)):
             try:
                 parsed_body = json.loads(result_body)
             except json.JSONDecodeError:
@@ -299,12 +299,16 @@ def record_invoke_model_result_attributes(
                     capture_content=capture_content,
                 )
             )
+            usage_input_tokens = parsed_body.get("prompt_token_count")
+            usage_output_tokens = parsed_body.get("generation_token_count")
         elif model_type is _ModelType.CLAUDE:
             span.set_attributes(
                 _generate_claude_response_and_choice_attributes(
                     parsed_body=parsed_body, capture_content=capture_content
                 )
             )
+            usage_input_tokens=parsed_body.get("usage", {}).get("input_tokens")
+            usage_output_tokens=parsed_body.get("usage", {}).get("output_tokens")
 
     finally:
         duration = max((default_timer() - start_time), 0)

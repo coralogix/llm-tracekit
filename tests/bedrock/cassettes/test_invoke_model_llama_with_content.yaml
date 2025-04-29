@@ -1,0 +1,68 @@
+interactions:
+- request:
+    body: |-
+      {
+        "prompt": "say this is a test",
+        "temperature": 0,
+        "max_gen_len": 300,
+        "top_p": 1
+      }
+    headers:
+      Accept:
+      - !!binary |
+        YXBwbGljYXRpb24vanNvbg==
+      Authorization:
+      - test-auth
+      Content-Length:
+      - '82'
+      Content-Type:
+      - !!binary |
+        YXBwbGljYXRpb24vanNvbg==
+      User-Agent:
+      - !!binary |
+        Qm90bzMvMS4zOC4wIG1kL0JvdG9jb3JlIzEuMzguMCB1YS8yLjEgb3MvbWFjb3MjMjQuNC4wIG1k
+        L2FyY2gjYXJtNjQgbGFuZy9weXRob24jMy4xMi45IG1kL3B5aW1wbCNDUHl0aG9uIGNmZy9yZXRy
+        eS1tb2RlI2xlZ2FjeSBCb3RvY29yZS8xLjM4LjA=
+      X-Amz-Date:
+      - !!binary |
+        MjAyNTA0MjlUMTQxNjEzWg==
+      X-Amz-Security-Token:
+      - test-security-token
+      amz-sdk-invocation-id:
+      - !!binary |
+        YTk1Zjc3ZjQtZmMxMS00YzgxLTgyNmYtY2M2ZjVlZDgwY2Q3
+      amz-sdk-request:
+      - !!binary |
+        YXR0ZW1wdD0x
+    method: POST
+    uri: https://bedrock-runtime.us-east-1.amazonaws.com/model/meta.llama3-8b-instruct-v1%3A0/invoke
+  response:
+    body:
+      string: |-
+        {
+          "generation": " of the test itself.  I'm not sure if this is a good idea, but I'm going to try it anyway.  I hope it works.  I'm not sure if it will work, but I'm going to try it anyway.  I hope it works.  I'm not sure if it will work, but I'm going to try it anyway.  I hope it works.  I'm not sure if it will work, but I'm going to try it anyway.  I hope it works.  I'm not sure if it will work, but I'm going to try it anyway.  I hope it works.  I'm not sure if it will work, but I'm going to try it anyway.  I hope it works.  I'm not sure if it will work, but I'm going to try it anyway.  I hope it works.  I'm not sure if it will work, but I'm going to try it anyway.  I hope it works.  I'm not sure if it will work, but I'm going to try it anyway.  I hope it works.  I'm not sure if it will work, but I'm going to try it anyway.  I hope it works.  I'm not sure if it will work, but I'm going to try it anyway.  I hope it works.  I'm not sure if it will work, but I'm going to try it anyway",
+          "prompt_token_count": 5,
+          "generation_token_count": 300,
+          "stop_reason": "length"
+        }
+    headers:
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '1072'
+      Content-Type:
+      - application/json
+      Date:
+      - Tue, 29 Apr 2025 14:16:17 GMT
+      X-Amzn-Bedrock-Input-Token-Count:
+      - '5'
+      X-Amzn-Bedrock-Invocation-Latency:
+      - '3038'
+      X-Amzn-Bedrock-Output-Token-Count:
+      - '300'
+      x-amzn-RequestId:
+      - 7ebf474d-0165-4820-b202-e3c639aefbf5
+    status:
+      code: 200
+      message: OK
+version: 1

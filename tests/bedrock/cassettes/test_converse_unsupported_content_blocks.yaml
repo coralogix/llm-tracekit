@@ -39,12 +39,12 @@ interactions:
         eS1tb2RlI2xlZ2FjeSBCb3RvY29yZS8xLjM4LjA=
       X-Amz-Date:
       - !!binary |
-        MjAyNTA0MjlUMTIyOTMyWg==
+        MjAyNTA0MjlUMTQxNjAxWg==
       X-Amz-Security-Token:
       - test-security-token
       amz-sdk-invocation-id:
       - !!binary |
-        NDU3MmIyNmQtOTJhNi00Zjk5LWIzNmMtZWMzYjJmMzQ5ZGFj
+        OWViMmRjMWUtYzlkMy00ZWFmLTgxNTEtNzM4NTFhNWNmZTNk
       amz-sdk-request:
       - !!binary |
         YXR0ZW1wdD0x
@@ -55,13 +55,13 @@ interactions:
       string: |-
         {
           "metrics": {
-            "latencyMs": 1939
+            "latencyMs": 3092
           },
           "output": {
             "message": {
               "content": [
                 {
-                  "text": "The image appears to show a handwritten note on a white background. The text is written in black ink and reads \"is a test\". The handwriting looks somewhat casual or informal in style. The note seems to be written on a plain white surface, possibly a piece of paper."
+                  "text": "The image appears to be a close-up photograph of a white or light-colored surface with some black text printed on it. The text reads \"is a test\" in a simple, sans-serif font. The letters are clearly visible against the light background. This looks like it could be a portion of a printed page or document, possibly used for testing or demonstration purposes."
                 }
               ],
               "role": "assistant"
@@ -70,21 +70,21 @@ interactions:
           "stopReason": "end_turn",
           "usage": {
             "inputTokens": 17,
-            "outputTokens": 60,
-            "totalTokens": 77
+            "outputTokens": 79,
+            "totalTokens": 96
           }
         }
     headers:
       Connection:
       - keep-alive
       Content-Length:
-      - '449'
+      - '542'
       Content-Type:
       - application/json
       Date:
-      - Tue, 29 Apr 2025 12:29:35 GMT
+      - Tue, 29 Apr 2025 14:16:05 GMT
       x-amzn-RequestId:
-      - e2ee74cf-aeac-451e-bf67-2214b0bc0040
+      - 41c42db7-7dc8-4d95-b42a-1a738a23efb2
     status:
       code: 200
       message: OK
