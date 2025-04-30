@@ -288,6 +288,8 @@ def invoke_agent_wrapper(
                             instruments=instruments,
                         ),
                     )
+
+                return result
             except Exception as error:
                 _handle_error(
                     error=error,

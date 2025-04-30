@@ -14,7 +14,6 @@ def _run_and_check_invoke_agent(bedrock_agent_client, span_exporter, metric_read
         sessionId=session_id,
         enableTrace=True,
     )
-    breakpoint()
     response_text = ""
     usage_input_tokens = 0
     usage_output_tokens = 0
@@ -29,7 +28,7 @@ def _run_and_check_invoke_agent(bedrock_agent_client, span_exporter, metric_read
                 "routingClassifierTrace",
             ]:
                 usage_data = (
-                    event["trace"]
+                    event["trace"]["trace"]
                     .get(key, {})
                     .get("modelInvocationOutput", {})
                     .get("metadata", {})
@@ -98,7 +97,7 @@ def test_invoke_agent_no_content(bedrock_agent_client_no_content, span_exporter,
         agent_id=agent_id,
         agent_alias_id=agent_alias_id,
         session_id="22",
-        expect_content=True,
+        expect_content=False,
     )
 
 

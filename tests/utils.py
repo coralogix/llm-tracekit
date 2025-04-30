@@ -116,21 +116,22 @@ def assert_choices_in_span(
     for index, choice in enumerate(expected_choices):
         assert (
             span.attributes[
-                ExtendedGenAIAttributes.GEN_AI_COMPLETION_FINISH_REASON.format(
-                    completion_index=index
-                )
-            ]
-            == choice["finish_reason"]
-        )
-        assert (
-            span.attributes[
                 ExtendedGenAIAttributes.GEN_AI_COMPLETION_ROLE.format(
                     completion_index=index
                 )
             ]
             == choice["message"]["role"]
         )
-        if "content" in choice:
+        if "finish_reason" in choice:
+            assert (
+                span.attributes[
+                    ExtendedGenAIAttributes.GEN_AI_COMPLETION_FINISH_REASON.format(
+                        completion_index=index
+                    )
+                ]
+                == choice["finish_reason"]
+            )
+        if "content" in choice["message"]:
             if expect_content:
                 assert (
                     span.attributes[

@@ -129,7 +129,7 @@ class InvokeAgentStreamWrapper(ObjectProxy):
                 # TODO: check if we need to handle b64 decoding
                 self._content += encoded_content.decode()
 
-        if "trace" in event:
+        if "trace" in event and "trace" in event["trace"]:
             for key in [
                 "preProcessingTrace",
                 "postProcessingTrace",
@@ -137,7 +137,7 @@ class InvokeAgentStreamWrapper(ObjectProxy):
                 "routingClassifierTrace",
             ]:
                 usage_data = (
-                    event["trace"]
+                    event["trace"]["trace"]
                     .get(key, {})
                     .get("modelInvocationOutput", {})
                     .get("metadata", {})
