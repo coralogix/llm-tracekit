@@ -62,6 +62,16 @@ def llama_model_id() -> str:
     return "meta.llama3-8b-instruct-v1:0"
 
 
+@pytest.fixture
+def agent_id() -> str:
+    return "3HNVYAQKPR"
+
+
+@pytest.fixture
+def agent_alias_id() -> str:
+    return "MRMVIPB6UI"
+
+
 def handle_recording_boto_response(response: dict) -> dict:
     """Prepares boto3 reponses for recoring/playback.
 
