@@ -130,18 +130,27 @@ def _run_and_check_invoke_model_claude(
         span_name = "bedrock.invoke_model_with_response_stream"
         stream_result = bedrock_client.invoke_model_with_response_stream(**args)
         result = {
+            "model": "",
+            "role": "",
+            "content": [{"type": "text", "text": ""}],
             "stop_reason": "",
-            "generation": "",
-            "prompt_token_count": 0,
-            "generation_token_count": 0
+            "usage": {
+                "input_tokens": 0,
+                "output_tokens": 0,
+            },
         }
         for chunk in stream_result["body"]:
             parsed_chunk = json.loads(chunk["chunk"]["bytes"])
-            result["generation"] += parsed_chunk.get("generation", "")
-            if parsed_chunk.get("stop_reason") is not None:
-                result["stop_reason"] = parsed_chunk["stop_reason"]
-                result["prompt_token_count"] = parsed_chunk["amazon-bedrock-invocationMetrics"]["inputTokenCount"]
-                result["generation_token_count"] = parsed_chunk["amazon-bedrock-invocationMetrics"]["outputTokenCount"]
+            if parsed_chunk["type"] == "message_start":
+                result["model"] = parsed_chunk["message"]["model"]
+                result["role"] = parsed_chunk["message"]["role"]
+            elif parsed_chunk["type"] == "content_block_delta":
+                result["content"][0]["text"] += parsed_chunk["delta"]["text"]
+            elif parsed_chunk["type"] == "message_delta":
+                result["stop_reason"] = parsed_chunk["delta"]["stop_reason"]
+            elif parsed_chunk["type"] == "message_stop":
+                result["usage"]["input_tokens"] = parsed_chunk["amazon-bedrock-invocationMetrics"]["inputTokenCount"]
+                result["usage"]["output_tokens"] = parsed_chunk["amazon-bedrock-invocationMetrics"]["outputTokenCount"]
     else:
         span_name = "bedrock.invoke_model"
         invoke_result = bedrock_client.invoke_model(**args)
@@ -349,12 +358,28 @@ def test_invoke_model_bad_auth(
     )
 
 
-def test_invoke_model_with_response_stream_calude_with_content():
-    pytest.skip("TODO")
+@pytest.mark.vcr()
+def test_invoke_model_with_response_stream_calude_with_content(bedrock_client_with_content, claude_model_id: str, span_exporter, metric_reader):
+    _run_and_check_invoke_model_claude(
+        bedrock_client=bedrock_client_with_content,
+        model_id=claude_model_id,
+        span_exporter=span_exporter,
+        metric_reader=metric_reader,
+        expect_content=True,
+        stream=True,
+    )
 
 
-def test_invoke_model_with_response_stream_calude_no_content():
-    pytest.skip("TODO")
+@pytest.mark.vcr()
+def test_invoke_model_with_response_stream_calude_no_content(bedrock_client_no_content, claude_model_id: str, span_exporter, metric_reader):
+    _run_and_check_invoke_model_claude(
+        bedrock_client=bedrock_client_no_content,
+        model_id=claude_model_id,
+        span_exporter=span_exporter,
+        metric_reader=metric_reader,
+        expect_content=False,
+        stream=True,
+    )
 
 
 def test_invoke_model_with_response_stream_calude_tool_calls_with_content():

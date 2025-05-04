@@ -421,6 +421,7 @@ class InvokeModelWithResponseStreamWrapper(ObjectProxy):
                 self._record_message = True
                 message = chunk["message"]
                 self._message = {
+                    "model": message["model"],
                     "role": message["role"],
                     "content": message.get("content", []),
                 }
@@ -473,6 +474,7 @@ class InvokeModelWithResponseStreamWrapper(ObjectProxy):
                 self._process_anthropic_claude_invocation_metrics(invocation_metrics)
 
             if self._record_message and self._message is not None:
+                self._response["model"] = self._message["model"]
                 self._response["role"] = self._message["role"]
                 self._response["content"] = self._message["content"]
                 self._record_message = False
