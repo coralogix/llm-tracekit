@@ -48,7 +48,7 @@ def assert_attributes_in_span(
     }
     for attribute, expected_value in attributes_to_expected_values.items():
         if expected_value is not None:
-            assert span.attributes[attribute] == expected_value
+            assert span.attributes[attribute] == expected_value, attribute
         else:
             assert attribute not in span.attributes
 

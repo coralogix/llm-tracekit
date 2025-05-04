@@ -30,7 +30,7 @@ interactions:
       - !!binary |
         YXR0ZW1wdD0x
     method: POST
-    uri: https://bedrock-agent-runtime.us-east-1.amazonaws.com/agents/3HNVYAQKPR/agentAliases/MRMVIPB6UI/sessions/22/text
+    uri: https://bedrock-agent-runtime.us-east-1.amazonaws.com/agents/test_agent_id/agentAliases/test_agent_alias_id/sessions/22/text
   response:
     body:
       string: |-

@@ -285,7 +285,9 @@ def record_invoke_model_result_attributes(
             return
 
         parsed_body = {}
-        if isinstance(result_body, (str, bytes)):
+        if isinstance(result_body, dict):
+            parsed_body = result_body
+        elif isinstance(result_body, (str, bytes)):
             try:
                 parsed_body = json.loads(result_body)
             except json.JSONDecodeError:

@@ -138,6 +138,8 @@ def invoke_model_with_response_stream_wrapper(
                         ),
                         model_id=model,
                     )
+
+                return result
             except Exception as error:
                 _handle_error(
                     error=error,

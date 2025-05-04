@@ -32,6 +32,19 @@ def _run_and_check_invoke_model_llama(
     if stream:
         span_name = "bedrock.invoke_model_with_response_stream"
         stream_result = bedrock_client.invoke_model_with_response_stream(**args)
+        result = {
+            "stop_reason": "",
+            "generation": "",
+            "prompt_token_count": 0,
+            "generation_token_count": 0
+        }
+        for chunk in stream_result["body"]:
+            parsed_chunk = json.loads(chunk["chunk"]["bytes"])
+            result["generation"] += parsed_chunk.get("generation", "")
+            if parsed_chunk.get("stop_reason") is not None:
+                result["stop_reason"] = parsed_chunk["stop_reason"]
+                result["prompt_token_count"] = parsed_chunk["amazon-bedrock-invocationMetrics"]["inputTokenCount"]
+                result["generation_token_count"] = parsed_chunk["amazon-bedrock-invocationMetrics"]["outputTokenCount"]
     else:
         span_name = "bedrock.invoke_model"
         invoke_result = bedrock_client.invoke_model(**args)
@@ -137,8 +150,42 @@ def test_invoke_model_llama_no_content(
     )
 
 
-def test_invoke_model_non_existing_model():
-    pytest.skip("TODO")
+def test_invoke_model_non_existing_model(bedrock_client_with_content, span_exporter, metric_reader):
+    model_id = "meta.llama3-8b-instruct-v999:999"
+    with pytest.raises(Exception):
+        bedrock_client_with_content.invoke_model(
+            modelId=model_id,
+            contentType="application/json",
+            accept="application/json",
+            body=json.dumps({"prompt": "say this is a test"}),
+        )
+
+    spans = span_exporter.get_finished_spans()
+    assert len(spans) == 1
+
+    assert_attributes_in_span(
+        span=spans[0],
+        span_name="bedrock.invoke_model",
+        request_model=model_id,
+        error="ValidationException",
+    )
+
+    expected_messages = [
+        {"role": "user", "content": "say this is a test"},
+    ]
+    assert_messages_in_span(
+        span=spans[0], expected_messages=expected_messages, expect_content=True
+    )
+
+    metrics = metric_reader.get_metrics_data().resource_metrics
+    assert len(metrics) == 1
+
+    metric_data = metrics[0].scope_metrics[0].metrics
+    assert_expected_metrics(
+        metrics=metric_data,
+        model=model_id,
+        error="ValidationException",
+    )
 
 
 @pytest.mark.vcr()
@@ -211,16 +258,68 @@ def test_invoke_model_with_response_stream_calude_unsupported_content_blocks():
     pytest.skip("TODO")
 
 
-def test_invoke_model_with_response_stream_llama_with_content():
-    pytest.skip("TODO")
+def test_invoke_model_with_response_stream_llama_with_content(
+    bedrock_client_with_content, llama_model_id: str, span_exporter, metric_reader
+):
+    _run_and_check_invoke_model_llama(
+        bedrock_client=bedrock_client_with_content,
+        model_id=llama_model_id,
+        span_exporter=span_exporter,
+        metric_reader=metric_reader,
+        expect_content=True,
+        stream=True,
+    )
 
 
-def test_invoke_model_with_response_stream_llama_no_content():
-    pytest.skip("TODO")
+def test_invoke_model_with_response_stream_llama_no_content(
+    bedrock_client_no_content, llama_model_id: str, span_exporter, metric_reader
+):
+    _run_and_check_invoke_model_llama(
+        bedrock_client=bedrock_client_no_content,
+        model_id=llama_model_id,
+        span_exporter=span_exporter,
+        metric_reader=metric_reader,
+        expect_content=False,
+        stream=True,
+    )
 
 
-def test_invoke_model_with_response_stream_non_existing_model():
-    pytest.skip("TODO")
+def test_invoke_model_with_response_stream_non_existing_model(bedrock_client_with_content, span_exporter, metric_reader):
+    model_id = "meta.llama3-8b-instruct-v999:999"
+    with pytest.raises(Exception):
+        bedrock_client_with_content.invoke_model_with_response_stream(
+            modelId=model_id,
+            contentType="application/json",
+            accept="application/json",
+            body=json.dumps({"prompt": "say this is a test"}),
+        )
+
+    spans = span_exporter.get_finished_spans()
+    assert len(spans) == 1
+
+    assert_attributes_in_span(
+        span=spans[0],
+        span_name="bedrock.invoke_model_with_response_stream",
+        request_model=model_id,
+        error="ValidationException",
+    )
+
+    expected_messages = [
+        {"role": "user", "content": "say this is a test"},
+    ]
+    assert_messages_in_span(
+        span=spans[0], expected_messages=expected_messages, expect_content=True
+    )
+
+    metrics = metric_reader.get_metrics_data().resource_metrics
+    assert len(metrics) == 1
+
+    metric_data = metrics[0].scope_metrics[0].metrics
+    assert_expected_metrics(
+        metrics=metric_data,
+        model=model_id,
+        error="ValidationException",
+    )
 
 
 @pytest.mark.vcr()

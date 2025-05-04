@@ -64,12 +64,12 @@ def llama_model_id() -> str:
 
 @pytest.fixture
 def agent_id() -> str:
-    return "3HNVYAQKPR"
+    return os.environ.get("AWS_BEDROCK_AGENT_ID", "test_agent_id")
 
 
 @pytest.fixture
 def agent_alias_id() -> str:
-    return "MRMVIPB6UI"
+    return os.environ.get("AWS_BEDROCK_AGENT_ALIAS_ID", "test_agent_alias_id")
 
 
 def handle_recording_boto_response(response: dict) -> dict:
