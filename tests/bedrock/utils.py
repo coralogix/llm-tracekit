@@ -12,6 +12,9 @@ from llm_tracekit.instruments import (
     GEN_AI_CLIENT_TOKEN_USAGE_BUCKETS,
 )
 
+# This is a PNG of a single black pixel
+IMAGE_DATA = b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01\x01\x00\x00\x00\x007n\xf9$\x00\x00\x00\nIDATx\x01c`\x00\x00\x00\x02\x00\x01su\x01\x18\x00\x00\x00\x00IEND\xaeB`\x82"
+
 
 def assert_attributes_in_span(
     span: ReadableSpan,

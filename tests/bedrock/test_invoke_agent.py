@@ -1,12 +1,20 @@
 import boto3
-from botocore.exceptions import ClientError
 import pytest
+from botocore.exceptions import ClientError
 
 from tests.bedrock.utils import assert_attributes_in_span, assert_expected_metrics
-from tests.utils import assert_messages_in_span, assert_choices_in_span
+from tests.utils import assert_choices_in_span, assert_messages_in_span
 
 
-def _run_and_check_invoke_agent(bedrock_agent_client, span_exporter, metric_reader, agent_id: str, agent_alias_id: str, expect_content: bool, session_id: str):
+def _run_and_check_invoke_agent(
+    bedrock_agent_client,
+    span_exporter,
+    metric_reader,
+    agent_id: str,
+    agent_alias_id: str,
+    expect_content: bool,
+    session_id: str,
+):
     result = bedrock_agent_client.invoke_agent(
         agentAliasId=agent_alias_id,
         agentId=agent_id,
@@ -53,7 +61,9 @@ def _run_and_check_invoke_agent(bedrock_agent_client, span_exporter, metric_read
         {"role": "user", "content": "say this is a test"},
     ]
     assert_messages_in_span(
-        span=spans[0], expected_messages=expected_messages, expect_content=expect_content
+        span=spans[0],
+        expected_messages=expected_messages,
+        expect_content=expect_content,
     )
 
     expected_choice = {
@@ -62,7 +72,9 @@ def _run_and_check_invoke_agent(bedrock_agent_client, span_exporter, metric_read
             "content": response_text,
         }
     }
-    assert_choices_in_span(span=spans[0], expected_choices=[expected_choice], expect_content=expect_content)
+    assert_choices_in_span(
+        span=spans[0], expected_choices=[expected_choice], expect_content=expect_content
+    )
 
     metrics = metric_reader.get_metrics_data().resource_metrics
     assert len(metrics) == 1
@@ -76,7 +88,13 @@ def _run_and_check_invoke_agent(bedrock_agent_client, span_exporter, metric_read
 
 
 @pytest.mark.vcr()
-def test_invoke_agent_with_content(bedrock_agent_client_with_content, span_exporter, metric_reader, agent_id: str, agent_alias_id: str):
+def test_invoke_agent_with_content(
+    bedrock_agent_client_with_content,
+    span_exporter,
+    metric_reader,
+    agent_id: str,
+    agent_alias_id: str,
+):
     _run_and_check_invoke_agent(
         bedrock_agent_client=bedrock_agent_client_with_content,
         span_exporter=span_exporter,
@@ -89,7 +107,13 @@ def test_invoke_agent_with_content(bedrock_agent_client_with_content, span_expor
 
 
 @pytest.mark.vcr()
-def test_invoke_agent_no_content(bedrock_agent_client_no_content, span_exporter, metric_reader, agent_id: str, agent_alias_id: str):
+def test_invoke_agent_no_content(
+    bedrock_agent_client_no_content,
+    span_exporter,
+    metric_reader,
+    agent_id: str,
+    agent_alias_id: str,
+):
     _run_and_check_invoke_agent(
         bedrock_agent_client=bedrock_agent_client_no_content,
         span_exporter=span_exporter,
@@ -102,7 +126,13 @@ def test_invoke_agent_no_content(bedrock_agent_client_no_content, span_exporter,
 
 
 @pytest.mark.vcr()
-def test_invoke_agent_bad_auth(instrument_with_content, span_exporter, metric_reader, agent_id: str, agent_alias_id: str):
+def test_invoke_agent_bad_auth(
+    instrument_with_content,
+    span_exporter,
+    metric_reader,
+    agent_id: str,
+    agent_alias_id: str,
+):
     client = boto3.client(
         "bedrock-agent-runtime",
         aws_access_key_id="test",

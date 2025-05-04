@@ -1,5 +1,5 @@
-from collections import defaultdict
 import json
+from collections import defaultdict
 from contextlib import suppress
 from enum import Enum
 from timeit import default_timer

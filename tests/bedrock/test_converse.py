@@ -2,11 +2,12 @@ import boto3
 import pytest
 from botocore.exceptions import ClientError
 
-from tests.bedrock.utils import assert_attributes_in_span, assert_expected_metrics
+from tests.bedrock.utils import (
+    IMAGE_DATA,
+    assert_attributes_in_span,
+    assert_expected_metrics,
+)
 from tests.utils import assert_choices_in_span, assert_messages_in_span
-
-# This is a PNG of a single black pixel
-IMAGE_DATA = b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01\x01\x00\x00\x00\x007n\xf9$\x00\x00\x00\nIDATx\x01c`\x00\x00\x00\x02\x00\x01su\x01\x18\x00\x00\x00\x00IEND\xaeB`\x82"
 
 
 def _run_and_check_converse(

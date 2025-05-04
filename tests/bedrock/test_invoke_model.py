@@ -1,10 +1,15 @@
+import base64
 import json
 
 import boto3
 import pytest
 from botocore.exceptions import ClientError
 
-from tests.bedrock.utils import assert_attributes_in_span, assert_expected_metrics
+from tests.bedrock.utils import (
+    IMAGE_DATA,
+    assert_attributes_in_span,
+    assert_expected_metrics,
+)
 from tests.utils import assert_choices_in_span, assert_messages_in_span
 
 
@@ -36,15 +41,19 @@ def _run_and_check_invoke_model_llama(
             "stop_reason": "",
             "generation": "",
             "prompt_token_count": 0,
-            "generation_token_count": 0
+            "generation_token_count": 0,
         }
         for chunk in stream_result["body"]:
             parsed_chunk = json.loads(chunk["chunk"]["bytes"])
             result["generation"] += parsed_chunk.get("generation", "")
             if parsed_chunk.get("stop_reason") is not None:
                 result["stop_reason"] = parsed_chunk["stop_reason"]
-                result["prompt_token_count"] = parsed_chunk["amazon-bedrock-invocationMetrics"]["inputTokenCount"]
-                result["generation_token_count"] = parsed_chunk["amazon-bedrock-invocationMetrics"]["outputTokenCount"]
+                result["prompt_token_count"] = parsed_chunk[
+                    "amazon-bedrock-invocationMetrics"
+                ]["inputTokenCount"]
+                result["generation_token_count"] = parsed_chunk[
+                    "amazon-bedrock-invocationMetrics"
+                ]["outputTokenCount"]
     else:
         span_name = "bedrock.invoke_model"
         invoke_result = bedrock_client.invoke_model(**args)
@@ -114,12 +123,7 @@ def _run_and_check_invoke_model_claude(
             {
                 "anthropic_version": "bedrock-2023-05-31",
                 "max_tokens": 300,
-                "messages": [
-                    {
-                        "role": "user",
-                        "content": "say this is a test"
-                    }
-                ],
+                "messages": [{"role": "user", "content": "say this is a test"}],
                 "system": "You are a helpful assistant",
                 "temperature": 0,
                 "top_p": 1,
@@ -149,8 +153,12 @@ def _run_and_check_invoke_model_claude(
             elif parsed_chunk["type"] == "message_delta":
                 result["stop_reason"] = parsed_chunk["delta"]["stop_reason"]
             elif parsed_chunk["type"] == "message_stop":
-                result["usage"]["input_tokens"] = parsed_chunk["amazon-bedrock-invocationMetrics"]["inputTokenCount"]
-                result["usage"]["output_tokens"] = parsed_chunk["amazon-bedrock-invocationMetrics"]["outputTokenCount"]
+                result["usage"]["input_tokens"] = parsed_chunk[
+                    "amazon-bedrock-invocationMetrics"
+                ]["inputTokenCount"]
+                result["usage"]["output_tokens"] = parsed_chunk[
+                    "amazon-bedrock-invocationMetrics"
+                ]["outputTokenCount"]
     else:
         span_name = "bedrock.invoke_model"
         invoke_result = bedrock_client.invoke_model(**args)
@@ -206,7 +214,9 @@ def _run_and_check_invoke_model_claude(
 
 
 @pytest.mark.vcr()
-def test_invoke_model_calude_with_content(bedrock_client_with_content, claude_model_id: str, span_exporter, metric_reader):
+def test_invoke_model_calude_with_content(
+    bedrock_client_with_content, claude_model_id: str, span_exporter, metric_reader
+):
     _run_and_check_invoke_model_claude(
         bedrock_client=bedrock_client_with_content,
         model_id=claude_model_id,
@@ -218,7 +228,9 @@ def test_invoke_model_calude_with_content(bedrock_client_with_content, claude_mo
 
 
 @pytest.mark.vcr()
-def test_invoke_model_calude_no_content(bedrock_client_no_content, claude_model_id: str, span_exporter, metric_reader):
+def test_invoke_model_calude_no_content(
+    bedrock_client_no_content, claude_model_id: str, span_exporter, metric_reader
+):
     _run_and_check_invoke_model_claude(
         bedrock_client=bedrock_client_no_content,
         model_id=claude_model_id,
@@ -237,12 +249,84 @@ def test_invoke_model_calude_tool_calls_no_content():
     pytest.skip("TODO")
 
 
-def test_invoke_model_calude_mixed_content_blocks():
-    pytest.skip("TODO")
+@pytest.mark.vcr()
+def test_invoke_model_calude_content_blocks(
+    bedrock_client_with_content, claude_model_id: str, span_exporter
+):
+    bedrock_client_with_content.invoke_model(
+        modelId=claude_model_id,
+        contentType="application/json",
+        accept="application/json",
+        body=json.dumps(
+            {
+                "anthropic_version": "bedrock-2023-05-31",
+                "max_tokens": 300,
+                "messages": [
+                    {
+                        "role": "user",
+                        "content": [
+                            {"type": "text", "text": "say this "},
+                            {"type": "text", "text": "is a test"},
+                        ],
+                    }
+                ],
+            }
+        ),
+    )
+
+    spans = span_exporter.get_finished_spans()
+    assert len(spans) == 1
+
+    expected_messages = [
+        {"role": "user", "content": "say this is a test"},
+    ]
+    assert_messages_in_span(
+        span=spans[0], expected_messages=expected_messages, expect_content=True
+    )
 
 
-def test_invoke_model_calude_unsupported_content_blocks():
-    pytest.skip("TODO")
+@pytest.mark.vcr()
+def test_invoke_model_calude_unsupported_content_blocks(
+    bedrock_client_with_content, claude_model_id: str, span_exporter
+):
+    bedrock_client_with_content.invoke_model(
+        modelId=claude_model_id,
+        contentType="application/json",
+        accept="application/json",
+        body=json.dumps(
+            {
+                "anthropic_version": "bedrock-2023-05-31",
+                "max_tokens": 300,
+                "messages": [
+                    {
+                        "role": "user",
+                        "content": [
+                            {"type": "text", "text": "say this "},
+                            {
+                                "type": "image",
+                                "source": {
+                                    "type": "base64",
+                                    "media_type": "image/png",
+                                    "data": base64.b64encode(IMAGE_DATA).decode(),
+                                },
+                            },
+                            {"type": "text", "text": "is a test"},
+                        ],
+                    }
+                ],
+            }
+        ),
+    )
+
+    spans = span_exporter.get_finished_spans()
+    assert len(spans) == 1
+
+    expected_messages = [
+        {"role": "user", "content": "say this is a test"},
+    ]
+    assert_messages_in_span(
+        span=spans[0], expected_messages=expected_messages, expect_content=True
+    )
 
 
 @pytest.mark.vcr()
@@ -274,7 +358,9 @@ def test_invoke_model_llama_no_content(
 
 
 @pytest.mark.vcr()
-def test_invoke_model_non_existing_model(bedrock_client_with_content, span_exporter, metric_reader):
+def test_invoke_model_non_existing_model(
+    bedrock_client_with_content, span_exporter, metric_reader
+):
     model_id = "meta.llama3-8b-instruct-v999:999"
     with pytest.raises(Exception):
         bedrock_client_with_content.invoke_model(
@@ -359,7 +445,9 @@ def test_invoke_model_bad_auth(
 
 
 @pytest.mark.vcr()
-def test_invoke_model_with_response_stream_calude_with_content(bedrock_client_with_content, claude_model_id: str, span_exporter, metric_reader):
+def test_invoke_model_with_response_stream_calude_with_content(
+    bedrock_client_with_content, claude_model_id: str, span_exporter, metric_reader
+):
     _run_and_check_invoke_model_claude(
         bedrock_client=bedrock_client_with_content,
         model_id=claude_model_id,
@@ -371,7 +459,9 @@ def test_invoke_model_with_response_stream_calude_with_content(bedrock_client_wi
 
 
 @pytest.mark.vcr()
-def test_invoke_model_with_response_stream_calude_no_content(bedrock_client_no_content, claude_model_id: str, span_exporter, metric_reader):
+def test_invoke_model_with_response_stream_calude_no_content(
+    bedrock_client_no_content, claude_model_id: str, span_exporter, metric_reader
+):
     _run_and_check_invoke_model_claude(
         bedrock_client=bedrock_client_no_content,
         model_id=claude_model_id,
@@ -390,12 +480,92 @@ def test_invoke_model_with_response_stream_calude_tool_calls_no_content():
     pytest.skip("TODO")
 
 
-def test_invoke_model_with_response_stream_calude_mixed_content_blocks():
-    pytest.skip("TODO")
+@pytest.mark.vcr()
+def test_invoke_model_with_response_stream_calude_content_blocks(
+    bedrock_client_with_content, claude_model_id: str, span_exporter
+):
+    result = bedrock_client_with_content.invoke_model_with_response_stream(
+        modelId=claude_model_id,
+        contentType="application/json",
+        accept="application/json",
+        body=json.dumps(
+            {
+                "anthropic_version": "bedrock-2023-05-31",
+                "max_tokens": 300,
+                "messages": [
+                    {
+                        "role": "user",
+                        "content": [
+                            {"type": "text", "text": "say this "},
+                            {"type": "text", "text": "is a test"},
+                        ],
+                    }
+                ],
+            }
+        ),
+    )
+
+    # consume the stream
+    for _ in result["body"]:
+        pass
+
+    spans = span_exporter.get_finished_spans()
+    assert len(spans) == 1
+
+    expected_messages = [
+        {"role": "user", "content": "say this is a test"},
+    ]
+    assert_messages_in_span(
+        span=spans[0], expected_messages=expected_messages, expect_content=True
+    )
 
 
-def test_invoke_model_with_response_stream_calude_unsupported_content_blocks():
-    pytest.skip("TODO")
+@pytest.mark.vcr()
+def test_invoke_model_with_response_stream_calude_unsupported_content_blocks(
+    bedrock_client_with_content, claude_model_id: str, span_exporter
+):
+    result = bedrock_client_with_content.invoke_model_with_response_stream(
+        modelId=claude_model_id,
+        contentType="application/json",
+        accept="application/json",
+        body=json.dumps(
+            {
+                "anthropic_version": "bedrock-2023-05-31",
+                "max_tokens": 300,
+                "messages": [
+                    {
+                        "role": "user",
+                        "content": [
+                            {"type": "text", "text": "say this "},
+                            {
+                                "type": "image",
+                                "source": {
+                                    "type": "base64",
+                                    "media_type": "image/png",
+                                    "data": base64.b64encode(IMAGE_DATA).decode(),
+                                },
+                            },
+                            {"type": "text", "text": "is a test"},
+                        ],
+                    }
+                ],
+            }
+        ),
+    )
+
+    # consume the stream
+    for _ in result["body"]:
+        pass
+
+    spans = span_exporter.get_finished_spans()
+    assert len(spans) == 1
+
+    expected_messages = [
+        {"role": "user", "content": "say this is a test"},
+    ]
+    assert_messages_in_span(
+        span=spans[0], expected_messages=expected_messages, expect_content=True
+    )
 
 
 @pytest.mark.vcr()
@@ -427,7 +597,9 @@ def test_invoke_model_with_response_stream_llama_no_content(
 
 
 @pytest.mark.vcr()
-def test_invoke_model_with_response_stream_non_existing_model(bedrock_client_with_content, span_exporter, metric_reader):
+def test_invoke_model_with_response_stream_non_existing_model(
+    bedrock_client_with_content, span_exporter, metric_reader
+):
     model_id = "meta.llama3-8b-instruct-v999:999"
     with pytest.raises(Exception):
         bedrock_client_with_content.invoke_model_with_response_stream(
