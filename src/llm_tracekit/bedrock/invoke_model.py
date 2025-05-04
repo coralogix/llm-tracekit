@@ -1,3 +1,4 @@
+from collections import defaultdict
 import json
 from contextlib import suppress
 from enum import Enum
@@ -54,7 +55,10 @@ def _parse_claude_message(
         # Theoretically, in the cases we support we don't expect to see multiple types of content
         # in the same message, but in case that happens we follow the hierarchy
         # of text > tool_calls > tool_call_result
-        content_blocks_by_type = {block.get("type"): block for block in content}
+        content_blocks_by_type = defaultdict(list)
+        for block in content:
+            content_blocks_by_type[block.get("type")].append(block)
+
         if "text" in content_blocks_by_type:
             text_parts = [
                 block["text"]

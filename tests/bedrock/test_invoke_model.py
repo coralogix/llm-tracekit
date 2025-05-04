@@ -154,7 +154,7 @@ def _run_and_check_invoke_model_claude(
         span=spans[0],
         span_name=span_name,
         request_model=model_id,
-        response_model=model_id,
+        response_model=result["model"],
         usage_input_tokens=result["usage"]["input_tokens"],
         usage_output_tokens=result["usage"]["output_tokens"],
         finish_reasons=(result["stop_reason"],),
@@ -177,7 +177,7 @@ def _run_and_check_invoke_model_claude(
         "finish_reason": result["stop_reason"],
         "message": {
             "role": result["role"],
-            "content": result["content"],
+            "content": result["content"][0]["text"],
         },
     }
     assert_choices_in_span(
@@ -196,6 +196,7 @@ def _run_and_check_invoke_model_claude(
     )
 
 
+@pytest.mark.vcr()
 def test_invoke_model_calude_with_content(bedrock_client_with_content, claude_model_id: str, span_exporter, metric_reader):
     _run_and_check_invoke_model_claude(
         bedrock_client=bedrock_client_with_content,
@@ -207,6 +208,7 @@ def test_invoke_model_calude_with_content(bedrock_client_with_content, claude_mo
     )
 
 
+@pytest.mark.vcr()
 def test_invoke_model_calude_no_content(bedrock_client_no_content, claude_model_id: str, span_exporter, metric_reader):
     _run_and_check_invoke_model_claude(
         bedrock_client=bedrock_client_no_content,
