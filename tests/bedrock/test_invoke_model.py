@@ -98,12 +98,124 @@ def _run_and_check_invoke_model_llama(
     )
 
 
-def test_invoke_model_calude_with_content():
-    pytest.skip("TODO")
+def _run_and_check_invoke_model_claude(
+    bedrock_client,
+    model_id: str,
+    span_exporter,
+    metric_reader,
+    expect_content: bool,
+    stream: bool,
+):
+    args = {
+        "modelId": model_id,
+        "contentType": "application/json",
+        "accept": "application/json",
+        "body": json.dumps(
+            {
+                "anthropic_version": "bedrock-2023-05-31",
+                "max_tokens": 300,
+                "messages": [
+                    {
+                        "role": "user",
+                        "content": "say this is a test"
+                    }
+                ],
+                "system": "You are a helpful assistant",
+                "temperature": 0,
+                "top_p": 1,
+            }
+        ),
+    }
+    if stream:
+        span_name = "bedrock.invoke_model_with_response_stream"
+        stream_result = bedrock_client.invoke_model_with_response_stream(**args)
+        result = {
+            "stop_reason": "",
+            "generation": "",
+            "prompt_token_count": 0,
+            "generation_token_count": 0
+        }
+        for chunk in stream_result["body"]:
+            parsed_chunk = json.loads(chunk["chunk"]["bytes"])
+            result["generation"] += parsed_chunk.get("generation", "")
+            if parsed_chunk.get("stop_reason") is not None:
+                result["stop_reason"] = parsed_chunk["stop_reason"]
+                result["prompt_token_count"] = parsed_chunk["amazon-bedrock-invocationMetrics"]["inputTokenCount"]
+                result["generation_token_count"] = parsed_chunk["amazon-bedrock-invocationMetrics"]["outputTokenCount"]
+    else:
+        span_name = "bedrock.invoke_model"
+        invoke_result = bedrock_client.invoke_model(**args)
+        result = json.loads(invoke_result["body"].read())
+
+    spans = span_exporter.get_finished_spans()
+    assert len(spans) == 1
+
+    assert_attributes_in_span(
+        span=spans[0],
+        span_name=span_name,
+        request_model=model_id,
+        response_model=model_id,
+        usage_input_tokens=result["usage"]["input_tokens"],
+        usage_output_tokens=result["usage"]["output_tokens"],
+        finish_reasons=(result["stop_reason"],),
+        max_tokens=300,
+        temperature=0,
+        top_p=1,
+    )
+
+    expected_messages = [
+        {"role": "system", "content": "You are a helpful assistant"},
+        {"role": "user", "content": "say this is a test"},
+    ]
+    assert_messages_in_span(
+        span=spans[0],
+        expected_messages=expected_messages,
+        expect_content=expect_content,
+    )
+
+    expected_choice = {
+        "finish_reason": result["stop_reason"],
+        "message": {
+            "role": result["role"],
+            "content": result["content"],
+        },
+    }
+    assert_choices_in_span(
+        span=spans[0], expected_choices=[expected_choice], expect_content=expect_content
+    )
+
+    metrics = metric_reader.get_metrics_data().resource_metrics
+    assert len(metrics) == 1
+
+    metric_data = metrics[0].scope_metrics[0].metrics
+    assert_expected_metrics(
+        metrics=metric_data,
+        model=model_id,
+        usage_input_tokens=result["usage"]["input_tokens"],
+        usage_output_tokens=result["usage"]["output_tokens"],
+    )
 
 
-def test_invoke_model_calude_no_content():
-    pytest.skip("TODO")
+def test_invoke_model_calude_with_content(bedrock_client_with_content, claude_model_id: str, span_exporter, metric_reader):
+    _run_and_check_invoke_model_claude(
+        bedrock_client=bedrock_client_with_content,
+        model_id=claude_model_id,
+        span_exporter=span_exporter,
+        metric_reader=metric_reader,
+        expect_content=True,
+        stream=False,
+    )
+
+
+def test_invoke_model_calude_no_content(bedrock_client_no_content, claude_model_id: str, span_exporter, metric_reader):
+    _run_and_check_invoke_model_claude(
+        bedrock_client=bedrock_client_no_content,
+        model_id=claude_model_id,
+        span_exporter=span_exporter,
+        metric_reader=metric_reader,
+        expect_content=False,
+        stream=False,
+    )
 
 
 def test_invoke_model_calude_tool_calls_with_content():
@@ -150,6 +262,7 @@ def test_invoke_model_llama_no_content(
     )
 
 
+@pytest.mark.vcr()
 def test_invoke_model_non_existing_model(bedrock_client_with_content, span_exporter, metric_reader):
     model_id = "meta.llama3-8b-instruct-v999:999"
     with pytest.raises(Exception):
@@ -258,6 +371,7 @@ def test_invoke_model_with_response_stream_calude_unsupported_content_blocks():
     pytest.skip("TODO")
 
 
+@pytest.mark.vcr()
 def test_invoke_model_with_response_stream_llama_with_content(
     bedrock_client_with_content, llama_model_id: str, span_exporter, metric_reader
 ):
@@ -271,6 +385,7 @@ def test_invoke_model_with_response_stream_llama_with_content(
     )
 
 
+@pytest.mark.vcr()
 def test_invoke_model_with_response_stream_llama_no_content(
     bedrock_client_no_content, llama_model_id: str, span_exporter, metric_reader
 ):
@@ -284,6 +399,7 @@ def test_invoke_model_with_response_stream_llama_no_content(
     )
 
 
+@pytest.mark.vcr()
 def test_invoke_model_with_response_stream_non_existing_model(bedrock_client_with_content, span_exporter, metric_reader):
     model_id = "meta.llama3-8b-instruct-v999:999"
     with pytest.raises(Exception):
