@@ -132,23 +132,3 @@ def assert_expected_metrics(
                 assert data_point.attributes[attribute] == expected_value
             else:
                 assert attribute not in data_point.attributes
-
-
-def get_current_weather_tool_definition():
-    return {
-        "toolSpec": {
-            "name": "get_current_weather",
-            "description": "Get the current weather in a given location",
-            "inputSchema": {
-                "type": "object",
-                "properties": {
-                    "location": {
-                        "type": "string",
-                        "description": "The city and state, e.g. Boston, MA",
-                    },
-                },
-                "required": ["location"],
-                "additionalProperties": False,
-            },
-        },
-    }

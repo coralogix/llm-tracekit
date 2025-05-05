@@ -1,3 +1,5 @@
+import json
+
 import boto3
 import pytest
 from botocore.exceptions import ClientError
@@ -8,6 +10,28 @@ from tests.bedrock.utils import (
     assert_expected_metrics,
 )
 from tests.utils import assert_choices_in_span, assert_messages_in_span
+
+
+def get_current_weather_tool_definition():
+    return {
+        "toolSpec": {
+            "name": "get_current_weather",
+            "description": "Get the current weather in a given location",
+            "inputSchema": {
+                "json": {
+                    "type": "object",
+                    "properties": {
+                        "location": {
+                            "type": "string",
+                            "description": "The city and state, e.g. Boston, MA",
+                        },
+                    },
+                    "required": ["location"],
+                    "additionalProperties": False,
+                },
+            },
+        },
+    }
 
 
 def _run_and_check_converse(
@@ -104,6 +128,162 @@ def _run_and_check_converse(
     )
 
 
+def _run_and_check_converse_tool_calls(
+    bedrock_client,
+    model_id: str,
+    span_exporter,
+    metric_reader,
+    expect_content: bool,
+    stream: bool,
+):
+    # TODO: handle streaming
+    args = {
+        "modelId": model_id,
+        "system": [{"text": "you are a helpful assistant"}],
+        "messages": [
+            {"role": "user", "content": [{"text": "What's the weather in Seattle and San Francisco today?"}]}
+        ],
+        "toolConfig": {
+            "tools": [get_current_weather_tool_definition()]
+        }
+    }
+    span_name = "bedrock.converse"
+    result_0 = bedrock_client.converse(**args)
+    tool_call_blocks = [block for block in result_0["output"]["message"]["content"] if "toolUse" in block]
+
+    assert result_0["stopReason"] == "tool_use"
+
+    tool_results = [
+        {
+            "tool_call_id": tool_call_blocks[0]["toolUse"]["toolUseId"],
+            "content": "50 degrees and raining"
+        },
+        {
+            "tool_call_id": tool_call_blocks[1]["toolUse"]["toolUseId"],
+            "content": "70 degrees and sunny"
+        }
+    ]
+
+    args["messages"].append(result_0["output"]["message"])
+    args["messages"].append({
+        "role": "user",
+        "content": [
+            {
+                "toolResult": {
+                    "toolUseId": tool_results[0]["tool_call_id"],
+                    "content": [{"text": tool_results[0]["content"]}]
+                }
+            },
+            {
+                "toolResult": {
+                    "toolUseId": tool_results[1]["tool_call_id"],
+                    "content": [{"text": tool_results[1]["content"]}]
+                }
+            },
+        ]
+    })
+
+    result_1 = bedrock_client.converse(**args)
+    assert result_1["stopReason"] == "end_turn"
+
+    expected_assistant_message = {
+        "role": result_0["output"]["message"]["role"],
+            "tool_calls": [
+            {
+                "id": tool_call_blocks[0]["toolUse"]["toolUseId"],
+                "type": "function",
+                "function": {
+                    "name": tool_call_blocks[0]["toolUse"]["name"],
+                    "arguments": json.dumps(tool_call_blocks[0]["toolUse"]["input"]),
+                },
+            },
+            {
+                "id": tool_call_blocks[1]["toolUse"]["toolUseId"],
+                "type": "function",
+                "function": {
+                    "name": tool_call_blocks[1]["toolUse"]["name"],
+                    "arguments": json.dumps(tool_call_blocks[1]["toolUse"]["input"]),
+                },
+            },
+        ]
+    }
+
+    spans = span_exporter.get_finished_spans()
+    assert len(spans) == 2
+
+    assert_attributes_in_span(
+        span=spans[0],
+        span_name=span_name,
+        request_model=model_id,
+        response_model=model_id,
+        usage_input_tokens=result_0["usage"]["inputTokens"],
+        usage_output_tokens=result_0["usage"]["outputTokens"],
+        finish_reasons=(result_0["stopReason"],),
+    )
+    assert_attributes_in_span(
+        span=spans[1],
+        span_name=span_name,
+        request_model=model_id,
+        response_model=model_id,
+        usage_input_tokens=result_1["usage"]["inputTokens"],
+        usage_output_tokens=result_1["usage"]["outputTokens"],
+        finish_reasons=(result_1["stopReason"],),
+    )
+
+    expected_messages_0 = [
+        {"role": "system", "content": "you are a helpful assistant"},
+        {"role": "user", "content": "What's the weather in Seattle and San Francisco today?"},
+    ]
+    assert_messages_in_span(
+        span=spans[0],
+        expected_messages=expected_messages_0,
+        expect_content=expect_content,
+    )
+
+    expected_messages_1 = [
+        *expected_messages_0,
+        expected_assistant_message,
+        {"role": "user", **tool_results[0]},
+        {"role": "user", **tool_results[1]},
+    ]
+    assert_messages_in_span(
+        span=spans[1],
+        expected_messages=expected_messages_1,
+        expect_content=expect_content,
+    )
+
+    expected_choice_0 = {
+        "finish_reason": result_0["stopReason"],
+        "message": expected_assistant_message,
+    }
+    assert_choices_in_span(
+        span=spans[0], expected_choices=[expected_choice_0], expect_content=expect_content
+    )
+
+    expected_choice_1 = {
+        "finish_reason": result_1["stopReason"],
+        "message": {
+            "role": result_1["output"]["message"]["role"],
+            "content": result_1["output"]["message"]["content"][0]["text"],
+        },
+    }
+    assert_choices_in_span(
+        span=spans[1], expected_choices=[expected_choice_1], expect_content=expect_content
+    )
+
+
+    metrics = metric_reader.get_metrics_data().resource_metrics
+    assert len(metrics) == 1
+
+    metric_data = metrics[0].scope_metrics[0].metrics
+    assert_expected_metrics(
+        metrics=metric_data,
+        model=model_id,
+        usage_input_tokens=result_0["usage"]["inputTokens"] + result_1["usage"]["inputTokens"],
+        usage_output_tokens=result_0["usage"]["outputTokens"] + result_1["usage"]["outputTokens"],
+    )
+
+
 @pytest.mark.vcr()
 def test_converse_with_content(
     bedrock_client_with_content, claude_model_id: str, span_exporter, metric_reader
@@ -132,12 +312,28 @@ def test_converse_no_content(
     )
 
 
-def test_converse_tool_calls_with_content():
-    pytest.skip("TODO")
+@pytest.mark.vcr()
+def test_converse_tool_calls_with_content(bedrock_client_with_content, claude_model_id: str, span_exporter, metric_reader):
+    _run_and_check_converse_tool_calls(
+        bedrock_client=bedrock_client_with_content,
+        model_id=claude_model_id,
+        span_exporter=span_exporter,
+        metric_reader=metric_reader,
+        expect_content=True,
+        stream=False,
+    )
 
 
-def test_converse_tool_calls_no_content():
-    pytest.skip("TODO")
+@pytest.mark.vcr()
+def test_converse_tool_calls_no_content(bedrock_client_no_content, claude_model_id: str, span_exporter, metric_reader):
+    _run_and_check_converse_tool_calls(
+        bedrock_client=bedrock_client_no_content,
+        model_id=claude_model_id,
+        span_exporter=span_exporter,
+        metric_reader=metric_reader,
+        expect_content=False,
+        stream=False,
+    )
 
 
 @pytest.mark.vcr()

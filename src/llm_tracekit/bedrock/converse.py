@@ -45,10 +45,10 @@ def _combine_tool_call_content_parts(
 
 def _parse_converse_message(
     role: Optional[str], content_parts: Optional[List[Dict[str, Any]]]
-) -> Message:
+) -> List[Message]:
     """Attempts to combine the content parts of a `converse` API message to a single message."""
     if content_parts is None:
-        return Message(role=role)
+        return [Message(role=role)]
 
     text_parts = []
     tool_calls = []
@@ -65,12 +65,8 @@ def _parse_converse_message(
         if "toolResult" in content_part:
             tool_call_results.append(content_part["toolResult"])
 
-    # Theoretically, in the cases we support we don't expect to see multiple types of content
-    # in the same message, but in case that happens we follow the hierarchy
-    # of text > tool_calls > tool_call_result
-    if len(text_parts) > 0:
-        return Message(role=role, content="".join(text_parts))
-    elif len(tool_calls) > 0:
+    # TODO: explain this mess
+    if len(tool_calls) > 0:
         message_tool_calls = []
         for tool_call in tool_calls:
             arguments = None
@@ -86,23 +82,30 @@ def _parse_converse_message(
                 )
             )
 
-        return Message(
+        return [Message(
             role=role,
             tool_calls=message_tool_calls,
-        )
-    # We don't support multiple tool call results, so we take the first one
-    elif len(tool_call_results) > 0:
-        content = None
-        if "content" in tool_call_results[0]:
-            content = _combine_tool_call_content_parts(tool_call_results[0]["content"])
+        )]
+    
+    messages = []
+    if len(tool_call_results) > 0:
+        for tool_call_result in tool_call_results:
+            content = None
+            if "content" in tool_call_result:
+                content = _combine_tool_call_content_parts(tool_call_result["content"])
 
-        return Message(
-            role=role,
-            tool_call_id=tool_call_results[0].get("toolUseId"),
-            content=content,
-        )
+            messages.append(Message(
+                role=role,
+                tool_call_id=tool_call_result.get("toolUseId"),
+                content=content,
+            ))
+    if len(text_parts) > 0:
+        messages.append(Message(role=role, content="".join(text_parts)))
 
-    return Message(role=role)
+    if len(messages) > 0:
+        return messages
+
+    return [Message(role=role)]
 
 
 def generate_attributes_from_converse_input(
@@ -114,7 +117,7 @@ def generate_attributes_from_converse_input(
         messages.append(Message(role="system", content=system_message.get("text")))
 
     for message in kwargs.get("messages", []):
-        messages.append(
+        messages.extend(
             _parse_converse_message(
                 role=message.get("role"), content_parts=message.get("content")
             )
@@ -186,7 +189,7 @@ def record_converse_result_attributes(
         parsed_response_message = _parse_converse_message(
             role=response_message.get("role"),
             content_parts=response_message.get("content"),
-        )
+        )[0]
         choice = Choice(
             finish_reason=finish_reason,
             role=parsed_response_message.role,
