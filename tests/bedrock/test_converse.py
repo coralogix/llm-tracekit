@@ -1,3 +1,4 @@
+from copy import deepcopy
 import json
 
 import boto3
@@ -10,9 +11,10 @@ from tests.bedrock.utils import (
     assert_expected_metrics,
 )
 from tests.utils import assert_choices_in_span, assert_messages_in_span
+from llm_tracekit.bedrock.utils import decode_tool_use_in_stream
 
 
-def get_current_weather_tool_definition():
+def _get_current_weather_tool_definition():
     return {
         "toolSpec": {
             "name": "get_current_weather",
@@ -32,6 +34,44 @@ def get_current_weather_tool_definition():
             },
         },
     }
+
+
+def _convert_stream_to_response(stream) -> dict:
+    result = {
+        "stopReason": "",
+        "output": {
+            "usage": {},
+            "message": {
+                "content": [],
+            },
+        },
+    }
+    current_block = {}
+    for event in stream:
+        if "messageStart" in event:
+            result["output"]["message"]["role"] = event["messageStart"]["role"]
+        if "contentBlockStart" in event:
+            start = event["contentBlockStart"].get("start", {})
+            if "toolUse" in start:
+                current_block = {"toolUse": deepcopy(start["toolUse"])}
+        if "contentBlockDelta" in event:
+            delta = event["contentBlockDelta"].get("delta", {})
+            if "text" in delta:
+                current_block.setdefault("text", "")
+                current_block["text"] += delta["text"]
+            elif "toolUse" in delta:
+                current_block["toolUse"].setdefault("input", "")
+                current_block["toolUse"]["input"] += delta["toolUse"]["input"]
+        if "contentBlockStop" in event:
+            if "toolUse" in current_block:
+                current_block["toolUse"]["input"] = json.loads(current_block["toolUse"]["input"])
+            result["output"]["message"]["content"].append(current_block)
+        if "metadata" in event:
+            result["usage"] = event["metadata"]["usage"]
+        if "messageStop" in event:
+            result["stopReason"] = event["messageStop"]["stopReason"]
+
+    return result
 
 
 def _run_and_check_converse(
@@ -55,26 +95,7 @@ def _run_and_check_converse(
     if stream:
         span_name = "bedrock.converse_stream"
         stream_result = bedrock_client.converse_stream(**args)
-        result = {
-            "stopReason": "",
-            "output": {
-                "usage": {},
-                "message": {
-                    "content": [{"text": ""}],
-                },
-            },
-        }
-        for event in stream_result["stream"]:
-            if "messageStart" in event:
-                result["output"]["message"]["role"] = event["messageStart"]["role"]
-            if "contentBlockDelta" in event:
-                result["output"]["message"]["content"][0]["text"] += event[
-                    "contentBlockDelta"
-                ]["delta"]["text"]
-            if "metadata" in event:
-                result["usage"] = event["metadata"]["usage"]
-            if "messageStop" in event:
-                result["stopReason"] = event["messageStop"]["stopReason"]
+        result = _convert_stream_to_response(stream_result["stream"])
     else:
         span_name = "bedrock.converse"
         result = bedrock_client.converse(**args)
@@ -136,7 +157,6 @@ def _run_and_check_converse_tool_calls(
     expect_content: bool,
     stream: bool,
 ):
-    # TODO: handle streaming
     args = {
         "modelId": model_id,
         "system": [{"text": "you are a helpful assistant"}],
@@ -144,11 +164,16 @@ def _run_and_check_converse_tool_calls(
             {"role": "user", "content": [{"text": "What's the weather in Seattle and San Francisco today?"}]}
         ],
         "toolConfig": {
-            "tools": [get_current_weather_tool_definition()]
+            "tools": [_get_current_weather_tool_definition()]
         }
     }
-    span_name = "bedrock.converse"
-    result_0 = bedrock_client.converse(**args)
+    if stream:
+        span_name = "bedrock.converse_stream"
+        stream_result_0 = bedrock_client.converse_stream(**args)
+        result_0 = _convert_stream_to_response(stream_result_0["stream"])
+    else:
+        span_name = "bedrock.converse"
+        result_0 = bedrock_client.converse(**args)
     tool_call_blocks = [block for block in result_0["output"]["message"]["content"] if "toolUse" in block]
 
     assert result_0["stopReason"] == "tool_use"
@@ -183,7 +208,11 @@ def _run_and_check_converse_tool_calls(
         ]
     })
 
-    result_1 = bedrock_client.converse(**args)
+    if stream:
+        stream_result_1 = bedrock_client.converse_stream(**args)
+        result_1 = _convert_stream_to_response(stream_result_1["stream"])
+    else:
+        result_1 = bedrock_client.converse(**args)
     assert result_1["stopReason"] == "end_turn"
 
     expected_assistant_message = {
@@ -498,12 +527,28 @@ def test_converse_stream_no_content(
     )
 
 
-def test_converse_stream_tool_calls_with_content():
-    pytest.skip("TODO")
+@pytest.mark.vcr()
+def test_converse_stream_tool_calls_with_content(bedrock_client_with_content, claude_model_id: str, span_exporter, metric_reader):
+    _run_and_check_converse_tool_calls(
+        bedrock_client=bedrock_client_with_content,
+        model_id=claude_model_id,
+        span_exporter=span_exporter,
+        metric_reader=metric_reader,
+        expect_content=True,
+        stream=True,
+    )
 
 
-def test_converse_stream_tool_calls_no_content():
-    pytest.skip("TODO")
+@pytest.mark.vcr()
+def test_converse_stream_tool_calls_no_content(bedrock_client_no_content, claude_model_id: str, span_exporter, metric_reader):
+    _run_and_check_converse_tool_calls(
+        bedrock_client=bedrock_client_no_content,
+        model_id=claude_model_id,
+        span_exporter=span_exporter,
+        metric_reader=metric_reader,
+        expect_content=False,
+        stream=True,
+    )
 
 
 @pytest.mark.vcr()

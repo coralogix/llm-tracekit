@@ -1,3 +1,4 @@
+from copy import deepcopy
 import json
 from contextlib import suppress
 from timeit import default_timer
@@ -256,8 +257,7 @@ class ConverseStreamWrapper(ObjectProxy):
             # {'contentBlockStart': {'start': {'toolUse': {'toolUseId': 'id', 'name': 'func_name'}}, 'contentBlockIndex': 1}}
             start = event["contentBlockStart"].get("start", {})
             if "toolUse" in start:
-                tool_use = decode_tool_use_in_stream(start["toolUse"])
-                self._content_block = {"toolUse": tool_use}
+                self._content_block = {"toolUse": deepcopy(start["toolUse"])}
             return
 
         if "contentBlockDelta" in event:
@@ -269,13 +269,16 @@ class ConverseStreamWrapper(ObjectProxy):
                     self._content_block.setdefault("text", "")
                     self._content_block["text"] += delta["text"]
                 elif "toolUse" in delta:
-                    tool_use = decode_tool_use_in_stream(delta["toolUse"])
-                    self._content_block["toolUse"].update(tool_use)
+                    self._content_block["toolUse"].setdefault("input", "")
+                    self._content_block["toolUse"]["input"] += delta["toolUse"].get("input", "")
             return
 
         if "contentBlockStop" in event:
             # {'contentBlockStop': {'contentBlockIndex': 0}}
             if self._record_message and self._message is not None:
+                if "toolUse" in self._content_block:
+                    self._content_block["toolUse"] = decode_tool_use_in_stream(self._content_block["toolUse"])
+
                 self._message["content"].append(self._content_block)
                 self._content_block = {}
             return
