@@ -53,11 +53,13 @@ def _parse_claude_message(
         return [Message(role=role, content=content)]
 
     if isinstance(content, list):
-        # TODO: explain this mess
         content_blocks_by_type = defaultdict(list)
         for block in content:
             content_blocks_by_type[block.get("type")].append(block)
 
+        # We follow the same logic the OTEL implementation uses:
+        #  * If there are tool call blocks, treat it as a single message with multiple tool calls
+        #  * If there are text / tool call result blocks, treat each block as a separate message
         if "tool_use" in content_blocks_by_type:
             tool_calls = []
             for block in content_blocks_by_type["tool_use"]:

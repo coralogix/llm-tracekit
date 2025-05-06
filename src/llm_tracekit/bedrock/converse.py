@@ -66,7 +66,9 @@ def _parse_converse_message(
         if "toolResult" in content_part:
             tool_call_results.append(content_part["toolResult"])
 
-    # TODO: explain this mess
+    # We follow the same logic the OTEL implementation uses:
+    #  * If there are tool call blocks, treat it as a single message with multiple tool calls
+    #  * If there are text / tool call result blocks, treat each block as a separate message
     if len(tool_calls) > 0:
         message_tool_calls = []
         for tool_call in tool_calls:
