@@ -66,6 +66,7 @@ def _convert_stream_to_response(stream) -> dict:
             if "toolUse" in current_block:
                 current_block["toolUse"]["input"] = json.loads(current_block["toolUse"]["input"])
             result["output"]["message"]["content"].append(current_block)
+            current_block = {}
         if "metadata" in event:
             result["usage"] = event["metadata"]["usage"]
         if "messageStop" in event:

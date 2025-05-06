@@ -35,20 +35,35 @@ def _convert_claude_stream_to_response(stream) -> dict:
     result = {
         "model": "",
         "role": "",
-        "content": [{"type": "text", "text": ""}],
+        "content": [],
         "stop_reason": "",
         "usage": {
             "input_tokens": 0,
             "output_tokens": 0,
         },
     }
-    for chunk in stream:
-        parsed_chunk = json.loads(chunk["chunk"]["bytes"])
+
+    current_block = {}
+    for event in stream:
+        parsed_chunk = json.loads(event["chunk"]["bytes"])
         if parsed_chunk["type"] == "message_start":
             result["model"] = parsed_chunk["message"]["model"]
             result["role"] = parsed_chunk["message"]["role"]
+        elif parsed_chunk["type"] == "content_block_start":
+            current_block = parsed_chunk["content_block"]
+            if "input" in current_block:
+                current_block["input"] = ""
         elif parsed_chunk["type"] == "content_block_delta":
-            result["content"][0]["text"] += parsed_chunk["delta"]["text"]
+            if parsed_chunk["delta"]["type"] == "text_delta":
+                current_block["text"] += parsed_chunk["delta"]["text"]
+            elif parsed_chunk["delta"]["type"] == "input_json_delta":
+                current_block["input"] += parsed_chunk["delta"]["partial_json"]
+        if parsed_chunk["type"] == "content_block_stop":
+            if current_block["type"] == "tool_use":
+                current_block["input"] = json.loads(current_block["input"])
+
+            result["content"].append(current_block)
+            current_block = {}
         elif parsed_chunk["type"] == "message_delta":
             result["stop_reason"] = parsed_chunk["delta"]["stop_reason"]
         elif parsed_chunk["type"] == "message_stop":
@@ -689,6 +704,7 @@ def test_invoke_model_with_response_stream_calude_no_content(
     )
 
 
+@pytest.mark.vcr()
 def test_invoke_model_with_response_stream_calude_tool_calls_with_content(bedrock_client_with_content, claude_model_id: str, span_exporter, metric_reader):
     _run_and_check_invoke_model_claude_tool_calls(
         bedrock_client=bedrock_client_with_content,
@@ -700,6 +716,7 @@ def test_invoke_model_with_response_stream_calude_tool_calls_with_content(bedroc
     )
 
 
+@pytest.mark.vcr()
 def test_invoke_model_with_response_stream_calude_tool_calls_no_content(bedrock_client_no_content, claude_model_id: str, span_exporter, metric_reader):
     _run_and_check_invoke_model_claude_tool_calls(
         bedrock_client=bedrock_client_no_content,
