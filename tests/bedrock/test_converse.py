@@ -1,5 +1,5 @@
-from copy import deepcopy
 import json
+from copy import deepcopy
 
 import boto3
 import pytest
@@ -9,9 +9,9 @@ from tests.bedrock.utils import (
     IMAGE_DATA,
     assert_attributes_in_span,
     assert_expected_metrics,
+    assert_tool_definitions_in_span,
 )
 from tests.utils import assert_choices_in_span, assert_messages_in_span
-from llm_tracekit.bedrock.utils import decode_tool_use_in_stream
 
 
 def _get_current_weather_tool_definition():
@@ -64,7 +64,9 @@ def _convert_stream_to_response(stream) -> dict:
                 current_block["toolUse"]["input"] += delta["toolUse"]["input"]
         if "contentBlockStop" in event:
             if "toolUse" in current_block:
-                current_block["toolUse"]["input"] = json.loads(current_block["toolUse"]["input"])
+                current_block["toolUse"]["input"] = json.loads(
+                    current_block["toolUse"]["input"]
+                )
             result["output"]["message"]["content"].append(current_block)
             current_block = {}
         if "metadata" in event:
@@ -158,15 +160,19 @@ def _run_and_check_converse_tool_calls(
     expect_content: bool,
     stream: bool,
 ):
+    tool_definition = _get_current_weather_tool_definition()
     args = {
         "modelId": model_id,
         "system": [{"text": "you are a helpful assistant"}],
         "messages": [
-            {"role": "user", "content": [{"text": "What's the weather in Seattle and San Francisco today?"}]}
+            {
+                "role": "user",
+                "content": [
+                    {"text": "What's the weather in Seattle and San Francisco today?"}
+                ],
+            }
         ],
-        "toolConfig": {
-            "tools": [_get_current_weather_tool_definition()]
-        }
+        "toolConfig": {"tools": [tool_definition]},
     }
     if stream:
         span_name = "bedrock.converse_stream"
@@ -175,39 +181,45 @@ def _run_and_check_converse_tool_calls(
     else:
         span_name = "bedrock.converse"
         result_0 = bedrock_client.converse(**args)
-    tool_call_blocks = [block for block in result_0["output"]["message"]["content"] if "toolUse" in block]
+    tool_call_blocks = [
+        block
+        for block in result_0["output"]["message"]["content"]
+        if "toolUse" in block
+    ]
 
     assert result_0["stopReason"] == "tool_use"
 
     tool_results = [
         {
             "tool_call_id": tool_call_blocks[0]["toolUse"]["toolUseId"],
-            "content": "50 degrees and raining"
+            "content": "50 degrees and raining",
         },
         {
             "tool_call_id": tool_call_blocks[1]["toolUse"]["toolUseId"],
-            "content": "70 degrees and sunny"
-        }
+            "content": "70 degrees and sunny",
+        },
     ]
 
     args["messages"].append(result_0["output"]["message"])
-    args["messages"].append({
-        "role": "user",
-        "content": [
-            {
-                "toolResult": {
-                    "toolUseId": tool_results[0]["tool_call_id"],
-                    "content": [{"text": tool_results[0]["content"]}]
-                }
-            },
-            {
-                "toolResult": {
-                    "toolUseId": tool_results[1]["tool_call_id"],
-                    "content": [{"text": tool_results[1]["content"]}]
-                }
-            },
-        ]
-    })
+    args["messages"].append(
+        {
+            "role": "user",
+            "content": [
+                {
+                    "toolResult": {
+                        "toolUseId": tool_results[0]["tool_call_id"],
+                        "content": [{"text": tool_results[0]["content"]}],
+                    }
+                },
+                {
+                    "toolResult": {
+                        "toolUseId": tool_results[1]["tool_call_id"],
+                        "content": [{"text": tool_results[1]["content"]}],
+                    }
+                },
+            ],
+        }
+    )
 
     if stream:
         stream_result_1 = bedrock_client.converse_stream(**args)
@@ -218,7 +230,7 @@ def _run_and_check_converse_tool_calls(
 
     expected_assistant_message = {
         "role": result_0["output"]["message"]["role"],
-            "tool_calls": [
+        "tool_calls": [
             {
                 "id": tool_call_blocks[0]["toolUse"]["toolUseId"],
                 "type": "function",
@@ -235,13 +247,12 @@ def _run_and_check_converse_tool_calls(
                     "arguments": json.dumps(tool_call_blocks[1]["toolUse"]["input"]),
                 },
             },
-        ]
+        ],
     }
 
     spans = span_exporter.get_finished_spans()
     assert len(spans) == 2
 
-    pytest.fail("Missing asserts on tool call definition")
     assert_attributes_in_span(
         span=spans[0],
         span_name=span_name,
@@ -261,9 +272,20 @@ def _run_and_check_converse_tool_calls(
         finish_reasons=(result_1["stopReason"],),
     )
 
+    expected_tool_definition = {
+        "name": tool_definition["toolSpec"]["name"],
+        "description": tool_definition["toolSpec"]["description"],
+        "parameters": json.dumps(tool_definition["toolSpec"]["inputSchema"]["json"]),
+    }
+    assert_tool_definitions_in_span(spans[0], [expected_tool_definition])
+    assert_tool_definitions_in_span(spans[1], [expected_tool_definition])
+
     expected_messages_0 = [
         {"role": "system", "content": "you are a helpful assistant"},
-        {"role": "user", "content": "What's the weather in Seattle and San Francisco today?"},
+        {
+            "role": "user",
+            "content": "What's the weather in Seattle and San Francisco today?",
+        },
     ]
     assert_messages_in_span(
         span=spans[0],
@@ -288,7 +310,9 @@ def _run_and_check_converse_tool_calls(
         "message": expected_assistant_message,
     }
     assert_choices_in_span(
-        span=spans[0], expected_choices=[expected_choice_0], expect_content=expect_content
+        span=spans[0],
+        expected_choices=[expected_choice_0],
+        expect_content=expect_content,
     )
 
     expected_choice_1 = {
@@ -299,9 +323,10 @@ def _run_and_check_converse_tool_calls(
         },
     }
     assert_choices_in_span(
-        span=spans[1], expected_choices=[expected_choice_1], expect_content=expect_content
+        span=spans[1],
+        expected_choices=[expected_choice_1],
+        expect_content=expect_content,
     )
-
 
     metrics = metric_reader.get_metrics_data().resource_metrics
     assert len(metrics) == 1
@@ -310,8 +335,10 @@ def _run_and_check_converse_tool_calls(
     assert_expected_metrics(
         metrics=metric_data,
         model=model_id,
-        usage_input_tokens=result_0["usage"]["inputTokens"] + result_1["usage"]["inputTokens"],
-        usage_output_tokens=result_0["usage"]["outputTokens"] + result_1["usage"]["outputTokens"],
+        usage_input_tokens=result_0["usage"]["inputTokens"]
+        + result_1["usage"]["inputTokens"],
+        usage_output_tokens=result_0["usage"]["outputTokens"]
+        + result_1["usage"]["outputTokens"],
     )
 
 
@@ -344,7 +371,9 @@ def test_converse_no_content(
 
 
 @pytest.mark.vcr()
-def test_converse_tool_calls_with_content(bedrock_client_with_content, claude_model_id: str, span_exporter, metric_reader):
+def test_converse_tool_calls_with_content(
+    bedrock_client_with_content, claude_model_id: str, span_exporter, metric_reader
+):
     _run_and_check_converse_tool_calls(
         bedrock_client=bedrock_client_with_content,
         model_id=claude_model_id,
@@ -356,7 +385,9 @@ def test_converse_tool_calls_with_content(bedrock_client_with_content, claude_mo
 
 
 @pytest.mark.vcr()
-def test_converse_tool_calls_no_content(bedrock_client_no_content, claude_model_id: str, span_exporter, metric_reader):
+def test_converse_tool_calls_no_content(
+    bedrock_client_no_content, claude_model_id: str, span_exporter, metric_reader
+):
     _run_and_check_converse_tool_calls(
         bedrock_client=bedrock_client_no_content,
         model_id=claude_model_id,
@@ -530,7 +561,9 @@ def test_converse_stream_no_content(
 
 
 @pytest.mark.vcr()
-def test_converse_stream_tool_calls_with_content(bedrock_client_with_content, claude_model_id: str, span_exporter, metric_reader):
+def test_converse_stream_tool_calls_with_content(
+    bedrock_client_with_content, claude_model_id: str, span_exporter, metric_reader
+):
     _run_and_check_converse_tool_calls(
         bedrock_client=bedrock_client_with_content,
         model_id=claude_model_id,
@@ -542,7 +575,9 @@ def test_converse_stream_tool_calls_with_content(bedrock_client_with_content, cl
 
 
 @pytest.mark.vcr()
-def test_converse_stream_tool_calls_no_content(bedrock_client_no_content, claude_model_id: str, span_exporter, metric_reader):
+def test_converse_stream_tool_calls_no_content(
+    bedrock_client_no_content, claude_model_id: str, span_exporter, metric_reader
+):
     _run_and_check_converse_tool_calls(
         bedrock_client=bedrock_client_no_content,
         model_id=claude_model_id,

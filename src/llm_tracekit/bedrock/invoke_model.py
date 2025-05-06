@@ -3,7 +3,7 @@ from collections import defaultdict
 from contextlib import suppress
 from enum import Enum
 from timeit import default_timer
-from typing import Any, Callable, Dict, Optional, Union, List
+from typing import Any, Callable, Dict, List, Optional, Union
 
 from botocore.eventstream import EventStream, EventStreamError
 from opentelemetry.semconv._incubating.attributes import (
@@ -83,11 +83,13 @@ def _parse_claude_message(
                 if not isinstance(tool_result_content, str):
                     tool_result_content = None
 
-                messages.append(Message(
-                    role=role,
-                    tool_call_id=tool_result.get("tool_use_id"),
-                    content=tool_result_content,
-                ))
+                messages.append(
+                    Message(
+                        role=role,
+                        tool_call_id=tool_result.get("tool_use_id"),
+                        content=tool_result_content,
+                    )
+                )
         if "text" in content_blocks_by_type:
             text_parts = [
                 block["text"]
@@ -95,7 +97,7 @@ def _parse_claude_message(
                 if block.get("text") is not None
             ]
             messages.append(Message(role=role, content="".join(text_parts)))
-        
+
         if len(messages) > 0:
             return messages
 
@@ -125,7 +127,7 @@ def _generate_claude_request_and_message_attributes(
             and "properties" in tool_definition["input_schema"]
         ):
             with suppress(TypeError):
-                tool_params = json.dumps(tool_definition["input_schema"]["properties"])
+                tool_params = json.dumps(tool_definition["input_schema"])
 
         tool_attributes.update(
             {

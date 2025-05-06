@@ -1,4 +1,4 @@
-from typing import Iterable, Optional
+from typing import Iterable, List, Optional
 
 from opentelemetry.sdk.trace import ReadableSpan
 from opentelemetry.semconv._incubating.attributes import (
@@ -7,6 +7,7 @@ from opentelemetry.semconv._incubating.attributes import (
 from opentelemetry.semconv._incubating.metrics import gen_ai_metrics
 from opentelemetry.semconv.attributes import error_attributes as ErrorAttributes
 
+from llm_tracekit import extended_gen_ai_attributes as ExtendedGenAIAttributes
 from llm_tracekit.instruments import (
     GEN_AI_CLIENT_OPERATION_DURATION_BUCKETS,
     GEN_AI_CLIENT_TOKEN_USAGE_BUCKETS,
@@ -14,6 +15,36 @@ from llm_tracekit.instruments import (
 
 # This is a PNG of a single black pixel
 IMAGE_DATA = b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01\x01\x00\x00\x00\x007n\xf9$\x00\x00\x00\nIDATx\x01c`\x00\x00\x00\x02\x00\x01su\x01\x18\x00\x00\x00\x00IEND\xaeB`\x82"
+
+
+def assert_tool_definitions_in_span(span: ReadableSpan, tools: List[dict]):
+    assert span.attributes is not None
+
+    for index, tool in enumerate(tools):
+        assert (
+            span.attributes[
+                ExtendedGenAIAttributes.GEN_AI_BEDROCK_REQUEST_TOOLS_FUNCTION_NAME.format(
+                    tool_index=index
+                )
+            ]
+            == tool["name"]
+        )
+        assert (
+            span.attributes[
+                ExtendedGenAIAttributes.GEN_AI_BEDROCK_REQUEST_TOOLS_FUNCTION_DESCRIPTION.format(
+                    tool_index=index
+                )
+            ]
+            == tool["description"]
+        )
+        assert (
+            span.attributes[
+                ExtendedGenAIAttributes.GEN_AI_BEDROCK_REQUEST_TOOLS_FUNCTION_PARAMETERS.format(
+                    tool_index=index
+                )
+            ]
+            == tool["parameters"]
+        )
 
 
 def assert_attributes_in_span(

@@ -9,6 +9,7 @@ from tests.bedrock.utils import (
     IMAGE_DATA,
     assert_attributes_in_span,
     assert_expected_metrics,
+    assert_tool_definitions_in_span,
 )
 from tests.utils import assert_choices_in_span, assert_messages_in_span
 
@@ -27,7 +28,7 @@ def _get_current_weather_tool_definition():
             },
             "required": ["location"],
             "additionalProperties": False,
-    },
+        },
     }
 
 
@@ -260,6 +261,7 @@ def _run_and_check_invoke_model_claude_tool_calls(
     expect_content: bool,
     stream: bool,
 ):
+    tool_definition = _get_current_weather_tool_definition()
     common_args = {
         "modelId": model_id,
         "contentType": "application/json",
@@ -268,10 +270,15 @@ def _run_and_check_invoke_model_claude_tool_calls(
     body = {
         "anthropic_version": "bedrock-2023-05-31",
         "max_tokens": 1000,
-        "messages": [{"role": "user", "content": "What's the weather in Seattle and San Francisco today?"}],
+        "messages": [
+            {
+                "role": "user",
+                "content": "What's the weather in Seattle and San Francisco today?",
+            }
+        ],
         "system": "You are a helpful assistant",
-        "tools": [_get_current_weather_tool_definition()],
-        "tool_choice": { "type": "auto" }
+        "tools": [tool_definition],
+        "tool_choice": {"type": "auto"},
     }
     args = {
         **common_args,
@@ -286,23 +293,22 @@ def _run_and_check_invoke_model_claude_tool_calls(
         invoke_result_0 = bedrock_client.invoke_model(**args)
         result_0 = json.loads(invoke_result_0["body"].read())
 
-    tool_call_blocks = [block for block in result_0["content"] if block["type"] == "tool_use"]
+    tool_call_blocks = [
+        block for block in result_0["content"] if block["type"] == "tool_use"
+    ]
 
     assert result_0["stop_reason"] == "tool_use"
 
     tool_results = [
         {
             "tool_call_id": tool_call_blocks[0]["id"],
-            "content": "50 degrees and raining"
+            "content": "50 degrees and raining",
         },
-        {
-            "tool_call_id": tool_call_blocks[1]["id"],
-            "content": "70 degrees and sunny"
-        }
+        {"tool_call_id": tool_call_blocks[1]["id"], "content": "70 degrees and sunny"},
     ]
     expected_assistant_message = {
         "role": result_0["role"],
-            "tool_calls": [
+        "tool_calls": [
             {
                 "id": tool_call_blocks[0]["id"],
                 "type": "function",
@@ -319,25 +325,27 @@ def _run_and_check_invoke_model_claude_tool_calls(
                     "arguments": json.dumps(tool_call_blocks[1]["input"]),
                 },
             },
-        ]
+        ],
     }
 
     body["messages"].append({"role": result_0["role"], "content": result_0["content"]})
-    body["messages"].append({
-        "role": "user",
-        "content": [
-            {
-                "type": "tool_result",
-                "tool_use_id": tool_results[0]["tool_call_id"],
-                "content": tool_results[0]["content"],
-            },
-            {
-                "type": "tool_result",
-                "tool_use_id": tool_results[1]["tool_call_id"],
-                "content": tool_results[1]["content"],
-            },
-        ]
-    })
+    body["messages"].append(
+        {
+            "role": "user",
+            "content": [
+                {
+                    "type": "tool_result",
+                    "tool_use_id": tool_results[0]["tool_call_id"],
+                    "content": tool_results[0]["content"],
+                },
+                {
+                    "type": "tool_result",
+                    "tool_use_id": tool_results[1]["tool_call_id"],
+                    "content": tool_results[1]["content"],
+                },
+            ],
+        }
+    )
     args = {
         **common_args,
         "body": json.dumps(body),
@@ -376,9 +384,20 @@ def _run_and_check_invoke_model_claude_tool_calls(
         max_tokens=1000,
     )
 
+    expected_tool_definition = {
+        "name": tool_definition["name"],
+        "description": tool_definition["description"],
+        "parameters": json.dumps(tool_definition["input_schema"]),
+    }
+    assert_tool_definitions_in_span(spans[0], [expected_tool_definition])
+    assert_tool_definitions_in_span(spans[1], [expected_tool_definition])
+
     expected_messages_0 = [
         {"role": "system", "content": "You are a helpful assistant"},
-        {"role": "user", "content": "What's the weather in Seattle and San Francisco today?"},
+        {
+            "role": "user",
+            "content": "What's the weather in Seattle and San Francisco today?",
+        },
     ]
     assert_messages_in_span(
         span=spans[0],
@@ -403,7 +422,9 @@ def _run_and_check_invoke_model_claude_tool_calls(
         "message": expected_assistant_message,
     }
     assert_choices_in_span(
-        span=spans[0], expected_choices=[expected_choice_0], expect_content=expect_content
+        span=spans[0],
+        expected_choices=[expected_choice_0],
+        expect_content=expect_content,
     )
     expected_choice_1 = {
         "finish_reason": result_1["stop_reason"],
@@ -413,7 +434,9 @@ def _run_and_check_invoke_model_claude_tool_calls(
         },
     }
     assert_choices_in_span(
-        span=spans[1], expected_choices=[expected_choice_1], expect_content=expect_content
+        span=spans[1],
+        expected_choices=[expected_choice_1],
+        expect_content=expect_content,
     )
 
     metrics = metric_reader.get_metrics_data().resource_metrics
@@ -423,10 +446,11 @@ def _run_and_check_invoke_model_claude_tool_calls(
     assert_expected_metrics(
         metrics=metric_data,
         model=model_id,
-        usage_input_tokens=result_0["usage"]["input_tokens"] + result_1["usage"]["input_tokens"],
-        usage_output_tokens=result_0["usage"]["output_tokens"] + result_1["usage"]["output_tokens"],
+        usage_input_tokens=result_0["usage"]["input_tokens"]
+        + result_1["usage"]["input_tokens"],
+        usage_output_tokens=result_0["usage"]["output_tokens"]
+        + result_1["usage"]["output_tokens"],
     )
-    # pytest.fail("Missing asserts on tool call definition")
 
 
 @pytest.mark.vcr()
@@ -458,7 +482,9 @@ def test_invoke_model_calude_no_content(
 
 
 @pytest.mark.vcr()
-def test_invoke_model_calude_tool_calls_with_content(bedrock_client_with_content, claude_model_id: str, span_exporter, metric_reader):
+def test_invoke_model_calude_tool_calls_with_content(
+    bedrock_client_with_content, claude_model_id: str, span_exporter, metric_reader
+):
     _run_and_check_invoke_model_claude_tool_calls(
         bedrock_client=bedrock_client_with_content,
         model_id=claude_model_id,
@@ -470,7 +496,9 @@ def test_invoke_model_calude_tool_calls_with_content(bedrock_client_with_content
 
 
 @pytest.mark.vcr()
-def test_invoke_model_calude_tool_calls_no_content(bedrock_client_no_content, claude_model_id: str, span_exporter, metric_reader):
+def test_invoke_model_calude_tool_calls_no_content(
+    bedrock_client_no_content, claude_model_id: str, span_exporter, metric_reader
+):
     _run_and_check_invoke_model_claude_tool_calls(
         bedrock_client=bedrock_client_no_content,
         model_id=claude_model_id,
@@ -705,7 +733,9 @@ def test_invoke_model_with_response_stream_calude_no_content(
 
 
 @pytest.mark.vcr()
-def test_invoke_model_with_response_stream_calude_tool_calls_with_content(bedrock_client_with_content, claude_model_id: str, span_exporter, metric_reader):
+def test_invoke_model_with_response_stream_calude_tool_calls_with_content(
+    bedrock_client_with_content, claude_model_id: str, span_exporter, metric_reader
+):
     _run_and_check_invoke_model_claude_tool_calls(
         bedrock_client=bedrock_client_with_content,
         model_id=claude_model_id,
@@ -717,7 +747,9 @@ def test_invoke_model_with_response_stream_calude_tool_calls_with_content(bedroc
 
 
 @pytest.mark.vcr()
-def test_invoke_model_with_response_stream_calude_tool_calls_no_content(bedrock_client_no_content, claude_model_id: str, span_exporter, metric_reader):
+def test_invoke_model_with_response_stream_calude_tool_calls_no_content(
+    bedrock_client_no_content, claude_model_id: str, span_exporter, metric_reader
+):
     _run_and_check_invoke_model_claude_tool_calls(
         bedrock_client=bedrock_client_no_content,
         model_id=claude_model_id,
