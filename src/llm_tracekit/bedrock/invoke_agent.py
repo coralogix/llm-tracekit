@@ -126,7 +126,6 @@ class InvokeAgentStreamWrapper(ObjectProxy):
 
             encoded_content = event["chunk"].get("bytes")
             if encoded_content is not None:
-                # TODO: check if we need to handle b64 decoding
                 self._content += encoded_content.decode()
 
         if "trace" in event and "trace" in event["trace"]:
