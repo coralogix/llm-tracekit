@@ -3,7 +3,7 @@ from collections import defaultdict
 from contextlib import suppress
 from enum import Enum
 from timeit import default_timer
-from typing import Any, Callable, Dict, Optional, Union
+from typing import Any, Callable, Dict, Optional, Union, List
 
 from botocore.eventstream import EventStream, EventStreamError
 from opentelemetry.semconv._incubating.attributes import (
@@ -47,26 +47,18 @@ def _get_model_type_from_model_id(model_id: Optional[str]) -> Optional[_ModelTyp
 
 def _parse_claude_message(
     role: Optional[str], content: Optional[Union[str, list]]
-) -> Message:
+) -> List[Message]:
     """Attempts to combine the content parts of a `converse` API message to a single message."""
     if isinstance(content, str):
-        return Message(role=role, content=content)
-    elif isinstance(content, list):
-        # Theoretically, in the cases we support we don't expect to see multiple types of content
-        # in the same message, but in case that happens we follow the hierarchy
-        # of text > tool_calls > tool_call_result
+        return [Message(role=role, content=content)]
+
+    if isinstance(content, list):
+        # TODO: explain this mess
         content_blocks_by_type = defaultdict(list)
         for block in content:
             content_blocks_by_type[block.get("type")].append(block)
 
-        if "text" in content_blocks_by_type:
-            text_parts = [
-                block["text"]
-                for block in content_blocks_by_type["text"]
-                if block.get("text") is not None
-            ]
-            return Message(role=role, content="".join(text_parts))
-        elif "tool_use" in content_blocks_by_type:
+        if "tool_use" in content_blocks_by_type:
             tool_calls = []
             for block in content_blocks_by_type["tool_use"]:
                 arguments = None
@@ -82,22 +74,32 @@ def _parse_claude_message(
                     )
                 )
 
-            return Message(role=role, tool_calls=tool_calls)
+            return [Message(role=role, tool_calls=tool_calls)]
 
-        elif "tool_result" in content_blocks_by_type:
-            # We don't support multiple tool call results, so we take the first one
-            tool_result = content_blocks_by_type["tool_result"][0]
-            tool_result_content = tool_result.get("content")
-            if not isinstance(tool_result_content, str):
-                tool_result_content = None
+        messages = []
+        if "tool_result" in content_blocks_by_type:
+            for tool_result in content_blocks_by_type["tool_result"]:
+                tool_result_content = tool_result.get("content")
+                if not isinstance(tool_result_content, str):
+                    tool_result_content = None
 
-            return Message(
-                role=role,
-                tool_call_id=tool_result.get("tool_use_id"),
-                content=tool_result_content,
-            )
+                messages.append(Message(
+                    role=role,
+                    tool_call_id=tool_result.get("tool_use_id"),
+                    content=tool_result_content,
+                ))
+        if "text" in content_blocks_by_type:
+            text_parts = [
+                block["text"]
+                for block in content_blocks_by_type["text"]
+                if block.get("text") is not None
+            ]
+            messages.append(Message(role=role, content="".join(text_parts)))
+        
+        if len(messages) > 0:
+            return messages
 
-    return Message(role=role)
+    return [Message(role=role)]
 
 
 def _generate_claude_request_and_message_attributes(
@@ -108,7 +110,7 @@ def _generate_claude_request_and_message_attributes(
         messages.append(Message(role="system", content=parsed_body["system"]))
 
     for message in parsed_body.get("messages", []):
-        messages.append(
+        messages.extend(
             _parse_claude_message(
                 role=message.get("role"), content=message.get("content")
             )
@@ -160,7 +162,7 @@ def _generate_claude_response_and_choice_attributes(
     usage_data = parsed_body.get("usage", {})
     parsed_response_message = _parse_claude_message(
         role=parsed_body.get("role"), content=parsed_body.get("content")
-    )
+    )[0]
     choice = Choice(
         finish_reason=finish_reason,
         role=parsed_response_message.role,

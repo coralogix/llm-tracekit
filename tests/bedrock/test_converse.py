@@ -240,6 +240,7 @@ def _run_and_check_converse_tool_calls(
     spans = span_exporter.get_finished_spans()
     assert len(spans) == 2
 
+    pytest.fail("Missing asserts on tool call definition")
     assert_attributes_in_span(
         span=spans[0],
         span_name=span_name,
