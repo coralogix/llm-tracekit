@@ -46,7 +46,7 @@ class Choice:
     tool_calls: Optional[List[ToolCall]] = None
 
 
-def remove_attributes_with_null_values(attributes: dict[str, Any]) -> dict[str, Any]:
+def remove_attributes_with_null_values(attributes: Dict[str, Any]) -> Dict[str, Any]:
     return {attr: value for attr, value in attributes.items() if value is not None}
 
 
