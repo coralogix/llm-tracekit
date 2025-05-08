@@ -232,7 +232,8 @@ def record_converse_result_attributes(
     record_metrics(
         instruments=instruments,
         duration=duration,
-        model=model,
+        request_model=model,
+        response_model=model,
         usage_input_tokens=usage_input_tokens,
         usage_output_tokens=usage_output_tokens,
     )
@@ -312,7 +313,8 @@ class ConverseStreamWrapper(ObjectProxy):
 
         if "messageStop" in event:
             # {'messageStop': {'stopReason': 'end_turn'}}
-            if stop_reason := event["messageStop"].get("stopReason"):
+            stop_reason = event["messageStop"].get("stopReason")
+            if stop_reason is not None:
                 self._response["stopReason"] = stop_reason
 
             if self._record_message:
@@ -324,12 +326,15 @@ class ConverseStreamWrapper(ObjectProxy):
 
         if "metadata" in event:
             # {'metadata': {'usage': {'inputTokens': 12, 'outputTokens': 15, 'totalTokens': 27}, 'metrics': {'latencyMs': 2980}}}
-            if usage := event["metadata"].get("usage"):
+            usage = event["metadata"].get("usage")
+            if usage is not None:
                 self._response["usage"] = {}
-                if input_tokens := usage.get("inputTokens"):
+                input_tokens = usage.get("inputTokens")
+                if input_tokens is not None:
                     self._response["usage"]["inputTokens"] = input_tokens
 
-                if output_tokens := usage.get("outputTokens"):
+                output_tokens = usage.get("outputTokens")
+                if output_tokens is not None:
                     self._response["usage"]["outputTokens"] = output_tokens
 
             self._stream_done_callback(self._response)

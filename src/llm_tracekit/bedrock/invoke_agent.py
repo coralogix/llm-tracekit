@@ -22,6 +22,7 @@ from opentelemetry.semconv._incubating.attributes import (
 from opentelemetry.trace import Span
 from wrapt import ObjectProxy
 
+from llm_tracekit import extended_gen_ai_attributes as ExtendedGenAIAttributes
 from llm_tracekit.bedrock.utils import record_metrics
 from llm_tracekit.instruments import Instruments
 from llm_tracekit.span_builder import (
@@ -50,7 +51,7 @@ def generate_attributes_from_invoke_agent_input(
         **base_attributes,
         **message_attributes,
         GenAIAttributes.GEN_AI_AGENT_ID: kwargs.get("agentId"),
-        GenAIAttributes.GEN_AI_AGENT_NAME: kwargs.get("agentAliasId"),
+        ExtendedGenAIAttributes.GEN_AI_BEDROCK_AGENT_ALIAS_ID: kwargs.get("agentAliasId"),
     }
 
     return remove_attributes_with_null_values(attributes)

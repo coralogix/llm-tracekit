@@ -26,7 +26,8 @@ from llm_tracekit.instruments import Instruments
 def record_metrics(
     instruments: Instruments,
     duration: float,
-    model: Optional[str] = None,
+    request_model: Optional[str] = None,
+    response_model: Optional[str] = None,
     usage_input_tokens: Optional[int] = None,
     usage_output_tokens: Optional[int] = None,
     error_type: Optional[str] = None,
@@ -36,13 +37,11 @@ def record_metrics(
         GenAIAttributes.GEN_AI_SYSTEM: GenAIAttributes.GenAiSystemValues.AWS_BEDROCK.value,
     }
 
-    if model is not None:
-        common_attributes.update(
-            {
-                GenAIAttributes.GEN_AI_REQUEST_MODEL: model,
-                GenAIAttributes.GEN_AI_RESPONSE_MODEL: model,
-            }
-        )
+    if request_model is not None:
+        common_attributes[GenAIAttributes.GEN_AI_REQUEST_MODEL] = request_model
+    if response_model is not None:
+        common_attributes[GenAIAttributes.GEN_AI_RESPONSE_MODEL] = response_model
+    
 
     if error_type:
         common_attributes[ErrorAttributes.ERROR_TYPE] = error_type

@@ -301,6 +301,8 @@ def record_invoke_model_result_attributes(
     capture_content: bool,
     model_id: Optional[str],
 ):
+    request_model = model_id
+    response_model = model_id
     usage_input_tokens = None
     usage_output_tokens = None
     try:
@@ -333,6 +335,7 @@ def record_invoke_model_result_attributes(
                     parsed_body=parsed_body, capture_content=capture_content
                 )
             )
+            response_model = parsed_body.get("model")
             usage_input_tokens = parsed_body.get("usage", {}).get("input_tokens")
             usage_output_tokens = parsed_body.get("usage", {}).get("output_tokens")
 
@@ -342,7 +345,8 @@ def record_invoke_model_result_attributes(
         record_metrics(
             instruments=instruments,
             duration=duration,
-            model=model_id,
+            request_model=request_model,
+            response_model=response_model,
             usage_input_tokens=usage_input_tokens,
             usage_output_tokens=usage_output_tokens,
         )
@@ -400,17 +404,22 @@ class InvokeModelWithResponseStreamWrapper(ObjectProxy):
             self._process_anthropic_claude_chunk(chunk)
 
     def _process_meta_llama_invocation_metrics(self, invocation_metrics):
-        if input_tokens := invocation_metrics.get("inputTokenCount"):
+        input_tokens = invocation_metrics.get("inputTokenCount")
+        if input_tokens is not None:
             self._response["prompt_token_count"] = input_tokens
-        if output_tokens := invocation_metrics.get("outputTokenCount"):
+        
+        output_tokens = invocation_metrics.get("outputTokenCount")
+        if output_tokens is not None:
             self._response["generation_token_count"] = output_tokens
 
     def _process_anthropic_claude_invocation_metrics(self, invocation_metrics):
         self._response["usage"] = {}
-        if input_tokens := invocation_metrics.get("inputTokenCount"):
+        input_tokens = invocation_metrics.get("inputTokenCount")
+        if input_tokens is not None:
             self._response["usage"]["input_tokens"] = input_tokens
 
-        if output_tokens := invocation_metrics.get("outputTokenCount"):
+        output_tokens = invocation_metrics.get("outputTokenCount")
+        if output_tokens is not None:
             self._response["usage"]["output_tokens"] = output_tokens
 
     def _process_meta_llama_chunk(self, chunk):
@@ -420,7 +429,8 @@ class InvokeModelWithResponseStreamWrapper(ObjectProxy):
         self._message["generation"] += chunk.get("generation", "")
 
         if chunk.get("stop_reason") is not None and self._message is not None:
-            if invocation_metrics := chunk.get("amazon-bedrock-invocationMetrics"):
+            invocation_metrics = chunk.get("amazon-bedrock-invocationMetrics")
+            if invocation_metrics is not None:
                 self._process_meta_llama_invocation_metrics(invocation_metrics)
 
             self._response["stop_reason"] = chunk["stop_reason"]
@@ -432,7 +442,8 @@ class InvokeModelWithResponseStreamWrapper(ObjectProxy):
 
     def _process_anthropic_claude_chunk(self, chunk):
         # pylint: disable=too-many-return-statements,too-many-branches
-        if not (message_type := chunk.get("type")):
+        message_type = chunk.get("type")
+        if message_type is None:
             return
 
         if message_type == "message_start":
@@ -484,13 +495,15 @@ class InvokeModelWithResponseStreamWrapper(ObjectProxy):
 
         if message_type == "message_delta":
             # {'type': 'message_delta', 'delta': {'stop_reason': 'end_turn', 'stop_sequence': None}, 'usage': {'output_tokens': 123}}
-            if (stop_reason := chunk.get("delta", {}).get("stop_reason")) is not None:
+            stop_reason = chunk.get("delta", {}).get("stop_reason")
+            if stop_reason is not None:
                 self._response["stop_reason"] = stop_reason
             return
 
         if message_type == "message_stop":
             # {'type': 'message_stop', 'amazon-bedrock-invocationMetrics': {'inputTokenCount': 18, 'outputTokenCount': 123, 'invocationLatency': 5250, 'firstByteLatency': 290}}
-            if invocation_metrics := chunk.get("amazon-bedrock-invocationMetrics"):
+            invocation_metrics = chunk.get("amazon-bedrock-invocationMetrics")
+            if invocation_metrics is not None:
                 self._process_anthropic_claude_invocation_metrics(invocation_metrics)
 
             if self._record_message and self._message is not None:

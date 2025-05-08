@@ -47,6 +47,12 @@ GEN_AI_OPENAI_REQUEST_TOOLS_FUNCTION_PARAMETERS: Final = (
 The parameters of the tool function in JSON format.
 """
 
+GEN_AI_BEDROCK_AGENT_ALIAS_ID: Final = (
+    "gen_ai.bedrock.agent_alias.id"
+)
+"""
+The ID of the Bedrock agent alias.
+"""
 GEN_AI_BEDROCK_REQUEST_TOOLS_FUNCTION_NAME: Final = (
     "gen_ai.bedrock.request.tools.{tool_index}.function.name"
 )

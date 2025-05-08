@@ -53,7 +53,7 @@ def _handle_error(
     record_metrics(
         instruments=instruments,
         duration=duration,
-        model=model,
+        request_model=model,
         error_type=type(error).__qualname__,
     )
 
