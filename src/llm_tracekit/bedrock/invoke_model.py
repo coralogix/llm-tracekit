@@ -33,12 +33,12 @@ from llm_tracekit.span_builder import (
     Choice,
     Message,
     ToolCall,
+    attribute_generator,
     generate_base_attributes,
     generate_choice_attributes,
     generate_message_attributes,
     generate_request_attributes,
     generate_response_attributes,
-    remove_attributes_with_null_values,
 )
 
 
@@ -120,6 +120,7 @@ def _parse_claude_message(
     return [Message(role=role)]
 
 
+@attribute_generator
 def _generate_claude_request_and_message_attributes(
     model_id: Optional[str], parsed_body: Dict[str, Any], capture_content: bool
 ) -> Dict[str, Any]:
@@ -169,7 +170,7 @@ def _generate_claude_request_and_message_attributes(
         **generate_message_attributes(
             messages=messages, capture_content=capture_content
         ),
-        **remove_attributes_with_null_values(tool_attributes),
+        **tool_attributes,
     }
 
 
@@ -407,7 +408,7 @@ class InvokeModelWithResponseStreamWrapper(ObjectProxy):
         input_tokens = invocation_metrics.get("inputTokenCount")
         if input_tokens is not None:
             self._response["prompt_token_count"] = input_tokens
-        
+
         output_tokens = invocation_metrics.get("outputTokenCount")
         if output_tokens is not None:
             self._response["generation_token_count"] = output_tokens

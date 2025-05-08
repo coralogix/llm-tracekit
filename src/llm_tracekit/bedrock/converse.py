@@ -32,12 +32,12 @@ from llm_tracekit.span_builder import (
     Choice,
     Message,
     ToolCall,
+    attribute_generator,
     generate_base_attributes,
     generate_choice_attributes,
     generate_message_attributes,
     generate_request_attributes,
     generate_response_attributes,
-    remove_attributes_with_null_values,
 )
 
 
@@ -129,6 +129,7 @@ def _parse_converse_message(
     return [Message(role=role)]
 
 
+@attribute_generator
 def generate_attributes_from_converse_input(
     kwargs: Dict[str, Any], capture_content: bool
 ) -> Dict[str, Any]:
@@ -183,7 +184,7 @@ def generate_attributes_from_converse_input(
         **generate_message_attributes(
             messages=messages, capture_content=capture_content
         ),
-        **remove_attributes_with_null_values(tool_attributes),
+        **tool_attributes,
     }
 
 

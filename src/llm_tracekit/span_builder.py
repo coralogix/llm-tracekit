@@ -13,7 +13,8 @@
 # limitations under the License.
 
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional
+from functools import wraps
+from typing import Any, Callable, Dict, List, Optional
 
 from opentelemetry.semconv._incubating.attributes import (
     gen_ai_attributes as GenAIAttributes,
@@ -50,6 +51,19 @@ def remove_attributes_with_null_values(attributes: Dict[str, Any]) -> Dict[str, 
     return {attr: value for attr, value in attributes.items() if value is not None}
 
 
+def attribute_generator(
+    original_function: Callable[..., Dict[str, Any]],
+) -> Callable[..., Dict[str, Any]]:
+    @wraps(original_function)
+    def wrapper(*args, **kwargs) -> Dict[str, Any]:
+        attributes = original_function(*args, **kwargs)
+
+        return remove_attributes_with_null_values(attributes)
+
+    return wrapper
+
+
+@attribute_generator
 def generate_base_attributes(
     system: GenAIAttributes.GenAiSystemValues,
     operation: GenAIAttributes.GenAiOperationNameValues = GenAIAttributes.GenAiOperationNameValues.CHAT,
@@ -58,9 +72,10 @@ def generate_base_attributes(
         GenAIAttributes.GEN_AI_OPERATION_NAME: operation.value,
         GenAIAttributes.GEN_AI_SYSTEM: system.value,
     }
-    return remove_attributes_with_null_values(attributes)
+    return attributes
 
 
+@attribute_generator
 def generate_request_attributes(
     model: Optional[str] = None,
     temperature: Optional[float] = None,
@@ -77,9 +92,10 @@ def generate_request_attributes(
         GenAIAttributes.GEN_AI_REQUEST_PRESENCE_PENALTY: presence_penalty,
         GenAIAttributes.GEN_AI_REQUEST_FREQUENCY_PENALTY: frequency_penalty,
     }
-    return remove_attributes_with_null_values(attributes)
+    return attributes
 
 
+@attribute_generator
 def generate_message_attributes(
     messages: List[Message], capture_content: bool
 ) -> Dict[str, Any]:
@@ -123,9 +139,10 @@ def generate_message_attributes(
                         )
                     ] = tool_call.function_arguments
 
-    return remove_attributes_with_null_values(attributes)
+    return attributes
 
 
+@attribute_generator
 def generate_response_attributes(
     model: Optional[str] = None,
     finish_reasons: Optional[List[str]] = None,
@@ -140,9 +157,10 @@ def generate_response_attributes(
         GenAIAttributes.GEN_AI_USAGE_INPUT_TOKENS: usage_input_tokens,
         GenAIAttributes.GEN_AI_USAGE_OUTPUT_TOKENS: usage_output_tokens,
     }
-    return remove_attributes_with_null_values(attributes)
+    return attributes
 
 
+@attribute_generator
 def generate_choice_attributes(
     choices: List[Choice], capture_content: bool
 ) -> Dict[str, Any]:
@@ -190,4 +208,4 @@ def generate_choice_attributes(
                         )
                     ] = tool_call.function_arguments
 
-    return remove_attributes_with_null_values(attributes)
+    return attributes

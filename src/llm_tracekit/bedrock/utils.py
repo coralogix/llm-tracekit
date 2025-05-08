@@ -41,7 +41,6 @@ def record_metrics(
         common_attributes[GenAIAttributes.GEN_AI_REQUEST_MODEL] = request_model
     if response_model is not None:
         common_attributes[GenAIAttributes.GEN_AI_RESPONSE_MODEL] = response_model
-    
 
     if error_type:
         common_attributes[ErrorAttributes.ERROR_TYPE] = error_type

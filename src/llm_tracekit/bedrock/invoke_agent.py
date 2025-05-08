@@ -28,14 +28,15 @@ from llm_tracekit.instruments import Instruments
 from llm_tracekit.span_builder import (
     Choice,
     Message,
+    attribute_generator,
     generate_base_attributes,
     generate_choice_attributes,
     generate_message_attributes,
     generate_response_attributes,
-    remove_attributes_with_null_values,
 )
 
 
+@attribute_generator
 def generate_attributes_from_invoke_agent_input(
     kwargs: Dict[str, Any], capture_content: bool
 ) -> Dict[str, Any]:
@@ -51,10 +52,12 @@ def generate_attributes_from_invoke_agent_input(
         **base_attributes,
         **message_attributes,
         GenAIAttributes.GEN_AI_AGENT_ID: kwargs.get("agentId"),
-        ExtendedGenAIAttributes.GEN_AI_BEDROCK_AGENT_ALIAS_ID: kwargs.get("agentAliasId"),
+        ExtendedGenAIAttributes.GEN_AI_BEDROCK_AGENT_ALIAS_ID: kwargs.get(
+            "agentAliasId"
+        ),
     }
 
-    return remove_attributes_with_null_values(attributes)
+    return attributes
 
 
 def record_invoke_agent_result_attributes(

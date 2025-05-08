@@ -27,9 +27,9 @@ from opentelemetry.semconv._incubating.attributes import (
 
 from llm_tracekit import extended_gen_ai_attributes as ExtendedGenAIAttributes
 from llm_tracekit.span_builder import (
+    attribute_generator,
     generate_base_attributes,
     generate_request_attributes,
-    remove_attributes_with_null_values,
 )
 
 
@@ -180,6 +180,7 @@ def non_numerical_value_is_set(value: Optional[Union[bool, str]]):
     return bool(value) and value != NOT_GIVEN
 
 
+@attribute_generator
 def get_llm_request_attributes(
     kwargs,
     client_instance,
@@ -249,5 +250,4 @@ def get_llm_request_attributes(
         service_tier if service_tier != "auto" else None
     )
 
-    # filter out None values
-    return remove_attributes_with_null_values(attributes)
+    return attributes
