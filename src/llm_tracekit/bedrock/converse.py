@@ -41,44 +41,44 @@ from llm_tracekit.span_builder import (
 )
 
 
-def _combine_tool_call_content_parts(
-    content_parts: List[Dict[str, Any]],
+def _combine_tool_call_content_blocks(
+    content_blocks: List[Dict[str, Any]],
 ) -> Optional[str]:
-    text_parts = []
-    for content_part in content_parts:
-        if "text" in content_part:
-            text_parts.append(content_part["text"])
+    text_blocks = []
+    for content_block in content_blocks:
+        if "text" in content_block:
+            text_blocks.append(content_block["text"])
 
-        if "json" in content_part:
-            return json.dumps(content_part["json"])
+        if "json" in content_block:
+            return json.dumps(content_block["json"])
 
-    if len(text_parts) > 0:
-        return "".join(text_parts)
+    if len(text_blocks) > 0:
+        return "".join(text_blocks)
 
     return None
 
 
 def _parse_converse_message(
-    role: Optional[str], content_parts: Optional[List[Dict[str, Any]]]
+    role: Optional[str], content_blocks: Optional[List[Dict[str, Any]]]
 ) -> List[Message]:
-    """Attempts to combine the content parts of a `converse` API message to a single message."""
-    if content_parts is None:
+    """Attempts to combine the content blocks of a `converse` API message to a single message."""
+    if content_blocks is None:
         return [Message(role=role)]
 
-    text_parts = []
+    text_blocks = []
     tool_calls = []
     tool_call_results = []
 
-    # Get all the content parts we support
-    for content_part in content_parts:
-        if "text" in content_part:
-            text_parts.append(content_part["text"])
+    # Get all the content blocks we support
+    for content_block in content_blocks:
+        if "text" in content_block:
+            text_blocks.append(content_block["text"])
 
-        if "toolUse" in content_part:
-            tool_calls.append(content_part["toolUse"])
+        if "toolUse" in content_block:
+            tool_calls.append(content_block["toolUse"])
 
-        if "toolResult" in content_part:
-            tool_call_results.append(content_part["toolResult"])
+        if "toolResult" in content_block:
+            tool_call_results.append(content_block["toolResult"])
 
     # We follow the same logic the OTEL implementation uses:
     #  * If there are tool call blocks, treat it as a single message with multiple tool calls
@@ -111,7 +111,7 @@ def _parse_converse_message(
         for tool_call_result in tool_call_results:
             content = None
             if "content" in tool_call_result:
-                content = _combine_tool_call_content_parts(tool_call_result["content"])
+                content = _combine_tool_call_content_blocks(tool_call_result["content"])
 
             messages.append(
                 Message(
@@ -120,8 +120,8 @@ def _parse_converse_message(
                     content=content,
                 )
             )
-    if len(text_parts) > 0:
-        messages.append(Message(role=role, content="".join(text_parts)))
+    if len(text_blocks) > 0:
+        messages.append(Message(role=role, content="".join(text_blocks)))
 
     if len(messages) > 0:
         return messages
@@ -140,12 +140,15 @@ def generate_attributes_from_converse_input(
     for message in kwargs.get("messages", []):
         messages.extend(
             _parse_converse_message(
-                role=message.get("role"), content_parts=message.get("content")
+                role=message.get("role"), content_blocks=message.get("content")
             )
         )
 
     tool_attributes = {}
     tool_configs = kwargs.get("toolConfig", {}).get("tools", [])
+    # tool configs can contain either "toolSpec" (which is the actual tool definition) or
+    # "cachePoint" (to use prompt caching) - we can only gather information from "toolSpec",
+    # so we filter out the rest
     tool_specs = [tool["toolSpec"] for tool in tool_configs if "toolSpec" in tool]
     for index, tool_spec in enumerate(tool_specs):
         tool_params = None
@@ -209,7 +212,7 @@ def record_converse_result_attributes(
     if response_message is not None:
         parsed_response_message = _parse_converse_message(
             role=response_message.get("role"),
-            content_parts=response_message.get("content"),
+            content_blocks=response_message.get("content"),
         )[0]
         choice = Choice(
             finish_reason=finish_reason,

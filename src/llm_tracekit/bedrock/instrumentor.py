@@ -14,6 +14,8 @@
 
 from typing import Collection
 
+import botocore.client
+import botocore.session
 from opentelemetry.instrumentation.instrumentor import (  # type: ignore[attr-defined] # Mypy doesn't recognize the attribute
     BaseInstrumentor,
 )
@@ -43,14 +45,14 @@ class BedrockInstrumentor(BaseInstrumentor):
             __name__,
             "",
             tracer_provider,
-            schema_url=Schemas.V1_28_0.value,
+            schema_url=Schemas.V1_32_0.value,
         )
         meter_provider = kwargs.get("meter_provider")
         self._meter = get_meter(
             __name__,
             "",
             meter_provider,
-            schema_url=Schemas.V1_28_0.value,
+            schema_url=Schemas.V1_32_0.value,
         )
 
         instruments = Instruments(self._meter)
@@ -68,8 +70,5 @@ class BedrockInstrumentor(BaseInstrumentor):
         )
 
     def _uninstrument(self, **kwargs):
-        import botocore.client  # pylint: disable=import-outside-toplevel
-        import botocore.session  # pylint: disable=import-outside-toplevel
-
         unwrap(botocore.client.ClientCreator, "create_client")
         unwrap(botocore.session.Session, "create_client")

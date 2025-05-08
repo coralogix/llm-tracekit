@@ -43,7 +43,7 @@ from llm_tracekit.span_builder import (
 
 
 class _ModelType(Enum):
-    CLAUDE = "CLAUDE"
+    CLAUDE = "claude"
     LLAMA3 = "llama3"
 
 
@@ -369,7 +369,7 @@ class InvokeModelWithResponseStreamWrapper(ObjectProxy):
         self._response: Dict[str, Any] = {}
         self._message = None
         self._content_block: Dict[str, Any] = {}
-        self._tool_json_input_buf = ""
+        self._tool_json_input_buffer = ""
         self._record_message = False
 
     def __iter__(self):
@@ -466,20 +466,20 @@ class InvokeModelWithResponseStreamWrapper(ObjectProxy):
                 if delta.get("type") == "text_delta":
                     self._content_block["text"] += delta.get("text", "")
                 elif delta.get("type") == "input_json_delta":
-                    self._tool_json_input_buf += delta.get("partial_json", "")
+                    self._tool_json_input_buffer += delta.get("partial_json", "")
             return
 
         if message_type == "content_block_stop":
             # {'type': 'content_block_stop', 'index': 0}
-            if self._tool_json_input_buf:
-                self._content_block["input"] = self._tool_json_input_buf
+            if self._tool_json_input_buffer:
+                self._content_block["input"] = self._tool_json_input_buffer
 
             if self._message is not None:
                 self._message["content"].append(
                     decode_tool_use_in_stream(self._content_block)
                 )
             self._content_block = {}
-            self._tool_json_input_buf = ""
+            self._tool_json_input_buffer = ""
             return
 
         if message_type == "message_delta":

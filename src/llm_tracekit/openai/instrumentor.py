@@ -42,6 +42,7 @@ API
 
 from typing import Collection
 
+import openai
 from opentelemetry.instrumentation.instrumentor import (  # type: ignore[attr-defined] # Mypy doesn't recognize the attribute
     BaseInstrumentor,
 )
@@ -101,7 +102,5 @@ class OpenAIInstrumentor(BaseInstrumentor):
         )
 
     def _uninstrument(self, **kwargs):
-        import openai  # pylint: disable=import-outside-toplevel
-
         unwrap(openai.resources.chat.completions.Completions, "create")
         unwrap(openai.resources.chat.completions.AsyncCompletions, "create")
