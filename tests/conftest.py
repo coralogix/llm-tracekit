@@ -1,16 +1,22 @@
-"""Unit tests configuration module."""
+# Copyright Coralogix Ltd.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
 import json
-import os
+from typing import Generator
 
 import pytest
 import yaml
-from openai import AsyncOpenAI, OpenAI
-
-from llm_tracekit import OpenAIInstrumentor
-from llm_tracekit.utils import (
-    OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT,
-)
 from opentelemetry.sdk.metrics import (
     MeterProvider,
 )
@@ -22,112 +28,36 @@ from opentelemetry.sdk.trace.export import SimpleSpanProcessor
 from opentelemetry.sdk.trace.export.in_memory_span_exporter import (
     InMemorySpanExporter,
 )
-from opentelemetry.sdk.trace.sampling import ALWAYS_OFF
+
+pytest.register_assert_rewrite("tests.utils")
 
 
 @pytest.fixture(scope="function", name="span_exporter")
-def fixture_span_exporter():
+def fixture_span_exporter() -> Generator[InMemorySpanExporter, None, None]:
     exporter = InMemorySpanExporter()
     yield exporter
 
 
 @pytest.fixture(scope="function", name="metric_reader")
-def fixture_metric_reader():
+def fixture_metric_reader() -> Generator[InMemoryMetricReader, None, None]:
     exporter = InMemoryMetricReader()
     yield exporter
 
 
 @pytest.fixture(scope="function", name="tracer_provider")
-def fixture_tracer_provider(span_exporter):
+def fixture_tracer_provider(span_exporter) -> TracerProvider:
     provider = TracerProvider()
     provider.add_span_processor(SimpleSpanProcessor(span_exporter))
     return provider
 
 
 @pytest.fixture(scope="function", name="meter_provider")
-def fixture_meter_provider(metric_reader):
+def fixture_meter_provider(metric_reader) -> MeterProvider:
     meter_provider = MeterProvider(
         metric_readers=[metric_reader],
     )
 
     return meter_provider
-
-
-@pytest.fixture(autouse=True)
-def environment():
-    if not os.getenv("OPENAI_API_KEY"):
-        os.environ["OPENAI_API_KEY"] = "test_openai_api_key"
-
-
-@pytest.fixture
-def openai_client():
-    return OpenAI()
-
-
-@pytest.fixture
-def async_openai_client():
-    return AsyncOpenAI()
-
-
-@pytest.fixture(scope="module")
-def vcr_config():
-    return {
-        "filter_headers": [
-            ("cookie", "test_cookie"),
-            ("authorization", "Bearer test_openai_api_key"),
-            ("openai-organization", "test_openai_org_id"),
-            ("openai-project", "test_openai_project_id"),
-        ],
-        "decode_compressed_response": True,
-        "before_record_response": scrub_response_headers,
-    }
-
-
-@pytest.fixture(scope="function")
-def instrument_no_content(tracer_provider, meter_provider):
-    os.environ.update({OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT: "False"})
-
-    instrumentor = OpenAIInstrumentor()
-    instrumentor.instrument(
-        tracer_provider=tracer_provider,
-        meter_provider=meter_provider,
-    )
-
-    yield instrumentor
-    os.environ.pop(OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT, None)
-    instrumentor.uninstrument()
-
-
-@pytest.fixture(scope="function")
-def instrument_with_content(tracer_provider, meter_provider):
-    os.environ.update({OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT: "True"})
-    instrumentor = OpenAIInstrumentor()
-    instrumentor.instrument(
-        tracer_provider=tracer_provider,
-        meter_provider=meter_provider,
-    )
-
-    yield instrumentor
-    os.environ.pop(OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT, None)
-    instrumentor.uninstrument()
-
-
-@pytest.fixture(scope="function")
-def instrument_with_content_unsampled(span_exporter, meter_provider):
-    os.environ.update({OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT: "True"})
-
-    tracer_provider = TracerProvider(sampler=ALWAYS_OFF)
-    tracer_provider.add_span_processor(SimpleSpanProcessor(span_exporter))
-
-    instrumentor = OpenAIInstrumentor()
-    instrumentor.instrument(
-        tracer_provider=tracer_provider,
-        meter_provider=meter_provider,
-    )
-
-    yield instrumentor
-    os.environ.pop(OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT, None)
-    instrumentor.uninstrument()
 
 
 class LiteralBlockScalar(str):
@@ -193,12 +123,3 @@ class PrettyPrintJSONBody:
 def fixture_vcr(vcr):
     vcr.register_serializer("yaml", PrettyPrintJSONBody)
     return vcr
-
-
-def scrub_response_headers(response):
-    """
-    This scrubs sensitive response headers. Note they are case-sensitive!
-    """
-    response["headers"]["openai-organization"] = "test_openai_org_id"
-    response["headers"]["Set-Cookie"] = "test_set_cookie"
-    return response

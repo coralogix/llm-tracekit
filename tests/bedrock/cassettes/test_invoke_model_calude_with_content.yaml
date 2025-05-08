@@ -1,0 +1,87 @@
+interactions:
+- request:
+    body: |-
+      {
+        "anthropic_version": "bedrock-2023-05-31",
+        "max_tokens": 300,
+        "messages": [
+          {
+            "role": "user",
+            "content": "say this is a test"
+          }
+        ],
+        "system": "You are a helpful assistant",
+        "temperature": 0,
+        "top_p": 1
+      }
+    headers:
+      Accept:
+      - !!binary |
+        YXBwbGljYXRpb24vanNvbg==
+      Authorization:
+      - test-auth
+      Content-Length:
+      - '198'
+      Content-Type:
+      - !!binary |
+        YXBwbGljYXRpb24vanNvbg==
+      User-Agent:
+      - !!binary |
+        Qm90bzMvMS4zOC4wIG1kL0JvdG9jb3JlIzEuMzguMCB1YS8yLjEgb3MvbWFjb3MjMjQuNC4wIG1k
+        L2FyY2gjYXJtNjQgbGFuZy9weXRob24jMy4xMi45IG1kL3B5aW1wbCNDUHl0aG9uIGNmZy9yZXRy
+        eS1tb2RlI2xlZ2FjeSBCb3RvY29yZS8xLjM4LjA=
+      X-Amz-Date:
+      - !!binary |
+        MjAyNTA1MDRUMTI1MDM2Wg==
+      X-Amz-Security-Token:
+      - test-security-token
+      amz-sdk-invocation-id:
+      - !!binary |
+        ZWZlOTBhYzctNTkyZi00ODZiLTljZWUtOWE4OTZlNmRmMjgx
+      amz-sdk-request:
+      - !!binary |
+        YXR0ZW1wdD0x
+    method: POST
+    uri: https://bedrock-runtime.us-east-1.amazonaws.com/model/anthropic.claude-3-5-sonnet-20240620-v1%3A0/invoke
+  response:
+    body:
+      string: |-
+        {
+          "id": "msg_bdrk_01B29vHHmse3SgrTwtqdCzAm",
+          "type": "message",
+          "role": "assistant",
+          "model": "claude-3-5-sonnet-20240620",
+          "content": [
+            {
+              "type": "text",
+              "text": "This is a test."
+            }
+          ],
+          "stop_reason": "end_turn",
+          "stop_sequence": null,
+          "usage": {
+            "input_tokens": 17,
+            "output_tokens": 8
+          }
+        }
+    headers:
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '260'
+      Content-Type:
+      - application/json
+      Date:
+      - Sun, 04 May 2025 12:50:37 GMT
+      X-Amzn-Bedrock-Input-Token-Count:
+      - '17'
+      X-Amzn-Bedrock-Invocation-Latency:
+      - '427'
+      X-Amzn-Bedrock-Output-Token-Count:
+      - '8'
+      x-amzn-RequestId:
+      - 7641cc87-5bad-45dc-a872-0ae1717f9054
+    status:
+      code: 200
+      message: OK
+version: 1

@@ -1,0 +1,76 @@
+interactions:
+- request:
+    body: |-
+      {
+        "anthropic_version": "bedrock-2023-05-31",
+        "max_tokens": 300,
+        "messages": [
+          {
+            "role": "user",
+            "content": [
+              {
+                "type": "text",
+                "text": "say this "
+              },
+              {
+                "type": "text",
+                "text": "is a test"
+              }
+            ]
+          }
+        ]
+      }
+    headers:
+      Authorization:
+      - test-auth
+      Content-Length:
+      - '185'
+      Content-Type:
+      - !!binary |
+        YXBwbGljYXRpb24vanNvbg==
+      User-Agent:
+      - !!binary |
+        Qm90bzMvMS4zOC4wIG1kL0JvdG9jb3JlIzEuMzguMCB1YS8yLjEgb3MvbWFjb3MjMjQuNC4wIG1k
+        L2FyY2gjYXJtNjQgbGFuZy9weXRob24jMy4xMi45IG1kL3B5aW1wbCNDUHl0aG9uIGNmZy9yZXRy
+        eS1tb2RlI2xlZ2FjeSBCb3RvY29yZS8xLjM4LjA=
+      X-Amz-Date:
+      - !!binary |
+        MjAyNTA1MDRUMTUxMjI1Wg==
+      X-Amz-Security-Token:
+      - test-security-token
+      X-Amzn-Bedrock-Accept:
+      - !!binary |
+        YXBwbGljYXRpb24vanNvbg==
+      amz-sdk-invocation-id:
+      - !!binary |
+        MmNmMzUzNzEtZjgwNi00MzdkLWFjYzQtYmJhYTU4YTJjYmJm
+      amz-sdk-request:
+      - !!binary |
+        YXR0ZW1wdD0x
+    method: POST
+    uri: https://bedrock-runtime.us-east-1.amazonaws.com/model/anthropic.claude-3-5-sonnet-20240620-v1%3A0/invoke-with-response-stream
+  response:
+    body:
+      string: |-
+        AAABzAAAAEtjlZEOCzpldmVudC10eXBlBwAFY2h1bmsNOmNvbnRlbnQtdHlwZQcAEGFwcGxpY2F0aW9uL2pzb24NOm1lc3NhZ2UtdHlwZQcABWV2ZW50eyJieXRlcyI6ImV5SjBlWEJsSWpvaWJXVnpjMkZuWlY5emRHRnlkQ0lzSW0xbGMzTmhaMlVpT25zaWFXUWlPaUp0YzJkZlltUnlhMTh3TVRORWVXVTVhR05EVkdGaGFrMU9RWEZRTkVaNVUwVWlMQ0owZVhCbElqb2liV1Z6YzJGblpTSXNJbkp2YkdVaU9pSmhjM05wYzNSaGJuUWlMQ0p0YjJSbGJDSTZJbU5zWVhWa1pTMHpMVFV0YzI5dWJtVjBMVEl3TWpRd05qSXdJaXdpWTI5dWRHVnVkQ0k2VzEwc0luTjBiM0JmY21WaGMyOXVJanB1ZFd4c0xDSnpkRzl3WDNObGNYVmxibU5sSWpwdWRXeHNMQ0oxYzJGblpTSTZleUpwYm5CMWRGOTBiMnRsYm5NaU9qRXlMQ0p2ZFhSd2RYUmZkRzlyWlc1eklqb3hmWDE5IiwicCI6ImFiY2RlZmdoaWprbG1ub3BxciJ9tfeLMAAAARoAAABLZSAb9ws6ZXZlbnQtdHlwZQcABWNodW5rDTpjb250ZW50LXR5cGUHABBhcHBsaWNhdGlvbi9qc29uDTptZXNzYWdlLXR5cGUHAAVldmVudHsiYnl0ZXMiOiJleUowZVhCbElqb2lZMjl1ZEdWdWRGOWliRzlqYTE5emRHRnlkQ0lzSW1sdVpHVjRJam93TENKamIyNTBaVzUwWDJKc2IyTnJJanA3SW5SNWNHVWlPaUowWlhoMElpd2lkR1Y0ZENJNklpSjlmUT09IiwicCI6ImFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6QUJDREVGR0hJSktMTU5PUFFSU1RVVldYWVowMTIzNDU2NyJ9WGPawAAAAPEAAABL8Xg+nAs6ZXZlbnQtdHlwZQcABWNodW5rDTpjb250ZW50LXR5cGUHABBhcHBsaWNhdGlvbi9qc29uDTptZXNzYWdlLXR5cGUHAAVldmVudHsiYnl0ZXMiOiJleUowZVhCbElqb2lZMjl1ZEdWdWRGOWliRzlqYTE5a1pXeDBZU0lzSW1sdVpHVjRJam93TENKa1pXeDBZU0k2ZXlKMGVYQmxJam9pZEdWNGRGOWtaV3gwWVNJc0luUmxlSFFpT2lKVWFHbHpJbjE5IiwicCI6ImFiY2RlZmdoaWprbG1ub3BxcnMifW25L6UAAAELAAAASzigpcULOmV2ZW50LXR5cGUHAAVjaHVuaw06Y29udGVudC10eXBlBwAQYXBwbGljYXRpb24vanNvbg06bWVzc2FnZS10eXBlBwAFZXZlbnR7ImJ5dGVzIjoiZXlKMGVYQmxJam9pWTI5dWRHVnVkRjlpYkc5amExOWtaV3gwWVNJc0ltbHVaR1Y0SWpvd0xDSmtaV3gwWVNJNmV5SjBlWEJsSWpvaWRHVjRkRjlrWld4MFlTSXNJblJsZUhRaU9pSWdhWE1nWVNCMFpYTjBMaUo5ZlE9PSIsInAiOiJhYmNkZWZnaGlqa2xtbm9wcXJzdHV2d3h5ekFCQ0RFRkcifT1LapIAAADRAAAASzC5EZgLOmV2ZW50LXR5cGUHAAVjaHVuaw06Y29udGVudC10eXBlBwAQYXBwbGljYXRpb24vanNvbg06bWVzc2FnZS10eXBlBwAFZXZlbnR7ImJ5dGVzIjoiZXlKMGVYQmxJam9pWTI5dWRHVnVkRjlpYkc5amExOXpkRzl3SWl3aWFXNWtaWGdpT2pCOSIsInAiOiJhYmNkZWZnaGlqa2xtbm9wcXJzdHV2d3h5ekFCQ0RFRkdISUpLTE1OT1BRUlNUVSJ9j53l0AAAASwAAABLS0FW0Qs6ZXZlbnQtdHlwZQcABWNodW5rDTpjb250ZW50LXR5cGUHABBhcHBsaWNhdGlvbi9qc29uDTptZXNzYWdlLXR5cGUHAAVldmVudHsiYnl0ZXMiOiJleUowZVhCbElqb2liV1Z6YzJGblpWOWtaV3gwWVNJc0ltUmxiSFJoSWpwN0luTjBiM0JmY21WaGMyOXVJam9pWlc1a1gzUjFjbTRpTENKemRHOXdYM05sY1hWbGJtTmxJanB1ZFd4c2ZTd2lkWE5oWjJVaU9uc2liM1YwY0hWMFgzUnZhMlZ1Y3lJNk9IMTkiLCJwIjoiYWJjZGVmZ2hpamtsbW5vcHFyc3R1dnd4eXpBQkNERUZHSElKS0xNTk9QUVJTVCJ9PgyJkQAAAUgAAABLJ/OHXAs6ZXZlbnQtdHlwZQcABWNodW5rDTpjb250ZW50LXR5cGUHABBhcHBsaWNhdGlvbi9qc29uDTptZXNzYWdlLXR5cGUHAAVldmVudHsiYnl0ZXMiOiJleUowZVhCbElqb2liV1Z6YzJGblpWOXpkRzl3SWl3aVlXMWhlbTl1TFdKbFpISnZZMnN0YVc1MmIyTmhkR2x2YmsxbGRISnBZM01pT25zaWFXNXdkWFJVYjJ0bGJrTnZkVzUwSWpveE1pd2liM1YwY0hWMFZHOXJaVzVEYjNWdWRDSTZPQ3dpYVc1MmIyTmhkR2x2Ymt4aGRHVnVZM2tpT2pNMk15d2labWx5YzNSQ2VYUmxUR0YwWlc1amVTSTZNamMwZlgwPSIsInAiOiJhYmNkZWZnaGlqa2xtbm9wcXIifZjO0w4=
+    headers:
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '2784'
+      Content-Type:
+      - application/vnd.amazon.eventstream
+      Date:
+      - Sun, 04 May 2025 15:12:25 GMT
+      Transfer-Encoding:
+      - chunked
+      X-Amzn-Bedrock-Content-Type:
+      - application/json
+      x-amzn-RequestId:
+      - ec80f7d3-78cd-4580-9222-a77af14da8f0
+      x-vcr-base64:
+      - 'yes'
+    status:
+      code: 200
+      message: OK
+version: 1

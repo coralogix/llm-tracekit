@@ -1,0 +1,287 @@
+interactions:
+- request:
+    body: |-
+      {
+        "system": [
+          {
+            "text": "you are a helpful assistant"
+          }
+        ],
+        "messages": [
+          {
+            "role": "user",
+            "content": [
+              {
+                "text": "What's the weather in Seattle and San Francisco today?"
+              }
+            ]
+          }
+        ],
+        "toolConfig": {
+          "tools": [
+            {
+              "toolSpec": {
+                "name": "get_current_weather",
+                "description": "Get the current weather in a given location",
+                "inputSchema": {
+                  "json": {
+                    "type": "object",
+                    "properties": {
+                      "location": {
+                        "type": "string",
+                        "description": "The city and state, e.g. Boston, MA"
+                      }
+                    },
+                    "required": [
+                      "location"
+                    ],
+                    "additionalProperties": false
+                  }
+                }
+              }
+            }
+          ]
+        }
+      }
+    headers:
+      Authorization:
+      - test-auth
+      Content-Length:
+      - '506'
+      Content-Type:
+      - !!binary |
+        YXBwbGljYXRpb24vanNvbg==
+      User-Agent:
+      - !!binary |
+        Qm90bzMvMS4zOC4wIG1kL0JvdG9jb3JlIzEuMzguMCB1YS8yLjEgb3MvbWFjb3MjMjQuNC4wIG1k
+        L2FyY2gjYXJtNjQgbGFuZy9weXRob24jMy4xMi45IG1kL3B5aW1wbCNDUHl0aG9uIGNmZy9yZXRy
+        eS1tb2RlI2xlZ2FjeSBCb3RvY29yZS8xLjM4LjA=
+      X-Amz-Date:
+      - !!binary |
+        MjAyNTA1MDVUMTIyNDU0Wg==
+      X-Amz-Security-Token:
+      - test-security-token
+      amz-sdk-invocation-id:
+      - !!binary |
+        YmFkNjUxNjAtMjNhMC00NzA1LWEyZGUtZjAwOWMyZDliNTYy
+      amz-sdk-request:
+      - !!binary |
+        YXR0ZW1wdD0x
+    method: POST
+    uri: https://bedrock-runtime.us-east-1.amazonaws.com/model/anthropic.claude-3-5-sonnet-20240620-v1%3A0/converse
+  response:
+    body:
+      string: |-
+        {
+          "metrics": {
+            "latencyMs": 3447
+          },
+          "output": {
+            "message": {
+              "content": [
+                {
+                  "text": "Certainly! I'd be happy to check the current weather for both Seattle and San Francisco for you. To do this, I'll need to use the weather tool twice, once for each city. Let me fetch that information for you right away."
+                },
+                {
+                  "toolUse": {
+                    "input": {
+                      "location": "Seattle, WA"
+                    },
+                    "name": "get_current_weather",
+                    "toolUseId": "tooluse_bRcbY_vhQTORqj4hrDpI8A"
+                  }
+                },
+                {
+                  "toolUse": {
+                    "input": {
+                      "location": "San Francisco, CA"
+                    },
+                    "name": "get_current_weather",
+                    "toolUseId": "tooluse_vdZhHO4mRAW5kG_MVJFY4g"
+                  }
+                }
+              ],
+              "role": "assistant"
+            }
+          },
+          "stopReason": "tool_use",
+          "usage": {
+            "inputTokens": 400,
+            "outputTokens": 150,
+            "totalTokens": 550
+          }
+        }
+    headers:
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '656'
+      Content-Type:
+      - application/json
+      Date:
+      - Mon, 05 May 2025 12:24:58 GMT
+      x-amzn-RequestId:
+      - 9ea806dd-6d4c-4e48-8224-c89f675a6817
+    status:
+      code: 200
+      message: OK
+- request:
+    body: |-
+      {
+        "system": [
+          {
+            "text": "you are a helpful assistant"
+          }
+        ],
+        "messages": [
+          {
+            "role": "user",
+            "content": [
+              {
+                "text": "What's the weather in Seattle and San Francisco today?"
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "content": [
+              {
+                "text": "Certainly! I'd be happy to check the current weather for both Seattle and San Francisco for you. To do this, I'll need to use the weather tool twice, once for each city. Let me fetch that information for you right away."
+              },
+              {
+                "toolUse": {
+                  "toolUseId": "tooluse_bRcbY_vhQTORqj4hrDpI8A",
+                  "name": "get_current_weather",
+                  "input": {
+                    "location": "Seattle, WA"
+                  }
+                }
+              },
+              {
+                "toolUse": {
+                  "toolUseId": "tooluse_vdZhHO4mRAW5kG_MVJFY4g",
+                  "name": "get_current_weather",
+                  "input": {
+                    "location": "San Francisco, CA"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "role": "user",
+            "content": [
+              {
+                "toolResult": {
+                  "toolUseId": "tooluse_bRcbY_vhQTORqj4hrDpI8A",
+                  "content": [
+                    {
+                      "text": "50 degrees and raining"
+                    }
+                  ]
+                }
+              },
+              {
+                "toolResult": {
+                  "toolUseId": "tooluse_vdZhHO4mRAW5kG_MVJFY4g",
+                  "content": [
+                    {
+                      "text": "70 degrees and sunny"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ],
+        "toolConfig": {
+          "tools": [
+            {
+              "toolSpec": {
+                "name": "get_current_weather",
+                "description": "Get the current weather in a given location",
+                "inputSchema": {
+                  "json": {
+                    "type": "object",
+                    "properties": {
+                      "location": {
+                        "type": "string",
+                        "description": "The city and state, e.g. Boston, MA"
+                      }
+                    },
+                    "required": [
+                      "location"
+                    ],
+                    "additionalProperties": false
+                  }
+                }
+              }
+            }
+          ]
+        }
+      }
+    headers:
+      Authorization:
+      - test-auth
+      Content-Length:
+      - '1300'
+      Content-Type:
+      - !!binary |
+        YXBwbGljYXRpb24vanNvbg==
+      User-Agent:
+      - !!binary |
+        Qm90bzMvMS4zOC4wIG1kL0JvdG9jb3JlIzEuMzguMCB1YS8yLjEgb3MvbWFjb3MjMjQuNC4wIG1k
+        L2FyY2gjYXJtNjQgbGFuZy9weXRob24jMy4xMi45IG1kL3B5aW1wbCNDUHl0aG9uIGNmZy9yZXRy
+        eS1tb2RlI2xlZ2FjeSBCb3RvY29yZS8xLjM4LjA=
+      X-Amz-Date:
+      - !!binary |
+        MjAyNTA1MDVUMTIyNDU4Wg==
+      X-Amz-Security-Token:
+      - test-security-token
+      amz-sdk-invocation-id:
+      - !!binary |
+        MDQzYjA2YTAtY2VjYy00MTkyLTkwYzYtYjI4NWJhYjVjODRh
+      amz-sdk-request:
+      - !!binary |
+        YXR0ZW1wdD0x
+    method: POST
+    uri: https://bedrock-runtime.us-east-1.amazonaws.com/model/anthropic.claude-3-5-sonnet-20240620-v1%3A0/converse
+  response:
+    body:
+      string: |-
+        {
+          "metrics": {
+            "latencyMs": 4418
+          },
+          "output": {
+            "message": {
+              "content": [
+                {
+                  "text": "Thank you for waiting. I've retrieved the current weather information for both cities:\n\n1. Seattle, WA: The current weather is 50 degrees and raining.\n2. San Francisco, CA: The current weather is 70 degrees and sunny.\n\nAs you can see, there's quite a difference between the two cities today! Seattle is experiencing cooler, rainy weather, which is fairly typical for the Pacific Northwest. On the other hand, San Francisco is enjoying a warmer, sunny day.\n\nIs there anything else you'd like to know about the weather in these cities or any other location?"
+                }
+              ],
+              "role": "assistant"
+            }
+          },
+          "stopReason": "end_turn",
+          "usage": {
+            "inputTokens": 627,
+            "outputTokens": 132,
+            "totalTokens": 759
+          }
+        }
+    headers:
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '747'
+      Content-Type:
+      - application/json
+      Date:
+      - Mon, 05 May 2025 12:25:03 GMT
+      x-amzn-RequestId:
+      - fcc7d044-48ff-4654-ae63-8d51d1b1dd33
+    status:
+      code: 200
+      message: OK
+version: 1

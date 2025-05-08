@@ -1,0 +1,55 @@
+interactions:
+- request:
+    body: |-
+      {
+        "inputText": "say this is a test"
+      }
+    headers:
+      Authorization:
+      - test-auth
+      Content-Length:
+      - '35'
+      Content-Type:
+      - !!binary |
+        YXBwbGljYXRpb24vanNvbg==
+      User-Agent:
+      - !!binary |
+        Qm90bzMvMS4zOC4wIG1kL0JvdG9jb3JlIzEuMzguMCB1YS8yLjEgb3MvbWFjb3MjMjQuNC4wIG1k
+        L2FyY2gjYXJtNjQgbGFuZy9weXRob24jMy4xMi45IG1kL3B5aW1wbCNDUHl0aG9uIGNmZy9yZXRy
+        eS1tb2RlI2xlZ2FjeSBCb3RvY29yZS8xLjM4LjA=
+      X-Amz-Date:
+      - !!binary |
+        MjAyNTA0MzBUMTExODU4Wg==
+      X-Amz-Security-Token:
+      - test-security-token
+      amz-sdk-invocation-id:
+      - !!binary |
+        ZThlMGZhNDMtNWI4Ny00NjQ5LTk2ODEtMDFhZjljNTNmYWIw
+      amz-sdk-request:
+      - !!binary |
+        YXR0ZW1wdD0x
+    method: POST
+    uri: https://bedrock-agent-runtime.us-east-1.amazonaws.com/agents/test_agent_id/agentAliases/test_agent_alias_id/sessions/123456/text
+  response:
+    body:
+      string: |-
+        {
+          "message": "The security token included in the request is invalid."
+        }
+    headers:
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '68'
+      Content-Type:
+      - application/json
+      Date:
+      - Wed, 30 Apr 2025 11:18:59 GMT
+      x-amzn-ErrorType:
+      - UnrecognizedClientException:http://internal.amazon.com/coral/com.amazon.coral.service/
+      x-amzn-RequestId:
+      - 405537ac-b4dc-41ac-bf80-9907870c8058
+    status:
+      code: 403
+      message: Forbidden
+version: 1

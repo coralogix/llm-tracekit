@@ -1,0 +1,83 @@
+interactions:
+- request:
+    body: |-
+      {
+        "messages": [
+          {
+            "role": "user",
+            "content": [
+              {
+                "text": "say this"
+              },
+              {
+                "text": " is a test"
+              }
+            ]
+          }
+        ]
+      }
+    headers:
+      Authorization:
+      - test-auth
+      Content-Length:
+      - '91'
+      Content-Type:
+      - !!binary |
+        YXBwbGljYXRpb24vanNvbg==
+      User-Agent:
+      - !!binary |
+        Qm90bzMvMS4zOC4wIG1kL0JvdG9jb3JlIzEuMzguMCB1YS8yLjEgb3MvbWFjb3MjMjQuNC4wIG1k
+        L2FyY2gjYXJtNjQgbGFuZy9weXRob24jMy4xMi45IG1kL3B5aW1wbCNDUHl0aG9uIGNmZy9yZXRy
+        eS1tb2RlI2xlZ2FjeSBCb3RvY29yZS8xLjM4LjA=
+      X-Amz-Date:
+      - !!binary |
+        MjAyNTA0MjlUMTQxNjAwWg==
+      X-Amz-Security-Token:
+      - test-security-token
+      amz-sdk-invocation-id:
+      - !!binary |
+        M2E3ZTE0NjgtYWU1NS00NTlmLWIxZWEtMGU1MTk5YjU2ZmZm
+      amz-sdk-request:
+      - !!binary |
+        YXR0ZW1wdD0x
+    method: POST
+    uri: https://bedrock-runtime.us-east-1.amazonaws.com/model/anthropic.claude-3-5-sonnet-20240620-v1%3A0/converse
+  response:
+    body:
+      string: |-
+        {
+          "metrics": {
+            "latencyMs": 461
+          },
+          "output": {
+            "message": {
+              "content": [
+                {
+                  "text": "This is a test."
+                }
+              ],
+              "role": "assistant"
+            }
+          },
+          "stopReason": "end_turn",
+          "usage": {
+            "inputTokens": 12,
+            "outputTokens": 8,
+            "totalTokens": 20
+          }
+        }
+    headers:
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '195'
+      Content-Type:
+      - application/json
+      Date:
+      - Tue, 29 Apr 2025 14:16:01 GMT
+      x-amzn-RequestId:
+      - d4f2d8c3-372c-458a-b5b0-02e1bc90621b
+    status:
+      code: 200
+      message: OK
+version: 1

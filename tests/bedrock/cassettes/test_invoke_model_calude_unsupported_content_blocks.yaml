@@ -1,0 +1,101 @@
+interactions:
+- request:
+    body: |-
+      {
+        "anthropic_version": "bedrock-2023-05-31",
+        "max_tokens": 300,
+        "messages": [
+          {
+            "role": "user",
+            "content": [
+              {
+                "type": "text",
+                "text": "say this "
+              },
+              {
+                "type": "image",
+                "source": {
+                  "type": "base64",
+                  "media_type": "image/png",
+                  "data": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABAQAAAAA3bvkkAAAACklEQVR4AWNgAAAAAgABc3UBGAAAAABJRU5ErkJggg=="
+                }
+              },
+              {
+                "type": "text",
+                "text": "is a test"
+              }
+            ]
+          }
+        ]
+      }
+    headers:
+      Accept:
+      - !!binary |
+        YXBwbGljYXRpb24vanNvbg==
+      Authorization:
+      - test-auth
+      Content-Length:
+      - '365'
+      Content-Type:
+      - !!binary |
+        YXBwbGljYXRpb24vanNvbg==
+      User-Agent:
+      - !!binary |
+        Qm90bzMvMS4zOC4wIG1kL0JvdG9jb3JlIzEuMzguMCB1YS8yLjEgb3MvbWFjb3MjMjQuNC4wIG1k
+        L2FyY2gjYXJtNjQgbGFuZy9weXRob24jMy4xMi45IG1kL3B5aW1wbCNDUHl0aG9uIGNmZy9yZXRy
+        eS1tb2RlI2xlZ2FjeSBCb3RvY29yZS8xLjM4LjA=
+      X-Amz-Date:
+      - !!binary |
+        MjAyNTA1MDRUMTUxMjIzWg==
+      X-Amz-Security-Token:
+      - test-security-token
+      amz-sdk-invocation-id:
+      - !!binary |
+        MTI3MjMxZWUtYjU3YS00NmJlLWJlMDQtMDg5NWZlZDJjMGNm
+      amz-sdk-request:
+      - !!binary |
+        YXR0ZW1wdD0x
+    method: POST
+    uri: https://bedrock-runtime.us-east-1.amazonaws.com/model/anthropic.claude-3-5-sonnet-20240620-v1%3A0/invoke
+  response:
+    body:
+      string: |-
+        {
+          "id": "msg_bdrk_01SnkF8me2SW3yuJaQKJcxQJ",
+          "type": "message",
+          "role": "assistant",
+          "model": "claude-3-5-sonnet-20240620",
+          "content": [
+            {
+              "type": "text",
+              "text": "The image appears to be a simple white background with black text. The text reads \"this\" in lowercase letters."
+            }
+          ],
+          "stop_reason": "end_turn",
+          "stop_sequence": null,
+          "usage": {
+            "input_tokens": 17,
+            "output_tokens": 26
+          }
+        }
+    headers:
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '358'
+      Content-Type:
+      - application/json
+      Date:
+      - Sun, 04 May 2025 15:12:25 GMT
+      X-Amzn-Bedrock-Input-Token-Count:
+      - '17'
+      X-Amzn-Bedrock-Invocation-Latency:
+      - '1040'
+      X-Amzn-Bedrock-Output-Token-Count:
+      - '26'
+      x-amzn-RequestId:
+      - 14ea2889-8568-4c75-ac9b-464ad588bde0
+    status:
+      code: 200
+      message: OK
+version: 1

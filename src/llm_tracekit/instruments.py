@@ -1,7 +1,21 @@
+# Copyright The OpenTelemetry Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 from opentelemetry.metrics import Histogram, Meter
 from opentelemetry.semconv._incubating.metrics import gen_ai_metrics
 
-_GEN_AI_CLIENT_OPERATION_DURATION_BUCKETS = [
+GEN_AI_CLIENT_OPERATION_DURATION_BUCKETS = [
     0.01,
     0.02,
     0.04,
@@ -18,7 +32,7 @@ _GEN_AI_CLIENT_OPERATION_DURATION_BUCKETS = [
     81.92,
 ]
 
-_GEN_AI_CLIENT_TOKEN_USAGE_BUCKETS = [
+GEN_AI_CLIENT_TOKEN_USAGE_BUCKETS = [
     1,
     4,
     16,
@@ -42,11 +56,11 @@ class Instruments:
             name=gen_ai_metrics.GEN_AI_CLIENT_OPERATION_DURATION,
             description="GenAI operation duration",
             unit="s",
-            explicit_bucket_boundaries_advisory=_GEN_AI_CLIENT_OPERATION_DURATION_BUCKETS,
+            explicit_bucket_boundaries_advisory=GEN_AI_CLIENT_OPERATION_DURATION_BUCKETS,
         )
         self.token_usage_histogram: Histogram = meter.create_histogram(
             name=gen_ai_metrics.GEN_AI_CLIENT_TOKEN_USAGE,
             description="Measures number of input and output tokens used",
             unit="{token}",
-            explicit_bucket_boundaries_advisory=_GEN_AI_CLIENT_TOKEN_USAGE_BUCKETS,
+            explicit_bucket_boundaries_advisory=GEN_AI_CLIENT_TOKEN_USAGE_BUCKETS,
         )

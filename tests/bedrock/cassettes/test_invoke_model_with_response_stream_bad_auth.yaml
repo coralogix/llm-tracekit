@@ -1,0 +1,58 @@
+interactions:
+- request:
+    body: |-
+      {
+        "prompt": "say this is a test"
+      }
+    headers:
+      Authorization:
+      - test-auth
+      Content-Length:
+      - '32'
+      Content-Type:
+      - !!binary |
+        YXBwbGljYXRpb24vanNvbg==
+      User-Agent:
+      - !!binary |
+        Qm90bzMvMS4zOC4wIG1kL0JvdG9jb3JlIzEuMzguMCB1YS8yLjEgb3MvbWFjb3MjMjQuNC4wIG1k
+        L2FyY2gjYXJtNjQgbGFuZy9weXRob24jMy4xMi45IG1kL3B5aW1wbCNDUHl0aG9uIGNmZy9yZXRy
+        eS1tb2RlI2xlZ2FjeSBCb3RvY29yZS8xLjM4LjA=
+      X-Amz-Date:
+      - !!binary |
+        MjAyNTA0MjlUMTQzMDQ2Wg==
+      X-Amz-Security-Token:
+      - test-security-token
+      X-Amzn-Bedrock-Accept:
+      - !!binary |
+        YXBwbGljYXRpb24vanNvbg==
+      amz-sdk-invocation-id:
+      - !!binary |
+        YTExZTEzMmYtMzQ1Zi00NmQ3LTg2ZDktMjk4MTc1Mzk5ZDhj
+      amz-sdk-request:
+      - !!binary |
+        YXR0ZW1wdD0x
+    method: POST
+    uri: https://bedrock-runtime.us-east-1.amazonaws.com/model/meta.llama3-8b-instruct-v1%3A0/invoke-with-response-stream
+  response:
+    body:
+      string: |-
+        {
+          "message": "The security token included in the request is invalid."
+        }
+    headers:
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '68'
+      Content-Type:
+      - application/json
+      Date:
+      - Tue, 29 Apr 2025 14:30:46 GMT
+      x-amzn-ErrorType:
+      - UnrecognizedClientException:http://internal.amazon.com/coral/com.amazon.coral.service/
+      x-amzn-RequestId:
+      - 713aeb90-c2c3-4835-b595-ff942a9afec7
+    status:
+      code: 403
+      message: Forbidden
+version: 1
