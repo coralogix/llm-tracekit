@@ -13,11 +13,13 @@
 # limitations under the License.
 
 import json
-from typing import Any, Mapping, Optional, Union
+from typing import Any, Dict, Mapping, Optional, Union, List
 from urllib.parse import urlparse
 
 from httpx import URL
 from openai import NOT_GIVEN
+from openai.types.chat.chat_completion import Choice as OpenAIChoice
+from openai.types.chat.chat_completion_message_tool_call import ChatCompletionMessageToolCall
 from opentelemetry.semconv._incubating.attributes import (
     gen_ai_attributes as GenAIAttributes,
 )
@@ -30,49 +32,49 @@ from llm_tracekit.span_builder import (
     attribute_generator,
     generate_base_attributes,
     generate_request_attributes,
+    generate_choice_attributes,
+    generate_message_attributes,
+    Message,
+    Choice,
+    ToolCall
 )
 
 
-def get_tool_call_attributes(item, capture_content: bool, base_path: str) -> dict:
-    attributes = {}
-
-    tool_calls = get_property_value(item, "tool_calls")
+def parse_tool_calls(tool_calls: Optional[Union[List[Dict[str, Any]], List[ChatCompletionMessageToolCall]]]) -> Optional[List[ToolCall]]:
     if tool_calls is None:
-        return {}
+        return None
 
-    for index, tool_call in enumerate(tool_calls):
-        call_id = get_property_value(tool_call, "id")
-        if call_id:
-            attributes[f"{base_path}.tool_calls.{index}.id"] = call_id
+    parsed_tool_calls = []
 
-        tool_type = get_property_value(tool_call, "type")
-        if tool_type:
-            attributes[f"{base_path}.tool_calls.{index}.type"] = tool_type
-
+    for tool_call in enumerate(tool_calls):
+        function_name = None
+        arguments = None
         func = get_property_value(tool_call, "function")
-        if func:
-            name = get_property_value(func, "name")
-            if name:
-                attributes[f"{base_path}.tool_calls.{index}.function.name"] = name
-
+        if func is not None:
+            function_name = get_property_value(func, "name")
             arguments = get_property_value(func, "arguments")
-            if capture_content and arguments:
-                if isinstance(arguments, str):
-                    arguments = arguments.replace("\n", "")
+            if isinstance(arguments, str):
+                arguments = arguments.replace("\n", "")  
 
-                attributes[f"{base_path}.tool_calls.{index}.function.arguments"] = (
-                    arguments
-                )
+        parsed_tool_calls.append(
+            ToolCall(
+                id=get_property_value(tool_call, "id"),
+                type=get_property_value(tool_call, "type"),
+                function_name=function_name,
+                function_arguments=arguments,
+            )
+        )
 
-    return attributes
+    return parsed_tool_calls
 
 
-def set_server_address_and_port(client_instance, attributes):
+def generate_server_address_and_port_attributes(client_instance) -> Dict[str, Any]:
     base_client = getattr(client_instance, "_client", None)
     base_url = getattr(base_client, "base_url", None)
     if not base_url:
-        return
+        return {}
 
+    attributes = {}
     port = -1
     if isinstance(base_url, URL):
         attributes[ServerAttributes.SERVER_ADDRESS] = base_url.host
@@ -85,6 +87,8 @@ def set_server_address_and_port(client_instance, attributes):
     if port and port != 443 and port > 0:
         attributes[ServerAttributes.SERVER_PORT] = port
 
+    return attributes
+
 
 def get_property_value(obj, property_name):
     if isinstance(obj, dict):
@@ -95,69 +99,46 @@ def get_property_value(obj, property_name):
 
 def messages_to_span_attributes(
     messages: list, capture_content: bool
-) -> Mapping[str, Any]:
-    span_attributes = {}
-
-    for index, message in enumerate(messages):
-        role = get_property_value(message, "role")
-        span_attributes[
-            ExtendedGenAIAttributes.GEN_AI_PROMPT_ROLE.format(prompt_index=index)
-        ] = role
-
+) -> Dict[str, Any]:
+    parsed_messages = []
+    for message in messages:
         content = get_property_value(message, "content")
-        if capture_content and isinstance(content, str) and content:
-            span_attributes[
-                ExtendedGenAIAttributes.GEN_AI_PROMPT_CONTENT.format(prompt_index=index)
-            ] = content
-        if role == "assistant":
-            tool_call_attributes = get_tool_call_attributes(
-                message, capture_content, f"gen_ai.prompt.{index}"
-            )
-            span_attributes.update(tool_call_attributes)
-        elif role == "tool":
-            tool_call_id = get_property_value(message, "tool_call_id")
-            if tool_call_id:
-                span_attributes[
-                    ExtendedGenAIAttributes.GEN_AI_PROMPT_TOOL_CALL_ID.format(
-                        prompt_index=index
-                    )
-                ] = tool_call_id
+        if not isinstance(content, str):
+            content = None
 
-    return span_attributes
+        tool_calls = parse_tool_calls(get_property_value(message, "tool_calls"))
+
+        parsed_messages.append(Message(
+            role=get_property_value(message, "role"),
+            content=content,
+            tool_call_id=get_property_value(message, "tool_call_id"),
+            tool_calls=tool_calls,
+        ))
+
+    return generate_message_attributes(messages=parsed_messages, capture_content=capture_content)
 
 
-def choices_to_span_attributes(choices: list, capture_content) -> Mapping[str, Any]:
-    span_attributes = {}
-
-    for index, choice in enumerate(choices):
-        span_attributes[
-            ExtendedGenAIAttributes.GEN_AI_COMPLETION_FINISH_REASON.format(
-                completion_index=index
-            )
-        ] = choice.finish_reason or "error"
-
+def choices_to_span_attributes(choices: List[OpenAIChoice], capture_content) -> Dict[str, Any]:
+    parsed_choices = []
+    for choice in choices:
+        role = None
+        content = None
+        tool_calls = None
         if choice.message:
-            role = choice.message.role if choice.message.role else None
-            span_attributes[
-                ExtendedGenAIAttributes.GEN_AI_COMPLETION_ROLE.format(
-                    completion_index=index
-                )
-            ] = role
+            role = choice.message.role
+            content = choice.message.content
+            tool_calls = parse_tool_calls(choice.message.tool_calls)
 
-            tool_call_attributes = get_tool_call_attributes(
-                choice.message, capture_content, f"gen_ai.completion.{index}"
+        parsed_choices.append(
+            Choice(
+                finish_reason=choice.finish_reason or "error",
+                role=role,
+                content=content,
+                tool_calls=tool_calls,
             )
-            span_attributes.update(tool_call_attributes)
+        )
 
-            content = get_property_value(choice.message, "content")
-            if capture_content and content:
-                span_attributes[
-                    ExtendedGenAIAttributes.GEN_AI_COMPLETION_CONTENT.format(
-                        completion_index=index
-                    )
-                ] = content
-
-    return span_attributes
+    return generate_choice_attributes(choices=choices, capture_content=capture_content)
 
 
 def set_span_attributes(span, attributes: dict):
@@ -184,6 +165,7 @@ def non_numerical_value_is_set(value: Optional[Union[bool, str]]):
 def get_llm_request_attributes(
     kwargs,
     client_instance,
+    capture_content: bool
 ):
     attributes = {
         **generate_base_attributes(system=GenAIAttributes.GenAiSystemValues.OPENAI),
@@ -195,6 +177,7 @@ def get_llm_request_attributes(
             presence_penalty=kwargs.get("presence_penalty"),
             frequency_penalty=kwargs.get("frequency_penalty"),
         ),
+        **messages_to_span_attributes(messages=kwargs.get("messages", []), capture_content=capture_content),
         GenAIAttributes.GEN_AI_OPENAI_REQUEST_SEED: kwargs.get("seed"),
         ExtendedGenAIAttributes.GEN_AI_OPENAI_REQUEST_USER: kwargs.get("user"),
     }
@@ -244,10 +227,9 @@ def get_llm_request_attributes(
                         )
                     ] = json.dumps(function_parameters)
 
-    set_server_address_and_port(client_instance, attributes)
+    attributes.update(generate_server_address_and_port_attributes(client_instance))
     service_tier = kwargs.get("service_tier")
-    attributes[GenAIAttributes.GEN_AI_OPENAI_RESPONSE_SERVICE_TIER] = (
-        service_tier if service_tier != "auto" else None
-    )
+    if service_tier != "auto":
+        attributes[GenAIAttributes.GEN_AI_OPENAI_RESPONSE_SERVICE_TIER] = service_tier
 
     return attributes

@@ -31,7 +31,6 @@ from llm_tracekit.openai.utils import (
     choices_to_span_attributes,
     get_llm_request_attributes,
     is_streaming,
-    messages_to_span_attributes,
     set_span_attribute,
 )
 
@@ -44,7 +43,7 @@ def chat_completions_create(
     """Wrap the `create` method of the `ChatCompletion` class to trace it."""
 
     def traced_method(wrapped, instance, args, kwargs):
-        span_attributes = {**get_llm_request_attributes(kwargs, instance)}
+        span_attributes = {**get_llm_request_attributes(kwargs, instance, capture_content)}
 
         span_name = f"{span_attributes[GenAIAttributes.GEN_AI_OPERATION_NAME]} {span_attributes[GenAIAttributes.GEN_AI_REQUEST_MODEL]}"
         with tracer.start_as_current_span(
@@ -53,9 +52,6 @@ def chat_completions_create(
             attributes=span_attributes,
             end_on_exit=False,
         ) as span:
-            messages = kwargs.get("messages", [])
-            span.set_attributes(messages_to_span_attributes(messages, capture_content))
-
             start = default_timer()
             result = None
             error_type = None
@@ -109,9 +105,6 @@ def async_chat_completions_create(
             attributes=span_attributes,
             end_on_exit=False,
         ) as span:
-            messages = kwargs.get("messages", [])
-            span.set_attributes(messages_to_span_attributes(messages, capture_content))
-
             start = default_timer()
             result = None
             error_type = None
