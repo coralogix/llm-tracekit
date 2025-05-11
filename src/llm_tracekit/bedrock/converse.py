@@ -66,8 +66,8 @@ def _parse_converse_message(
         return [Message(role=role)]
 
     text_blocks = []
-    tool_calls = []
-    tool_call_results = []
+    tool_call_blocks = []
+    tool_call_result_blocks = []
 
     # Get all the content blocks we support
     for content_block in content_blocks:
@@ -75,53 +75,61 @@ def _parse_converse_message(
             text_blocks.append(content_block["text"])
 
         if "toolUse" in content_block:
-            tool_calls.append(content_block["toolUse"])
+            tool_call_blocks.append(content_block["toolUse"])
 
         if "toolResult" in content_block:
-            tool_call_results.append(content_block["toolResult"])
+            tool_call_result_blocks.append(content_block["toolResult"])
 
     # We follow the same logic the OTEL implementation uses:
-    #  * If there are tool call blocks, treat it as a single message with multiple tool calls
-    #  * If there are text / tool call result blocks, treat each block as a separate message
-    if len(tool_calls) > 0:
-        message_tool_calls = []
-        for tool_call in tool_calls:
-            arguments = None
-            if "input" in tool_call:
-                arguments = json.dumps(tool_call["input"])
+    #  * For assistant messages (text/tool calls) - return a single message
+    #  * for user messages (text / tool call results) - return a message for each tool 
+    #    call result, and another message for text
+    messages = []
+    if role == "assistant":
+        tool_calls = None
+        content = None
+        if len(text_blocks) > 0:
+            content="".join(text_blocks)
+        if len(tool_call_blocks) > 0:
+            tool_calls = []
+            for tool_call in tool_call_blocks:
+                arguments = None
+                if "input" in tool_call:
+                    arguments = json.dumps(tool_call["input"])
 
-            message_tool_calls.append(
-                ToolCall(
-                    id=tool_call.get("toolUseId"),
-                    type="function",
-                    function_name=tool_call.get("name"),
-                    function_arguments=arguments,
+                tool_calls.append(
+                    ToolCall(
+                        id=tool_call.get("toolUseId"),
+                        type="function",
+                        function_name=tool_call.get("name"),
+                        function_arguments=arguments,
+                    )
                 )
-            )
 
-        return [
+        messages.append(
             Message(
                 role=role,
-                tool_calls=message_tool_calls,
+                tool_calls=tool_calls,
+                content=content
             )
-        ]
+        )
+    elif role == "user":
+        if len(tool_call_result_blocks) > 0:
+            for tool_call_result in tool_call_result_blocks:
+                content = None
+                if "content" in tool_call_result:
+                    content = _combine_tool_call_content_blocks(tool_call_result["content"])
 
-    messages = []
-    if len(tool_call_results) > 0:
-        for tool_call_result in tool_call_results:
-            content = None
-            if "content" in tool_call_result:
-                content = _combine_tool_call_content_blocks(tool_call_result["content"])
-
-            messages.append(
-                Message(
-                    role=role,
-                    tool_call_id=tool_call_result.get("toolUseId"),
-                    content=content,
+                messages.append(
+                    Message(
+                        role=role,
+                        tool_call_id=tool_call_result.get("toolUseId"),
+                        content=content,
+                    )
                 )
-            )
-    if len(text_blocks) > 0:
-        messages.append(Message(role=role, content="".join(text_blocks)))
+
+        if len(text_blocks) > 0:
+            messages.append(Message(role=role, content="".join(text_blocks)))
 
     if len(messages) > 0:
         return messages

@@ -71,48 +71,67 @@ def _parse_claude_message(
         for block in content:
             content_blocks_by_type[block.get("type")].append(block)
 
+
         # We follow the same logic the OTEL implementation uses:
-        #  * If there are tool call blocks, treat it as a single message with multiple tool calls
-        #  * If there are text / tool call result blocks, treat each block as a separate message
-        if "tool_use" in content_blocks_by_type:
-            tool_calls = []
-            for block in content_blocks_by_type["tool_use"]:
-                arguments = None
-                if "input" in block:
-                    arguments = json.dumps(block["input"])
-
-                tool_calls.append(
-                    ToolCall(
-                        id=block.get("id"),
-                        type="function",
-                        function_name=block.get("name"),
-                        function_arguments=arguments,
-                    )
-                )
-
-            return [Message(role=role, tool_calls=tool_calls)]
-
+        #  * For assistant messages (text/tool calls) - return a single message
+        #  * for user messages (text / tool call results) - return a message for each tool 
+        #    call result, and another message for text
         messages = []
-        if "tool_result" in content_blocks_by_type:
-            for tool_result in content_blocks_by_type["tool_result"]:
-                tool_result_content = tool_result.get("content")
-                if not isinstance(tool_result_content, str):
-                    tool_result_content = None
+        if role == "assistant":
+            content = None
+            tool_calls = None
+            if "tool_use" in content_blocks_by_type:
+                tool_calls = []
+                for block in content_blocks_by_type["tool_use"]:
+                    arguments = None
+                    if "input" in block:
+                        arguments = json.dumps(block["input"])
 
-                messages.append(
-                    Message(
-                        role=role,
-                        tool_call_id=tool_result.get("tool_use_id"),
-                        content=tool_result_content,
+                    tool_calls.append(
+                        ToolCall(
+                            id=block.get("id"),
+                            type="function",
+                            function_name=block.get("name"),
+                            function_arguments=arguments,
+                        )
                     )
+            
+            if "text" in content_blocks_by_type:
+                text_parts = [
+                    block["text"]
+                    for block in content_blocks_by_type["text"]
+                    if block.get("text") is not None
+                ]
+                content = "".join(text_parts)
+
+            messages.append(
+                Message(
+                    role=role,
+                    tool_calls=tool_calls,
+                    content=content,
                 )
-        if "text" in content_blocks_by_type:
-            text_parts = [
-                block["text"]
-                for block in content_blocks_by_type["text"]
-                if block.get("text") is not None
-            ]
-            messages.append(Message(role=role, content="".join(text_parts)))
+            )
+        elif role == "user":
+            if "tool_result" in content_blocks_by_type:
+                for tool_result in content_blocks_by_type["tool_result"]:
+                    tool_result_content = tool_result.get("content")
+                    if not isinstance(tool_result_content, str):
+                        tool_result_content = None
+
+                    messages.append(
+                        Message(
+                            role=role,
+                            tool_call_id=tool_result.get("tool_use_id"),
+                            content=tool_result_content,
+                        )
+                    )
+            if "text" in content_blocks_by_type:
+                text_parts = [
+                    block["text"]
+                    for block in content_blocks_by_type["text"]
+                    if block.get("text") is not None
+                ]
+                messages.append(Message(role=role, content="".join(text_parts)))
 
         if len(messages) > 0:
             return messages
