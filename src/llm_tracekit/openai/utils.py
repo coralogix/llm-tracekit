@@ -13,13 +13,16 @@
 # limitations under the License.
 
 import json
-from typing import Any, Dict, Mapping, Optional, Union, List
+from typing import Any, Dict, List, Mapping, Optional, Union
 from urllib.parse import urlparse
 
 from httpx import URL
 from openai import NOT_GIVEN
-from openai.types.chat.chat_completion import ChatCompletion, Choice as OpenAIChoice
-from openai.types.chat.chat_completion_message_tool_call import ChatCompletionMessageToolCall
+from openai.types.chat.chat_completion import ChatCompletion
+from openai.types.chat.chat_completion import Choice as OpenAIChoice
+from openai.types.chat.chat_completion_message_tool_call import (
+    ChatCompletionMessageToolCall,
+)
 from opentelemetry.semconv._incubating.attributes import (
     gen_ai_attributes as GenAIAttributes,
 )
@@ -29,25 +32,29 @@ from opentelemetry.semconv._incubating.attributes import (
 
 from llm_tracekit import extended_gen_ai_attributes as ExtendedGenAIAttributes
 from llm_tracekit.span_builder import (
+    Choice,
+    Message,
+    ToolCall,
     attribute_generator,
     generate_base_attributes,
-    generate_request_attributes,
     generate_choice_attributes,
     generate_message_attributes,
+    generate_request_attributes,
     generate_response_attributes,
-    Message,
-    Choice,
-    ToolCall
 )
 
 
-def parse_tool_calls(tool_calls: Optional[Union[List[Dict[str, Any]], List[ChatCompletionMessageToolCall]]]) -> Optional[List[ToolCall]]:
+def parse_tool_calls(
+    tool_calls: Optional[
+        Union[List[Dict[str, Any]], List[ChatCompletionMessageToolCall]]
+    ],
+) -> Optional[List[ToolCall]]:
     if tool_calls is None:
         return None
 
     parsed_tool_calls = []
 
-    for tool_call in enumerate(tool_calls):
+    for tool_call in tool_calls:
         function_name = None
         arguments = None
         func = get_property_value(tool_call, "function")
@@ -55,7 +62,7 @@ def parse_tool_calls(tool_calls: Optional[Union[List[Dict[str, Any]], List[ChatC
             function_name = get_property_value(func, "name")
             arguments = get_property_value(func, "arguments")
             if isinstance(arguments, str):
-                arguments = arguments.replace("\n", "")  
+                arguments = arguments.replace("\n", "")
 
         parsed_tool_calls.append(
             ToolCall(
@@ -75,16 +82,17 @@ def generate_server_address_and_port_attributes(client_instance) -> Dict[str, An
     if not base_url:
         return {}
 
-    attributes = {}
-    port = -1
+    host = None
+    port: Optional[int] = -1
     if isinstance(base_url, URL):
-        attributes[ServerAttributes.SERVER_ADDRESS] = base_url.host
+        host = base_url.host
         port = base_url.port
     elif isinstance(base_url, str):
         url = urlparse(base_url)
-        attributes[ServerAttributes.SERVER_ADDRESS] = url.hostname
+        host = url.hostname
         port = url.port
 
+    attributes: Dict[str, Any] = {ServerAttributes.SERVER_ADDRESS: host}
     if port and port != 443 and port > 0:
         attributes[ServerAttributes.SERVER_PORT] = port
 
@@ -109,17 +117,23 @@ def messages_to_span_attributes(
 
         tool_calls = parse_tool_calls(get_property_value(message, "tool_calls"))
 
-        parsed_messages.append(Message(
-            role=get_property_value(message, "role"),
-            content=content,
-            tool_call_id=get_property_value(message, "tool_call_id"),
-            tool_calls=tool_calls,
-        ))
+        parsed_messages.append(
+            Message(
+                role=get_property_value(message, "role"),
+                content=content,
+                tool_call_id=get_property_value(message, "tool_call_id"),
+                tool_calls=tool_calls,
+            )
+        )
 
-    return generate_message_attributes(messages=parsed_messages, capture_content=capture_content)
+    return generate_message_attributes(
+        messages=parsed_messages, capture_content=capture_content
+    )
 
 
-def choices_to_span_attributes(choices: List[OpenAIChoice], capture_content) -> Dict[str, Any]:
+def choices_to_span_attributes(
+    choices: List[OpenAIChoice], capture_content
+) -> Dict[str, Any]:
     parsed_choices = []
     for choice in choices:
         role = None
@@ -139,7 +153,7 @@ def choices_to_span_attributes(choices: List[OpenAIChoice], capture_content) -> 
             )
         )
 
-    return generate_choice_attributes(choices=choices, capture_content=capture_content)
+    return generate_choice_attributes(choices=parsed_choices, capture_content=capture_content)
 
 
 def set_span_attributes(span, attributes: dict):
@@ -163,11 +177,7 @@ def non_numerical_value_is_set(value: Optional[Union[bool, str]]):
 
 
 @attribute_generator
-def get_llm_request_attributes(
-    kwargs,
-    client_instance,
-    capture_content: bool
-):
+def get_llm_request_attributes(kwargs, client_instance, capture_content: bool):
     attributes = {
         **generate_base_attributes(system=GenAIAttributes.GenAiSystemValues.OPENAI),
         **generate_request_attributes(
@@ -178,7 +188,9 @@ def get_llm_request_attributes(
             presence_penalty=kwargs.get("presence_penalty"),
             frequency_penalty=kwargs.get("frequency_penalty"),
         ),
-        **messages_to_span_attributes(messages=kwargs.get("messages", []), capture_content=capture_content),
+        **messages_to_span_attributes(
+            messages=kwargs.get("messages", []), capture_content=capture_content
+        ),
         GenAIAttributes.GEN_AI_OPENAI_REQUEST_SEED: kwargs.get("seed"),
         ExtendedGenAIAttributes.GEN_AI_OPENAI_REQUEST_USER: kwargs.get("user"),
     }
@@ -237,15 +249,14 @@ def get_llm_request_attributes(
 
 
 @attribute_generator
-def get_llm_response_attributes(result: ChatCompletion, capture_content: bool) -> Dict[str, Any]:
-    attributes = {}
+def get_llm_response_attributes(
+    result: ChatCompletion, capture_content: bool
+) -> Dict[str, Any]:
     finish_reasons = None
     if result.choices is not None:
         finish_reasons = []
         for choice in result.choices:
             finish_reasons.append(choice.finish_reason or "error")
-
-        attributes.update()
 
     usage_input_tokens = None
     usage_output_tokens = None
@@ -262,5 +273,5 @@ def get_llm_response_attributes(result: ChatCompletion, capture_content: bool) -
             usage_input_tokens=usage_input_tokens,
             usage_output_tokens=usage_output_tokens,
         ),
-        **choices_to_span_attributes(result.choices, capture_content)
+        **choices_to_span_attributes(result.choices, capture_content),
     }

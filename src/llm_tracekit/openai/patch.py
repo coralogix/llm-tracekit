@@ -28,10 +28,16 @@ from llm_tracekit.instrumentation_utils import handle_span_exception
 from llm_tracekit.instruments import Instruments
 from llm_tracekit.openai.utils import (
     get_llm_request_attributes,
-    is_streaming,
     get_llm_response_attributes,
+    is_streaming,
 )
-from llm_tracekit.span_builder import generate_response_attributes, generate_choice_attributes, attribute_generator, Choice, ToolCall
+from llm_tracekit.span_builder import (
+    Choice,
+    ToolCall,
+    attribute_generator,
+    generate_choice_attributes,
+    generate_response_attributes,
+)
 
 
 def chat_completions_create(
@@ -42,7 +48,9 @@ def chat_completions_create(
     """Wrap the `create` method of the `ChatCompletion` class to trace it."""
 
     def traced_method(wrapped, instance, args, kwargs):
-        span_attributes = {**get_llm_request_attributes(kwargs, instance, capture_content)}
+        span_attributes = {
+            **get_llm_request_attributes(kwargs, instance, capture_content)
+        }
 
         span_name = f"{span_attributes[GenAIAttributes.GEN_AI_OPERATION_NAME]} {span_attributes[GenAIAttributes.GEN_AI_REQUEST_MODEL]}"
         with tracer.start_as_current_span(
@@ -60,7 +68,9 @@ def chat_completions_create(
                     return StreamWrapper(result, span, capture_content)
 
                 if span.is_recording():
-                    span.set_attributes(get_llm_response_attributes(result, capture_content))
+                    span.set_attributes(
+                        get_llm_response_attributes(result, capture_content)
+                    )
 
                 span.end()
                 return result
@@ -90,7 +100,7 @@ def async_chat_completions_create(
     """Wrap the `create` method of the `AsyncChatCompletion` class to trace it."""
 
     async def traced_method(wrapped, instance, args, kwargs):
-        span_attributes = {**get_llm_request_attributes(kwargs, instance)}
+        span_attributes = {**get_llm_request_attributes(kwargs, instance, capture_content)}
 
         span_name = f"{span_attributes[GenAIAttributes.GEN_AI_OPERATION_NAME]} {span_attributes[GenAIAttributes.GEN_AI_REQUEST_MODEL]}"
         with tracer.start_as_current_span(
@@ -108,7 +118,9 @@ def async_chat_completions_create(
                     return AsyncStreamWrapper(result, span, capture_content)
 
                 if span.is_recording():
-                    span.set_attributes(get_llm_response_attributes(result, capture_content))
+                    span.set_attributes(
+                        get_llm_response_attributes(result, capture_content)
+                    )
 
                 span.end()
                 return result
@@ -256,7 +268,6 @@ class BaseStreamWrapper:
     def setup(self):
         if not self._span_started:
             self._span_started = True
-
 
     @attribute_generator
     def _generate_response_attributes(self) -> Dict[str, Any]:

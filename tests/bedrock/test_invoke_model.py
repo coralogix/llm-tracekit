@@ -180,7 +180,8 @@ def _run_and_check_invoke_model_llama(
     metric_data = metrics[0].scope_metrics[0].metrics
     assert_expected_metrics(
         metrics=metric_data,
-        model=model_id,
+        request_model=model_id,
+        response_model=model_id,
         usage_input_tokens=result["prompt_token_count"],
         usage_output_tokens=result["generation_token_count"],
     )
@@ -261,7 +262,8 @@ def _run_and_check_invoke_model_claude(
     metric_data = metrics[0].scope_metrics[0].metrics
     assert_expected_metrics(
         metrics=metric_data,
-        model=model_id,
+        request_model=model_id,
+        response_model=result["model"],
         usage_input_tokens=result["usage"]["input_tokens"],
         usage_output_tokens=result["usage"]["output_tokens"],
     )
@@ -459,7 +461,8 @@ def _run_and_check_invoke_model_claude_tool_calls(
     metric_data = metrics[0].scope_metrics[0].metrics
     assert_expected_metrics(
         metrics=metric_data,
-        model=model_id,
+        request_model=model_id,
+        response_model=result_0["model"],
         usage_input_tokens=result_0["usage"]["input_tokens"]
         + result_1["usage"]["input_tokens"],
         usage_output_tokens=result_0["usage"]["output_tokens"]
@@ -667,7 +670,7 @@ def test_invoke_model_non_existing_model(
     metric_data = metrics[0].scope_metrics[0].metrics
     assert_expected_metrics(
         metrics=metric_data,
-        model=model_id,
+        request_model=model_id,
         error="ValidationException",
     )
 
@@ -713,7 +716,7 @@ def test_invoke_model_bad_auth(
     metric_data = metrics[0].scope_metrics[0].metrics
     assert_expected_metrics(
         metrics=metric_data,
-        model=llama_model_id,
+        request_model=llama_model_id,
         error="ClientError",
     )
 
@@ -926,7 +929,7 @@ def test_invoke_model_with_response_stream_non_existing_model(
     metric_data = metrics[0].scope_metrics[0].metrics
     assert_expected_metrics(
         metrics=metric_data,
-        model=model_id,
+        request_model=model_id,
         error="ValidationException",
     )
 
@@ -972,6 +975,6 @@ def test_invoke_model_with_response_stream_bad_auth(
     metric_data = metrics[0].scope_metrics[0].metrics
     assert_expected_metrics(
         metrics=metric_data,
-        model=llama_model_id,
+        request_model=llama_model_id,
         error="ClientError",
     )

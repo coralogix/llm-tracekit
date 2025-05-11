@@ -160,7 +160,8 @@ def _run_and_check_converse(
     metric_data = metrics[0].scope_metrics[0].metrics
     assert_expected_metrics(
         metrics=metric_data,
-        model=model_id,
+        request_model=model_id,
+        response_model=model_id,
         usage_input_tokens=result["usage"]["inputTokens"],
         usage_output_tokens=result["usage"]["outputTokens"],
     )
@@ -348,7 +349,8 @@ def _run_and_check_converse_tool_calls(
     metric_data = metrics[0].scope_metrics[0].metrics
     assert_expected_metrics(
         metrics=metric_data,
-        model=model_id,
+        request_model=model_id,
+        response_model=model_id,
         usage_input_tokens=result_0["usage"]["inputTokens"]
         + result_1["usage"]["inputTokens"],
         usage_output_tokens=result_0["usage"]["outputTokens"]
@@ -446,7 +448,7 @@ def test_converse_non_existing_model(
     metric_data = metrics[0].scope_metrics[0].metrics
     assert_expected_metrics(
         metrics=metric_data,
-        model=model_id,
+        request_model=model_id,
         error="ValidationException",
     )
 
@@ -490,7 +492,7 @@ def test_converse_bad_auth(
     metric_data = metrics[0].scope_metrics[0].metrics
     assert_expected_metrics(
         metrics=metric_data,
-        model=claude_model_id,
+        request_model=claude_model_id,
         error="ClientError",
     )
 
@@ -636,7 +638,7 @@ def test_converse_stream_non_existing_model(
     metric_data = metrics[0].scope_metrics[0].metrics
     assert_expected_metrics(
         metrics=metric_data,
-        model=model_id,
+        request_model=model_id,
         error="ValidationException",
     )
 
@@ -680,7 +682,7 @@ def test_converse_stream_bad_auth(
     metric_data = metrics[0].scope_metrics[0].metrics
     assert_expected_metrics(
         metrics=metric_data,
-        model=claude_model_id,
+        request_model=claude_model_id,
         error="ClientError",
     )
 

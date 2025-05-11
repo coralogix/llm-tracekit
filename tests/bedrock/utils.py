@@ -92,7 +92,7 @@ def assert_attributes_in_span(
         GenAIAttributes.GEN_AI_REQUEST_TEMPERATURE: temperature,
         GenAIAttributes.GEN_AI_REQUEST_TOP_P: top_p,
         GenAIAttributes.GEN_AI_AGENT_ID: agent_id,
-        GenAIAttributes.GEN_AI_AGENT_NAME: agent_alias_id,
+        ExtendedGenAIAttributes.GEN_AI_BEDROCK_AGENT_ALIAS_ID: agent_alias_id,
     }
     for attribute, expected_value in attributes_to_expected_values.items():
         if expected_value is not None:
@@ -106,13 +106,14 @@ def assert_expected_metrics(
     usage_input_tokens: Optional[int] = None,
     usage_output_tokens: Optional[int] = None,
     error: Optional[str] = None,
-    model: Optional[str] = None,
+    request_model: Optional[str] = None,
+    response_model: Optional[str] = None,
 ):
     attributes = {
         GenAIAttributes.GEN_AI_OPERATION_NAME: GenAIAttributes.GenAiOperationNameValues.CHAT.value,
         GenAIAttributes.GEN_AI_SYSTEM: GenAIAttributes.GenAiSystemValues.AWS_BEDROCK.value,
-        GenAIAttributes.GEN_AI_REQUEST_MODEL: model,
-        GenAIAttributes.GEN_AI_RESPONSE_MODEL: model,
+        GenAIAttributes.GEN_AI_REQUEST_MODEL: request_model,
+        GenAIAttributes.GEN_AI_RESPONSE_MODEL: response_model,
         ErrorAttributes.ERROR_TYPE: error,
     }
 
