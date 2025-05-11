@@ -324,6 +324,7 @@ def _run_and_check_invoke_model_claude_tool_calls(
     ]
     expected_assistant_message = {
         "role": result_0["role"],
+        "content": result_0["content"][0]["text"],
         "tool_calls": [
             {
                 "id": tool_call_blocks[0]["id"],

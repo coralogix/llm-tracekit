@@ -245,6 +245,7 @@ def _run_and_check_converse_tool_calls(
 
     expected_assistant_message = {
         "role": result_0["output"]["message"]["role"],
+        "content": result_0["output"]["message"]["content"][0]["text"],
         "tool_calls": [
             {
                 "id": tool_call_blocks[0]["toolUse"]["toolUseId"],
