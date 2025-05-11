@@ -18,7 +18,7 @@ from urllib.parse import urlparse
 
 from httpx import URL
 from openai import NOT_GIVEN
-from openai.types.chat.chat_completion import Choice as OpenAIChoice
+from openai.types.chat.chat_completion import ChatCompletion, Choice as OpenAIChoice
 from openai.types.chat.chat_completion_message_tool_call import ChatCompletionMessageToolCall
 from opentelemetry.semconv._incubating.attributes import (
     gen_ai_attributes as GenAIAttributes,
@@ -34,6 +34,7 @@ from llm_tracekit.span_builder import (
     generate_request_attributes,
     generate_choice_attributes,
     generate_message_attributes,
+    generate_response_attributes,
     Message,
     Choice,
     ToolCall
@@ -233,3 +234,33 @@ def get_llm_request_attributes(
         attributes[GenAIAttributes.GEN_AI_OPENAI_RESPONSE_SERVICE_TIER] = service_tier
 
     return attributes
+
+
+@attribute_generator
+def get_llm_response_attributes(result: ChatCompletion, capture_content: bool) -> Dict[str, Any]:
+    attributes = {}
+    finish_reasons = None
+    if result.choices is not None:
+        finish_reasons = []
+        for choice in result.choices:
+            finish_reasons.append(choice.finish_reason or "error")
+
+        attributes.update()
+
+    usage_input_tokens = None
+    usage_output_tokens = None
+    if result.usage is not None:
+        usage_input_tokens = result.usage.prompt_tokens
+        usage_output_tokens = result.usage.completion_tokens
+
+    return {
+        GenAIAttributes.GEN_AI_OPENAI_REQUEST_SERVICE_TIER: result.service_tier,
+        **generate_response_attributes(
+            model=result.model,
+            finish_reasons=finish_reasons,
+            id=result.id,
+            usage_input_tokens=usage_input_tokens,
+            usage_output_tokens=usage_output_tokens,
+        ),
+        **choices_to_span_attributes(result.choices, capture_content)
+    }
