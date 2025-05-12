@@ -425,8 +425,8 @@ def _run_and_check_invoke_model_claude_tool_calls(
     expected_messages_1 = [
         *expected_messages_0,
         expected_assistant_message,
-        {"role": "user", **tool_results[0]},
-        {"role": "user", **tool_results[1]},
+        {"role": "tool", **tool_results[0]},
+        {"role": "tool", **tool_results[1]},
     ]
     assert_messages_in_span(
         span=spans[1],

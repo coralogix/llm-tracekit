@@ -120,7 +120,7 @@ def _parse_claude_message(
 
                     messages.append(
                         Message(
-                            role=role,
+                            role="tool",
                             tool_call_id=tool_result.get("tool_use_id"),
                             content=tool_result_content,
                         )

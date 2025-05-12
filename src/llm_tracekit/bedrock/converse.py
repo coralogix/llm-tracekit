@@ -122,7 +122,7 @@ def _parse_converse_message(
 
                 messages.append(
                     Message(
-                        role=role,
+                        role="tool",
                         tool_call_id=tool_call_result.get("toolUseId"),
                         content=content,
                     )
