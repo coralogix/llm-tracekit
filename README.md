@@ -16,7 +16,19 @@ pip install llm-tracekit[bedrock]
 This section describes how to setup up instrumentation for OpenAI or Bedrock. The examples will use the OpenAI instrumentation, but the usage is identical for both instrumentations, so you can simple replace `OpenAIInstrumentor` with `BedrockInstrumentor` if you are using Bedrock.
 
 ### Setting up tracing
-The following code demonstrates how to manually set up tracing:
+You can use the `setup_export_to_coralogix` function to setup tracing and export traces to Coralogix
+```python
+from llm_tracekit import setup_export_to_coralogix
+
+setup_export_to_coralogix(
+    service_name="ai-service",
+    application_name="ai-application",
+    subsystem_name="ai-subsystem",
+    capture_content=True,
+)
+```
+
+Alternatively, you can set up tracing manually:
 ```python
 from opentelemetry import trace
 from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
@@ -31,18 +43,6 @@ exporter = OTLPSpanExporter()
 span_processor = SimpleSpanProcessor(exporter)
 tracer_provider.add_span_processor(span_processor)
 trace.set_tracer_provider(tracer_provider)
-```
-
-Alternatively, you can use the `setup_export_to_coralogix` function to setup tracing and export traces to Coralogix
-```python
-from llm_tracekit import setup_export_to_coralogix
-
-setup_export_to_coralogix(
-    service_name="ai-service",
-    application_name="ai-application",
-    subsystem_name="ai-subsystem",
-    capture_content=True,
-)
 ```
 
 ### Activation
