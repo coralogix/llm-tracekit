@@ -64,11 +64,7 @@ Most Coralogix AI evaluations will not work without message contents, so it is h
 ### Uninstrument
 To uninstrument clients, call the `uninstrument` method:
 ```python
-OpenAIInstrumentor.instrument()
-# ...
-
-# Uninstrument all clients
-OpenAIInstrumentor.uninstrument()
+OpenAIInstrumentor().uninstrument()
 ```
 
 ### Full Example
