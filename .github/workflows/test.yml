@@ -26,5 +26,5 @@ jobs:
 
       - name: Run test
         run: |
-          uv run --group=dev --all-extras pytest tests/ -sv
+          uv run --group=dev --locked --all-extras pytest tests/ -sv
         shell: bash

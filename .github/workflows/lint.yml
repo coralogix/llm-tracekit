@@ -22,10 +22,10 @@ jobs:
 
       - name: Run Ruff
         run: |
-          uv run --group=dev --all-extras ruff check src
+          uv run --group=dev --locked --all-extras ruff check src
         shell: bash
 
       - name: Run Mypy
         run: |
-          uv run --group=dev --all-extras mypy src
+          uv run --group=dev --locked --all-extras mypy src
         shell: bash
