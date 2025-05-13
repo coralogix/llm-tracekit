@@ -3,7 +3,7 @@ import json
 import os
 from typing import Any
 
-DEFAULT_TRACES_DIRECTORY = os.path.expanduser("llm-traces")
+DEFAULT_TRACES_DIRECTORY = "llm-traces"
 
 
 class FilesystemSpans:

@@ -79,3 +79,6 @@ only-include = [
     "src",
     "tests",
 ]
+
+[project.scripts]
+llm-tracekit = "llm_tracekit.local_debugging.cli.cli:main"
