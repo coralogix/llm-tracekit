@@ -13,7 +13,7 @@
 # limitations under the License.
 
 from timeit import default_timer
-from typing import Optional, Union
+from typing import Any, Dict, Optional, Union
 
 from openai import AsyncStream, Stream
 from opentelemetry.semconv._incubating.attributes import (
@@ -24,15 +24,19 @@ from opentelemetry.semconv._incubating.attributes import (
 )
 from opentelemetry.trace import Span, SpanKind, Tracer
 
-from . import extended_gen_ai_attributes as ExtendedGenAIAttributes
-from .instruments import Instruments
-from .utils import (
-    choices_to_span_attributes,
+from llm_tracekit.instrumentation_utils import handle_span_exception
+from llm_tracekit.instruments import Instruments
+from llm_tracekit.openai.utils import (
     get_llm_request_attributes,
-    handle_span_exception,
+    get_llm_response_attributes,
     is_streaming,
-    messages_to_span_attributes,
-    set_span_attribute,
+)
+from llm_tracekit.span_builder import (
+    Choice,
+    ToolCall,
+    attribute_generator,
+    generate_choice_attributes,
+    generate_response_attributes,
 )
 
 
@@ -44,7 +48,9 @@ def chat_completions_create(
     """Wrap the `create` method of the `ChatCompletion` class to trace it."""
 
     def traced_method(wrapped, instance, args, kwargs):
-        span_attributes = {**get_llm_request_attributes(kwargs, instance)}
+        span_attributes = {
+            **get_llm_request_attributes(kwargs, instance, capture_content)
+        }
 
         span_name = f"{span_attributes[GenAIAttributes.GEN_AI_OPERATION_NAME]} {span_attributes[GenAIAttributes.GEN_AI_REQUEST_MODEL]}"
         with tracer.start_as_current_span(
@@ -53,9 +59,6 @@ def chat_completions_create(
             attributes=span_attributes,
             end_on_exit=False,
         ) as span:
-            messages = kwargs.get("messages", [])
-            span.set_attributes(messages_to_span_attributes(messages, capture_content))
-
             start = default_timer()
             result = None
             error_type = None
@@ -65,12 +68,9 @@ def chat_completions_create(
                     return StreamWrapper(result, span, capture_content)
 
                 if span.is_recording():
-                    _set_response_attributes(span, result, capture_content)
-
-                choices = getattr(result, "choices", [])
-                span.set_attributes(
-                    choices_to_span_attributes(choices, capture_content)
-                )
+                    span.set_attributes(
+                        get_llm_response_attributes(result, capture_content)
+                    )
 
                 span.end()
                 return result
@@ -100,7 +100,7 @@ def async_chat_completions_create(
     """Wrap the `create` method of the `AsyncChatCompletion` class to trace it."""
 
     async def traced_method(wrapped, instance, args, kwargs):
-        span_attributes = {**get_llm_request_attributes(kwargs, instance)}
+        span_attributes = {**get_llm_request_attributes(kwargs, instance, capture_content)}
 
         span_name = f"{span_attributes[GenAIAttributes.GEN_AI_OPERATION_NAME]} {span_attributes[GenAIAttributes.GEN_AI_REQUEST_MODEL]}"
         with tracer.start_as_current_span(
@@ -109,9 +109,6 @@ def async_chat_completions_create(
             attributes=span_attributes,
             end_on_exit=False,
         ) as span:
-            messages = kwargs.get("messages", [])
-            span.set_attributes(messages_to_span_attributes(messages, capture_content))
-
             start = default_timer()
             result = None
             error_type = None
@@ -121,11 +118,9 @@ def async_chat_completions_create(
                     return AsyncStreamWrapper(result, span, capture_content)
 
                 if span.is_recording():
-                    _set_response_attributes(span, result, capture_content)
-                choices = getattr(result, "choices", [])
-                span.set_attributes(
-                    choices_to_span_attributes(choices, capture_content)
-                )
+                    span.set_attributes(
+                        get_llm_response_attributes(result, capture_content)
+                    )
 
                 span.end()
                 return result
@@ -213,44 +208,6 @@ def _record_metrics(
         )
 
 
-def _set_response_attributes(span, result, capture_content: bool):
-    set_span_attribute(span, GenAIAttributes.GEN_AI_RESPONSE_MODEL, result.model)
-
-    if getattr(result, "choices", None):
-        finish_reasons = []
-        for choice in result.choices:
-            finish_reasons.append(choice.finish_reason or "error")
-
-        set_span_attribute(
-            span,
-            GenAIAttributes.GEN_AI_RESPONSE_FINISH_REASONS,
-            finish_reasons,
-        )
-
-    if getattr(result, "id", None):
-        set_span_attribute(span, GenAIAttributes.GEN_AI_RESPONSE_ID, result.id)
-
-    if getattr(result, "service_tier", None):
-        set_span_attribute(
-            span,
-            GenAIAttributes.GEN_AI_OPENAI_REQUEST_SERVICE_TIER,
-            result.service_tier,
-        )
-
-    # Get the usage
-    if getattr(result, "usage", None):
-        set_span_attribute(
-            span,
-            GenAIAttributes.GEN_AI_USAGE_INPUT_TOKENS,
-            result.usage.prompt_tokens,
-        )
-        set_span_attribute(
-            span,
-            GenAIAttributes.GEN_AI_USAGE_OUTPUT_TOKENS,
-            result.usage.completion_tokens,
-        )
-
-
 class ToolCallBuffer:
     def __init__(self, index, tool_call_id, function_name):
         self.index = index
@@ -312,72 +269,55 @@ class BaseStreamWrapper:
         if not self._span_started:
             self._span_started = True
 
+    @attribute_generator
+    def _generate_response_attributes(self) -> Dict[str, Any]:
+        parsed_choices = []
+        for choice in self.choice_buffers:
+            content = None
+            if choice.text_content:
+                content = "".join(choice.text_content)
+
+            tool_calls = None
+            if choice.tool_calls_buffers:
+                tool_calls = []
+                for tool_call in choice.tool_calls_buffers:
+                    tool_calls.append(
+                        ToolCall(
+                            id=tool_call.tool_call_id,
+                            type="function",
+                            function_name=tool_call.function_name,
+                            function_arguments="".join(tool_call.arguments),
+                        )
+                    )
+
+            parsed_choices.append(
+                Choice(
+                    finish_reason=choice.finish_reason or "error",
+                    role="assistant",
+                    content=content,
+                    tool_calls=tool_calls,
+                )
+            )
+
+        return {
+            GenAIAttributes.GEN_AI_OPENAI_RESPONSE_SERVICE_TIER: self.service_tier,
+            **generate_response_attributes(
+                model=self.response_model,
+                id=self.response_id,
+                finish_reasons=self.finish_reasons,
+                usage_input_tokens=self.prompt_tokens,
+                usage_output_tokens=self.completion_tokens,
+            ),
+            **generate_choice_attributes(parsed_choices, self.capture_content),
+        }
+
     def cleanup(self):
         if not self._span_started:
             return
 
         span_attributes = {}
         if self.span.is_recording():
-            if self.response_model:
-                span_attributes[GenAIAttributes.GEN_AI_RESPONSE_MODEL] = (
-                    self.response_model
-                )
-
-            if self.response_id:
-                span_attributes[GenAIAttributes.GEN_AI_RESPONSE_ID] = self.response_id
-
-            span_attributes[GenAIAttributes.GEN_AI_USAGE_INPUT_TOKENS] = (
-                self.prompt_tokens
-            )
-            span_attributes[GenAIAttributes.GEN_AI_USAGE_OUTPUT_TOKENS] = (
-                self.completion_tokens
-            )
-            span_attributes[GenAIAttributes.GEN_AI_OPENAI_RESPONSE_SERVICE_TIER] = (
-                self.service_tier
-            )
-            span_attributes[GenAIAttributes.GEN_AI_RESPONSE_FINISH_REASONS] = (
-                self.finish_reasons
-            )
-
-        for idx, choice in enumerate(self.choice_buffers):
-            span_attributes[
-                ExtendedGenAIAttributes.GEN_AI_COMPLETION_ROLE.format(
-                    completion_index=idx
-                )
-            ] = "assistant"
-            span_attributes[
-                ExtendedGenAIAttributes.GEN_AI_COMPLETION_FINISH_REASON.format(
-                    completion_index=idx
-                )
-            ] = choice.finish_reason or "error"
-            if self.capture_content and choice.text_content:
-                span_attributes[
-                    ExtendedGenAIAttributes.GEN_AI_COMPLETION_CONTENT.format(
-                        completion_index=idx
-                    )
-                ] = "".join(choice.text_content)
-            if choice.tool_calls_buffers:
-                for tidx, tool_call in enumerate(choice.tool_calls_buffers):
-                    tool_call_attributes = {
-                        ExtendedGenAIAttributes.GEN_AI_COMPLETION_TOOL_CALLS_ID.format(
-                            completion_index=idx, tool_call_index=tidx
-                        ): tool_call.tool_call_id,
-                        ExtendedGenAIAttributes.GEN_AI_COMPLETION_TOOL_CALLS_TYPE.format(
-                            completion_index=idx, tool_call_index=tidx
-                        ): "function",
-                        ExtendedGenAIAttributes.GEN_AI_COMPLETION_TOOL_CALLS_FUNCTION_NAME.format(
-                            completion_index=idx, tool_call_index=tidx
-                        ): tool_call.function_name,
-                    }
-
-                    if self.capture_content:
-                        tool_call_attributes[
-                            ExtendedGenAIAttributes.GEN_AI_COMPLETION_TOOL_CALLS_FUNCTION_ARGUMENTS.format(
-                                completion_index=idx, tool_call_index=tidx
-                            )
-                        ] = "".join(tool_call.arguments)
-
-                    span_attributes.update(tool_call_attributes)
+            span_attributes = self._generate_response_attributes()
 
         self.span.set_attributes(span_attributes)
         self.span.end()

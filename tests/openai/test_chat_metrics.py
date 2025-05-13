@@ -7,7 +7,6 @@ from opentelemetry.semconv._incubating.attributes import (
 )
 from opentelemetry.semconv._incubating.metrics import gen_ai_metrics
 
-
 _DURATION_BUCKETS = (
     0.01,
     0.02,

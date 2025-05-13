@@ -1,18 +1,25 @@
-from typing import Optional
+# Copyright Coralogix Ltd.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
-from openai.types.chat import ChatCompletion
 from opentelemetry.sdk.trace import ReadableSpan
-from opentelemetry.semconv._incubating.attributes import (
-    gen_ai_attributes as GenAIAttributes,
-)
-from opentelemetry.semconv._incubating.attributes import (
-    server_attributes as ServerAttributes,
-)
 
 import llm_tracekit.extended_gen_ai_attributes as ExtendedGenAIAttributes
 
 
-def assert_messages_in_span(span: ReadableSpan, expected_messages: list):
+def assert_messages_in_span(
+    span: ReadableSpan, expected_messages: list, expect_content: bool
+):
     assert span.attributes is not None
 
     for index, message in enumerate(expected_messages):
@@ -24,19 +31,22 @@ def assert_messages_in_span(span: ReadableSpan, expected_messages: list):
         )
 
         if "content" in message:
-            assert (
-                span.attributes[
+            if expect_content:
+                assert (
+                    span.attributes[
+                        ExtendedGenAIAttributes.GEN_AI_PROMPT_CONTENT.format(
+                            prompt_index=index
+                        )
+                    ]
+                    == message["content"]
+                )
+            else:
+                assert (
                     ExtendedGenAIAttributes.GEN_AI_PROMPT_CONTENT.format(
                         prompt_index=index
                     )
-                ]
-                == message["content"]
-            )
-        else:
-            assert (
-                ExtendedGenAIAttributes.GEN_AI_PROMPT_CONTENT.format(prompt_index=index)
-                not in span.attributes
-            )
+                    not in span.attributes
+                )
 
         if "tool_calls" in message:
             for tool_index, tool_call in enumerate(message["tool_calls"]):
@@ -64,7 +74,7 @@ def assert_messages_in_span(span: ReadableSpan, expected_messages: list):
                     ]
                     == tool_call["function"]["name"]
                 )
-                if "arguments" in tool_call["function"]:
+                if expect_content:
                     assert (
                         span.attributes[
                             ExtendedGenAIAttributes.GEN_AI_PROMPT_TOOL_CALLS_FUNCTION_ARGUMENTS.format(
@@ -112,18 +122,12 @@ def assert_messages_in_span(span: ReadableSpan, expected_messages: list):
     )
 
 
-def assert_choices_in_span(span: ReadableSpan, expected_choices: list):
+def assert_choices_in_span(
+    span: ReadableSpan, expected_choices: list, expect_content: bool
+):
     assert span.attributes is not None
 
     for index, choice in enumerate(expected_choices):
-        assert (
-            span.attributes[
-                ExtendedGenAIAttributes.GEN_AI_COMPLETION_FINISH_REASON.format(
-                    completion_index=index
-                )
-            ]
-            == choice["finish_reason"]
-        )
         assert (
             span.attributes[
                 ExtendedGenAIAttributes.GEN_AI_COMPLETION_ROLE.format(
@@ -132,22 +136,32 @@ def assert_choices_in_span(span: ReadableSpan, expected_choices: list):
             ]
             == choice["message"]["role"]
         )
-        if "content" in choice["message"]:
+        if "finish_reason" in choice:
             assert (
                 span.attributes[
-                    ExtendedGenAIAttributes.GEN_AI_COMPLETION_CONTENT.format(
+                    ExtendedGenAIAttributes.GEN_AI_COMPLETION_FINISH_REASON.format(
                         completion_index=index
                     )
                 ]
-                == choice["message"]["content"]
+                == choice["finish_reason"]
             )
-        else:
-            assert (
-                ExtendedGenAIAttributes.GEN_AI_COMPLETION_CONTENT.format(
-                    completion_index=index
+        if "content" in choice["message"]:
+            if expect_content:
+                assert (
+                    span.attributes[
+                        ExtendedGenAIAttributes.GEN_AI_COMPLETION_CONTENT.format(
+                            completion_index=index
+                        )
+                    ]
+                    == choice["message"]["content"]
                 )
-                not in span.attributes
-            )
+            else:
+                assert (
+                    ExtendedGenAIAttributes.GEN_AI_COMPLETION_CONTENT.format(
+                        completion_index=index
+                    )
+                    not in span.attributes
+                )
 
         if "tool_calls" in choice["message"]:
             for tool_index, tool_call in enumerate(choice["message"]["tool_calls"]):
@@ -175,7 +189,7 @@ def assert_choices_in_span(span: ReadableSpan, expected_choices: list):
                     ]
                     == tool_call["function"]["name"]
                 )
-                if "arguments" in tool_call["function"]:
+                if expect_content:
                     assert (
                         span.attributes[
                             ExtendedGenAIAttributes.GEN_AI_COMPLETION_TOOL_CALLS_FUNCTION_ARGUMENTS.format(
@@ -206,87 +220,3 @@ def assert_choices_in_span(span: ReadableSpan, expected_choices: list):
         )
         not in span.attributes
     )
-
-
-def assert_completion_attributes(
-    span: ReadableSpan,
-    request_model: str,
-    response: ChatCompletion,
-    operation_name: str = "chat",
-    server_address: str = "api.openai.com",
-):
-    return assert_all_attributes(
-        span,
-        request_model,
-        response.id,
-        response.model,
-        response.usage.prompt_tokens,
-        response.usage.completion_tokens,
-        operation_name,
-        server_address,
-    )
-
-
-def assert_all_attributes(
-    span: ReadableSpan,
-    request_model: str,
-    response_id: str = None,
-    response_model: str = None,
-    input_tokens: Optional[int] = None,
-    output_tokens: Optional[int] = None,
-    operation_name: str = "chat",
-    server_address: str = "api.openai.com",
-):
-    assert span.name == f"{operation_name} {request_model}"
-    assert operation_name == span.attributes[GenAIAttributes.GEN_AI_OPERATION_NAME]
-    assert (
-        GenAIAttributes.GenAiSystemValues.OPENAI.value
-        == span.attributes[GenAIAttributes.GEN_AI_SYSTEM]
-    )
-    assert request_model == span.attributes[GenAIAttributes.GEN_AI_REQUEST_MODEL]
-    if response_model:
-        assert response_model == span.attributes[GenAIAttributes.GEN_AI_RESPONSE_MODEL]
-    else:
-        assert GenAIAttributes.GEN_AI_RESPONSE_MODEL not in span.attributes
-
-    if response_id:
-        assert response_id == span.attributes[GenAIAttributes.GEN_AI_RESPONSE_ID]
-    else:
-        assert GenAIAttributes.GEN_AI_RESPONSE_ID not in span.attributes
-
-    if input_tokens is not None:
-        assert (
-            input_tokens == span.attributes[GenAIAttributes.GEN_AI_USAGE_INPUT_TOKENS]
-        )
-    else:
-        assert GenAIAttributes.GEN_AI_USAGE_INPUT_TOKENS not in span.attributes
-
-    if output_tokens is not None:
-        assert (
-            output_tokens == span.attributes[GenAIAttributes.GEN_AI_USAGE_OUTPUT_TOKENS]
-        )
-    else:
-        assert GenAIAttributes.GEN_AI_USAGE_OUTPUT_TOKENS not in span.attributes
-
-    assert server_address == span.attributes[ServerAttributes.SERVER_ADDRESS]
-
-
-def get_current_weather_tool_definition():
-    return {
-        "type": "function",
-        "function": {
-            "name": "get_current_weather",
-            "description": "Get the current weather in a given location",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "location": {
-                        "type": "string",
-                        "description": "The city and state, e.g. Boston, MA",
-                    },
-                },
-                "required": ["location"],
-                "additionalProperties": False,
-            },
-        },
-    }

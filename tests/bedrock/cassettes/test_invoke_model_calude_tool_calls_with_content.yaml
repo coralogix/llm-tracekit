@@ -1,0 +1,268 @@
+interactions:
+- request:
+    body: |-
+      {
+        "anthropic_version": "bedrock-2023-05-31",
+        "max_tokens": 1000,
+        "messages": [
+          {
+            "role": "user",
+            "content": "What's the weather in Seattle and San Francisco today?"
+          }
+        ],
+        "system": "You are a helpful assistant",
+        "tools": [
+          {
+            "name": "get_current_weather",
+            "description": "Get the current weather in a given location",
+            "input_schema": {
+              "type": "object",
+              "properties": {
+                "location": {
+                  "type": "string",
+                  "description": "The city and state, e.g. Boston, MA"
+                }
+              },
+              "required": [
+                "location"
+              ],
+              "additionalProperties": false
+            }
+          }
+        ],
+        "tool_choice": {
+          "type": "auto"
+        }
+      }
+    headers:
+      Accept:
+      - !!binary |
+        YXBwbGljYXRpb24vanNvbg==
+      Authorization:
+      - test-auth
+      Content-Length:
+      - '539'
+      Content-Type:
+      - !!binary |
+        YXBwbGljYXRpb24vanNvbg==
+      User-Agent:
+      - !!binary |
+        Qm90bzMvMS4zOC4wIG1kL0JvdG9jb3JlIzEuMzguMCB1YS8yLjEgb3MvbWFjb3MjMjQuNC4wIG1k
+        L2FyY2gjYXJtNjQgbGFuZy9weXRob24jMy4xMi45IG1kL3B5aW1wbCNDUHl0aG9uIGNmZy9yZXRy
+        eS1tb2RlI2xlZ2FjeSBCb3RvY29yZS8xLjM4LjA=
+      X-Amz-Date:
+      - !!binary |
+        MjAyNTA1MDZUMTIyMzI1Wg==
+      X-Amz-Security-Token:
+      - test-security-token
+      amz-sdk-invocation-id:
+      - !!binary |
+        MWZmNDA0NjgtMTRkZi00NmQxLThlMzAtMTA2YWIyODM2MjZm
+      amz-sdk-request:
+      - !!binary |
+        YXR0ZW1wdD0x
+    method: POST
+    uri: https://bedrock-runtime.us-east-1.amazonaws.com/model/anthropic.claude-3-5-sonnet-20240620-v1%3A0/invoke
+  response:
+    body:
+      string: |-
+        {
+          "id": "msg_bdrk_01AcADDkhfBKaDwrwfpALy8P",
+          "type": "message",
+          "role": "assistant",
+          "model": "claude-3-5-sonnet-20240620",
+          "content": [
+            {
+              "type": "text",
+              "text": "To answer your question about the weather in Seattle and San Francisco today, I'll need to use the get_current_weather function for both cities. Let me check that for you."
+            },
+            {
+              "type": "tool_use",
+              "id": "toolu_bdrk_01VAUKPta1CjUJrmrJA58Fa2",
+              "name": "get_current_weather",
+              "input": {
+                "location": "Seattle, WA"
+              }
+            },
+            {
+              "type": "tool_use",
+              "id": "toolu_bdrk_013m93CyjAxj68NhdMJyFYFR",
+              "name": "get_current_weather",
+              "input": {
+                "location": "San Francisco, CA"
+              }
+            }
+          ],
+          "stop_reason": "tool_use",
+          "stop_sequence": null,
+          "usage": {
+            "input_tokens": 400,
+            "output_tokens": 137
+          }
+        }
+    headers:
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '679'
+      Content-Type:
+      - application/json
+      Date:
+      - Tue, 06 May 2025 12:23:29 GMT
+      X-Amzn-Bedrock-Input-Token-Count:
+      - '400'
+      X-Amzn-Bedrock-Invocation-Latency:
+      - '3586'
+      X-Amzn-Bedrock-Output-Token-Count:
+      - '137'
+      x-amzn-RequestId:
+      - cfbe903b-1513-478a-8058-26bc42eb1df7
+    status:
+      code: 200
+      message: OK
+- request:
+    body: |-
+      {
+        "anthropic_version": "bedrock-2023-05-31",
+        "max_tokens": 1000,
+        "messages": [
+          {
+            "role": "user",
+            "content": "What's the weather in Seattle and San Francisco today?"
+          },
+          {
+            "role": "assistant",
+            "content": [
+              {
+                "type": "text",
+                "text": "To answer your question about the weather in Seattle and San Francisco today, I'll need to use the get_current_weather function for both cities. Let me check that for you."
+              },
+              {
+                "type": "tool_use",
+                "id": "toolu_bdrk_01VAUKPta1CjUJrmrJA58Fa2",
+                "name": "get_current_weather",
+                "input": {
+                  "location": "Seattle, WA"
+                }
+              },
+              {
+                "type": "tool_use",
+                "id": "toolu_bdrk_013m93CyjAxj68NhdMJyFYFR",
+                "name": "get_current_weather",
+                "input": {
+                  "location": "San Francisco, CA"
+                }
+              }
+            ]
+          },
+          {
+            "role": "user",
+            "content": [
+              {
+                "type": "tool_result",
+                "tool_use_id": "toolu_bdrk_01VAUKPta1CjUJrmrJA58Fa2",
+                "content": "50 degrees and raining"
+              },
+              {
+                "type": "tool_result",
+                "tool_use_id": "toolu_bdrk_013m93CyjAxj68NhdMJyFYFR",
+                "content": "70 degrees and sunny"
+              }
+            ]
+          }
+        ],
+        "system": "You are a helpful assistant",
+        "tools": [
+          {
+            "name": "get_current_weather",
+            "description": "Get the current weather in a given location",
+            "input_schema": {
+              "type": "object",
+              "properties": {
+                "location": {
+                  "type": "string",
+                  "description": "The city and state, e.g. Boston, MA"
+                }
+              },
+              "required": [
+                "location"
+              ],
+              "additionalProperties": false
+            }
+          }
+        ],
+        "tool_choice": {
+          "type": "auto"
+        }
+      }
+    headers:
+      Accept:
+      - !!binary |
+        YXBwbGljYXRpb24vanNvbg==
+      Authorization:
+      - test-auth
+      Content-Length:
+      - '1315'
+      Content-Type:
+      - !!binary |
+        YXBwbGljYXRpb24vanNvbg==
+      User-Agent:
+      - !!binary |
+        Qm90bzMvMS4zOC4wIG1kL0JvdG9jb3JlIzEuMzguMCB1YS8yLjEgb3MvbWFjb3MjMjQuNC4wIG1k
+        L2FyY2gjYXJtNjQgbGFuZy9weXRob24jMy4xMi45IG1kL3B5aW1wbCNDUHl0aG9uIGNmZy9yZXRy
+        eS1tb2RlI2xlZ2FjeSBCb3RvY29yZS8xLjM4LjA=
+      X-Amz-Date:
+      - !!binary |
+        MjAyNTA1MDZUMTIyMzI5Wg==
+      X-Amz-Security-Token:
+      - test-security-token
+      amz-sdk-invocation-id:
+      - !!binary |
+        YWFlMGU3YTMtZjk1MS00M2E3LThiMDItYTk1YzUyODMxYTYy
+      amz-sdk-request:
+      - !!binary |
+        YXR0ZW1wdD0x
+    method: POST
+    uri: https://bedrock-runtime.us-east-1.amazonaws.com/model/anthropic.claude-3-5-sonnet-20240620-v1%3A0/invoke
+  response:
+    body:
+      string: |-
+        {
+          "id": "msg_bdrk_01Y6ZUs7KybPMt9JXSjiBNEf",
+          "type": "message",
+          "role": "assistant",
+          "model": "claude-3-5-sonnet-20240620",
+          "content": [
+            {
+              "type": "text",
+              "text": "Based on the information I've retrieved, here's the current weather for both cities:\n\n1. Seattle, WA: It's currently 50 degrees and raining.\n2. San Francisco, CA: It's currently 70 degrees and sunny.\n\nAs you can see, the weather is quite different in these two cities today. Seattle is experiencing typical Pacific Northwest weather with rain and cooler temperatures, while San Francisco is enjoying a warm and sunny day. If you're planning any activities or travel, you might want to take these weather conditions into account.\n\nIs there anything else you'd like to know about the weather in these cities or any other locations?"
+            }
+          ],
+          "stop_reason": "end_turn",
+          "stop_sequence": null,
+          "usage": {
+            "input_tokens": 614,
+            "output_tokens": 141
+          }
+        }
+    headers:
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '884'
+      Content-Type:
+      - application/json
+      Date:
+      - Tue, 06 May 2025 12:23:34 GMT
+      X-Amzn-Bedrock-Input-Token-Count:
+      - '614'
+      X-Amzn-Bedrock-Invocation-Latency:
+      - '4610'
+      X-Amzn-Bedrock-Output-Token-Count:
+      - '141'
+      x-amzn-RequestId:
+      - 2408f5f3-47da-4ad9-9766-7358aa14f0cf
+    status:
+      code: 200
+      message: OK
+version: 1

@@ -1,0 +1,55 @@
+interactions:
+- request:
+    body: |-
+      {
+        "inputText": "say this is a test"
+      }
+    headers:
+      Authorization:
+      - test-auth
+      Content-Length:
+      - '35'
+      Content-Type:
+      - !!binary |
+        YXBwbGljYXRpb24vanNvbg==
+      User-Agent:
+      - !!binary |
+        Qm90bzMvMS4zOC4wIG1kL0JvdG9jb3JlIzEuMzguMCB1YS8yLjEgb3MvbWFjb3MjMjQuNC4wIG1k
+        L2FyY2gjYXJtNjQgbGFuZy9weXRob24jMy4xMi45IG1kL3B5aW1wbCNDUHl0aG9uIGNmZy9yZXRy
+        eS1tb2RlI2xlZ2FjeSBCb3RvY29yZS8xLjM4LjA=
+      X-Amz-Date:
+      - !!binary |
+        MjAyNTA0MjlUMTQ1MTA5Wg==
+      X-Amz-Security-Token:
+      - test-security-token
+      amz-sdk-invocation-id:
+      - !!binary |
+        MDY3MGY4OTMtZjBkMS00NzRlLThiYTEtODE3MThlYWRiNTMw
+      amz-sdk-request:
+      - !!binary |
+        YXR0ZW1wdD0x
+    method: POST
+    uri: https://bedrock-agent-runtime.us-east-1.amazonaws.com/agents/agent_id/agentAliases/agent_alias/sessions/123456/text
+  response:
+    body:
+      string: |-
+        {
+          "message": "3 validation errors detected: Value 'agent_id' at 'agentId' failed to satisfy constraint: Member must satisfy regular expression pattern: [0-9a-zA-Z]+; Value 'agent_alias' at 'agentAliasId' failed to satisfy constraint: Member must have length less than or equal to 10; Value 'agent_alias' at 'agentAliasId' failed to satisfy constraint: Member must satisfy regular expression pattern: [0-9a-zA-Z]+"
+        }
+    headers:
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '412'
+      Content-Type:
+      - application/json
+      Date:
+      - Tue, 29 Apr 2025 14:51:10 GMT
+      x-amzn-ErrorType:
+      - ValidationException:http://internal.amazon.com/coral/com.amazon.coral.validate/
+      x-amzn-RequestId:
+      - 9f6f34f7-d0cd-400d-952b-ab387d6a3efa
+    status:
+      code: 400
+      message: Bad Request
+version: 1
