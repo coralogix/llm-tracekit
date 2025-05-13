@@ -1,7 +1,7 @@
-from llm_tracekit.local_debugging.filesystem_spans import DEFAULT_TRACES_DIRECTORY
+from llm_tracekit.local_debugging.filesystem_spans import FilesystemSpans
 
 def list_llm_conversations(traces_directory: str | None):
-    if traces_directory is None:
-        traces_directory = DEFAULT_TRACES_DIRECTORY
+    filesystem_spans = FilesystemSpans(traces_directory)
+    sessions = filesystem_spans.get_sessions()
 
-    print(f"listing {traces_directory}")
+    print(f"Sessions: {sessions}")

@@ -14,16 +14,15 @@ class FilesystemSpans:
             os.makedirs(traces_directory, exist_ok=True)
 
         self._traces_directory = traces_directory
-        self._sessions = self._load_spans()
 
-    def _load_spans(self) -> list:
+    def get_sessions(self) -> list[dict]:
         if not os.path.exists(self._traces_directory):
             return []
 
         sessions = []
 
         for file_name in os.listdir(self._traces_directory):
-            full_path = os.path.join(self._traces_directory, file_name)
+            full_path = os.path.join(self._traces_directory, file_name)6
 
             with open(full_path, "rt") as trace_file:
                 session = json.load(trace_file)
