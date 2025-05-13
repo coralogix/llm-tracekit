@@ -46,7 +46,7 @@ response = client.chat.completions.create(
 ```
 
 ### Enabling message content
-Message content such as the contents of the prompt, completion, function arguments and return values are not captured by default. To capture message content as span attributes, set the environment variable OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT to true.
+Message content such as the contents of the prompt, completion, function arguments and return values are not captured by default. To capture message content as span attributes, set the environment variable `OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT` to true.
 
 Most Coralogix AI evaluations will not work without message contents, so it is highly recommended to enable capturing.
 
