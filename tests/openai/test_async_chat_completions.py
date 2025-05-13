@@ -26,13 +26,12 @@ from opentelemetry.semconv._incubating.attributes import (
 )
 
 import llm_tracekit.extended_gen_ai_attributes as ExtendedGenAIAttributes
-from tests.utils import (
+from tests.openai.utils import (
     assert_all_attributes,
-    assert_choices_in_span,
     assert_completion_attributes,
-    assert_messages_in_span,
     get_current_weather_tool_definition,
 )
+from tests.utils import assert_choices_in_span, assert_messages_in_span
 
 
 @pytest.mark.vcr()
@@ -51,7 +50,9 @@ async def test_async_chat_completion_with_content(
     assert_completion_attributes(spans[0], llm_model_value, response)
 
     user_message = {"role": "user", "content": messages_value[0]["content"]}
-    assert_messages_in_span(spans[0], [user_message])
+    assert_messages_in_span(
+        span=spans[0], expected_messages=[user_message], expect_content=True
+    )
 
     choice = {
         "finish_reason": "stop",
@@ -60,7 +61,9 @@ async def test_async_chat_completion_with_content(
             "content": response.choices[0].message.content,
         },
     }
-    assert_choices_in_span(spans[0], [choice])
+    assert_choices_in_span(
+        span=spans[0], expected_choices=[choice], expect_content=True
+    )
 
 
 @pytest.mark.vcr()
@@ -81,7 +84,9 @@ async def test_async_chat_completion_with_content_array(
     assert_completion_attributes(spans[0], llm_model_value, response)
 
     user_message = {"role": "user"}
-    assert_messages_in_span(spans[0], [user_message])
+    assert_messages_in_span(
+        span=spans[0], expected_messages=[user_message], expect_content=True
+    )
 
     choice = {
         "finish_reason": "stop",
@@ -90,7 +95,9 @@ async def test_async_chat_completion_with_content_array(
             "content": response.choices[0].message.content,
         },
     }
-    assert_choices_in_span(spans[0], [choice])
+    assert_choices_in_span(
+        span=spans[0], expected_choices=[choice], expect_content=True
+    )
 
 
 @pytest.mark.vcr()
@@ -108,13 +115,17 @@ async def test_async_chat_completion_no_content(
     spans = span_exporter.get_finished_spans()
     assert_completion_attributes(spans[0], llm_model_value, response)
 
-    assert_messages_in_span(spans[0], [{"role": "user"}])
+    assert_messages_in_span(
+        span=spans[0], expected_messages=[{"role": "user"}], expect_content=False
+    )
 
     choice = {
         "finish_reason": "stop",
         "message": {"role": "assistant"},
     }
-    assert_choices_in_span(spans[0], [choice])
+    assert_choices_in_span(
+        span=spans[0], expected_choices=[choice], expect_content=False
+    )
 
 
 @pytest.mark.asyncio()
@@ -212,7 +223,9 @@ async def test_async_chat_completion_multiple_choices(
     assert_completion_attributes(spans[0], llm_model_value, response)
 
     user_message = {"role": "user", "content": messages_value[0]["content"]}
-    assert_messages_in_span(spans[0], [user_message])
+    assert_messages_in_span(
+        span=spans[0], expected_messages=[user_message], expect_content=True
+    )
 
     choices = [
         {
@@ -230,7 +243,7 @@ async def test_async_chat_completion_multiple_choices(
             },
         },
     ]
-    assert_choices_in_span(spans[0], choices)
+    assert_choices_in_span(span=spans[0], expected_choices=choices, expect_content=True)
 
 
 @pytest.mark.vcr()
@@ -305,27 +318,31 @@ async def chat_completion_tool_call(span_exporter, async_openai_client, expect_c
     assert_completion_attributes(spans[1], llm_model_value, response_1)
 
     # call one
-    system_message = {"role": "system"}
-    user_message = {"role": "user"}
-    if expect_content:
-        system_message["content"] = messages_value[0]["content"]
-        user_message["content"] = messages_value[1]["content"]
 
-    assert_messages_in_span(spans[0], [system_message, user_message])
+    system_message = {"role": "system", "content": messages_value[0]["content"]}
+    user_message = {"role": "user", "content": messages_value[1]["content"]}
+    assert_messages_in_span(
+        span=spans[0],
+        expected_messages=[system_message, user_message],
+        expect_content=expect_content,
+    )
 
-    function_call_0 = {"name": "get_current_weather"}
-    function_call_1 = {"name": "get_current_weather"}
-    if expect_content:
-        function_call_0["arguments"] = (
+    function_call_0 = {
+        "name": "get_current_weather",
+        "arguments": (
             response_0.choices[0]
             .message.tool_calls[0]
             .function.arguments.replace("\n", "")
-        )
-        function_call_1["arguments"] = (
+        ),
+    }
+    function_call_1 = {
+        "name": "get_current_weather",
+        "arguments": (
             response_0.choices[0]
             .message.tool_calls[1]
             .function.arguments.replace("\n", "")
-        )
+        ),
+    }
 
     choice = {
         "finish_reason": "tool_calls",
@@ -345,7 +362,9 @@ async def chat_completion_tool_call(span_exporter, async_openai_client, expect_c
             ],
         },
     }
-    assert_choices_in_span(spans[0], [choice])
+    assert_choices_in_span(
+        span=spans[0], expected_choices=[choice], expect_content=expect_content
+    )
 
     # call two
     assistant_tool_call = {
@@ -355,37 +374,37 @@ async def chat_completion_tool_call(span_exporter, async_openai_client, expect_c
     tool_message_0 = {
         "role": "tool",
         "tool_call_id": tool_call_result_0["tool_call_id"],
+        "content": tool_call_result_0["content"],
     }
     tool_message_1 = {
         "role": "tool",
         "tool_call_id": tool_call_result_1["tool_call_id"],
+        "content": tool_call_result_1["content"],
     }
-    if expect_content:
-        tool_message_0["content"] = tool_call_result_0["content"]
-        tool_message_1["content"] = tool_call_result_1["content"]
-    else:
-        assistant_tool_call["tool_calls"][0]["function"].pop("arguments")
-        assistant_tool_call["tool_calls"][1]["function"].pop("arguments")
 
     assert_messages_in_span(
-        spans[1],
-        [
+        span=spans[1],
+        expected_messages=[
             system_message,
             user_message,
             assistant_tool_call,
             tool_message_0,
             tool_message_1,
         ],
+        expect_content=expect_content,
     )
 
     choice = {
         "finish_reason": "stop",
-        "message": {"role": "assistant"},
+        "message": {
+            "role": "assistant",
+            "content": response_1.choices[0].message.content,
+        },
     }
-    if expect_content:
-        choice["message"]["content"] = response_1.choices[0].message.content
 
-    assert_choices_in_span(spans[1], [choice])
+    assert_choices_in_span(
+        span=spans[1], expected_choices=[choice], expect_content=expect_content
+    )
 
 
 @pytest.mark.vcr()
@@ -429,13 +448,17 @@ async def test_async_chat_completion_streaming(
     )
 
     user_message = {"role": "user", "content": "Say this is a test"}
-    assert_messages_in_span(spans[0], [user_message])
+    assert_messages_in_span(
+        span=spans[0], expected_messages=[user_message], expect_content=True
+    )
 
     choice = {
         "finish_reason": "stop",
         "message": {"role": "assistant", "content": response_stream_result},
     }
-    assert_choices_in_span(spans[0], [choice])
+    assert_choices_in_span(
+        span=spans[0], expected_choices=[choice], expect_content=True
+    )
 
 
 @pytest.mark.vcr()
@@ -477,13 +500,17 @@ async def test_async_chat_completion_streaming_not_complete(
     )
 
     user_message = {"role": "user", "content": "Say this is a test"}
-    assert_messages_in_span(spans[0], [user_message])
+    assert_messages_in_span(
+        span=spans[0], expected_messages=[user_message], expect_content=True
+    )
 
     choice = {
         "finish_reason": "error",
         "message": {"role": "assistant", "content": response_stream_result},
     }
-    assert_choices_in_span(spans[0], [choice])
+    assert_choices_in_span(
+        span=spans[0], expected_choices=[choice], expect_content=True
+    )
 
 
 @pytest.mark.vcr()
@@ -544,7 +571,9 @@ async def test_async_chat_completion_multiple_choices_streaming(
             "content": "What's the weather in Seattle and San Francisco today?",
         },
     ]
-    assert_messages_in_span(spans[0], messages)
+    assert_messages_in_span(
+        span=spans[0], expected_messages=messages, expect_content=True
+    )
 
     choices = [
         {
@@ -562,7 +591,7 @@ async def test_async_chat_completion_multiple_choices_streaming(
             },
         },
     ]
-    assert_choices_in_span(spans[0], choices)
+    assert_choices_in_span(span=spans[0], expected_choices=choices, expect_content=True)
 
 
 @pytest.mark.vcr()
@@ -671,21 +700,23 @@ async def async_chat_completion_multiple_tools_streaming(
         response_stream_usage.completion_tokens,
     )
 
-    system_message = {"role": "system"}
-    user_message = {"role": "user"}
-    if expect_content:
-        system_message["content"] = messages_value[0]["content"]
-        user_message["content"] = (
-            "What's the weather in Seattle and San Francisco today?"
-        )
-
-    assert_messages_in_span(spans[0], [system_message, user_message])
+    system_message = {"role": "system", "content": messages_value[0]["content"]}
+    user_message = {
+        "role": "user",
+        "content": "What's the weather in Seattle and San Francisco today?",
+    }
+    assert_messages_in_span(
+        span=spans[0],
+        expected_messages=[system_message, user_message],
+        expect_content=expect_content,
+    )
 
     tool_call_0 = {
         "id": tool_call_ids[0],
         "type": "function",
         "function": {
             "name": tool_names[0],
+            "arguments": tool_args[0].replace("\n", ""),
         },
     }
     tool_call_1 = {
@@ -693,12 +724,9 @@ async def async_chat_completion_multiple_tools_streaming(
         "type": "function",
         "function": {
             "name": tool_names[1],
+            "arguments": tool_args[1].replace("\n", ""),
         },
     }
-
-    if expect_content:
-        tool_call_0["function"]["arguments"] = tool_args[0].replace("\n", "")
-        tool_call_1["function"]["arguments"] = tool_args[1].replace("\n", "")
 
     choice = {
         "finish_reason": "tool_calls",
@@ -707,4 +735,6 @@ async def async_chat_completion_multiple_tools_streaming(
             "tool_calls": [tool_call_0, tool_call_1],
         },
     }
-    assert_choices_in_span(spans[0], [choice])
+    assert_choices_in_span(
+        span=spans[0], expected_choices=[choice], expect_content=expect_content
+    )

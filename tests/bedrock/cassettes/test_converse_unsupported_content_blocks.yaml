@@ -1,0 +1,91 @@
+interactions:
+- request:
+    body: |-
+      {
+        "messages": [
+          {
+            "role": "user",
+            "content": [
+              {
+                "text": "say this"
+              },
+              {
+                "image": {
+                  "format": "png",
+                  "source": {
+                    "bytes": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABAQAAAAA3bvkkAAAACklEQVR4AWNgAAAAAgABc3UBGAAAAABJRU5ErkJggg=="
+                  }
+                }
+              },
+              {
+                "text": " is a test"
+              }
+            ]
+          }
+        ]
+      }
+    headers:
+      Authorization:
+      - test-auth
+      Content-Length:
+      - '238'
+      Content-Type:
+      - !!binary |
+        YXBwbGljYXRpb24vanNvbg==
+      User-Agent:
+      - !!binary |
+        Qm90bzMvMS4zOC4wIG1kL0JvdG9jb3JlIzEuMzguMCB1YS8yLjEgb3MvbWFjb3MjMjQuNC4wIG1k
+        L2FyY2gjYXJtNjQgbGFuZy9weXRob24jMy4xMi45IG1kL3B5aW1wbCNDUHl0aG9uIGNmZy9yZXRy
+        eS1tb2RlI2xlZ2FjeSBCb3RvY29yZS8xLjM4LjA=
+      X-Amz-Date:
+      - !!binary |
+        MjAyNTA0MjlUMTQxNjAxWg==
+      X-Amz-Security-Token:
+      - test-security-token
+      amz-sdk-invocation-id:
+      - !!binary |
+        OWViMmRjMWUtYzlkMy00ZWFmLTgxNTEtNzM4NTFhNWNmZTNk
+      amz-sdk-request:
+      - !!binary |
+        YXR0ZW1wdD0x
+    method: POST
+    uri: https://bedrock-runtime.us-east-1.amazonaws.com/model/anthropic.claude-3-5-sonnet-20240620-v1%3A0/converse
+  response:
+    body:
+      string: |-
+        {
+          "metrics": {
+            "latencyMs": 3092
+          },
+          "output": {
+            "message": {
+              "content": [
+                {
+                  "text": "The image appears to be a close-up photograph of a white or light-colored surface with some black text printed on it. The text reads \"is a test\" in a simple, sans-serif font. The letters are clearly visible against the light background. This looks like it could be a portion of a printed page or document, possibly used for testing or demonstration purposes."
+                }
+              ],
+              "role": "assistant"
+            }
+          },
+          "stopReason": "end_turn",
+          "usage": {
+            "inputTokens": 17,
+            "outputTokens": 79,
+            "totalTokens": 96
+          }
+        }
+    headers:
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '542'
+      Content-Type:
+      - application/json
+      Date:
+      - Tue, 29 Apr 2025 14:16:05 GMT
+      x-amzn-RequestId:
+      - 41c42db7-7dc8-4d95-b42a-1a738a23efb2
+    status:
+      code: 200
+      message: OK
+version: 1

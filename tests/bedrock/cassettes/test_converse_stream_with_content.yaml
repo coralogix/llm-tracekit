@@ -1,0 +1,74 @@
+interactions:
+- request:
+    body: |-
+      {
+        "system": [
+          {
+            "text": "you are a helpful assistant"
+          }
+        ],
+        "messages": [
+          {
+            "role": "user",
+            "content": [
+              {
+                "text": "say this is a test"
+              }
+            ]
+          }
+        ],
+        "inferenceConfig": {
+          "maxTokens": 300,
+          "temperature": 0,
+          "topP": 1
+        }
+      }
+    headers:
+      Authorization:
+      - test-auth
+      Content-Length:
+      - '198'
+      Content-Type:
+      - !!binary |
+        YXBwbGljYXRpb24vanNvbg==
+      User-Agent:
+      - !!binary |
+        Qm90bzMvMS4zOC4wIG1kL0JvdG9jb3JlIzEuMzguMCB1YS8yLjEgb3MvbWFjb3MjMjQuNC4wIG1k
+        L2FyY2gjYXJtNjQgbGFuZy9weXRob24jMy4xMi45IG1kL3B5aW1wbCNDUHl0aG9uIGNmZy9yZXRy
+        eS1tb2RlI2xlZ2FjeSBCb3RvY29yZS8xLjM4LjA=
+      X-Amz-Date:
+      - !!binary |
+        MjAyNTA0MjlUMTQxNjA1Wg==
+      X-Amz-Security-Token:
+      - test-security-token
+      amz-sdk-invocation-id:
+      - !!binary |
+        NmI0YjEwMDEtYzJjYi00MGQ5LTg0ZDQtOTVmMGExZDIwNDk3
+      amz-sdk-request:
+      - !!binary |
+        YXR0ZW1wdD0x
+    method: POST
+    uri: https://bedrock-runtime.us-east-1.amazonaws.com/model/anthropic.claude-3-5-sonnet-20240620-v1%3A0/converse-stream
+  response:
+    body:
+      string: |-
+        AAAAtQAAAFI4YGjVCzpldmVudC10eXBlBwAMbWVzc2FnZVN0YXJ0DTpjb250ZW50LXR5cGUHABBhcHBsaWNhdGlvbi9qc29uDTptZXNzYWdlLXR5cGUHAAVldmVudHsicCI6ImFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6QUJDREVGR0hJSktMTU5PUFFSU1RVVldYWVowMTIzIiwicm9sZSI6ImFzc2lzdGFudCJ9gnZ5VAAAAMMAAABXPpiJNQs6ZXZlbnQtdHlwZQcAEWNvbnRlbnRCbG9ja0RlbHRhDTpjb250ZW50LXR5cGUHABBhcHBsaWNhdGlvbi9qc29uDTptZXNzYWdlLXR5cGUHAAVldmVudHsiY29udGVudEJsb2NrSW5kZXgiOjAsImRlbHRhIjp7InRleHQiOiJUaGlzIn0sInAiOiJhYmNkZWZnaGlqa2xtbm9wcXJzdHV2d3h5ekFCQ0RFRkdISUpLTCJ9ecT8MAAAAKgAAABX0HrPaQs6ZXZlbnQtdHlwZQcAEWNvbnRlbnRCbG9ja0RlbHRhDTpjb250ZW50LXR5cGUHABBhcHBsaWNhdGlvbi9qc29uDTptZXNzYWdlLXR5cGUHAAVldmVudHsiY29udGVudEJsb2NrSW5kZXgiOjAsImRlbHRhIjp7InRleHQiOiIgaXMgYSB0ZXN0LiJ9LCJwIjoiYWJjZCJ9zTc11gAAAK4AAABWKD0KXws6ZXZlbnQtdHlwZQcAEGNvbnRlbnRCbG9ja1N0b3ANOmNvbnRlbnQtdHlwZQcAEGFwcGxpY2F0aW9uL2pzb24NOm1lc3NhZ2UtdHlwZQcABWV2ZW50eyJjb250ZW50QmxvY2tJbmRleCI6MCwicCI6ImFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6QUJDREVGR0hJSktMTU5PUCJ9jZ6LOgAAALYAAABR5slDvws6ZXZlbnQtdHlwZQcAC21lc3NhZ2VTdG9wDTpjb250ZW50LXR5cGUHABBhcHBsaWNhdGlvbi9qc29uDTptZXNzYWdlLXR5cGUHAAVldmVudHsicCI6ImFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6QUJDREVGR0hJSktMTU5PUFFSU1RVVldYWVowIiwic3RvcFJlYXNvbiI6ImVuZF90dXJuIn2MVmAwAAAAyQAAAE4QQzlUCzpldmVudC10eXBlBwAIbWV0YWRhdGENOmNvbnRlbnQtdHlwZQcAEGFwcGxpY2F0aW9uL2pzb24NOm1lc3NhZ2UtdHlwZQcABWV2ZW50eyJtZXRyaWNzIjp7ImxhdGVuY3lNcyI6NDM2fSwicCI6ImFiY2RlZmdoaWoiLCJ1c2FnZSI6eyJpbnB1dFRva2VucyI6MTcsIm91dHB1dFRva2VucyI6OCwidG90YWxUb2tlbnMiOjI1fX00bEGX
+    headers:
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '1468'
+      Content-Type:
+      - application/vnd.amazon.eventstream
+      Date:
+      - Tue, 29 Apr 2025 14:16:06 GMT
+      Transfer-Encoding:
+      - chunked
+      x-amzn-RequestId:
+      - 6671e574-31a5-45df-8d33-b9954576542f
+      x-vcr-base64:
+      - 'yes'
+    status:
+      code: 200
+      message: OK
+version: 1

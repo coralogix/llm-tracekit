@@ -1,0 +1,58 @@
+interactions:
+- request:
+    body: |-
+      {
+        "prompt": "say this is a test"
+      }
+    headers:
+      Authorization:
+      - test-auth
+      Content-Length:
+      - '32'
+      Content-Type:
+      - !!binary |
+        YXBwbGljYXRpb24vanNvbg==
+      User-Agent:
+      - !!binary |
+        Qm90bzMvMS4zOC4wIG1kL0JvdG9jb3JlIzEuMzguMCB1YS8yLjEgb3MvbWFjb3MjMjQuNC4wIG1k
+        L2FyY2gjYXJtNjQgbGFuZy9weXRob24jMy4xMi45IG1kL3B5aW1wbCNDUHl0aG9uIGNmZy9yZXRy
+        eS1tb2RlI2xlZ2FjeSBCb3RvY29yZS8xLjM4LjA=
+      X-Amz-Date:
+      - !!binary |
+        MjAyNTA1MDRUMTI0MDE1Wg==
+      X-Amz-Security-Token:
+      - test-security-token
+      X-Amzn-Bedrock-Accept:
+      - !!binary |
+        YXBwbGljYXRpb24vanNvbg==
+      amz-sdk-invocation-id:
+      - !!binary |
+        YjU2ZTg5ODUtOTBjMC00NmE3LTkzOGQtM2U0YWY2YzgyMjkw
+      amz-sdk-request:
+      - !!binary |
+        YXR0ZW1wdD0x
+    method: POST
+    uri: https://bedrock-runtime.us-east-1.amazonaws.com/model/meta.llama3-8b-instruct-v999%3A999/invoke-with-response-stream
+  response:
+    body:
+      string: |-
+        {
+          "message": "The provided model identifier is invalid."
+        }
+    headers:
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '55'
+      Content-Type:
+      - application/json
+      Date:
+      - Sun, 04 May 2025 12:40:16 GMT
+      x-amzn-ErrorType:
+      - ValidationException:http://internal.amazon.com/coral/com.amazon.bedrock/
+      x-amzn-RequestId:
+      - aa95d3fd-93e2-40dd-93f6-2753ecc15180
+    status:
+      code: 400
+      message: Bad Request
+version: 1
