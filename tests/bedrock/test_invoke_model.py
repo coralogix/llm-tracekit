@@ -472,7 +472,7 @@ def _run_and_check_invoke_model_claude_tool_calls(
 
 
 @pytest.mark.vcr()
-def test_invoke_model_calude_with_content(
+def test_invoke_model_claude_with_content(
     bedrock_client_with_content, claude_model_id: str, span_exporter, metric_reader
 ):
     _run_and_check_invoke_model_claude(
@@ -486,7 +486,7 @@ def test_invoke_model_calude_with_content(
 
 
 @pytest.mark.vcr()
-def test_invoke_model_calude_no_content(
+def test_invoke_model_claude_no_content(
     bedrock_client_no_content, claude_model_id: str, span_exporter, metric_reader
 ):
     _run_and_check_invoke_model_claude(
@@ -500,7 +500,7 @@ def test_invoke_model_calude_no_content(
 
 
 @pytest.mark.vcr()
-def test_invoke_model_calude_tool_calls_with_content(
+def test_invoke_model_claude_tool_calls_with_content(
     bedrock_client_with_content, claude_model_id: str, span_exporter, metric_reader
 ):
     _run_and_check_invoke_model_claude_tool_calls(
@@ -514,7 +514,7 @@ def test_invoke_model_calude_tool_calls_with_content(
 
 
 @pytest.mark.vcr()
-def test_invoke_model_calude_tool_calls_no_content(
+def test_invoke_model_claude_tool_calls_no_content(
     bedrock_client_no_content, claude_model_id: str, span_exporter, metric_reader
 ):
     _run_and_check_invoke_model_claude_tool_calls(
@@ -528,7 +528,7 @@ def test_invoke_model_calude_tool_calls_no_content(
 
 
 @pytest.mark.vcr()
-def test_invoke_model_calude_content_blocks(
+def test_invoke_model_claude_content_blocks(
     bedrock_client_with_content, claude_model_id: str, span_exporter
 ):
     bedrock_client_with_content.invoke_model(
@@ -564,7 +564,7 @@ def test_invoke_model_calude_content_blocks(
 
 
 @pytest.mark.vcr()
-def test_invoke_model_calude_unsupported_content_blocks(
+def test_invoke_model_claude_unsupported_content_blocks(
     bedrock_client_with_content, claude_model_id: str, span_exporter
 ):
     bedrock_client_with_content.invoke_model(
@@ -723,7 +723,7 @@ def test_invoke_model_bad_auth(
 
 
 @pytest.mark.vcr()
-def test_invoke_model_with_response_stream_calude_with_content(
+def test_invoke_model_with_response_stream_claude_with_content(
     bedrock_client_with_content, claude_model_id: str, span_exporter, metric_reader
 ):
     _run_and_check_invoke_model_claude(
@@ -737,7 +737,7 @@ def test_invoke_model_with_response_stream_calude_with_content(
 
 
 @pytest.mark.vcr()
-def test_invoke_model_with_response_stream_calude_no_content(
+def test_invoke_model_with_response_stream_claude_no_content(
     bedrock_client_no_content, claude_model_id: str, span_exporter, metric_reader
 ):
     _run_and_check_invoke_model_claude(
@@ -751,7 +751,7 @@ def test_invoke_model_with_response_stream_calude_no_content(
 
 
 @pytest.mark.vcr()
-def test_invoke_model_with_response_stream_calude_tool_calls_with_content(
+def test_invoke_model_with_response_stream_claude_tool_calls_with_content(
     bedrock_client_with_content, claude_model_id: str, span_exporter, metric_reader
 ):
     _run_and_check_invoke_model_claude_tool_calls(
@@ -765,7 +765,7 @@ def test_invoke_model_with_response_stream_calude_tool_calls_with_content(
 
 
 @pytest.mark.vcr()
-def test_invoke_model_with_response_stream_calude_tool_calls_no_content(
+def test_invoke_model_with_response_stream_claude_tool_calls_no_content(
     bedrock_client_no_content, claude_model_id: str, span_exporter, metric_reader
 ):
     _run_and_check_invoke_model_claude_tool_calls(
@@ -779,7 +779,7 @@ def test_invoke_model_with_response_stream_calude_tool_calls_no_content(
 
 
 @pytest.mark.vcr()
-def test_invoke_model_with_response_stream_calude_content_blocks(
+def test_invoke_model_with_response_stream_claude_content_blocks(
     bedrock_client_with_content, claude_model_id: str, span_exporter
 ):
     result = bedrock_client_with_content.invoke_model_with_response_stream(
@@ -819,7 +819,7 @@ def test_invoke_model_with_response_stream_calude_content_blocks(
 
 
 @pytest.mark.vcr()
-def test_invoke_model_with_response_stream_calude_unsupported_content_blocks(
+def test_invoke_model_with_response_stream_claude_unsupported_content_blocks(
     bedrock_client_with_content, claude_model_id: str, span_exporter
 ):
     result = bedrock_client_with_content.invoke_model_with_response_stream(
