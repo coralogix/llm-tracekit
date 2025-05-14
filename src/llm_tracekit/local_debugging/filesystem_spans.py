@@ -1,3 +1,4 @@
+import itertools
 import json
 import os
 from typing import Dict, List, Optional
@@ -14,7 +15,13 @@ class FilesystemSpans:
 
         self._traces_directory = traces_directory
 
-    def get_spans(self) -> Dict[str, List[Dict]]:
+    def get_spans(self) -> List[Dict]:
+        trace_id_to_spans = self.get_spans_by_trace()
+        spans = list(itertools.chain.from_iterable(trace_id_to_spans.values()))
+
+        return spans
+
+    def get_spans_by_trace(self) -> Dict[str, List[Dict]]:
         if not os.path.exists(self._traces_directory):
             return {}
 

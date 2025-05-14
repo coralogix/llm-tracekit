@@ -15,6 +15,7 @@ dependencies = [
     "opentelemetry-instrumentation>=0.53b1",
     "opentelemetry-sdk>=1.32.1",
     "opentelemetry-semantic-conventions>=0.53b1",
+    "rich>=14.0.0",
 ]
 classifiers = [
     "Development Status :: 5 - Production/Stable",
@@ -71,7 +72,7 @@ build-backend = "hatchling.build"
 asyncio_default_fixture_loop_scope = "function"
 
 [[tool.mypy.overrides]]
-module = ["wrapt", "opentelemetry.exporter.otlp.proto.grpc.trace_exporter", "rich.console", "rich.table"]
+module = ["wrapt", "opentelemetry.exporter.otlp.proto.grpc.trace_exporter", "rich.console", "rich.table", "rich.panel"]
 ignore_missing_imports = true
 
 [tool.hatch.build.targets.sdist]

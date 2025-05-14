@@ -1,15 +1,13 @@
 from datetime import datetime
-import itertools
 from typing import Dict, Optional
 from llm_tracekit.local_debugging.filesystem_spans import FilesystemSpans
 from rich.console import Console
 from rich.table import Table
 
 
-def list_llm_conversations(traces_directory: Optional[str] = None):
+def list_llm_conversations(traces_directory: Optional[str]):
     filesystem_spans = FilesystemSpans(traces_directory)
-    trace_id_to_spans = filesystem_spans.get_spans()
-    spans = list(itertools.chain.from_iterable(trace_id_to_spans.values()))
+    spans = filesystem_spans.get_spans()
 
     console = Console()
 

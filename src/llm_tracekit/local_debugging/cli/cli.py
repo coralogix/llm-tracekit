@@ -1,6 +1,7 @@
 import argparse
 
 from llm_tracekit.local_debugging.cli.list import list_llm_conversations
+from llm_tracekit.local_debugging.cli.show import show_span
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -24,7 +25,7 @@ def build_parser() -> argparse.ArgumentParser:
     subparsers.add_parser("list", parents=[common], help="list llm conversations")
 
     p_show = subparsers.add_parser("show", parents=[common], help="show a single conversation")
-    p_show.add_argument("id", help="the conversation id")
+    p_show.add_argument("--id", help="the conversation id")
 
     p_watch = subparsers.add_parser(
         "watch", parents=[common], help="follow a trace in real time"
@@ -39,6 +40,6 @@ def main():
     if args.command == 'list':
         list_llm_conversations(args.traces_directory)
     elif args.command == 'show':
-        pass
+        show_span(args.traces_directory, args.id)
     elif args.command == 'watch':
         pass
