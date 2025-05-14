@@ -1,6 +1,6 @@
 import json
 import os
-from typing import List, Optional
+from typing import Dict, List, Optional
 
 DEFAULT_TRACES_DIRECTORY = "llm-traces"
 
@@ -14,19 +14,24 @@ class FilesystemSpans:
 
         self._traces_directory = traces_directory
 
-    def get_sessions(self) -> List[dict]:
+    def get_sessions(self) -> Dict[str, Dict]:
         if not os.path.exists(self._traces_directory):
             return []
 
-        sessions = []
+        sessions: Dict[List[Dict]] = {}
 
-        for file_name in os.listdir(self._traces_directory):
-            full_path = os.path.join(self._traces_directory, file_name)
+        for trace_id in os.listdir(self._traces_directory):
+            full_path = os.path.join(self._traces_directory, trace_id)
 
             with open(full_path, "rt") as trace_file:
-                session = json.load(trace_file)
+                raw_sessions_data = trace_file.readlines()
 
-            sessions.append(session)
+            if trace_id not in sessions and len(raw_sessions_data) > 0:
+                sessions[trace_id] = []
+            
+            for raw_session in raw_sessions_data:
+                session = json.loads(raw_session)
+                sessions[trace_id].append(session)
 
         return sessions
 
