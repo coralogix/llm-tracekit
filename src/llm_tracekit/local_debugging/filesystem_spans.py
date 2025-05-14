@@ -99,6 +99,6 @@ class FilesystemSpans:
             observer.stop()
         observer.join()
 
-    def _list_trace_files(self) -> list[str]:
+    def _list_trace_files(self) -> List[str]:
         file_names = os.listdir(self._traces_directory)
         return [file_name for file_name in file_names if file_name.endswith(".jsonl")]
