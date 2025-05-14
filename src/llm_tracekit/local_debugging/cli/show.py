@@ -97,5 +97,3 @@ def show_span(traces_directory: Optional[str], span_id):
         # Add separator between messages
         if i < len(conversation) - 1:
             console.print("─" * 80)
-    
-    

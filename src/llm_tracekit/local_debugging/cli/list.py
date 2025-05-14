@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Dict, Optional
+from typing import Dict, List, Optional
 from llm_tracekit.local_debugging.filesystem_spans import FilesystemSpans
 from rich.console import Console
 from rich.table import Table
@@ -35,7 +35,7 @@ def list_llm_conversations(traces_directory: Optional[str]):
         user_message_count = sum(1 for m in conversation if m.get("role") == "user")
 
         table.add_row(
-            span['span_id'][:8],
+            span["span_id"][:8],
             created_at,
             model,
             str(user_message_count),
@@ -60,18 +60,67 @@ def _parse_conversation_from_span(span: dict) -> list[dict]:
     return prompt_messages + completion_messages
 
 
-def _extract_messages(span_attributes: dict, section: str) -> list[Dict]:
+def _extract_messages(span_attributes: dict, section: str) -> list[Dict[str, str]]:
     messages = []
-    i = 0
-    while f"gen_ai.{section}.{i}.role" in span_attributes:
-        messages.append(
+    index = 0
+    while f"gen_ai.{section}.{index}.role" in span_attributes:
+        content = span_attributes.get(f"gen_ai.{section}.{index}.content")
+
+        # Found tool calls
+        if (
+            content is None
+            and f"gen_ai.{section}.{index}.tool_calls.0.id" in span_attributes
+        ):
+            messages.extend(_extract_tool_calls_requests(index, span_attributes))
+        elif content is not None:
+            messages.append(
+                {
+                    "role": span_attributes[f"gen_ai.{section}.{index}.role"],
+                    "content": content,
+                }
+            )
+
+        index += 1
+
+    return messages
+
+
+def _extract_tool_calls_requests(
+    message_index: int, span_attributes: dict
+) -> List[Dict[str, str]]:
+    tool_calls = []
+
+    tool_call_index = 0
+
+    while (
+        f"gen_ai.completion.{message_index}.tool_calls.{tool_call_index}.id"
+        in span_attributes
+    ):
+        tool_id = span_attributes[
+            f"gen_ai.completion.{message_index}.tool_calls.{tool_call_index}.id"
+        ]
+
+        tool_name = span_attributes[
+            f"gen_ai.completion.{message_index}.tool_calls.{tool_call_index}.function.name"
+        ]
+
+        tool_args = span_attributes[
+            f"gen_ai.completion.{message_index}.tool_calls.{tool_call_index}.function.arguments"
+        ]
+
+        tool_calls.append(
             {
-                "role": span_attributes[f"gen_ai.{section}.{i}.role"],
-                "content": span_attributes[f"gen_ai.{section}.{i}.content"],
+                "type": "tool_call",
+                "role": "assistant",
+                "tool_name": tool_name,
+                "tool_arguments": tool_args,
+                "tool_id": tool_id,
             }
         )
-        i += 1
-    return messages
+
+        tool_call_index += 1
+
+    return tool_calls
 
 
 def _calculate_tokens_usage(span: dict) -> int:
