@@ -10,9 +10,8 @@ DEFAULT_TRACES_DIRECTORY = "llm-traces"
 
 
 class FileChangesHandler(FileSystemEventHandler):
-    def __init__(self, on_new_trace_created, on_span_added_to_trace):
-        self._on_new_trace_created = on_new_trace_created
-        self._on_span_added_to_trace = on_span_added_to_trace
+    def __init__(self, on_trace_change):
+        self.on_trace_change = on_trace_change
 
         self._path_to_last_position = {}
 
@@ -20,18 +19,13 @@ class FileChangesHandler(FileSystemEventHandler):
         if event.is_directory:
             return
 
-        self._on_new_trace_created(event.src_path)
+        self.on_trace_change(os.path.basename(event.src_path))
 
     def on_modified(self, event):
         if event.is_directory:
             return
-        
-        last_file_position = self._path_to_last_position.get(event.src_path)
-        new_file_size = os.path.getsize(event.src_path)
 
-        self._on_span_added_to_trace(event.src_path, last_file_position, new_file_size)
-
-        self._path_to_last_position[event.src_path] = new_file_size
+        self.on_trace_change(os.path.basename(event.src_path))
 
 
 class FilesystemSpans:
@@ -56,7 +50,7 @@ class FilesystemSpans:
 
         spans: Dict[str, List[Dict]] = {}
 
-        for trace_id in os.listdir(self._traces_directory):
+        for trace_id in self._list_trace_files():
             full_path = os.path.join(self._traces_directory, trace_id)
 
             with open(full_path, "rt") as trace_file:
@@ -78,22 +72,22 @@ class FilesystemSpans:
             span: the span to save
         """
         # Save to file
-        filepath = os.path.join(self._traces_directory, span["trace_id"])
-        with open(filepath, "at") as output_file:
+        filename = os.path.join(self._traces_directory, span["trace_id"])
+        with open(f"{filename}.jsonl", "at") as output_file:
             output_file.write(json.dumps(span) + "\n")
 
     def clear_all(self):
         if not os.path.exists(self._traces_directory):
             return
 
-        file_names = os.listdir(self._traces_directory)
+        file_names = self._list_trace_files()
 
         for file_name in file_names:
             os.remove(os.path.join(self._traces_directory, file_name))
 
-    def register_for_notifications(self, on_new_trace_created, on_span_added_to_trace):
+    def listen_for_span_changes(self, on_trace_change):
         """Blocks forever"""
-        handler = FileChangesHandler(on_new_trace_created, on_span_added_to_trace)
+        handler = FileChangesHandler(on_trace_change)
         observer = Observer()
         observer.schedule(handler, self._traces_directory, recursive=False)
         observer.start()
@@ -104,3 +98,7 @@ class FilesystemSpans:
         except KeyboardInterrupt:
             observer.stop()
         observer.join()
+
+    def _list_trace_files(self) -> list[str]:
+        file_names = os.listdir(self._traces_directory)
+        return [file_name for file_name in file_names if file_name.endswith(".jsonl")]
