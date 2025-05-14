@@ -1,5 +1,6 @@
 from datetime import datetime
-from typing import Optional
+import itertools
+from typing import Dict, Optional
 from llm_tracekit.local_debugging.filesystem_spans import FilesystemSpans
 from rich.console import Console
 from rich.table import Table
@@ -7,11 +8,12 @@ from rich.table import Table
 
 def list_llm_conversations(traces_directory: Optional[str] = None):
     filesystem_spans = FilesystemSpans(traces_directory)
-    sessions = filesystem_spans.get_sessions()
+    trace_id_to_spans = filesystem_spans.get_spans()
+    spans = list(itertools.chain.from_iterable(trace_id_to_spans.values()))
 
     console = Console()
 
-    if len(sessions) == 0:
+    if len(spans) == 0:
         console.print("[yellow]No LLM sessions found.[/yellow]")
         return
 
@@ -23,46 +25,19 @@ def list_llm_conversations(traces_directory: Optional[str] = None):
     table.add_column("# Msgs", style="magenta")
     table.add_column("Total Tokens", style="blue")
 
-    for trace_id in sessions:
-        created_at = format_timestamp(sessions[trace_id][0]["timestamp"])
+    for span in spans:
+        created_at = _format_timestamp(span["timestamp"])
 
-        # Find model name from spans
-        model = "Unknown"
-        total_tokens = 0
+        model = span["attributes"].get("gen_ai.request.model", "Unknown")
+        total_tokens = _calculate_tokens_usage(span)
 
-        seen_span_tokens = set()
-
-        for span in sessions[trace_id]:
-            attributes = span["attributes"]
-            if "gen_ai.request.model" in attributes:
-                model = attributes["gen_ai.request.model"]
-
-            # Only check for separate input/output tokens
-            if (
-                "gen_ai.usage.input_tokens" in attributes
-                and "gen_ai.usage.output_tokens" in attributes
-            ):
-                input_tokens = int(attributes["gen_ai.usage.input_tokens"])
-                output_tokens = int(attributes["gen_ai.usage.output_tokens"])
-
-                # Create a unique identifier for this span's token usage
-                # Use the span ID if available, otherwise use a combination of tokens and timestamps
-                span_id = span["span_id"]
-                token_key = f"{span_id}:{input_tokens}:{output_tokens}"
-
-                if token_key not in seen_span_tokens:
-                    seen_span_tokens.add(token_key)
-                    total_tokens += input_tokens + output_tokens
-
-        # Count messages instead of spans
         conversation = _parse_conversation_from_span(span)
         message_count = len(conversation)
 
-        # Count user messages specifically
         user_message_count = sum(1 for m in conversation if m.get("role") == "user")
 
         table.add_row(
-            trace_id[:8],
+            span['span_id'][:8],
             created_at,
             model,
             str(user_message_count),
@@ -73,35 +48,43 @@ def list_llm_conversations(traces_directory: Optional[str] = None):
     console.print(table)
 
 
-def format_timestamp(timestamp_ms: int) -> str:
-    """Format a timestamp in milliseconds to a human-readable string.
-    
-    Args:
-        timestamp_ms: Timestamp in milliseconds.
-        
-    Returns:
-        Formatted timestamp string.
-    """
+def _format_timestamp(timestamp_ms: int) -> str:
     dt = datetime.fromtimestamp(timestamp_ms / 1000)
     return dt.strftime("%Y-%m-%d %H:%M:%S")
 
 
 def _parse_conversation_from_span(span: dict) -> list[dict]:
-    conversation = []
+    span_attributes = span["attributes"]
 
-    index = 0
+    prompt_messages = _extract_messages(span_attributes, "prompt")
+    completion_messages = _extract_messages(span_attributes, "completion")
 
-    while True:
-        if f"gen_ai.prompt.{index}.role" not in span["attributes"] or f"gen_ai.prompt.{index}.content" not in span["attributes"]:
-            break
+    return prompt_messages + completion_messages
 
-        conversation.append(
+
+def _extract_messages(span_attributes: dict, section: str) -> list[Dict]:
+    messages = []
+    i = 0
+    while f"gen_ai.{section}.{i}.role" in span_attributes:
+        messages.append(
             {
-                "role": span["attributes"][f"gen_ai.prompt.{index}.role"],
-                "content": span["attributes"][f"gen_ai.prompt.{index}.content"],
+                "role": span_attributes[f"gen_ai.{section}.{i}.role"],
+                "content": span_attributes[f"gen_ai.{section}.{i}.content"],
             }
         )
+        i += 1
+    return messages
 
-        index += 1
 
-    return conversation
+def _calculate_tokens_usage(span: dict) -> int:
+    input_tokens = span["attributes"].get("gen_ai.usage.input_tokens")
+    output_tokens = span["attributes"].get("gen_ai.usage.output_tokens")
+
+    total_tokens = 0
+    if input_tokens is not None:
+        total_tokens = int(input_tokens)
+
+    if output_tokens is not None:
+        total_tokens += int(output_tokens)
+
+    return total_tokens

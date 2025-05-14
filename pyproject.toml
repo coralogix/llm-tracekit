@@ -71,7 +71,7 @@ build-backend = "hatchling.build"
 asyncio_default_fixture_loop_scope = "function"
 
 [[tool.mypy.overrides]]
-module = ["wrapt", "opentelemetry.exporter.otlp.proto.grpc.trace_exporter"]
+module = ["wrapt", "opentelemetry.exporter.otlp.proto.grpc.trace_exporter", "rich.console", "rich.table"]
 ignore_missing_imports = true
 
 [tool.hatch.build.targets.sdist]
