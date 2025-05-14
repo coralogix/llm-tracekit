@@ -38,7 +38,8 @@ class FilesystemSpans:
     def __init__(self, traces_directory: Optional[str] = None):
         if traces_directory is None:
             traces_directory = DEFAULT_TRACES_DIRECTORY
-        elif not os.path.exists(traces_directory):
+
+        if not os.path.exists(traces_directory):
             os.makedirs(traces_directory, exist_ok=True)
 
         self._traces_directory = traces_directory
