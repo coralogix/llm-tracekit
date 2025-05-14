@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, Optional
 import os
 
 from llm_tracekit.local_debugging.local_span_processor import LocalSpanProcessor
@@ -9,7 +9,7 @@ def is_local_debugging_enabled() -> bool:
     return 'LOCAL_DEBUGGING' in os.environ
 
 
-def add_local_debugging(tracer_provider: Any | None):
+def add_local_debugging(tracer_provider: Optional[Any]):
     traces_directory = os.environ.get('LOCAL_DEBUGGING_TRACES_DIRECTORY')
     local_span_processor = LocalSpanProcessor(traces_directory)
 

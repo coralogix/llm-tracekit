@@ -1,4 +1,3 @@
-import sys
 import argparse
 
 from llm_tracekit.local_debugging.cli.list import list_llm_conversations

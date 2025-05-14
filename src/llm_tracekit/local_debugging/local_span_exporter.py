@@ -1,8 +1,5 @@
-import json
-import os
 import time
-from datetime import datetime
-from typing import Dict, Any
+from typing import Optional
 
 from opentelemetry.trace import SpanKind
 
@@ -18,7 +15,7 @@ class LocalSpanExporter:
     without needing to connect to Coralogix.
     """
     
-    def __init__(self, traces_directory: str | None):
+    def __init__(self, traces_directory: Optional[str] = None):
         """Initialize the exporter.
         
         Args:

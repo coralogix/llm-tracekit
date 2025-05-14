@@ -1,3 +1,4 @@
+from typing import Optional
 from opentelemetry.sdk.trace import ReadableSpan
 from opentelemetry.sdk.trace.export import SpanProcessor
 from llm_tracekit.local_debugging.local_span_exporter import LocalSpanExporter
@@ -10,7 +11,7 @@ class LocalSpanProcessor(SpanProcessor):
     writes them to the local filesystem for debugging purposes.
     """
     
-    def __init__(self, traces_directory: str | None):
+    def __init__(self, traces_directory: Optional[str] = None):
         """Initialize the local debug span processor.
         
         Args:
