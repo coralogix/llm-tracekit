@@ -2,6 +2,8 @@ import argparse
 
 from llm_tracekit.local_debugging.cli.list import list_llm_conversations
 from llm_tracekit.local_debugging.cli.show import show_span
+from llm_tracekit.local_debugging.cli.watch import watch
+from llm_tracekit.local_debugging.filesystem_spans import FilesystemSpans
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -24,13 +26,14 @@ def build_parser() -> argparse.ArgumentParser:
 
     subparsers.add_parser("list", parents=[common], help="list llm conversations")
 
-    p_show = subparsers.add_parser("show", parents=[common], help="show a single conversation")
-    p_show.add_argument("--id", help="the conversation id")
+    p_clear = subparsers.add_parser("show", parents=[common], help="show a single conversation")
+    p_clear.add_argument("--id", help="the conversation id")
 
-    p_watch = subparsers.add_parser(
+    subparsers.add_parser(
         "watch", parents=[common], help="follow a trace in real time"
     )
-    p_watch.add_argument("trace_name", help="file name of the trace to watch")
+
+    p_clear = subparsers.add_parser("clear", parents=[common], help="clear all stored conversations")
 
     return parser
 
@@ -42,4 +45,7 @@ def main():
     elif args.command == 'show':
         show_span(args.traces_directory, args.id)
     elif args.command == 'watch':
-        pass
+        watch(args.traces_directory)
+    elif args.command == "clear":
+        filesystem_spans = FilesystemSpans(args.traces_directory)
+        filesystem_spans.clear_all()
