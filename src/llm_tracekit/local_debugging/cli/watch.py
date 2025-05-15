@@ -1,4 +1,7 @@
 from typing import Dict, List, Optional
+from rich.console import Console
+from rich.panel import Panel
+from rich.text import Text
 from llm_tracekit.local_debugging.cli.show import _show_span
 from llm_tracekit.local_debugging.filesystem_spans import FilesystemSpans
 
@@ -7,6 +10,8 @@ class Callbacks:
     def __init__(self, filesystem_spans):
         self._filesystem_spans = filesystem_spans
         self._previous_spans = {}
+        self._console = Console()
+        self._first_span_printed = False
 
     def on_trace_change(self, trace_id: str):
         current_spans = self._filesystem_spans.get_spans_by_trace()
@@ -15,7 +20,15 @@ class Callbacks:
         )
 
         for span in new_spans:
+            if self._first_span_printed:
+                separator = Text("✧ NEXT SPAN ✧", style="bold cyan")
+                self._console.print(
+                    Panel(separator, border_style="cyan", expand=True, padding=(0, 0))
+                )
+
             _show_span(span)
+
+            self._first_span_printed = True
 
         self._previous_spans = current_spans
 
