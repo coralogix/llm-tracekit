@@ -1,11 +1,40 @@
 from datetime import datetime
 from typing import Dict, List
 
-Conversation = List[Dict]
+
+def is_prefix(a: List, b: List) -> bool:
+    return len(a) <= len(b) and all(x == y for x, y in zip(a, b))
 
 
-def merge_duplicate_conversations(conversations: List[Conversation]) -> List[Conversation]:
-    return []
+def split_to_sessions(spans: List[dict]) -> List[Dict]:
+    for span in spans:
+        span["history"] = parse_conversation_from_span(span)
+        span["contains_other_span"] = False
+        span["should_delete"] = False
+
+    # Sorting the spans from oldest to newest
+    spans = sorted(spans, key=lambda t: t["timestamp"])
+
+    # Going through the spans from oldest (= smallest) to newest (= biggest)
+    # If span i is a prefix of a newer span j, mark span i for deletion.
+    # We only allow span j to delete a single span, because we might have a case where
+    # there are 2 same spans (span A), where only one of the spans is being used as a message history for the next span (span B).
+    # in that case, we want to show 2 conversations - span A and span B.
+    for i in range(len(spans)):
+        for j in range(i + 1, len(spans)):
+            if (
+                is_prefix(spans[i]["history"], spans[j]["history"])
+                and not spans[j]["contains_other_span"]
+            ):
+                spans[j]["contains_other_span"] = True
+                spans[i]["should_delete"] = True
+
+    sessions = [span for span in spans if not span["should_delete"]]
+    for session in sessions:
+        session.pop("contains_other_span")
+        session.pop("should_delete")
+
+    return sessions
 
 
 def format_timestamp(timestamp_ms: int) -> str:
@@ -13,7 +42,7 @@ def format_timestamp(timestamp_ms: int) -> str:
     return dt.strftime("%Y-%m-%d %H:%M:%S")
 
 
-def parse_conversation_from_span(span: dict) -> Conversation:
+def parse_conversation_from_span(span: dict) -> List[Dict]:
     span_attributes = span["attributes"]
 
     prompt_messages = _extract_messages(span_attributes, "prompt")

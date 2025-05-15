@@ -16,6 +16,6 @@ def add_local_debugging(tracer_provider: Optional[Any]):
     if tracer_provider is None:
         # No traces provider defined, create a new provider
         tracer_provider = TracerProvider()
-        trace.set_tracer_provider(tracer_provider)        
+        trace.set_tracer_provider(tracer_provider)
     
     tracer_provider.add_span_processor(local_span_processor)

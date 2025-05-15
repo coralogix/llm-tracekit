@@ -3,7 +3,10 @@ from llm_tracekit.local_debugging.filesystem_spans import FilesystemSpans
 from rich.console import Console
 from rich.table import Table
 
-from llm_tracekit.local_debugging.utilities import format_timestamp, parse_conversation_from_span
+from llm_tracekit.local_debugging.utilities import (
+    format_timestamp,
+    split_to_sessions,
+)
 
 
 def list_llm_conversations(traces_directory: Optional[str]):
@@ -24,16 +27,18 @@ def list_llm_conversations(traces_directory: Optional[str]):
     table.add_column("# Msgs", style="magenta")
     table.add_column("Total Tokens", style="blue")
 
+    # Only contains the spans
+    spans = split_to_sessions(spans)
+
     for span in spans:
         created_at = format_timestamp(span["timestamp"])
 
         model = span["attributes"].get("gen_ai.request.model", "Unknown")
         total_tokens = _calculate_tokens_usage(span)
 
-        conversation = parse_conversation_from_span(span)
-        message_count = len(conversation)
+        message_count = len(span["history"])
 
-        user_message_count = sum(1 for m in conversation if m.get("role") == "user")
+        user_message_count = sum(1 for m in span["history"] if m.get("role") == "user")
 
         table.add_row(
             span["span_id"][:8],
@@ -45,6 +50,7 @@ def list_llm_conversations(traces_directory: Optional[str]):
         )
 
     console.print(table)
+
 
 def _calculate_tokens_usage(span: dict) -> int:
     input_tokens = span["attributes"].get("gen_ai.usage.input_tokens")
