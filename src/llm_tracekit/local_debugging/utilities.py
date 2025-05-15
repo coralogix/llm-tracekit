@@ -1,5 +1,3 @@
-
-
 from datetime import datetime
 from typing import Dict, List
 
@@ -29,7 +27,9 @@ def _extract_messages(span_attributes: dict, section: str) -> list[Dict[str, str
             content is None
             and f"gen_ai.{section}.{index}.tool_calls.0.id" in span_attributes
         ):
-            messages.extend(_extract_tool_calls_requests(index, span_attributes))
+            messages.extend(
+                _extract_tool_calls_requests(index, span_attributes, section)
+            )
         elif content is not None:
             messages.append(
                 {
@@ -44,26 +44,26 @@ def _extract_messages(span_attributes: dict, section: str) -> list[Dict[str, str
 
 
 def _extract_tool_calls_requests(
-    message_index: int, span_attributes: dict
+    message_index: int, span_attributes: dict, section
 ) -> List[Dict[str, str]]:
     tool_calls = []
 
     tool_call_index = 0
 
     while (
-        f"gen_ai.completion.{message_index}.tool_calls.{tool_call_index}.id"
+        f"gen_ai.{section}.{message_index}.tool_calls.{tool_call_index}.id"
         in span_attributes
     ):
         tool_id = span_attributes[
-            f"gen_ai.completion.{message_index}.tool_calls.{tool_call_index}.id"
+            f"gen_ai.{section}.{message_index}.tool_calls.{tool_call_index}.id"
         ]
 
         tool_name = span_attributes[
-            f"gen_ai.completion.{message_index}.tool_calls.{tool_call_index}.function.name"
+            f"gen_ai.{section}.{message_index}.tool_calls.{tool_call_index}.function.name"
         ]
 
         tool_args = span_attributes[
-            f"gen_ai.completion.{message_index}.tool_calls.{tool_call_index}.function.arguments"
+            f"gen_ai.{section}.{message_index}.tool_calls.{tool_call_index}.function.arguments"
         ]
 
         tool_calls.append(
