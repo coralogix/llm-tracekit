@@ -3,7 +3,7 @@ from llm_tracekit.local_debugging.filesystem_spans import FilesystemSpans
 from rich.console import Console
 from rich.table import Table
 
-from llm_tracekit.local_debugging.utilities import _format_timestamp, _parse_conversation_from_span
+from llm_tracekit.local_debugging.utilities import format_timestamp, parse_conversation_from_span
 
 
 def list_llm_conversations(traces_directory: Optional[str]):
@@ -25,12 +25,12 @@ def list_llm_conversations(traces_directory: Optional[str]):
     table.add_column("Total Tokens", style="blue")
 
     for span in spans:
-        created_at = _format_timestamp(span["timestamp"])
+        created_at = format_timestamp(span["timestamp"])
 
         model = span["attributes"].get("gen_ai.request.model", "Unknown")
         total_tokens = _calculate_tokens_usage(span)
 
-        conversation = _parse_conversation_from_span(span)
+        conversation = parse_conversation_from_span(span)
         message_count = len(conversation)
 
         user_message_count = sum(1 for m in conversation if m.get("role") == "user")

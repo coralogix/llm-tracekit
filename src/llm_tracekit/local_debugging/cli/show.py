@@ -5,7 +5,7 @@ from rich.panel import Panel
 from rich.markdown import Markdown
 from rich.json import JSON
 from llm_tracekit.local_debugging.filesystem_spans import FilesystemSpans
-from llm_tracekit.local_debugging.utilities import _format_timestamp, _parse_conversation_from_span
+from llm_tracekit.local_debugging.utilities import format_timestamp, parse_conversation_from_span
 
 
 def show_span(traces_directory: Optional[str], span_id):
@@ -28,7 +28,7 @@ def show_span(traces_directory: Optional[str], span_id):
         Panel(
             f"[bold]Session ID:[/bold] {span['span_id']}",
             title="Session Details",
-            subtitle=f"Created: {_format_timestamp(span['timestamp'])}",
+            subtitle=f"Created: {format_timestamp(span['timestamp'])}",
         )
     )
 
@@ -38,7 +38,7 @@ def show_span(traces_directory: Optional[str], span_id):
 def _show_span(span: dict):
     console = Console()
 
-    conversation = _parse_conversation_from_span(span)  # noqa: F821
+    conversation = parse_conversation_from_span(span)  # noqa: F821
 
     for i, message in enumerate(conversation):
         msg_type = message.get("type", "message")

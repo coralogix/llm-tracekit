@@ -71,7 +71,6 @@ class FilesystemSpans:
         Args:
             span: the span to save
         """
-        # Save to file
         filename = os.path.join(self._traces_directory, span["trace_id"])
         with open(f"{filename}.jsonl", "at") as output_file:
             output_file.write(json.dumps(span) + "\n")

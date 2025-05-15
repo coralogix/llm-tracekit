@@ -1,13 +1,19 @@
 from datetime import datetime
 from typing import Dict, List
 
+Conversation = List[Dict]
 
-def _format_timestamp(timestamp_ms: int) -> str:
+
+def merge_duplicate_conversations(conversations: List[Conversation]) -> List[Conversation]:
+    return []
+
+
+def format_timestamp(timestamp_ms: int) -> str:
     dt = datetime.fromtimestamp(timestamp_ms / 1000)
     return dt.strftime("%Y-%m-%d %H:%M:%S")
 
 
-def _parse_conversation_from_span(span: dict) -> list[dict]:
+def parse_conversation_from_span(span: dict) -> Conversation:
     span_attributes = span["attributes"]
 
     prompt_messages = _extract_messages(span_attributes, "prompt")
@@ -16,7 +22,7 @@ def _parse_conversation_from_span(span: dict) -> list[dict]:
     return prompt_messages + completion_messages
 
 
-def _extract_messages(span_attributes: dict, section: str) -> list[Dict[str, str]]:
+def _extract_messages(span_attributes: dict, section: str) -> List[Dict[str, str]]:
     messages = []
     index = 0
     while f"gen_ai.{section}.{index}.role" in span_attributes:
