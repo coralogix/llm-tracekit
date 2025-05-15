@@ -29,6 +29,7 @@ from llm_tracekit.bedrock.package import _instruments
 from llm_tracekit.bedrock.patch import create_client_wrapper
 from llm_tracekit.instrumentation_utils import is_content_enabled
 from llm_tracekit.instruments import Instruments
+from llm_tracekit.local_debugging import add_local_debugging, is_local_debugging_enabled
 
 
 class BedrockInstrumentor(BaseInstrumentor):
@@ -41,6 +42,9 @@ class BedrockInstrumentor(BaseInstrumentor):
     def _instrument(self, **kwargs):
         """Enable OpenAI instrumentation."""
         tracer_provider = kwargs.get("tracer_provider")
+        if is_local_debugging_enabled():
+            add_local_debugging(tracer_provider)
+            
         tracer = get_tracer(
             __name__,
             "",
