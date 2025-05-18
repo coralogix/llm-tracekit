@@ -3,7 +3,7 @@ from typing import Dict, List
 
 
 def is_prefix(a: List, b: List) -> bool:
-    return len(a) <= len(b) and all(x == y for x, y in zip(a, b))
+    return len(a) < len(b) and all(x == y for x, y in zip(a, b))
 
 
 def split_to_sessions(spans: List[dict]) -> List[Dict]:
