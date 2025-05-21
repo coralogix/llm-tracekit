@@ -13,13 +13,13 @@
 # limitations under the License.
 
 import os
-from typing import Optional
+from typing import Optional, List
 
 from opentelemetry import trace
 from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
 from opentelemetry.sdk.resources import SERVICE_NAME, Resource
 from opentelemetry.sdk.trace import TracerProvider
-from opentelemetry.sdk.trace.export import BatchSpanProcessor, SimpleSpanProcessor
+from opentelemetry.sdk.trace.export import BatchSpanProcessor, SimpleSpanProcessor, SpanProcessor
 
 from llm_tracekit.instrumentation_utils import enable_capture_content
 
@@ -32,18 +32,20 @@ def setup_export_to_coralogix(
     subsystem_name: Optional[str] = None,
     use_batch_processor: bool = False,
     capture_content: bool = True,
+    processors: Optional[List[SpanProcessor]] = None,
 ):
     """
     Setup OpenAI spans to be exported to Coralogix.
 
     Args:
         service_name: The service name.
-        coralogix_token: The Coralogix token. Defaults to os.environ["CX_TOKEN]
+        coralogix_token: The Coralogix token. Defaults to os.environ["CX_TOKEN"]
         coralogix_endpoint: The Coralogix endpoint. Defaults to os.environ["CX_ENDPOINT"]
         application_name: The Coralogix application name. Defaults to os.environ["CX_APPLICATION_NAME"]
         subsystem_name: The Coralogix subsystem name. Defaults to os.environ["CX_SUBSYSTEM_NAME"]
-        use_batch_processor: Whether to use a batch processor or a simple processor..
+        use_batch_processor: Whether to use a batch processor or a simple processor.
         capture_content: Whether to capture the content of the messages.
+        processors: Optional list of SpanProcessor instances to add to the tracer provider before the exporter processor.
     """
 
     # Read environment variables as defaults if needed
@@ -62,6 +64,11 @@ def setup_export_to_coralogix(
     tracer_provider = TracerProvider(
         resource=Resource.create({SERVICE_NAME: service_name}),
     )
+
+    # add any custom span processors before configuring the exporter processor
+    if processors:
+        for span_processor in processors:
+            tracer_provider.add_span_processor(span_processor)
 
     # set up an OTLP exporter to send spans to coralogix directly.
     headers = {
