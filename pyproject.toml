@@ -35,11 +35,11 @@ openai = [
     "openai>=1.26.0",
 ]
 bedrock = [
-    "boto3>=1.37.31",
+    "boto3>=1.37.0",
 ]
 all = [
     "openai>=1.26.0",
-    "boto3>=1.37.31",
+    "boto3>=1.37.0",
 ]
 
 
