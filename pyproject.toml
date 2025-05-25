@@ -1,6 +1,6 @@
 [project]
 name = "llm-tracekit"
-version = "1.1.0"
+version = "1.1.1"
 description = "Collect and send GenAI calls as spans for development and production observability."
 readme = "README.md"
 authors = [
@@ -35,11 +35,11 @@ openai = [
     "openai>=1.26.0",
 ]
 bedrock = [
-    "boto3>=1.37.31",
+    "boto3>=1.37.0",
 ]
 all = [
     "openai>=1.26.0",
-    "boto3>=1.37.31",
+    "boto3>=1.37.0",
 ]
 
 
