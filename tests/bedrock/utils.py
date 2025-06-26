@@ -73,8 +73,11 @@ def assert_attributes_in_span(
     max_tokens: Optional[int] = None,
     temperature: Optional[float] = None,
     top_p: Optional[float] = None,
+    top_k: Optional[int] = None,
     agent_id: Optional[str] = None,
     agent_alias_id: Optional[str] = None,
+    foundation_model: Optional[str] = None,
+
 ):
     assert span.name == span_name
     assert span.attributes is not None
@@ -82,8 +85,8 @@ def assert_attributes_in_span(
     attributes_to_expected_values = {
         GenAIAttributes.GEN_AI_OPERATION_NAME: GenAIAttributes.GenAiOperationNameValues.CHAT.value,
         GenAIAttributes.GEN_AI_SYSTEM: GenAIAttributes.GenAiSystemValues.AWS_BEDROCK.value,
-        GenAIAttributes.GEN_AI_REQUEST_MODEL: request_model,
-        GenAIAttributes.GEN_AI_RESPONSE_MODEL: response_model,
+        GenAIAttributes.GEN_AI_REQUEST_MODEL: request_model or foundation_model,
+        GenAIAttributes.GEN_AI_RESPONSE_MODEL: response_model or foundation_model,
         GenAIAttributes.GEN_AI_USAGE_INPUT_TOKENS: usage_input_tokens,
         GenAIAttributes.GEN_AI_USAGE_OUTPUT_TOKENS: usage_output_tokens,
         GenAIAttributes.GEN_AI_RESPONSE_FINISH_REASONS: finish_reasons,
@@ -91,6 +94,7 @@ def assert_attributes_in_span(
         GenAIAttributes.GEN_AI_REQUEST_MAX_TOKENS: max_tokens,
         GenAIAttributes.GEN_AI_REQUEST_TEMPERATURE: temperature,
         GenAIAttributes.GEN_AI_REQUEST_TOP_P: top_p,
+        GenAIAttributes.GEN_AI_REQUEST_TOP_K: top_k,
         GenAIAttributes.GEN_AI_AGENT_ID: agent_id,
         ExtendedGenAIAttributes.GEN_AI_BEDROCK_AGENT_ALIAS_ID: agent_alias_id,
     }
@@ -108,12 +112,13 @@ def assert_expected_metrics(
     error: Optional[str] = None,
     request_model: Optional[str] = None,
     response_model: Optional[str] = None,
+    foundation_model: Optional[str] = None,
 ):
     attributes = {
         GenAIAttributes.GEN_AI_OPERATION_NAME: GenAIAttributes.GenAiOperationNameValues.CHAT.value,
         GenAIAttributes.GEN_AI_SYSTEM: GenAIAttributes.GenAiSystemValues.AWS_BEDROCK.value,
         GenAIAttributes.GEN_AI_REQUEST_MODEL: request_model,
-        GenAIAttributes.GEN_AI_RESPONSE_MODEL: response_model,
+        GenAIAttributes.GEN_AI_RESPONSE_MODEL: response_model or foundation_model,
         ErrorAttributes.ERROR_TYPE: error,
     }
 
