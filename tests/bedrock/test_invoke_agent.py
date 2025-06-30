@@ -40,9 +40,13 @@ def _run_and_check_invoke_agent(
     )
 
     response_text = ""
-    usage_input_tokens, usage_output_tokens = 0, 0
+    usage_input_tokens = 0
+    usage_output_tokens = 0
     foundation_model = None
-    temperature, top_p, top_k, max_tokens = None, None, None, None
+    temperature = None
+    top_p = None
+    top_k = None
+    max_tokens = None
 
     for event in result["completion"]:
         if "chunk" in event:
@@ -69,17 +73,16 @@ def _run_and_check_invoke_agent(
                 usage_output_tokens += usage_data.get("outputTokens", 0)
 
                 model_invocation_input = sub_trace.get("modelInvocationInput", {})
-                if not foundation_model:
+                if foundation_model is None:
                     foundation_model = model_invocation_input.get("foundationModel")
 
                 inference_config = model_invocation_input.get(
                     "inferenceConfiguration", {}
                 )
-                if inference_config:
-                    temperature = inference_config.get("temperature")
-                    top_p = inference_config.get("topP")
-                    top_k = inference_config.get("topK")
-                    max_tokens = inference_config.get("maximumLength")
+                temperature = inference_config.get("temperature")
+                top_p = inference_config.get("topP")
+                top_k = inference_config.get("topK")
+                max_tokens = inference_config.get("maximumLength")
 
     spans = span_exporter.get_finished_spans()
     assert len(spans) == 1
@@ -102,38 +105,20 @@ def _run_and_check_invoke_agent(
         max_tokens=max_tokens,
     )
 
-    # Since trace can return full history, we no longer assume a single prompt.
-    # Instead, we verify that the *last* prompt message is the one we sent.
-    prompt_count = 0
-    while f"gen_ai.prompt.{prompt_count}.role" in span.attributes:
-        prompt_count += 1
-    
-    assert prompt_count > 0, "No prompt messages found in span"
-    
-    last_prompt_role_key = f"gen_ai.prompt.{prompt_count - 1}.role"
-    last_prompt_content_key = f"gen_ai.prompt.{prompt_count - 1}.content"
+    expected_prompts = [{"role": "user", "content": input_text}]
+    expected_completions = [{"message": {"role": "assistant", "content": response_text}}]
 
-    assert span.attributes[last_prompt_role_key] == "user"
-    if expect_content:
-        assert span.attributes[last_prompt_content_key] == input_text
-    else:
-        assert last_prompt_content_key not in span.attributes
+    assert_messages_in_span(
+        span=span,
+        expected_messages=expected_prompts,
+        expect_content=expect_content,
+    )
 
-    # Similarly, we check that the *last* completion content matches the response.
-    completion_count = 0
-    while f"gen_ai.completion.{completion_count}.role" in span.attributes:
-        completion_count += 1
-        
-    assert completion_count > 0, "No completion messages found in span"
-    
-    last_completion_role_key = f"gen_ai.completion.{completion_count - 1}.role"
-    last_completion_content_key = f"gen_ai.completion.{completion_count - 1}.content"
-
-    assert span.attributes[last_completion_role_key] == "assistant"
-    if expect_content:
-        assert span.attributes[last_completion_content_key] == response_text
-    else:
-        assert last_completion_content_key not in span.attributes
+    assert_choices_in_span(
+        span=span,
+        expected_choices=expected_completions,
+        expect_content=expect_content,
+    )
 
     metrics = metric_reader.get_metrics_data().resource_metrics
     assert len(metrics) == 1

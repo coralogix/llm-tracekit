@@ -14,17 +14,15 @@ interactions:
         YXBwbGljYXRpb24vanNvbg==
       User-Agent:
       - !!binary |
-        Qm90bzMvMS4zOC4wIG1kL0JvdG9jb3JlIzEuMzguMCB1YS8yLjEgb3MvbWFjb3MjMjQuNC4wIG1k
-        L2FyY2gjYXJtNjQgbGFuZy9weXRob24jMy4xMi45IG1kL3B5aW1wbCNDUHl0aG9uIGNmZy9yZXRy
-        eS1tb2RlI2xlZ2FjeSBCb3RvY29yZS8xLjM4LjA=
+        Qm90bzMvMS4zOC4zNiBtZC9Cb3RvY29yZSMxLjM4LjM2IHVhLzIuMSBvcy93aW5kb3dzIzEwIG1k
+        L2FyY2gjYW1kNjQgbGFuZy9weXRob24jMy4xMS41IG1kL3B5aW1wbCNDUHl0aG9uIG0vWixiLEQg
+        Y2ZnL3JldHJ5LW1vZGUjbGVnYWN5IEJvdG9jb3JlLzEuMzguMzY=
       X-Amz-Date:
       - !!binary |
-        MjAyNTA0MjlUMTQ1MTA5Wg==
-      X-Amz-Security-Token:
-      - test-security-token
+        MjAyNTA2MjVUMTY1MTI3Wg==
       amz-sdk-invocation-id:
       - !!binary |
-        MDY3MGY4OTMtZjBkMS00NzRlLThiYTEtODE3MThlYWRiNTMw
+        MzkzZDdhNTItNDQ0My00M2IzLWI3ZjctYWJmNjhkMTg5ZjUz
       amz-sdk-request:
       - !!binary |
         YXR0ZW1wdD0x
@@ -34,7 +32,7 @@ interactions:
     body:
       string: |-
         {
-          "message": "3 validation errors detected: Value 'agent_id' at 'agentId' failed to satisfy constraint: Member must satisfy regular expression pattern: [0-9a-zA-Z]+; Value 'agent_alias' at 'agentAliasId' failed to satisfy constraint: Member must have length less than or equal to 10; Value 'agent_alias' at 'agentAliasId' failed to satisfy constraint: Member must satisfy regular expression pattern: [0-9a-zA-Z]+"
+          "message": "3 validation errors detected: Value 'agent_id' at 'agentId' failed to satisfy constraint: Member must satisfy regular expression pattern: [0-9a-zA-Z]+; Value 'agent_alias' at 'agentAliasId' failed to satisfy constraint: Member must satisfy regular expression pattern: [0-9a-zA-Z]+; Value 'agent_alias' at 'agentAliasId' failed to satisfy constraint: Member must have length less than or equal to 10"
         }
     headers:
       Connection:
@@ -44,11 +42,11 @@ interactions:
       Content-Type:
       - application/json
       Date:
-      - Tue, 29 Apr 2025 14:51:10 GMT
+      - Wed, 25 Jun 2025 16:51:28 GMT
       x-amzn-ErrorType:
       - ValidationException:http://internal.amazon.com/coral/com.amazon.coral.validate/
       x-amzn-RequestId:
-      - 9f6f34f7-d0cd-400d-952b-ab387d6a3efa
+      - 8fc7f696-fc64-4998-b142-27e7f1e2b167
     status:
       code: 400
       message: Bad Request

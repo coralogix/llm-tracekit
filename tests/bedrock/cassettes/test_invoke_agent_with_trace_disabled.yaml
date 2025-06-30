@@ -1,0 +1,58 @@
+interactions:
+- request:
+    body: |-
+      {
+        "inputText": "hello",
+        "enableTrace": false
+      }
+    headers:
+      Authorization:
+      - test-auth
+      Content-Length:
+      - '44'
+      Content-Type:
+      - !!binary |
+        YXBwbGljYXRpb24vanNvbg==
+      User-Agent:
+      - !!binary |
+        Qm90bzMvMS4zOC4zNiBtZC9Cb3RvY29yZSMxLjM4LjM2IHVhLzIuMSBvcy93aW5kb3dzIzEwIG1k
+        L2FyY2gjYW1kNjQgbGFuZy9weXRob24jMy4xMS41IG1kL3B5aW1wbCNDUHl0aG9uIG0vWixiLEQg
+        Y2ZnL3JldHJ5LW1vZGUjbGVnYWN5IEJvdG9jb3JlLzEuMzguMzY=
+      X-Amz-Date:
+      - !!binary |
+        MjAyNTA2MjVUMTY1MTIzWg==
+      amz-sdk-invocation-id:
+      - !!binary |
+        MmVlZWNjODMtZGNjNS00NjMxLWI0NzItNDEyNWZhMzU1NjU2
+      amz-sdk-request:
+      - !!binary |
+        YXR0ZW1wdD0x
+    method: POST
+    uri: https://bedrock-agent-runtime.us-east-1.amazonaws.com/agents/3HNVYAQKPR/agentAliases/P0DCMGG0P7/sessions/no-trace-01/text
+  response:
+    body:
+      string: |-
+        AAAA9wAAAEt+OMs8CzpldmVudC10eXBlBwAFY2h1bmsNOmNvbnRlbnQtdHlwZQcAEGFwcGxpY2F0aW9uL2pzb24NOm1lc3NhZ2UtdHlwZQcABWV2ZW50eyJieXRlcyI6IlNHVnNiRzhoSUVsMEozTWdibWxqWlNCMGJ5QnRaV1YwSUhsdmRTNGdTRzkzSUdOaGJpQkpJR0Z6YzJsemRDQjViM1VnZEc5a1lYay9JRWx6SUhSb1pYSmxJR0Z1ZVhSb2FXNW5JSE53WldOcFptbGpJSGx2ZFNka0lHeHBhMlVnYUdWc2NDQjNhWFJvUHc9PSJ9vYWeyQ==
+    headers:
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '332'
+      Content-Type:
+      - application/vnd.amazon.eventstream
+      Date:
+      - Wed, 25 Jun 2025 16:51:24 GMT
+      Transfer-Encoding:
+      - chunked
+      x-amz-bedrock-agent-session-id:
+      - no-trace-01
+      x-amzn-RequestId:
+      - 8d4556aa-f650-41ae-af4a-622c321f7617
+      x-amzn-bedrock-agent-content-type:
+      - application/json
+      x-vcr-base64:
+      - 'yes'
+    status:
+      code: 200
+      message: OK
+version: 1

@@ -80,6 +80,7 @@ def generate_request_attributes(
     model: Optional[str] = None,
     temperature: Optional[float] = None,
     top_p: Optional[float] = None,
+    top_k: Optional[int] = None,
     max_tokens: Optional[int] = None,
     presence_penalty: Optional[float] = None,
     frequency_penalty: Optional[float] = None,
@@ -88,6 +89,7 @@ def generate_request_attributes(
         GenAIAttributes.GEN_AI_REQUEST_MODEL: model,
         GenAIAttributes.GEN_AI_REQUEST_TEMPERATURE: temperature,
         GenAIAttributes.GEN_AI_REQUEST_TOP_P: top_p,
+        GenAIAttributes.GEN_AI_REQUEST_TOP_K: top_k,
         GenAIAttributes.GEN_AI_REQUEST_MAX_TOKENS: max_tokens,
         GenAIAttributes.GEN_AI_REQUEST_PRESENCE_PENALTY: presence_penalty,
         GenAIAttributes.GEN_AI_REQUEST_FREQUENCY_PENALTY: frequency_penalty,
@@ -149,11 +151,6 @@ def generate_response_attributes(
     id: Optional[str] = None,
     usage_input_tokens: Optional[int] = None,
     usage_output_tokens: Optional[int] = None,
-    foundation_model: Optional[str] = None,
-    inference_config_max_tokens: Optional[int] = None,
-    inference_config_temperature: Optional[float] = None,
-    inference_config_top_k: Optional[int] = None,
-    inference_config_top_p: Optional[float] = None,
 ) -> Dict[str, Any]:
     attributes = {
         GenAIAttributes.GEN_AI_RESPONSE_MODEL: model,
@@ -161,11 +158,6 @@ def generate_response_attributes(
         GenAIAttributes.GEN_AI_RESPONSE_ID: id,
         GenAIAttributes.GEN_AI_USAGE_INPUT_TOKENS: usage_input_tokens,
         GenAIAttributes.GEN_AI_USAGE_OUTPUT_TOKENS: usage_output_tokens,
-        GenAIAttributes.GEN_AI_REQUEST_MODEL: foundation_model,
-        GenAIAttributes.GEN_AI_REQUEST_MAX_TOKENS: inference_config_max_tokens,
-        GenAIAttributes.GEN_AI_REQUEST_TEMPERATURE: inference_config_temperature,
-        GenAIAttributes.GEN_AI_REQUEST_TOP_K: inference_config_top_k,
-        GenAIAttributes.GEN_AI_REQUEST_TOP_P: inference_config_top_p,
     }
     return attributes
 
