@@ -14,10 +14,9 @@
 
 import json
 import logging
-import re
 from dataclasses import dataclass, field
 from timeit import default_timer
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from typing import Any, Callable, Dict, List, Optional
 
 from botocore.eventstream import EventStream, EventStreamError
 from opentelemetry.semconv._incubating.attributes import (

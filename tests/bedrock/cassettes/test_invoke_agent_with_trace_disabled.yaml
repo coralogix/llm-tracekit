@@ -15,15 +15,15 @@ interactions:
         YXBwbGljYXRpb24vanNvbg==
       User-Agent:
       - !!binary |
-        Qm90bzMvMS4zOC4zNiBtZC9Cb3RvY29yZSMxLjM4LjM2IHVhLzIuMSBvcy93aW5kb3dzIzEwIG1k
-        L2FyY2gjYW1kNjQgbGFuZy9weXRob24jMy4xMS41IG1kL3B5aW1wbCNDUHl0aG9uIG0vWixiLEQg
-        Y2ZnL3JldHJ5LW1vZGUjbGVnYWN5IEJvdG9jb3JlLzEuMzguMzY=
+        Qm90bzMvMS4zOC4yMyBtZC9Cb3RvY29yZSMxLjM4LjIzIHVhLzIuMSBvcy93aW5kb3dzIzEwIG1k
+        L2FyY2gjYW1kNjQgbGFuZy9weXRob24jMy4xMS41IG1kL3B5aW1wbCNDUHl0aG9uIG0vWixiIGNm
+        Zy9yZXRyeS1tb2RlI2xlZ2FjeSBCb3RvY29yZS8xLjM4LjIz
       X-Amz-Date:
       - !!binary |
-        MjAyNTA2MjVUMTY1MTIzWg==
+        MjAyNTA3MDFUMTIwOTAxWg==
       amz-sdk-invocation-id:
       - !!binary |
-        MmVlZWNjODMtZGNjNS00NjMxLWI0NzItNDEyNWZhMzU1NjU2
+        YWFjZDIzYWQtMDc3ZC00MzFkLWEyMjktN2I3ZGU4NmMyODg2
       amz-sdk-request:
       - !!binary |
         YXR0ZW1wdD0x
@@ -41,13 +41,13 @@ interactions:
       Content-Type:
       - application/vnd.amazon.eventstream
       Date:
-      - Wed, 25 Jun 2025 16:51:24 GMT
+      - Tue, 01 Jul 2025 12:09:02 GMT
       Transfer-Encoding:
       - chunked
       x-amz-bedrock-agent-session-id:
       - no-trace-01
       x-amzn-RequestId:
-      - 8d4556aa-f650-41ae-af4a-622c321f7617
+      - 3bd0f4b6-3347-43c7-bdaa-828674ff3180
       x-amzn-bedrock-agent-content-type:
       - application/json
       x-vcr-base64:

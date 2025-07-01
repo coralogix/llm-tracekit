@@ -14,17 +14,17 @@ interactions:
         YXBwbGljYXRpb24vanNvbg==
       User-Agent:
       - !!binary |
-        Qm90bzMvMS4zOC4zNiBtZC9Cb3RvY29yZSMxLjM4LjM2IHVhLzIuMSBvcy93aW5kb3dzIzEwIG1k
-        L2FyY2gjYW1kNjQgbGFuZy9weXRob24jMy4xMS41IG1kL3B5aW1wbCNDUHl0aG9uIG0vWixiLEQg
-        Y2ZnL3JldHJ5LW1vZGUjbGVnYWN5IEJvdG9jb3JlLzEuMzguMzY=
+        Qm90bzMvMS4zOC4yMyBtZC9Cb3RvY29yZSMxLjM4LjIzIHVhLzIuMSBvcy93aW5kb3dzIzEwIG1k
+        L2FyY2gjYW1kNjQgbGFuZy9weXRob24jMy4xMS41IG1kL3B5aW1wbCNDUHl0aG9uIG0vWixiIGNm
+        Zy9yZXRyeS1tb2RlI2xlZ2FjeSBCb3RvY29yZS8xLjM4LjIz
       X-Amz-Date:
       - !!binary |
-        MjAyNTA2MjVUMTY1MTI2Wg==
+        MjAyNTA3MDFUMTIwOTA0Wg==
       X-Amz-Security-Token:
       - test-security-token
       amz-sdk-invocation-id:
       - !!binary |
-        M2YwZTgzNzQtMWU2Zi00ZTJkLWI0NjMtNzMzNjZjMjE0M2I3
+        YjA5ZDRjMzQtNjgzMS00MTBjLWE3ZTQtNzk0MmE2ZTA5MzRh
       amz-sdk-request:
       - !!binary |
         YXR0ZW1wdD0x
@@ -44,11 +44,11 @@ interactions:
       Content-Type:
       - application/json
       Date:
-      - Wed, 25 Jun 2025 16:51:27 GMT
+      - Tue, 01 Jul 2025 12:09:05 GMT
       x-amzn-ErrorType:
       - UnrecognizedClientException:http://internal.amazon.com/coral/com.amazon.coral.service/
       x-amzn-RequestId:
-      - 95145f9e-3b7a-44ab-8503-57aaf285c1e9
+      - dd760f75-ec8f-44e7-80c7-e89fdede91cc
     status:
       code: 403
       message: Forbidden
