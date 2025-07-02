@@ -19,15 +19,15 @@ interactions:
         Zy9yZXRyeS1tb2RlI2xlZ2FjeSBCb3RvY29yZS8xLjM4LjIz
       X-Amz-Date:
       - !!binary |
-        MjAyNTA3MDFUMTIwOTA0Wg==
+        MjAyNTA3MDJUMDg0ODU4Wg==
       amz-sdk-invocation-id:
       - !!binary |
-        OWM2OTM3MDItNTcyOS00YzZkLWIxMGUtODJmNjg5MTg4MWU3
+        YzMwODI5ZGMtNjVjNy00NzdmLWE3MzctYmZjZGI2YWU5ZmE5
       amz-sdk-request:
       - !!binary |
         YXR0ZW1wdD0x
     method: POST
-    uri: https://bedrock-agent-runtime.us-east-1.amazonaws.com/agents/agent_id/agentAliases/agent_alias/sessions/123456/text
+    uri: https://bedrock-agent-runtime.us-east-1.amazonaws.com/agents/test_agent_id/agentAliases/test_agent_alias_id/sessions/123456/text
   response:
     body:
       string: |-
@@ -42,11 +42,11 @@ interactions:
       Content-Type:
       - application/json
       Date:
-      - Tue, 01 Jul 2025 12:09:06 GMT
+      - Wed, 02 Jul 2025 08:49:00 GMT
       x-amzn-ErrorType:
       - ValidationException:http://internal.amazon.com/coral/com.amazon.coral.validate/
       x-amzn-RequestId:
-      - 58d149bd-cf95-450d-a5dd-55cbf62e5617
+      - c4940631-b151-47d8-8ec6-81d5254a7c35
     status:
       code: 400
       message: Bad Request

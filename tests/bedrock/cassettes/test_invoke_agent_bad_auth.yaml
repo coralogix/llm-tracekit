@@ -19,17 +19,17 @@ interactions:
         Zy9yZXRyeS1tb2RlI2xlZ2FjeSBCb3RvY29yZS8xLjM4LjIz
       X-Amz-Date:
       - !!binary |
-        MjAyNTA3MDFUMTIwOTA0Wg==
+        MjAyNTA3MDJUMDg0ODU4Wg==
       X-Amz-Security-Token:
       - test-security-token
       amz-sdk-invocation-id:
       - !!binary |
-        YjA5ZDRjMzQtNjgzMS00MTBjLWE3ZTQtNzk0MmE2ZTA5MzRh
+        MDIxY2E4NmEtMjdhNi00MzBlLWJkMDAtNzVhZDAzZWI2MzFj
       amz-sdk-request:
       - !!binary |
         YXR0ZW1wdD0x
     method: POST
-    uri: https://bedrock-agent-runtime.us-east-1.amazonaws.com/agents/3HNVYAQKPR/agentAliases/P0DCMGG0P7/sessions/123456/text
+    uri: https://bedrock-agent-runtime.us-east-1.amazonaws.com/agents/test_agent_id/agentAliases/test_agent_alias_id/sessions/123456/text
   response:
     body:
       string: |-
@@ -44,11 +44,11 @@ interactions:
       Content-Type:
       - application/json
       Date:
-      - Tue, 01 Jul 2025 12:09:05 GMT
+      - Wed, 02 Jul 2025 08:48:59 GMT
       x-amzn-ErrorType:
       - UnrecognizedClientException:http://internal.amazon.com/coral/com.amazon.coral.service/
       x-amzn-RequestId:
-      - dd760f75-ec8f-44e7-80c7-e89fdede91cc
+      - fc0d5ed0-bed2-4a3e-85d3-d3e339d4e3ae
     status:
       code: 403
       message: Forbidden
