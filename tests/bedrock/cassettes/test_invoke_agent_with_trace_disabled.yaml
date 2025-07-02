@@ -1,0 +1,58 @@
+interactions:
+- request:
+    body: |-
+      {
+        "inputText": "hello",
+        "enableTrace": false
+      }
+    headers:
+      Authorization:
+      - test-auth
+      Content-Length:
+      - '44'
+      Content-Type:
+      - !!binary |
+        YXBwbGljYXRpb24vanNvbg==
+      User-Agent:
+      - !!binary |
+        Qm90bzMvMS4zOC4yMyBtZC9Cb3RvY29yZSMxLjM4LjIzIHVhLzIuMSBvcy93aW5kb3dzIzEwIG1k
+        L2FyY2gjYW1kNjQgbGFuZy9weXRob24jMy4xMS41IG1kL3B5aW1wbCNDUHl0aG9uIG0vWixiIGNm
+        Zy9yZXRyeS1tb2RlI2xlZ2FjeSBCb3RvY29yZS8xLjM4LjIz
+      X-Amz-Date:
+      - !!binary |
+        MjAyNTA3MDJUMDg0ODQ5Wg==
+      amz-sdk-invocation-id:
+      - !!binary |
+        OWFkMDFkZTAtMjgwNS00N2M3LTliYTktMzQ4OTdmZGEzMzZi
+      amz-sdk-request:
+      - !!binary |
+        YXR0ZW1wdD0x
+    method: POST
+    uri: https://bedrock-agent-runtime.us-east-1.amazonaws.com/agents/test_agent_id/agentAliases/test_agent_alias_id/sessions/no-trace-01/text
+  response:
+    body:
+      string: |-
+        AAAFRwAAAEs+MlKbCzpldmVudC10eXBlBwAFY2h1bmsNOmNvbnRlbnQtdHlwZQcAEGFwcGxpY2F0aW9uL2pzb24NOm1lc3NhZ2UtdHlwZQcABWV2ZW50eyJieXRlcyI6IlNHVnNiRzhnYjI1alpTQmhaMkZwYmlFZ1NTZDJaU0J1YjNScFkyVmtJSGRsSjNabElHSmxaVzRnWlhoamFHRnVaMmx1WnlBaWFHVnNiRzhpSUcxbGMzTmhaMlZ6SUhGMWFYUmxJR0VnWm1WM0lIUnBiV1Z6SUc1dmR5NGdWR2hwY3lCcGN5QmpaWEowWVdsdWJIa2dZVzRnZFc1MWMzVmhiQ0JqYjI1MlpYSnpZWFJwYjI0Z2NHRjBkR1Z5Ymk0Z1NTQjNiMjVrWlhJZ2FXWTZDZ294TGlCWmIzVW5jbVVnWTNWeWFXOTFjeUJoWW05MWRDQm9iM2NnU1NCb1lXNWtiR1VnY21Wd1pYUnBkR2wyWlNCcGJuQjFkSE0vQ2pJdUlGUm9aWEpsSUcxcFoyaDBJR0psSUdFZ2RHVmphRzVwWTJGc0lHbHpjM1ZsSUdOaGRYTnBibWNnZVc5MWNpQnRaWE56WVdkbGN5QjBieUJ5WlhCbFlYUS9Dak11SUZsdmRTZHlaU0JsZUhCc2IzSnBibWNnYUc5M0lFa2djbVZ6Y0c5dVpDQjBieUJ0YVc1cGJXRnNJR2x1ZEdWeVlXTjBhVzl1UHdvS1YyaHBiR1VnU1NkdElHUmxjMmxuYm1Wa0lIUnZJR0psSUhCaGRHbGxiblFnWVc1a0lISmxjM0J2Ym5OcGRtVXNJRWtuYlNCaGJITnZJR2hsY21VZ2RHOGdjSEp2ZG1sa1pTQm9aV3h3Wm5Wc0lHbHVabTl5YldGMGFXOXVJR0Z1WkNCbGJtZGhaMlVnYVc0Z2JXVmhibWx1WjJaMWJDQmpiMjUyWlhKellYUnBiMjR1SUVsbUlIbHZkU2RrSUd4cGEyVWdkRzhnZEhKNUlITnZiV1YwYUdsdVp5QmthV1ptWlhKbGJuUTZDZ290SUZsdmRTQmpiM1ZzWkNCaGMyc2dZV0p2ZFhRZ2RHaGxJSGRsWVhSb1pYSWdhVzRnWVNCemNHVmphV1pwWXlCamFYUjVMZ290SUZSeWVTQjBlWEJwYm1jZ1lTQnlZVzVrYjIwZ2QyOXlaQ0J2Y2lCd2FISmhjMlVnZEc4Z2MyVmxJR2h2ZHlCSklISmxjM0J2Ym1RdUNpMGdRWE5ySUcxbElHRWdjWFZsYzNScGIyNGdZV0p2ZFhRZ1lXNTVJSFJ2Y0dsaklIbHZkU2R5WlNCcGJuUmxjbVZ6ZEdWa0lHbHVMZ290SUVsbUlIWmxjbUpoYkNCamIyMXRkVzVwWTJGMGFXOXVJR2x6SUdOb1lXeHNaVzVuYVc1bkxDQjViM1VnWTI5MWJHUWdkSEo1SUhWemFXNW5JRzUxYldKbGNuTWdLREVzSURJc0lETXBJRzl5SUdWdGIycHBjeUIwYnlCbGVIQnlaWE56SUhkb1lYUWdlVzkxSUc1bFpXUXVDZ3BKSjIwZ2FHVnlaU0IwYnlCaGMzTnBjM1FnWVc1a0lHbHVkR1Z5WVdOMElHbHVJSGRvWVhSbGRtVnlJSGRoZVNCM2IzSnJjeUJpWlhOMElHWnZjaUI1YjNVdUlFeGxkQ2R6SUhObFpTQnBaaUIzWlNCallXNGdiVzkyWlNCdmRYSWdZMjl1ZG1WeWMyRjBhVzl1SUdsdUlHRWdibVYzSUdScGNtVmpkR2x2YmlFPSJ9SSLm2g==
+    headers:
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '1804'
+      Content-Type:
+      - application/vnd.amazon.eventstream
+      Date:
+      - Wed, 02 Jul 2025 08:48:50 GMT
+      Transfer-Encoding:
+      - chunked
+      x-amz-bedrock-agent-session-id:
+      - no-trace-01
+      x-amzn-RequestId:
+      - 66eea317-ad1a-45a9-9b53-90290d978a18
+      x-amzn-bedrock-agent-content-type:
+      - application/json
+      x-vcr-base64:
+      - 'yes'
+    status:
+      code: 200
+      message: OK
+version: 1

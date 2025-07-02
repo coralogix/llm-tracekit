@@ -8,7 +8,7 @@ authors = [
 ]
 license = "Apache-2.0"
 license-files = ["LICENSE.md"]
-requires-python = ">=3.8, <4.0"
+requires-python = ">=3.9, <4.0"
 dependencies = [
     "opentelemetry-api>=1.32.1",
     "opentelemetry-exporter-otlp>=1.32.1",
@@ -56,7 +56,7 @@ dev = [
     "botocore-stubs>=1.38.4",
     "mypy>=1.14.1",
     "pytest>=8.3.4",
-    "pytest-asyncio>=0.24.0",
+    "pytest-asyncio>=1.0.0",
     "pytest-vcr>=1.0.2",
     "pyyaml>=6.0.2",
     "ruff>=0.9.7",
@@ -67,7 +67,6 @@ dev = [
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
-[tool.pytest.ini_options]
 asyncio_default_fixture_loop_scope = "function"
 
 [[tool.mypy.overrides]]

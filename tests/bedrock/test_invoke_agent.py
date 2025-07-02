@@ -26,78 +26,108 @@ def _run_and_check_invoke_agent(
     metric_reader,
     agent_id: str,
     agent_alias_id: str,
-    expect_content: bool,
     session_id: str,
+    input_text: str,
+    expect_content: bool,
+    enable_trace: bool,
 ):
     result = bedrock_agent_client.invoke_agent(
         agentAliasId=agent_alias_id,
         agentId=agent_id,
-        inputText="say this is a test",
+        inputText=input_text,
         sessionId=session_id,
-        enableTrace=True,
+        enableTrace=enable_trace,
     )
+
     response_text = ""
     usage_input_tokens = 0
     usage_output_tokens = 0
+    foundation_model = None
+    temperature = None
+    top_p = None
+    top_k = None
+    max_tokens = None
+
     for event in result["completion"]:
         if "chunk" in event:
             response_text += event["chunk"]["bytes"].decode()
-        if "trace" in event:
+
+        if enable_trace and "trace" in event and "trace" in event.get("trace", {}):
+            trace_data = event["trace"]["trace"]
             for key in [
                 "preProcessingTrace",
                 "postProcessingTrace",
                 "orchestrationTrace",
                 "routingClassifierTrace",
             ]:
+                if key not in trace_data:
+                    continue
+
+                sub_trace = trace_data[key]
                 usage_data = (
-                    event["trace"]["trace"]
-                    .get(key, {})
-                    .get("modelInvocationOutput", {})
+                    sub_trace.get("modelInvocationOutput", {})
                     .get("metadata", {})
                     .get("usage", {})
                 )
                 usage_input_tokens += usage_data.get("inputTokens", 0)
                 usage_output_tokens += usage_data.get("outputTokens", 0)
 
+                model_invocation_input = sub_trace.get("modelInvocationInput", {})
+                if foundation_model is None:
+                    foundation_model = model_invocation_input.get("foundationModel")
+
+                inference_config = model_invocation_input.get(
+                    "inferenceConfiguration", {}
+                )
+                temperature = inference_config.get("temperature")
+                top_p = inference_config.get("topP")
+                top_k = inference_config.get("topK")
+                max_tokens = inference_config.get("maximumLength")
+
     spans = span_exporter.get_finished_spans()
     assert len(spans) == 1
+    span = spans[0]
+
+    final_input_tokens = usage_input_tokens if enable_trace else None
+    final_output_tokens = usage_output_tokens if enable_trace else None
 
     assert_attributes_in_span(
-        span=spans[0],
+        span=span,
         span_name="bedrock.invoke_agent",
         agent_id=agent_id,
         agent_alias_id=agent_alias_id,
-        usage_input_tokens=usage_input_tokens,
-        usage_output_tokens=usage_output_tokens,
+        usage_input_tokens=final_input_tokens,
+        usage_output_tokens=final_output_tokens,
+        foundation_model=foundation_model,
+        temperature=temperature,
+        top_p=top_p,
+        top_k=top_k,
+        max_tokens=max_tokens,
     )
 
-    expected_messages = [
-        {"role": "user", "content": "say this is a test"},
-    ]
+    expected_prompts = [{"role": "user", "content": input_text}]
+    expected_completions = [{"message": {"role": "assistant", "content": response_text}}]
+
     assert_messages_in_span(
-        span=spans[0],
-        expected_messages=expected_messages,
+        span=span,
+        expected_messages=expected_prompts,
         expect_content=expect_content,
     )
 
-    expected_choice = {
-        "message": {
-            "role": "assistant",
-            "content": response_text,
-        }
-    }
     assert_choices_in_span(
-        span=spans[0], expected_choices=[expected_choice], expect_content=expect_content
+        span=span,
+        expected_choices=expected_completions,
+        expect_content=expect_content,
     )
 
     metrics = metric_reader.get_metrics_data().resource_metrics
     assert len(metrics) == 1
-
     metric_data = metrics[0].scope_metrics[0].metrics
     assert_expected_metrics(
         metrics=metric_data,
-        usage_input_tokens=usage_input_tokens,
-        usage_output_tokens=usage_output_tokens,
+        usage_input_tokens=final_input_tokens,
+        usage_output_tokens=final_output_tokens,
+        foundation_model=foundation_model,
     )
 
 
@@ -116,7 +146,9 @@ def test_invoke_agent_with_content(
         agent_id=agent_id,
         agent_alias_id=agent_alias_id,
         session_id="11",
+        input_text="say this is a test",
         expect_content=True,
+        enable_trace=True,
     )
 
 
@@ -135,7 +167,30 @@ def test_invoke_agent_no_content(
         agent_id=agent_id,
         agent_alias_id=agent_alias_id,
         session_id="22",
+        input_text="say this is a test",
         expect_content=False,
+        enable_trace=True,
+    )
+
+
+@pytest.mark.vcr()
+def test_invoke_agent_with_trace_disabled(
+    bedrock_agent_client_with_content,
+    span_exporter,
+    metric_reader,
+    agent_id: str,
+    agent_alias_id: str,
+):
+    _run_and_check_invoke_agent(
+        bedrock_agent_client=bedrock_agent_client_with_content,
+        span_exporter=span_exporter,
+        metric_reader=metric_reader,
+        agent_id=agent_id,
+        agent_alias_id=agent_alias_id,
+        session_id="no-trace-01",
+        input_text="hello",
+        expect_content=True,
+        enable_trace=False,
     )
 
 
