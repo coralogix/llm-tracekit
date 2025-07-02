@@ -14,6 +14,7 @@
 
 import base64
 import os
+from urllib.parse import urlparse, urlunparse
 
 import boto3
 import pytest
@@ -86,8 +87,40 @@ def agent_alias_id() -> str:
     return os.environ.get("AWS_BEDROCK_AGENT_ALIAS_ID", "test_agent_alias_id")
 
 
+def handle_recording_filter_agent_uri(request):
+    """Filters out any agent data before recording.
+
+    Args:
+        request: HTTP request
+
+    Returns:
+        Filtered request
+    """
+    try:
+        parsed_uri = urlparse(request.uri)
+        path_components = parsed_uri.path.split('/')
+
+        idx_agents = path_components.index('agents')
+        idx_aliases = path_components.index('agentAliases')
+
+        path_components[idx_agents + 1] = "test_agent_id"
+        path_components[idx_aliases + 1] = "test_agent_alias_id"
+
+        new_path = '/'.join(path_components)
+
+        new_uri = parsed_uri._replace(path=new_path)
+        request.uri = urlunparse(new_uri)
+
+    except ValueError:
+        # if .index() returns no match (e.g. another URL)
+        # do nothing
+        pass
+
+    return request
+
+
 def handle_recording_boto_response(response: dict) -> dict:
-    """Prepares boto3 reponses for recoring/playback.
+    """Prepares boto3 responses for recording/playback.
 
     Args:
         response: HTTP response
@@ -126,6 +159,7 @@ def vcr_config():
             ("Authorization", "test-auth"),
         ],
         "decode_compressed_response": True,
+        "before_record_request": handle_recording_filter_agent_uri,
         "before_record_response": handle_recording_boto_response,
     }
 
