@@ -102,38 +102,50 @@ def record_invoke_agent_result_attributes(
             tool_calls=tool_calls,
         )
 
-        if result.prompt_history is not None:
-            all_prompts = result.prompt_history
-        else:
-            all_prompts = []
+        final_attributes = {}
 
-        if result.completion_history is not None:
+        if result.prompt_history is not None and result.completion_history is not None:
+            all_prompts = result.prompt_history
             all_choices = result.completion_history + [current_choice]
+
+            final_attributes.update(
+                generate_message_attributes(
+                    messages=all_prompts, capture_content=capture_content
+                )
+            )
+            final_attributes.update(
+                generate_choice_attributes(
+                    choices=all_choices,
+                    capture_content=capture_content,
+                )
+            )
         else:
             all_choices = [current_choice]
+            final_attributes.update(
+                generate_choice_attributes(
+                    choices=all_choices,
+                    capture_content=capture_content,
+                )
+            )
 
-        attributes = {
-            **generate_message_attributes(
-                messages=all_prompts, capture_content=capture_content
-            ),
-            **generate_request_attributes(
+        final_attributes.update(
+            generate_request_attributes(
                 model=result.foundation_model,
                 temperature=result.inference_config_temperature,
                 top_p=result.inference_config_top_p,
                 top_k=result.inference_config_top_k,
                 max_tokens=result.inference_config_max_tokens,
-            ),
-            **generate_response_attributes(
+            )
+        )
+        final_attributes.update(
+            generate_response_attributes(
                 model=result.foundation_model,
                 usage_input_tokens=result.usage_input_tokens,
                 usage_output_tokens=result.usage_output_tokens,
-            ),
-            **generate_choice_attributes(
-                choices=all_choices,
-                capture_content=capture_content,
-            ),
-        }
-        span.set_attributes(attributes)
+            )
+        )
+
+        span.set_attributes(final_attributes)
     finally:
         duration = max((default_timer() - start_time), 0)
         span.end()
