@@ -1,6 +1,6 @@
 [project]
 name = "llm-tracekit"
-version = "1.2.0"
+version = "1.3.0"
 description = "Collect and send GenAI calls as spans for development and production observability."
 readme = "README.md"
 authors = [
