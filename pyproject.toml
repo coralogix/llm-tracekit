@@ -50,6 +50,7 @@ repository = "https://github.com/coralogix/llm-tracekit.git"
 
 [project.entry-points.opentelemetry_instrumentor]
 openai = "llm_tracekit:OpenAIInstrumentor"
+boto3 = "llm_tracekit:BedrockInstrumentor"
 
 [dependency-groups]
 dev = [
