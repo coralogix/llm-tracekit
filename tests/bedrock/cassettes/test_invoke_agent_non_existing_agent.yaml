@@ -14,22 +14,20 @@ interactions:
         YXBwbGljYXRpb24vanNvbg==
       User-Agent:
       - !!binary |
-        Qm90bzMvMS4zOC4wIG1kL0JvdG9jb3JlIzEuMzguMCB1YS8yLjEgb3MvbWFjb3MjMjQuNC4wIG1k
-        L2FyY2gjYXJtNjQgbGFuZy9weXRob24jMy4xMi45IG1kL3B5aW1wbCNDUHl0aG9uIGNmZy9yZXRy
-        eS1tb2RlI2xlZ2FjeSBCb3RvY29yZS8xLjM4LjA=
+        Qm90bzMvMS4zOC4yMyBtZC9Cb3RvY29yZSMxLjM4LjIzIHVhLzIuMSBvcy93aW5kb3dzIzEwIG1k
+        L2FyY2gjYW1kNjQgbGFuZy9weXRob24jMy4xMS41IG1kL3B5aW1wbCNDUHl0aG9uIG0vWixiIGNm
+        Zy9yZXRyeS1tb2RlI2xlZ2FjeSBCb3RvY29yZS8xLjM4LjIz
       X-Amz-Date:
       - !!binary |
-        MjAyNTA0MjlUMTQ1MTA5Wg==
-      X-Amz-Security-Token:
-      - test-security-token
+        MjAyNTA3MDJUMDg0ODU4Wg==
       amz-sdk-invocation-id:
       - !!binary |
-        MDY3MGY4OTMtZjBkMS00NzRlLThiYTEtODE3MThlYWRiNTMw
+        YzMwODI5ZGMtNjVjNy00NzdmLWE3MzctYmZjZGI2YWU5ZmE5
       amz-sdk-request:
       - !!binary |
         YXR0ZW1wdD0x
     method: POST
-    uri: https://bedrock-agent-runtime.us-east-1.amazonaws.com/agents/agent_id/agentAliases/agent_alias/sessions/123456/text
+    uri: https://bedrock-agent-runtime.us-east-1.amazonaws.com/agents/test_agent_id/agentAliases/test_agent_alias_id/sessions/123456/text
   response:
     body:
       string: |-
@@ -44,11 +42,11 @@ interactions:
       Content-Type:
       - application/json
       Date:
-      - Tue, 29 Apr 2025 14:51:10 GMT
+      - Wed, 02 Jul 2025 08:49:00 GMT
       x-amzn-ErrorType:
       - ValidationException:http://internal.amazon.com/coral/com.amazon.coral.validate/
       x-amzn-RequestId:
-      - 9f6f34f7-d0cd-400d-952b-ab387d6a3efa
+      - c4940631-b151-47d8-8ec6-81d5254a7c35
     status:
       code: 400
       message: Bad Request
