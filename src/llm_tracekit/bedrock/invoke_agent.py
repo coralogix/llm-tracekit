@@ -105,29 +105,24 @@ def record_invoke_agent_result_attributes(
 
         final_attributes = {}
 
-        if result.prompt_history is not None and result.completion_history is not None:
-            all_prompts = result.prompt_history
-            all_choices = result.completion_history + [current_choice]
-
-            final_attributes.update(
+        if result.prompt_history is not None:
+             final_attributes.update(
                 generate_message_attributes(
-                    messages=all_prompts, capture_content=capture_content
+                    messages=result.prompt_history,
+                    capture_content=capture_content
                 )
             )
-            final_attributes.update(
-                generate_choice_attributes(
-                    choices=all_choices,
-                    capture_content=capture_content,
-                )
+
+        all_choices: List[Choice] = [current_choice]
+        if result.completion_history is not None:
+            all_choices = result.completion_history + all_choices
+
+        final_attributes.update(
+            generate_choice_attributes(
+                choices=all_choices,
+                capture_content=capture_content,
             )
-        else:
-            all_choices = [current_choice]
-            final_attributes.update(
-                generate_choice_attributes(
-                    choices=all_choices,
-                    capture_content=capture_content,
-                )
-            )
+        )
 
         final_attributes.update(
             generate_request_attributes(
@@ -253,6 +248,23 @@ class InvokeAgentStreamWrapper(ObjectProxy):
             self._result.prompt_history = None
             self._result.completion_history = None
 
+    def _extract_finish_reasons(self, raw_response_dict: Dict[str, Any]):
+        try:
+            content_string = raw_response_dict.get('content')
+            if isinstance(content_string, str):
+                content_json = json.loads(content_string)
+                stop_reason = content_json.get('stop_reason')
+                if stop_reason is not None:
+                    if self._result.finish_reasons is None:
+                        self._result.finish_reasons = []
+                    if stop_reason not in self._result.finish_reasons:
+                        self._result.finish_reasons.append(stop_reason)
+                    
+        except (json.JSONDecodeError, TypeError, AttributeError):
+            logger.debug(
+                "Could not decode rawResponse as JSON",
+            )
+
     def _process_event(self, event):
         if "chunk" in event:
             if self._result.content is None:
@@ -280,23 +292,8 @@ class InvokeAgentStreamWrapper(ObjectProxy):
             model_invocation_output = sub_trace.get("modelInvocationOutput", {})
 
             raw_response_dict = model_invocation_output.get('rawResponse', {})
-
             if raw_response_dict:
-                try:
-                    content_string = raw_response_dict.get('content')
-                    if isinstance(content_string, str):
-                        content_json = json.loads(content_string)
-                        stop_reason = content_json.get('stop_reason')
-                        if stop_reason is not None:
-                            if self._result.finish_reasons is None:
-                                self._result.finish_reasons = []
-                            if stop_reason not in self._result.finish_reasons:
-                                self._result.finish_reasons.append(stop_reason)
-                            
-                except (json.JSONDecodeError, TypeError, AttributeError):
-                    logger.debug(
-                        "Could not decode rawResponse as JSON",
-                    )
+                self._extract_finish_reasons(raw_response_dict)
                     
             usage_data = model_invocation_output.get("metadata", {}).get("usage")
             if usage_data is not None:
