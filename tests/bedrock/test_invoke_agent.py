@@ -79,10 +79,14 @@ def _run_and_check_invoke_agent(
                 inference_config = model_invocation_input.get(
                     "inferenceConfiguration", {}
                 )
-                temperature = inference_config.get("temperature")
-                top_p = inference_config.get("topP")
-                top_k = inference_config.get("topK")
-                max_tokens = inference_config.get("maximumLength")
+                if temperature is None:
+                    temperature = inference_config.get("temperature")
+                if top_p is None:
+                    top_p = inference_config.get("topP")
+                if top_k is None:
+                    top_k = inference_config.get("topK")
+                if max_tokens is None:
+                    max_tokens = inference_config.get("maximumLength")
 
     spans = span_exporter.get_finished_spans()
     assert len(spans) == 1
