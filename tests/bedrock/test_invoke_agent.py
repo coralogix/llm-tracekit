@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import json
 import boto3
 import pytest
 from botocore.exceptions import ClientError
@@ -47,6 +48,8 @@ def _run_and_check_invoke_agent(
     top_p = None
     top_k = None
     max_tokens = None
+    expected_finish_reasons = []
+
 
     for event in result["completion"]:
         if "chunk" in event:
@@ -64,9 +67,10 @@ def _run_and_check_invoke_agent(
                     continue
 
                 sub_trace = trace_data[key]
+                model_invocation_output = sub_trace.get("modelInvocationOutput", {})
+
                 usage_data = (
-                    sub_trace.get("modelInvocationOutput", {})
-                    .get("metadata", {})
+                    model_invocation_output.get("metadata", {})
                     .get("usage", {})
                 )
                 usage_input_tokens += usage_data.get("inputTokens", 0)
@@ -88,12 +92,29 @@ def _run_and_check_invoke_agent(
                 if max_tokens is None:
                     max_tokens = inference_config.get("maximumLength")
 
+                raw_response_dict = model_invocation_output.get('rawResponse', {})
+                if raw_response_dict:
+                    try:
+                        content_string = raw_response_dict.get('content')
+                        if isinstance(content_string, str):
+                            content_json = json.loads(content_string)
+                            stop_reason = content_json.get('stop_reason')
+                            if stop_reason is not None:
+                                if stop_reason not in expected_finish_reasons:
+                                    expected_finish_reasons.append(stop_reason)
+                    except (json.JSONDecodeError, TypeError, AttributeError):
+                        pass
+
+
     spans = span_exporter.get_finished_spans()
     assert len(spans) == 1
     span = spans[0]
 
     final_input_tokens = usage_input_tokens if enable_trace else None
     final_output_tokens = usage_output_tokens if enable_trace else None
+    # OTEL stores array attributes as tuples in span, convert for assertion.
+    final_finish_reasons = tuple(expected_finish_reasons) if enable_trace else None
+
 
     assert_attributes_in_span(
         span=span,
@@ -107,6 +128,7 @@ def _run_and_check_invoke_agent(
         top_p=top_p,
         top_k=top_k,
         max_tokens=max_tokens,
+        finish_reasons=final_finish_reasons,
     )
 
     expected_prompts = [{"role": "user", "content": input_text}]
@@ -229,6 +251,7 @@ def test_invoke_agent_bad_auth(
         agent_id=agent_id,
         agent_alias_id=agent_alias_id,
         error="ClientError",
+        finish_reasons=None,
     )
 
     expected_messages = [
@@ -271,6 +294,7 @@ def test_invoke_agent_non_existing_agent(
         agent_id=agent_id,
         agent_alias_id=agent_alias_id,
         error="ValidationException",
+        finish_reasons=None,
     )
 
     expected_messages = [

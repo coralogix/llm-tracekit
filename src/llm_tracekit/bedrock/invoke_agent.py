@@ -60,6 +60,7 @@ class AgentStreamResult:
     inference_config_top_p: Optional[float] = None
     prompt_history: Optional[List[Message]] = None
     completion_history: Optional[List[Choice]] = None
+    finish_reasons: Optional[List[str]] = None
     tool_calls_buffer: List[ToolCall] = field(default_factory=list)
 
 
@@ -140,6 +141,7 @@ def record_invoke_agent_result_attributes(
         final_attributes.update(
             generate_response_attributes(
                 model=result.foundation_model,
+                finish_reasons=result.finish_reasons,
                 usage_input_tokens=result.usage_input_tokens,
                 usage_output_tokens=result.usage_output_tokens,
             )
@@ -276,6 +278,25 @@ class InvokeAgentStreamWrapper(ObjectProxy):
             sub_trace = trace_data[key]
             model_invocation_input = sub_trace.get("modelInvocationInput", {})
             model_invocation_output = sub_trace.get("modelInvocationOutput", {})
+
+            raw_response_dict = model_invocation_output.get('rawResponse', {})
+
+            if raw_response_dict:
+                try:
+                    content_string = raw_response_dict.get('content')
+                    if isinstance(content_string, str):
+                        content_json = json.loads(content_string)
+                        stop_reason = content_json.get('stop_reason')
+                        if stop_reason is not None:
+                            if self._result.finish_reasons is None:
+                                self._result.finish_reasons = []
+                            if stop_reason not in self._result.finish_reasons:
+                                self._result.finish_reasons.append(stop_reason)
+                            
+                except (json.JSONDecodeError, TypeError, AttributeError):
+                    logger.debug(
+                        "Could not decode rawResponse as JSON",
+                    )
 
             usage_data = model_invocation_output.get("metadata", {}).get("usage")
             if usage_data is not None:
