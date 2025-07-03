@@ -297,7 +297,7 @@ class InvokeAgentStreamWrapper(ObjectProxy):
                     logger.debug(
                         "Could not decode rawResponse as JSON",
                     )
-
+                    
             usage_data = model_invocation_output.get("metadata", {}).get("usage")
             if usage_data is not None:
                 self._process_usage_data(usage_data)

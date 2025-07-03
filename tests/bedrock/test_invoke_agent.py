@@ -50,7 +50,6 @@ def _run_and_check_invoke_agent(
     max_tokens = None
     expected_finish_reasons = []
 
-
     for event in result["completion"]:
         if "chunk" in event:
             response_text += event["chunk"]["bytes"].decode()
@@ -114,7 +113,6 @@ def _run_and_check_invoke_agent(
     final_output_tokens = usage_output_tokens if enable_trace else None
     # OTEL stores array attributes as tuples in span, convert for assertion.
     final_finish_reasons = tuple(expected_finish_reasons) if enable_trace else None
-
 
     assert_attributes_in_span(
         span=span,
