@@ -285,10 +285,18 @@ class InvokeAgentStreamWrapper(ObjectProxy):
                 self._result.foundation_model = model_invocation_input.get("foundationModel")
 
             inference_config = model_invocation_input.get("inferenceConfiguration", {})
-            self._result.inference_config_max_tokens = inference_config.get("maximumLength")
-            self._result.inference_config_temperature = inference_config.get("temperature")
-            self._result.inference_config_top_k = inference_config.get("topK")
-            self._result.inference_config_top_p = inference_config.get("topP")
+            
+            if self._result.inference_config_max_tokens is None:
+                self._result.inference_config_max_tokens = inference_config.get("maximumLength")
+
+            if self._result.inference_config_temperature is None:
+                self._result.inference_config_temperature = inference_config.get("temperature")
+
+            if self._result.inference_config_top_k is None:
+                self._result.inference_config_top_k = inference_config.get("topK")
+                
+            if self._result.inference_config_top_p is None:
+                self._result.inference_config_top_p = inference_config.get("topP")
 
             if "text" in model_invocation_input:
                 try:
