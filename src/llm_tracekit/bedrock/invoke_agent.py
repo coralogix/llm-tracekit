@@ -60,7 +60,6 @@ class AgentStreamResult:
     inference_config_top_p: Optional[float] = None
     prompt_history: Optional[List[Message]] = None
     finish_reasons: Optional[List[str]] = None
-    tool_call_ids: List[ToolCall] = field(default_factory=list)
 
 
 @attribute_generator
@@ -95,11 +94,9 @@ def record_invoke_agent_result_attributes(
     capture_content: bool,
 ):
     try:
-        tool_calls = result.tool_call_ids if result.tool_call_ids  else None
         current_choice = Choice(
             role="assistant",
-            content=result.content,
-            tool_calls=tool_calls,
+            content=result.content
         )
 
         final_attributes = {}
@@ -195,38 +192,44 @@ class InvokeAgentStreamWrapper(ObjectProxy):
     def _process_chat_history(self, raw_messages: List[Dict[str, Any]]):
         try:
             prompt_history: List[Message] = []
-            local_tool_call_ids: List[ToolCall] = []
+            last_tool_call_id: str = None
             for msg in raw_messages:
                 role = msg.get("role")
                 raw_content = msg.get("content", "")
 
-                if role is None or "type=tool_result" in raw_content:
+                if role is None:
                     continue
-
-                tool_call = parsing_utils.parse_tool_use(raw_content)
-                if tool_call is not None:
-                    local_tool_call_ids.append(ToolCall(id=tool_call.id))
-                    prompt_history.append(Message(role=role, tool_calls=[tool_call]))
-                    continue
-
+                
                 content = parsing_utils.parse_content(raw_content)
+
+                if "type=tool_use" in raw_content:
+                    tool_call = parsing_utils.parse_tool_use(raw_content)
+                    if tool_call is not None:
+                        last_tool_call_id = tool_call.id
+                        prompt_history.append(Message(role=role, tool_calls=[tool_call]))
+                        continue
+
+                if "type=tool_result" in raw_content:
+                    if last_tool_call_id is None:
+                        continue
+                    clean_content = parsing_utils.clean_tool_result_content(content)
+                    prompt_history.append(
+                        Message(
+                            role=role,
+                            content=clean_content,
+                            tool_call_id=last_tool_call_id
+                        )
+                    )
+                    last_tool_call_id = None
+                    continue
+
                 if role == "user":
                     clean_content = parsing_utils.clean_user_content(content)
                     prompt_history.append(Message(role=role, content=clean_content))
 
                 elif role == "assistant":
                     final_content = parsing_utils.extract_final_answer(content)
-                    tool_calls_for_choice = local_tool_call_ids if local_tool_call_ids else None
-                    prompt_history.append(
-                        Message(
-                            role=role,
-                            content=final_content,
-                            tool_calls=tool_calls_for_choice,
-                        )
-                    )
-                    local_tool_call_ids = []
-
-            self._result.tool_call_ids = local_tool_call_ids
+                    prompt_history.append(Message(role=role, content=final_content))
 
             if not prompt_history:
                 self._result.prompt_history = None
