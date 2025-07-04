@@ -20,6 +20,11 @@ _TOOL_USE_PATTERN = re.compile(
     re.DOTALL | re.IGNORECASE,
 )
 _TYPE_SUFFIX_PATTERN = re.compile(r",\s*type=\w+$")
+_TOOL_RESULT_SUFFIX_PATTERN = re.compile(
+    r",\s*(?:reasoningText|id|name|input|toolUseId|content|isError"
+    r"|guardContent|imageSource)=",
+    re.IGNORECASE
+)
 
 
 def parse_content(raw_content: str) -> str:
@@ -56,3 +61,13 @@ def parse_tool_use(raw_content: str) -> Optional[ToolCall]:
             extracted_data["function_arguments"],
         )
     return ToolCall(**extracted_data)
+
+
+def clean_tool_result_content(raw_tool_output: str) -> str:
+    """Cleans the output from a tool_result message by stripping the trailing
+    technical metadata fields."""
+    match = _TOOL_RESULT_SUFFIX_PATTERN.search(raw_tool_output)
+    
+    if match is not None:
+        return raw_tool_output[:match.start()].strip()
+    return raw_tool_output.strip()
