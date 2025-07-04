@@ -59,9 +59,8 @@ class AgentStreamResult:
     inference_config_top_k: Optional[int] = None
     inference_config_top_p: Optional[float] = None
     prompt_history: Optional[List[Message]] = None
-    completion_history: Optional[List[Choice]] = None
     finish_reasons: Optional[List[str]] = None
-    tool_calls_buffer: List[ToolCall] = field(default_factory=list)
+    tool_call_ids: List[ToolCall] = field(default_factory=list)
 
 
 @attribute_generator
@@ -96,7 +95,7 @@ def record_invoke_agent_result_attributes(
     capture_content: bool,
 ):
     try:
-        tool_calls = result.tool_calls_buffer if result.tool_calls_buffer else None
+        tool_calls = result.tool_call_ids if result.tool_call_ids  else None
         current_choice = Choice(
             role="assistant",
             content=result.content,
@@ -113,13 +112,9 @@ def record_invoke_agent_result_attributes(
                 )
             )
 
-        all_choices: List[Choice] = [current_choice]
-        if result.completion_history is not None:
-            all_choices = result.completion_history + all_choices
-
         final_attributes.update(
             generate_choice_attributes(
-                choices=all_choices,
+                choices=[current_choice],
                 capture_content=capture_content,
             )
         )
@@ -200,9 +195,7 @@ class InvokeAgentStreamWrapper(ObjectProxy):
     def _process_chat_history(self, raw_messages: List[Dict[str, Any]]):
         try:
             prompt_history: List[Message] = []
-            completion_history: List[Choice] = []
-            local_tool_calls_buffer: List[ToolCall] = []
-
+            local_tool_call_ids: List[ToolCall] = []
             for msg in raw_messages:
                 role = msg.get("role")
                 raw_content = msg.get("content", "")
@@ -212,7 +205,8 @@ class InvokeAgentStreamWrapper(ObjectProxy):
 
                 tool_call = parsing_utils.parse_tool_use(raw_content)
                 if tool_call is not None:
-                    local_tool_calls_buffer.append(tool_call)
+                    local_tool_call_ids.append(ToolCall(id=tool_call.id))
+                    prompt_history.append(Message(role=role, tool_calls=[tool_call]))
                     continue
 
                 content = parsing_utils.parse_content(raw_content)
@@ -222,24 +216,22 @@ class InvokeAgentStreamWrapper(ObjectProxy):
 
                 elif role == "assistant":
                     final_content = parsing_utils.extract_final_answer(content)
-                    tool_calls_for_choice = local_tool_calls_buffer if local_tool_calls_buffer else None
-                    completion_history.append(
-                        Choice(
+                    tool_calls_for_choice = local_tool_call_ids if local_tool_call_ids else None
+                    prompt_history.append(
+                        Message(
                             role=role,
                             content=final_content,
                             tool_calls=tool_calls_for_choice,
                         )
                     )
-                    local_tool_calls_buffer = []
+                    local_tool_call_ids = []
 
-            self._result.tool_calls_buffer = local_tool_calls_buffer
+            self._result.tool_call_ids = local_tool_call_ids
 
-            if not prompt_history and not completion_history:
+            if not prompt_history:
                 self._result.prompt_history = None
-                self._result.completion_history = None
             else:
                 self._result.prompt_history = prompt_history
-                self._result.completion_history = completion_history
         except Exception:
             logger.exception(
                 "Failed to process Bedrock agent chat history. Raw messages: %s",
