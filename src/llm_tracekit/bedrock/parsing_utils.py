@@ -74,7 +74,7 @@ def clean_tool_result_content(raw_tool_output: str) -> str:
     return raw_tool_output.strip()
 
 
-def parse_tool_result_id(raw_tool_output: str) -> str | None:
+def parse_tool_result_id(raw_tool_output: str) -> Optional[str]:
     """Extracts the tool result id from the raw tool output."""
     match = _TOOL_RESULT_ID_PATTERN.search(raw_tool_output)
     return match.group(1) if match is not None else None
