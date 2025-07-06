@@ -14,7 +14,7 @@
 
 import json
 import logging
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from timeit import default_timer
 from typing import Any, Callable, Dict, List, Optional
 
@@ -32,7 +32,6 @@ from llm_tracekit.instruments import Instruments
 from llm_tracekit.span_builder import (
     Choice,
     Message,
-    ToolCall,
     attribute_generator,
     generate_base_attributes,
     generate_choice_attributes,
@@ -59,8 +58,7 @@ class AgentStreamResult:
     inference_config_top_k: Optional[int] = None
     inference_config_top_p: Optional[float] = None
     prompt_history: Optional[List[Message]] = None
-    completion_history: Optional[List[Choice]] = None
-    tool_calls_buffer: List[ToolCall] = field(default_factory=list)
+    finish_reasons: Optional[List[str]] = None
 
 
 @attribute_generator
@@ -95,45 +93,47 @@ def record_invoke_agent_result_attributes(
     capture_content: bool,
 ):
     try:
-        tool_calls = result.tool_calls_buffer if result.tool_calls_buffer else None
         current_choice = Choice(
             role="assistant",
-            content=result.content,
-            tool_calls=tool_calls,
+            content=result.content
         )
 
+        final_attributes = {}
+
         if result.prompt_history is not None:
-            all_prompts = result.prompt_history
-        else:
-            all_prompts = []
+             final_attributes.update(
+                generate_message_attributes(
+                    messages=result.prompt_history,
+                    capture_content=capture_content
+                )
+            )
 
-        if result.completion_history is not None:
-            all_choices = result.completion_history + [current_choice]
-        else:
-            all_choices = [current_choice]
+        final_attributes.update(
+            generate_choice_attributes(
+                choices=[current_choice],
+                capture_content=capture_content,
+            )
+        )
 
-        attributes = {
-            **generate_message_attributes(
-                messages=all_prompts, capture_content=capture_content
-            ),
-            **generate_request_attributes(
+        final_attributes.update(
+            generate_request_attributes(
                 model=result.foundation_model,
                 temperature=result.inference_config_temperature,
                 top_p=result.inference_config_top_p,
                 top_k=result.inference_config_top_k,
                 max_tokens=result.inference_config_max_tokens,
-            ),
-            **generate_response_attributes(
+            )
+        )
+        final_attributes.update(
+            generate_response_attributes(
                 model=result.foundation_model,
+                finish_reasons=result.finish_reasons,
                 usage_input_tokens=result.usage_input_tokens,
                 usage_output_tokens=result.usage_output_tokens,
-            ),
-            **generate_choice_attributes(
-                choices=all_choices,
-                capture_content=capture_content,
-            ),
-        }
-        span.set_attributes(attributes)
+            )
+        )
+
+        span.set_attributes(final_attributes)
     finally:
         duration = max((default_timer() - start_time), 0)
         span.end()
@@ -191,53 +191,68 @@ class InvokeAgentStreamWrapper(ObjectProxy):
     def _process_chat_history(self, raw_messages: List[Dict[str, Any]]):
         try:
             prompt_history: List[Message] = []
-            completion_history: List[Choice] = []
-            local_tool_calls_buffer: List[ToolCall] = []
-
             for msg in raw_messages:
                 role = msg.get("role")
                 raw_content = msg.get("content", "")
 
-                if role is None or "type=tool_result" in raw_content:
+                if role is None:
                     continue
-
-                tool_call = parsing_utils.parse_tool_use(raw_content)
-                if tool_call is not None:
-                    local_tool_calls_buffer.append(tool_call)
-                    continue
-
+                
                 content = parsing_utils.parse_content(raw_content)
+
+                if "type=tool_use" in raw_content:
+                    tool_call = parsing_utils.parse_tool_use(raw_content)
+                    if tool_call is not None:
+                        prompt_history.append(Message(role=role, tool_calls=[tool_call]))
+                        continue
+
+                if "type=tool_result" in raw_content:
+                    clean_content = parsing_utils.clean_tool_result_content(content)
+                    prompt_history.append(
+                        Message(
+                            role=role,
+                            content=clean_content,
+                            tool_call_id=parsing_utils.parse_tool_result_id(raw_content),
+                        )
+                    )
+                    continue
+
                 if role == "user":
                     clean_content = parsing_utils.clean_user_content(content)
                     prompt_history.append(Message(role=role, content=clean_content))
 
                 elif role == "assistant":
                     final_content = parsing_utils.extract_final_answer(content)
-                    tool_calls_for_choice = local_tool_calls_buffer if local_tool_calls_buffer else None
-                    completion_history.append(
-                        Choice(
-                            role=role,
-                            content=final_content,
-                            tool_calls=tool_calls_for_choice,
-                        )
-                    )
-                    local_tool_calls_buffer = []
+                    prompt_history.append(Message(role=role, content=final_content))
 
-            self._result.tool_calls_buffer = local_tool_calls_buffer
-
-            if not prompt_history and not completion_history:
+            if not prompt_history:
                 self._result.prompt_history = None
-                self._result.completion_history = None
             else:
                 self._result.prompt_history = prompt_history
-                self._result.completion_history = completion_history
         except Exception:
             logger.exception(
                 "Failed to process Bedrock agent chat history. Raw messages: %s",
                 raw_messages,
             )
             self._result.prompt_history = None
-            self._result.completion_history = None
+
+
+    def _extract_finish_reasons(self, raw_response_dict: Dict[str, Any]):
+        try:
+            content_string = raw_response_dict.get('content')
+            if isinstance(content_string, str):
+                content_json = json.loads(content_string)
+                stop_reason = content_json.get('stop_reason')
+                if stop_reason is not None:
+                    if self._result.finish_reasons is None:
+                        self._result.finish_reasons = []
+                    if stop_reason not in self._result.finish_reasons:
+                        self._result.finish_reasons.append(stop_reason)
+                    
+        except (json.JSONDecodeError, TypeError, AttributeError):
+            logger.debug(
+                "Could not decode rawResponse as JSON",
+            )
 
     def _process_event(self, event):
         if "chunk" in event:
@@ -265,6 +280,10 @@ class InvokeAgentStreamWrapper(ObjectProxy):
             model_invocation_input = sub_trace.get("modelInvocationInput", {})
             model_invocation_output = sub_trace.get("modelInvocationOutput", {})
 
+            raw_response_dict = model_invocation_output.get('rawResponse', {})
+            if raw_response_dict:
+                self._extract_finish_reasons(raw_response_dict)
+                    
             usage_data = model_invocation_output.get("metadata", {}).get("usage")
             if usage_data is not None:
                 self._process_usage_data(usage_data)
@@ -273,10 +292,18 @@ class InvokeAgentStreamWrapper(ObjectProxy):
                 self._result.foundation_model = model_invocation_input.get("foundationModel")
 
             inference_config = model_invocation_input.get("inferenceConfiguration", {})
-            self._result.inference_config_max_tokens = inference_config.get("maximumLength")
-            self._result.inference_config_temperature = inference_config.get("temperature")
-            self._result.inference_config_top_k = inference_config.get("topK")
-            self._result.inference_config_top_p = inference_config.get("topP")
+            
+            if self._result.inference_config_max_tokens is None:
+                self._result.inference_config_max_tokens = inference_config.get("maximumLength")
+
+            if self._result.inference_config_temperature is None:
+                self._result.inference_config_temperature = inference_config.get("temperature")
+
+            if self._result.inference_config_top_k is None:
+                self._result.inference_config_top_k = inference_config.get("topK")
+                
+            if self._result.inference_config_top_p is None:
+                self._result.inference_config_top_p = inference_config.get("topP")
 
             if "text" in model_invocation_input:
                 try:
