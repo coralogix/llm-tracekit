@@ -14,7 +14,7 @@
 
 import json
 import logging
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from timeit import default_timer
 from typing import Any, Callable, Dict, List, Optional
 
@@ -32,7 +32,6 @@ from llm_tracekit.instruments import Instruments
 from llm_tracekit.span_builder import (
     Choice,
     Message,
-    ToolCall,
     attribute_generator,
     generate_base_attributes,
     generate_choice_attributes,
@@ -192,7 +191,6 @@ class InvokeAgentStreamWrapper(ObjectProxy):
     def _process_chat_history(self, raw_messages: List[Dict[str, Any]]):
         try:
             prompt_history: List[Message] = []
-            last_tool_call_id: str = None
             for msg in raw_messages:
                 role = msg.get("role")
                 raw_content = msg.get("content", "")
@@ -205,22 +203,18 @@ class InvokeAgentStreamWrapper(ObjectProxy):
                 if "type=tool_use" in raw_content:
                     tool_call = parsing_utils.parse_tool_use(raw_content)
                     if tool_call is not None:
-                        last_tool_call_id = tool_call.id
                         prompt_history.append(Message(role=role, tool_calls=[tool_call]))
                         continue
 
                 if "type=tool_result" in raw_content:
-                    if last_tool_call_id is None:
-                        continue
                     clean_content = parsing_utils.clean_tool_result_content(content)
                     prompt_history.append(
                         Message(
                             role=role,
                             content=clean_content,
-                            tool_call_id=last_tool_call_id
+                            tool_call_id=parsing_utils.parse_tool_result_id(raw_content),
                         )
                     )
-                    last_tool_call_id = None
                     continue
 
                 if role == "user":
@@ -241,7 +235,7 @@ class InvokeAgentStreamWrapper(ObjectProxy):
                 raw_messages,
             )
             self._result.prompt_history = None
-            self._result.completion_history = None
+
 
     def _extract_finish_reasons(self, raw_response_dict: Dict[str, Any]):
         try:
