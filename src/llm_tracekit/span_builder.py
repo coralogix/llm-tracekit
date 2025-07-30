@@ -47,6 +47,14 @@ class Choice:
     tool_calls: Optional[List[ToolCall]] = None
 
 
+@dataclass
+class Agent:
+    id: Optional[str] = None
+    name: Optional[str] = None
+    description: Optional[str] = None
+    instruction: Optional[str] = None
+
+
 def remove_attributes_with_null_values(attributes: Dict[str, Any]) -> Dict[str, Any]:
     return {attr: value for attr, value in attributes.items() if value is not None}
 
@@ -210,4 +218,22 @@ def generate_choice_attributes(
                         )
                     ] = tool_call.function_arguments
 
+    return attributes
+
+
+@attribute_generator
+def generate_agent_attributes(
+    agent: Agent
+) -> Dict[str, Any]:
+    attributes = {}
+    attributes[
+        GenAIAttributes.GEN_AI_AGENT_NAME
+    ] = agent.name
+    attributes[
+        GenAIAttributes.GEN_AI_AGENT_ID
+    ] = agent.id
+    attributes[
+        GenAIAttributes.GEN_AI_AGENT_DESCRIPTION
+    ] = agent.description
+        
     return attributes

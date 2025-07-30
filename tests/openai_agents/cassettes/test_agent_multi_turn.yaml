@@ -1,0 +1,326 @@
+interactions:
+- request:
+    body: |-
+      {
+        "include": [],
+        "input": [
+          {
+            "content": "Say 'This is a test.",
+            "role": "user"
+          }
+        ],
+        "instructions": "Be a helpful assistant",
+        "model": "gpt-4o-mini",
+        "stream": false,
+        "tools": []
+      }
+    headers:
+      accept:
+      - application/json
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      content-length:
+      - '161'
+      content-type:
+      - application/json
+      cookie:
+      - __cf_bm=kgghBRtwuSWduZYkoR5RBCSbdjjVHyM8ZEvcUHZ.KWQ-1753367348-1.0.1.1-MIMvLzFBijimUS21ShaMFcY6r9dbryTfAULOLdnjLfHYtRKdV1Qm7IE1RQWcVcA7_R0hDndE0LKi2UMynqyWV_YUezoJDqah6hSualhzJj4;
+        _cfuvid=sqsTB.vpipdxMJKy1hQfMFLXyM41JO21LyTh3AnFwZw-1753367348258-0.0.1.1-604800000
+      host:
+      - api.openai.com
+      x-stainless-async:
+      - async:asyncio
+      x-stainless-read-timeout:
+      - '600'
+      x-stainless-retry-count:
+      - '1'
+    method: POST
+    uri: https://api.openai.com/v1/responses
+  response:
+    body:
+      string: |-
+        {
+          "id": "resp_6882433a5740819ea3b12f72e77f556602463837c6bec2b4",
+          "object": "response",
+          "created_at": 1753367354,
+          "status": "completed",
+          "background": false,
+          "error": null,
+          "incomplete_details": null,
+          "instructions": "Be a helpful assistant",
+          "max_output_tokens": null,
+          "max_tool_calls": null,
+          "model": "gpt-4o-mini-2024-07-18",
+          "output": [
+            {
+              "id": "msg_6882433b368c819e8442c15e3344f19702463837c6bec2b4",
+              "type": "message",
+              "status": "completed",
+              "content": [
+                {
+                  "type": "output_text",
+                  "annotations": [],
+                  "logprobs": [],
+                  "text": "This is a test."
+                }
+              ],
+              "role": "assistant"
+            }
+          ],
+          "parallel_tool_calls": true,
+          "previous_response_id": null,
+          "prompt_cache_key": null,
+          "reasoning": {
+            "effort": null,
+            "summary": null
+          },
+          "safety_identifier": null,
+          "service_tier": "default",
+          "store": true,
+          "temperature": 1.0,
+          "text": {
+            "format": {
+              "type": "text"
+            }
+          },
+          "tool_choice": "auto",
+          "tools": [],
+          "top_logprobs": 0,
+          "top_p": 1.0,
+          "truncation": "disabled",
+          "usage": {
+            "input_tokens": 22,
+            "input_tokens_details": {
+              "cached_tokens": 0
+            },
+            "output_tokens": 6,
+            "output_tokens_details": {
+              "reasoning_tokens": 0
+            },
+            "total_tokens": 28
+          },
+          "user": null,
+          "metadata": {}
+        }
+    headers:
+      CF-RAY:
+      - 96441bcc2d9aecbf-WAW
+      Connection:
+      - keep-alive
+      Content-Type:
+      - application/json
+      Date:
+      - Thu, 24 Jul 2025 14:29:15 GMT
+      Server:
+      - cloudflare
+      Transfer-Encoding:
+      - chunked
+      X-Content-Type-Options:
+      - nosniff
+      alt-svc:
+      - h3=":443"; ma=86400
+      cf-cache-status:
+      - DYNAMIC
+      content-length:
+      - '1367'
+      openai-organization:
+      - aporia-1
+      openai-processing-ms:
+      - '1159'
+      openai-project:
+      - proj_iedJ0uQD0V10kceXWonavbSf
+      openai-version:
+      - '2020-10-01'
+      strict-transport-security:
+      - max-age=31536000; includeSubDomains; preload
+      x-ratelimit-limit-requests:
+      - '30000'
+      x-ratelimit-limit-tokens:
+      - '150000000'
+      x-ratelimit-remaining-requests:
+      - '29999'
+      x-ratelimit-remaining-tokens:
+      - '149999959'
+      x-ratelimit-reset-requests:
+      - 2ms
+      x-ratelimit-reset-tokens:
+      - 0s
+      x-request-id:
+      - req_c9f73c742d8cd0056709cd63e8cd1764
+    status:
+      code: 200
+      message: OK
+- request:
+    body: |-
+      {
+        "include": [],
+        "input": [
+          {
+            "content": "Say 'This is a test.",
+            "role": "user"
+          },
+          {
+            "id": "msg_6882433b368c819e8442c15e3344f19702463837c6bec2b4",
+            "content": [
+              {
+                "annotations": [],
+                "text": "This is a test.",
+                "type": "output_text",
+                "logprobs": []
+              }
+            ],
+            "role": "assistant",
+            "status": "completed",
+            "type": "message"
+          },
+          {
+            "role": "user",
+            "content": "Repeat your last message."
+          }
+        ],
+        "instructions": "Be a helpful assistant",
+        "model": "gpt-4o-mini",
+        "stream": false,
+        "tools": []
+      }
+    headers:
+      accept:
+      - application/json
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      content-length:
+      - '425'
+      content-type:
+      - application/json
+      cookie:
+      - __cf_bm=kgghBRtwuSWduZYkoR5RBCSbdjjVHyM8ZEvcUHZ.KWQ-1753367348-1.0.1.1-MIMvLzFBijimUS21ShaMFcY6r9dbryTfAULOLdnjLfHYtRKdV1Qm7IE1RQWcVcA7_R0hDndE0LKi2UMynqyWV_YUezoJDqah6hSualhzJj4;
+        _cfuvid=sqsTB.vpipdxMJKy1hQfMFLXyM41JO21LyTh3AnFwZw-1753367348258-0.0.1.1-604800000
+      host:
+      - api.openai.com
+      x-stainless-async:
+      - async:asyncio
+      x-stainless-read-timeout:
+      - '600'
+      x-stainless-retry-count:
+      - '0'
+    method: POST
+    uri: https://api.openai.com/v1/responses
+  response:
+    body:
+      string: |-
+        {
+          "id": "resp_6882433bb3d8819e913ee1b7c8c98f6702463837c6bec2b4",
+          "object": "response",
+          "created_at": 1753367355,
+          "status": "completed",
+          "background": false,
+          "error": null,
+          "incomplete_details": null,
+          "instructions": "Be a helpful assistant",
+          "max_output_tokens": null,
+          "max_tool_calls": null,
+          "model": "gpt-4o-mini-2024-07-18",
+          "output": [
+            {
+              "id": "msg_6882433cfe44819eb7e2ecc0f3f3a39402463837c6bec2b4",
+              "type": "message",
+              "status": "completed",
+              "content": [
+                {
+                  "type": "output_text",
+                  "annotations": [],
+                  "logprobs": [],
+                  "text": "This is a test."
+                }
+              ],
+              "role": "assistant"
+            }
+          ],
+          "parallel_tool_calls": true,
+          "previous_response_id": null,
+          "prompt_cache_key": null,
+          "reasoning": {
+            "effort": null,
+            "summary": null
+          },
+          "safety_identifier": null,
+          "service_tier": "default",
+          "store": true,
+          "temperature": 1.0,
+          "text": {
+            "format": {
+              "type": "text"
+            }
+          },
+          "tool_choice": "auto",
+          "tools": [],
+          "top_logprobs": 0,
+          "top_p": 1.0,
+          "truncation": "disabled",
+          "usage": {
+            "input_tokens": 40,
+            "input_tokens_details": {
+              "cached_tokens": 0
+            },
+            "output_tokens": 6,
+            "output_tokens_details": {
+              "reasoning_tokens": 0
+            },
+            "total_tokens": 46
+          },
+          "user": null,
+          "metadata": {}
+        }
+    headers:
+      CF-RAY:
+      - 96441bd46cb6ecbf-WAW
+      Connection:
+      - keep-alive
+      Content-Type:
+      - application/json
+      Date:
+      - Thu, 24 Jul 2025 14:29:17 GMT
+      Server:
+      - cloudflare
+      Transfer-Encoding:
+      - chunked
+      X-Content-Type-Options:
+      - nosniff
+      alt-svc:
+      - h3=":443"; ma=86400
+      cf-cache-status:
+      - DYNAMIC
+      content-length:
+      - '1367'
+      openai-organization:
+      - aporia-1
+      openai-processing-ms:
+      - '1442'
+      openai-project:
+      - proj_iedJ0uQD0V10kceXWonavbSf
+      openai-version:
+      - '2020-10-01'
+      strict-transport-security:
+      - max-age=31536000; includeSubDomains; preload
+      x-ratelimit-limit-requests:
+      - '30000'
+      x-ratelimit-limit-tokens:
+      - '150000000'
+      x-ratelimit-remaining-requests:
+      - '29999'
+      x-ratelimit-remaining-tokens:
+      - '149999940'
+      x-ratelimit-reset-requests:
+      - 2ms
+      x-ratelimit-reset-tokens:
+      - 0s
+      x-request-id:
+      - req_dbd13a74ef4065d0bc5990bc4ae4cc6b
+    status:
+      code: 200
+      message: OK
+version: 1

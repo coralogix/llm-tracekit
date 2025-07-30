@@ -1,0 +1,399 @@
+interactions:
+- request:
+    body: |-
+      {
+        "include": [],
+        "input": [
+          {
+            "content": "What is the weather in Tel Aviv? Answer in the next format: City - Temperature - Weather.",
+            "role": "user"
+          }
+        ],
+        "instructions": "get weather",
+        "model": "gpt-4o-mini",
+        "stream": false,
+        "tools": [
+          {
+            "name": "get_weather",
+            "parameters": {
+              "properties": {
+                "city": {
+                  "title": "City",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "city"
+              ],
+              "title": "get_weather_args",
+              "type": "object",
+              "additionalProperties": false
+            },
+            "strict": true,
+            "type": "function",
+            "description": ""
+          }
+        ]
+      }
+    headers:
+      accept:
+      - application/json
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      content-length:
+      - '452'
+      content-type:
+      - application/json
+      cookie:
+      - __cf_bm=kgghBRtwuSWduZYkoR5RBCSbdjjVHyM8ZEvcUHZ.KWQ-1753367348-1.0.1.1-MIMvLzFBijimUS21ShaMFcY6r9dbryTfAULOLdnjLfHYtRKdV1Qm7IE1RQWcVcA7_R0hDndE0LKi2UMynqyWV_YUezoJDqah6hSualhzJj4;
+        _cfuvid=sqsTB.vpipdxMJKy1hQfMFLXyM41JO21LyTh3AnFwZw-1753367348258-0.0.1.1-604800000
+      host:
+      - api.openai.com
+      x-stainless-async:
+      - async:asyncio
+      x-stainless-read-timeout:
+      - '600'
+      x-stainless-retry-count:
+      - '1'
+    method: POST
+    uri: https://api.openai.com/v1/responses
+  response:
+    body:
+      string: |-
+        {
+          "id": "resp_68824334f904819ca1cb889093d1f4ae0f4507daf8cb69a7",
+          "object": "response",
+          "created_at": 1753367349,
+          "status": "completed",
+          "background": false,
+          "error": null,
+          "incomplete_details": null,
+          "instructions": "get weather",
+          "max_output_tokens": null,
+          "max_tool_calls": null,
+          "model": "gpt-4o-mini-2024-07-18",
+          "output": [
+            {
+              "id": "fc_68824335ae9c819c9da01ecbebf4cf4b0f4507daf8cb69a7",
+              "type": "function_call",
+              "status": "completed",
+              "arguments": "{\"city\":\"Tel Aviv\"}",
+              "call_id": "call_doxSkVpdE7W0GuoGECdn5Njd",
+              "name": "get_weather"
+            }
+          ],
+          "parallel_tool_calls": true,
+          "previous_response_id": null,
+          "prompt_cache_key": null,
+          "reasoning": {
+            "effort": null,
+            "summary": null
+          },
+          "safety_identifier": null,
+          "service_tier": "default",
+          "store": true,
+          "temperature": 1.0,
+          "text": {
+            "format": {
+              "type": "text"
+            }
+          },
+          "tool_choice": "auto",
+          "tools": [
+            {
+              "type": "function",
+              "description": null,
+              "name": "get_weather",
+              "parameters": {
+                "properties": {
+                  "city": {
+                    "title": "City",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "city"
+                ],
+                "title": "get_weather_args",
+                "type": "object",
+                "additionalProperties": false
+              },
+              "strict": true
+            }
+          ],
+          "top_logprobs": 0,
+          "top_p": 1.0,
+          "truncation": "disabled",
+          "usage": {
+            "input_tokens": 65,
+            "input_tokens_details": {
+              "cached_tokens": 0
+            },
+            "output_tokens": 16,
+            "output_tokens_details": {
+              "reasoning_tokens": 0
+            },
+            "total_tokens": 81
+          },
+          "user": null,
+          "metadata": {}
+        }
+    headers:
+      CF-RAY:
+      - 96441baa9b64021b-WAW
+      Connection:
+      - keep-alive
+      Content-Type:
+      - application/json
+      Date:
+      - Thu, 24 Jul 2025 14:29:09 GMT
+      Server:
+      - cloudflare
+      Transfer-Encoding:
+      - chunked
+      X-Content-Type-Options:
+      - nosniff
+      alt-svc:
+      - h3=":443"; ma=86400
+      cf-cache-status:
+      - DYNAMIC
+      content-length:
+      - '1713'
+      openai-organization:
+      - aporia-1
+      openai-processing-ms:
+      - '851'
+      openai-project:
+      - proj_iedJ0uQD0V10kceXWonavbSf
+      openai-version:
+      - '2020-10-01'
+      strict-transport-security:
+      - max-age=31536000; includeSubDomains; preload
+      x-ratelimit-limit-requests:
+      - '30000'
+      x-ratelimit-limit-tokens:
+      - '150000000'
+      x-ratelimit-remaining-requests:
+      - '29999'
+      x-ratelimit-remaining-tokens:
+      - '149999718'
+      x-ratelimit-reset-requests:
+      - 2ms
+      x-ratelimit-reset-tokens:
+      - 0s
+      x-request-id:
+      - req_92361f702e3ec7b8e33576d05016f5ae
+    status:
+      code: 200
+      message: OK
+- request:
+    body: |-
+      {
+        "include": [],
+        "input": [
+          {
+            "content": "What is the weather in Tel Aviv? Answer in the next format: City - Temperature - Weather.",
+            "role": "user"
+          },
+          {
+            "arguments": "{\"city\":\"Tel Aviv\"}",
+            "call_id": "call_doxSkVpdE7W0GuoGECdn5Njd",
+            "name": "get_weather",
+            "type": "function_call",
+            "id": "fc_68824335ae9c819c9da01ecbebf4cf4b0f4507daf8cb69a7",
+            "status": "completed"
+          },
+          {
+            "call_id": "call_doxSkVpdE7W0GuoGECdn5Njd",
+            "output": "The weather in Tel Aviv is currently 25\u00b0C and clear.",
+            "type": "function_call_output"
+          }
+        ],
+        "instructions": "get weather",
+        "model": "gpt-4o-mini",
+        "stream": false,
+        "tools": [
+          {
+            "name": "get_weather",
+            "parameters": {
+              "properties": {
+                "city": {
+                  "title": "City",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "city"
+              ],
+              "title": "get_weather_args",
+              "type": "object",
+              "additionalProperties": false
+            },
+            "strict": true,
+            "type": "function",
+            "description": ""
+          }
+        ]
+      }
+    headers:
+      accept:
+      - application/json
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      content-length:
+      - '797'
+      content-type:
+      - application/json
+      cookie:
+      - __cf_bm=kgghBRtwuSWduZYkoR5RBCSbdjjVHyM8ZEvcUHZ.KWQ-1753367348-1.0.1.1-MIMvLzFBijimUS21ShaMFcY6r9dbryTfAULOLdnjLfHYtRKdV1Qm7IE1RQWcVcA7_R0hDndE0LKi2UMynqyWV_YUezoJDqah6hSualhzJj4;
+        _cfuvid=sqsTB.vpipdxMJKy1hQfMFLXyM41JO21LyTh3AnFwZw-1753367348258-0.0.1.1-604800000
+      host:
+      - api.openai.com
+      x-stainless-async:
+      - async:asyncio
+      x-stainless-read-timeout:
+      - '600'
+      x-stainless-retry-count:
+      - '0'
+    method: POST
+    uri: https://api.openai.com/v1/responses
+  response:
+    body:
+      string: |-
+        {
+          "id": "resp_68824335fc04819cb4235fa3028adc900f4507daf8cb69a7",
+          "object": "response",
+          "created_at": 1753367350,
+          "status": "completed",
+          "background": false,
+          "error": null,
+          "incomplete_details": null,
+          "instructions": "get weather",
+          "max_output_tokens": null,
+          "max_tool_calls": null,
+          "model": "gpt-4o-mini-2024-07-18",
+          "output": [
+            {
+              "id": "msg_688243396378819caa45a06d28dc05f20f4507daf8cb69a7",
+              "type": "message",
+              "status": "completed",
+              "content": [
+                {
+                  "type": "output_text",
+                  "annotations": [],
+                  "logprobs": [],
+                  "text": "Tel Aviv - 25\u00b0C - Clear"
+                }
+              ],
+              "role": "assistant"
+            }
+          ],
+          "parallel_tool_calls": true,
+          "previous_response_id": null,
+          "prompt_cache_key": null,
+          "reasoning": {
+            "effort": null,
+            "summary": null
+          },
+          "safety_identifier": null,
+          "service_tier": "default",
+          "store": true,
+          "temperature": 1.0,
+          "text": {
+            "format": {
+              "type": "text"
+            }
+          },
+          "tool_choice": "auto",
+          "tools": [
+            {
+              "type": "function",
+              "description": null,
+              "name": "get_weather",
+              "parameters": {
+                "properties": {
+                  "city": {
+                    "title": "City",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "city"
+                ],
+                "title": "get_weather_args",
+                "type": "object",
+                "additionalProperties": false
+              },
+              "strict": true
+            }
+          ],
+          "top_logprobs": 0,
+          "top_p": 1.0,
+          "truncation": "disabled",
+          "usage": {
+            "input_tokens": 102,
+            "input_tokens_details": {
+              "cached_tokens": 0
+            },
+            "output_tokens": 10,
+            "output_tokens_details": {
+              "reasoning_tokens": 0
+            },
+            "total_tokens": 112
+          },
+          "user": null,
+          "metadata": {}
+        }
+    headers:
+      CF-RAY:
+      - 96441bb0ecde021b-WAW
+      Connection:
+      - keep-alive
+      Content-Type:
+      - application/json
+      Date:
+      - Thu, 24 Jul 2025 14:29:13 GMT
+      Server:
+      - cloudflare
+      Transfer-Encoding:
+      - chunked
+      X-Content-Type-Options:
+      - nosniff
+      alt-svc:
+      - h3=":443"; ma=86400
+      cf-cache-status:
+      - DYNAMIC
+      content-length:
+      - '1797'
+      openai-organization:
+      - aporia-1
+      openai-processing-ms:
+      - '3609'
+      openai-project:
+      - proj_iedJ0uQD0V10kceXWonavbSf
+      openai-version:
+      - '2020-10-01'
+      strict-transport-security:
+      - max-age=31536000; includeSubDomains; preload
+      x-ratelimit-limit-requests:
+      - '30000'
+      x-ratelimit-limit-tokens:
+      - '150000000'
+      x-ratelimit-remaining-requests:
+      - '29999'
+      x-ratelimit-remaining-tokens:
+      - '149999680'
+      x-ratelimit-reset-requests:
+      - 2ms
+      x-ratelimit-reset-tokens:
+      - 0s
+      x-request-id:
+      - req_235029f4a0a3b4fe38cdd80565d69765
+    status:
+      code: 200
+      message: OK
+version: 1
