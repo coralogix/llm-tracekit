@@ -54,7 +54,7 @@ def parse_tool_use(raw_content: str) -> Optional[ToolCall]:
         extracted_data["function_arguments"] = json.loads(
             extracted_data["function_arguments"]
         )
-    except (json.JSONDecodeError, TypeError)
+    except (json.JSONDecodeError, TypeError):
         pass
     return ToolCall(**extracted_data)
 
