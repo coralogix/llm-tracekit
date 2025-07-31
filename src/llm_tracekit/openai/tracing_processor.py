@@ -27,6 +27,7 @@ from agents import (
     TracingProcessor
 )
 from agents.tracing import ResponseSpanData
+
 from opentelemetry.context import attach, detach, set_value
 from opentelemetry.trace import Span as OTELSpan
 from opentelemetry.trace import (
@@ -78,7 +79,7 @@ class OpenAIAgentsTracingProcessor(TracingProcessor):
         self._last_agent: Optional[Agent] = None
 
     def _process_chat_history(self, span_data: ResponseSpanData) -> ChatHistoryResult:
-        input_messages: List[Dict[str, Any]] = span_data.input
+        input_messages: Any = span_data.input
         history: List[Message] = []
         choices: List[Choice] = []
         
@@ -138,7 +139,7 @@ class OpenAIAgentsTracingProcessor(TracingProcessor):
             response_tool_calls: Optional[List[ToolCall]] = None
             response_role = 'assistant'
             
-            if response.instructions is not None:
+            if isinstance(response.instructions, str):
                 history.insert(0, Message(role='system', content=response.instructions))
 
             if response.output is not None and isinstance(response.output, list) and len(response.output) > 0:
@@ -148,8 +149,9 @@ class OpenAIAgentsTracingProcessor(TracingProcessor):
                 
                 if (hasattr(message_part, 'content') and 
                     isinstance(message_part.content, list) and 
-                    len(message_part.content) > 0):
-                    response_content = message_part.content[0].text
+                    len(message_part.content) > 0 and
+                    hasattr(message_part.content[0], 'text')):
+                        response_content = message_part.content[0].text
 
                 current_tool_calls = []
                 for part in response.output:
@@ -196,7 +198,7 @@ class OpenAIAgentsTracingProcessor(TracingProcessor):
         return attributes
 
     def _process_response_span(self, span_data: ResponseSpanData) -> Dict[str, Any]:
-        if self._request_model is None:
+        if self._request_model is None and span_data.response is not None:
             self._request_model = span_data.response.model
         
         chat_result = self._process_chat_history(span_data)
@@ -206,6 +208,21 @@ class OpenAIAgentsTracingProcessor(TracingProcessor):
             active_agent = Agent(name="unknown")
         else:
             self._last_agent = active_agent
+
+        top_p: Optional[float] = None
+        temperature: Optional[float] = None
+        response_model: Optional[str] = None
+        usage_input_tokens: Optional[int] = None
+        usage_output_tokens: Optional[int] = None
+
+        if span_data.response is not None:
+            top_p = span_data.response.top_p
+            temperature = span_data.response.temperature
+            response_id = span_data.response.id
+            response_model = span_data.response.model
+            if span_data.response.usage is not None:
+                usage_input_tokens = span_data.response.usage.input_tokens
+                usage_output_tokens = span_data.response.usage.output_tokens
         
         attributes = {
             **generate_base_attributes(
@@ -221,15 +238,15 @@ class OpenAIAgentsTracingProcessor(TracingProcessor):
                 capture_content=True
             ),
             **generate_request_attributes(
-                top_p=span_data.response.top_p,
-                temperature=span_data.response.temperature,
+                top_p=top_p,
+                temperature=temperature,
                 model=self._request_model
             ),
             **generate_response_attributes(
-                usage_input_tokens=span_data.response.usage.input_tokens,
-                usage_output_tokens=span_data.response.usage.output_tokens,
-                id=span_data.response.id,
-                model=span_data.response.model
+                usage_input_tokens=usage_input_tokens,
+                usage_output_tokens=usage_output_tokens,
+                id=response_id,
+                model=response_model
             ),
             **generate_agent_attributes(
                 agent=active_agent

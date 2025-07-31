@@ -107,14 +107,12 @@ class OpenAIInstrumentor(BaseInstrumentor):
             ),
         )
 
-        if set_trace_processors:
-            self._agent_tracer = OpenAIAgentsTracingProcessor(
-                tracer=tracer
-            )
-            set_trace_processors([self._agent_tracer])
+        self._agent_tracer = OpenAIAgentsTracingProcessor(
+            tracer=tracer
+        )
+        set_trace_processors([self._agent_tracer])
 
     def _uninstrument(self, **kwargs):
         unwrap(openai.resources.chat.completions.Completions, "create")
         unwrap(openai.resources.chat.completions.AsyncCompletions, "create")
-        if self._agent_tracer:
-            set_trace_processors([OpenAIAgentsTracingProcessorUninstrumented()])
+        set_trace_processors([OpenAIAgentsTracingProcessorUninstrumented()])
