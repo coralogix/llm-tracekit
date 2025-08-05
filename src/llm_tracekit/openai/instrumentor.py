@@ -43,7 +43,6 @@ API
 from typing import Collection
 
 import openai
-from agents.tracing import set_trace_processors
 from opentelemetry.instrumentation.instrumentor import (  # type: ignore[attr-defined] # Mypy doesn't recognize the attribute
     BaseInstrumentor,
 )
@@ -59,10 +58,6 @@ from llm_tracekit.openai.package import _instruments
 from llm_tracekit.openai.patch import (
     async_chat_completions_create,
     chat_completions_create,
-)
-from llm_tracekit.openai.tracing_processor import (
-    OpenAIAgentsTracingProcessor,
-    OpenAIAgentsTracingProcessorUninstrumented,
 )
 
 
@@ -107,12 +102,6 @@ class OpenAIInstrumentor(BaseInstrumentor):
             ),
         )
 
-        self._agent_tracer = OpenAIAgentsTracingProcessor(
-            tracer=tracer
-        )
-        set_trace_processors([self._agent_tracer])
-
     def _uninstrument(self, **kwargs):
         unwrap(openai.resources.chat.completions.Completions, "create")
         unwrap(openai.resources.chat.completions.AsyncCompletions, "create")
-        set_trace_processors([OpenAIAgentsTracingProcessorUninstrumented()])

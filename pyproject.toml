@@ -34,11 +34,16 @@ classifiers = [
 openai = [
     "openai>=1.26.0",
 ]
+openai_agents = [
+    "openai>=1.26.0",
+    "openai-agents>=0.1.0",
+]
 bedrock = [
     "boto3>=1.37.0",
 ]
 all = [
     "openai>=1.26.0",
+    "openai-agents>=0.1.0",
     "boto3>=1.37.0",
 ]
 
@@ -50,6 +55,7 @@ repository = "https://github.com/coralogix/llm-tracekit.git"
 
 [project.entry-points.opentelemetry_instrumentor]
 openai = "llm_tracekit:OpenAIInstrumentor"
+openai_agents = "llm_tracekit:OpenAIAgentsInstrumentor"
 boto3 = "llm_tracekit:BedrockInstrumentor"
 
 [dependency-groups]

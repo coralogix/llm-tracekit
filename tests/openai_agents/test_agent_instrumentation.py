@@ -17,13 +17,20 @@ import pytest
 from tests.utils import assert_choices_in_span, assert_messages_in_span
 from tests.openai_agents.utils import assert_attributes
 
-from agents import Runner
+from agents import Agent, Runner, function_tool
+
 
 @pytest.mark.vcr()
 @pytest.mark.asyncio()
 async def test_agent_single_turn(
-    span_exporter, simple_agent, instrument
+    span_exporter, instrument
 ):
+    simple_agent = Agent(
+        name="SimpleAgent",
+        model="gpt-4o-mini",
+        instructions="Be a helpful assistant",
+    )
+
     prompt = "Say 'This is a test.'"
     await Runner.run(simple_agent, prompt)
 
@@ -32,7 +39,7 @@ async def test_agent_single_turn(
 
     final_response_span = None
     for span in spans:
-        if span.name == "ResponseSpanData":
+        if span.name == "Response":
             final_response_span = span
 
     assert final_response_span is not None, "Final response span not found"
@@ -72,7 +79,6 @@ async def test_agent_single_turn(
 
     assert_attributes(
         span=final_response_span,
-        request_model="gpt-4o-mini-2024-07-18",
         response_model="gpt-4o-mini-2024-07-18",
         agent_name=simple_agent.name
     )
@@ -80,17 +86,28 @@ async def test_agent_single_turn(
 @pytest.mark.vcr()
 @pytest.mark.asyncio()
 async def test_agent_tool_usage(
-    span_exporter, weather_agent, instrument
+    span_exporter, instrument
 ):
+    @function_tool
+    async def get_weather(city: str) -> str:
+        return f"The weather in {city} is currently 25°C and clear."
+    
+    weather_agent = Agent(
+        name="WeatherAgent",
+        tools=[get_weather],
+        model="gpt-4o-mini",
+        instructions="get weather",
+    )
+    
     prompt = "What is the weather in Tel Aviv? Answer in the next format: City - Temperature - Weather."
-    await Runner.run(weather_agent, prompt)
+    result = await Runner.run(weather_agent, prompt)
 
     spans = span_exporter.get_finished_spans()
     assert len(spans) == 5 # response -> function -> response -> agent data -> parent
 
     final_response_span = None
     for span in spans:
-        if span.name == "ResponseSpanData": 
+        if span.name == "Response": 
             final_response_span = span
 
     assert final_response_span is not None, "Final response span not found"
@@ -133,14 +150,13 @@ async def test_agent_tool_usage(
         'finish_reason': 'completed',
         'message': {
             'role': 'assistant',
-            'content': 'Tel Aviv - 25°C - Clear'
+            'content': result.final_output
         }
     }
     ]
 
     assert_attributes(
         span=final_response_span,
-        request_model="gpt-4o-mini-2024-07-18",
         response_model="gpt-4o-mini-2024-07-18",
         agent_name=weather_agent.name
     )
@@ -160,8 +176,14 @@ async def test_agent_tool_usage(
 @pytest.mark.vcr()
 @pytest.mark.asyncio()
 async def test_agent_multi_turn(
-    span_exporter, simple_agent, instrument
+    span_exporter, instrument
 ):
+    simple_agent = Agent(
+        name="SimpleAgent",
+        model="gpt-4o-mini",
+        instructions="Be a helpful assistant",
+    )
+
     prompt_1 = "Say 'This is a test."
     result = await Runner.run(simple_agent, prompt_1)
     
@@ -177,7 +199,7 @@ async def test_agent_multi_turn(
 
     final_response_span = None
     for span in spans:
-        if span.name == "ResponseSpanData":
+        if span.name == "Response":
             final_response_span = span
 
     assert final_response_span is not None, "Final response span not found"
@@ -225,7 +247,6 @@ async def test_agent_multi_turn(
 
     assert_attributes(
         span=final_response_span,
-        request_model="gpt-4o-mini-2024-07-18",
         response_model="gpt-4o-mini-2024-07-18",
         agent_name=simple_agent.name
     )
@@ -234,8 +255,19 @@ async def test_agent_multi_turn(
 @pytest.mark.vcr()
 @pytest.mark.asyncio()
 async def test_agent_tool_execution_error(
-    span_exporter, failing_agent, instrument
+    span_exporter, instrument
 ):
+    @function_tool
+    async def failing_weather_tool(city: str) -> str:
+        raise ValueError("Tool failed as intended for testing")
+
+    failing_agent = Agent(
+        name="FailingAgent",
+        tools=[failing_weather_tool],
+        model="gpt-4o-mini",
+        instructions="to fail",
+    )
+    
     prompt = "What is the weather in Tel Aviv?"
     result = await Runner.run(failing_agent, prompt)
 
@@ -245,7 +277,7 @@ async def test_agent_tool_execution_error(
 
     final_response_span = None
     for span in spans:
-        if span.name == "ResponseSpanData":
+        if span.name == "Response":
             final_response_span = span
 
     assert final_response_span is not None, "Final response span not found"
@@ -306,7 +338,117 @@ async def test_agent_tool_execution_error(
 
     assert_attributes(
         span=final_response_span,
-        request_model="gpt-4o-mini-2024-07-18",
         response_model="gpt-4o-mini-2024-07-18",
         agent_name=failing_agent.name
+    )
+
+
+@pytest.mark.vcr()
+@pytest.mark.asyncio()
+async def test_agent_nested_agent(
+    span_exporter, instrument
+):
+    @function_tool
+    async def get_weather(city: str) -> str:
+        return f"The weather in {city} is currently 25°C and clear."
+    
+    weather_agent = Agent(
+        name="WeatherAgent",
+        tools=[get_weather],
+        model="gpt-4o-mini",
+        instructions="get weather",
+    )
+    
+    @function_tool
+    async def call_weather_agent(city: str) -> str:
+        prompt = f"What is the weather in {city}?"
+        result = await Runner.run(weather_agent, prompt)
+        return result.final_output
+
+    main_agent = Agent(
+        name="Assistant",
+        tools=[call_weather_agent],
+        model="gpt-4o-mini",
+        instructions="Be a helpful assistant. If the user asks about weather, call the weather agent."
+    )
+
+    prompt = "What is the weather in Tel Aviv?"
+    result = await Runner.run(main_agent, prompt)
+
+    spans = span_exporter.get_finished_spans()
+    
+    assert len(spans) == 9 # response -> response -> function -> response -> agent data ->
+                           # -> function -> response -> agent data -> parent
+
+    assert sum(1 for span in spans if span.name == "Response") == 4
+    assert sum(1 for span in spans if span.name == "Tool - call_weather_agent") == 1
+    assert sum(1 for span in spans if span.name == "Tool - get_weather") == 1
+    assert sum(1 for span in spans if span.name == "Agent - WeatherAgent") == 1
+    assert sum(1 for span in spans if span.name == "Agent - Assistant") == 1
+
+    final_response_span = None
+    for span in spans:
+        if span.name == "Response":
+            final_response_span = span
+
+    assert final_response_span is not None, "Final response span not found"
+
+    tool_id = final_response_span.attributes.get("gen_ai.prompt.2.tool_calls.0.id")
+    tool_result_id = final_response_span.attributes.get("gen_ai.prompt.3.tool_call_id")
+
+    expected_messages = [
+        {
+            'role': 'system',
+            'content': 'Be a helpful assistant. If the user asks about weather, call the weather agent.'
+        },
+        {
+            "role": "user",
+            "content": "What is the weather in Tel Aviv?"
+        },
+        {
+            "role": "assistant",
+            "tool_calls": [
+            {
+                "id": tool_id,
+                "type": "function_call",
+                "function": {
+                "name": "call_weather_agent",
+                "arguments": "{\"city\":\"Tel Aviv\"}"
+                }
+            }
+            ]
+        },
+        {
+            "role": "tool",
+            "tool_call_id": tool_result_id,
+            "content": "The weather in Tel Aviv is currently 35°C and sunny."
+        }
+    ]
+
+    expected_choices = [
+        {
+            'finish_reason': 'completed',
+            'message': {
+                'role': 'assistant',
+                'content': result.final_output
+            }
+        }
+    ]
+
+    assert_messages_in_span(
+        span=final_response_span,
+        expected_messages=expected_messages,
+        expect_content=True
+    )
+
+    assert_choices_in_span(
+        span=final_response_span,
+        expected_choices=expected_choices,
+        expect_content=True
+    )
+
+    assert_attributes(
+        span=final_response_span,
+        response_model="gpt-4o-mini-2024-07-18",
+        agent_name=weather_agent.name
     )

@@ -15,8 +15,7 @@
 import os
 import pytest
 
-from llm_tracekit.openai.instrumentor import OpenAIInstrumentor
-from agents import Agent, function_tool
+from llm_tracekit.openai_agents.instrumentor import OpenAIAgentsInstrumentor
 
 
 @pytest.fixture(autouse=True)
@@ -26,7 +25,7 @@ def openai_env_vars():
 
 @pytest.fixture(scope="function")
 def instrument(tracer_provider, meter_provider):
-    instrumentor = OpenAIInstrumentor()
+    instrumentor = OpenAIAgentsInstrumentor()
     
     instrumentor.instrument(
         tracer_provider=tracer_provider,
@@ -37,45 +36,23 @@ def instrument(tracer_provider, meter_provider):
 
     instrumentor.uninstrument()
 
-@pytest.fixture
-def weather_tool():
-    @function_tool
-    async def get_weather(city: str) -> str:
-        return f"The weather in {city} is currently 25°C and clear."
-    return get_weather
+def handle_request_cookies(request):
+    if 'cookie' in request.headers:
+        request.headers['cookie'] = 'redacted_cookie'
+    if 'openai-organization' in request.headers:
+        request.headers['openai-organization'] = 'test_organization'
+    if 'openai-project' in request.headers:
+        request.headers['openai-project'] = 'test_project'
+    return request
 
-@pytest.fixture
-def failing_tool():
-    @function_tool
-    async def failing_weather_tool(city: str) -> str:
-        raise ValueError("Tool failed as intended for testing")
-    return failing_weather_tool
-
-@pytest.fixture
-def weather_agent(weather_tool):
-    return Agent(
-        name="WeatherAgent",
-        tools=[weather_tool],
-        model="gpt-4o-mini",
-        instructions="get weather",
-    )
-
-@pytest.fixture
-def failing_agent(failing_tool):
-    return Agent(
-        name="FailingAgent",
-        tools=[failing_tool],
-        model="gpt-4o-mini",
-        instructions="to fail",
-    )
-
-@pytest.fixture
-def simple_agent():
-    return Agent(
-        name="SimpleAgent",
-        model="gpt-4o-mini",
-        instructions="Be a helpful assistant",
-    )
+def handle_response_cookies(response):
+    if 'Set-Cookie' in response['headers']:
+        response['headers']['Set-Cookie'] = ['redacted_set_cookie']
+    if 'openai-organization' in response['headers']:
+        response['headers']['openai-organization'] = ['test_openai_org_id']
+    if 'openai-project' in response['headers']:
+        response['headers']['openai-project'] = ['test_openai_project']
+    return response
 
 @pytest.fixture(scope="module")
 def vcr_config():
@@ -92,4 +69,6 @@ def vcr_config():
             "user-agent",
         ],
         "decode_compressed_response": True,
+        "before_record_request": handle_request_cookies,
+        "before_record_response": handle_response_cookies,
     }

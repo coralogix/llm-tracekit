@@ -47,8 +47,7 @@ interactions:
       content-type:
       - application/json
       cookie:
-      - __cf_bm=kgghBRtwuSWduZYkoR5RBCSbdjjVHyM8ZEvcUHZ.KWQ-1753367348-1.0.1.1-MIMvLzFBijimUS21ShaMFcY6r9dbryTfAULOLdnjLfHYtRKdV1Qm7IE1RQWcVcA7_R0hDndE0LKi2UMynqyWV_YUezoJDqah6hSualhzJj4;
-        _cfuvid=sqsTB.vpipdxMJKy1hQfMFLXyM41JO21LyTh3AnFwZw-1753367348258-0.0.1.1-604800000
+      - redacted_cookie
       host:
       - api.openai.com
       x-stainless-async:
@@ -63,9 +62,9 @@ interactions:
     body:
       string: |-
         {
-          "id": "resp_68824334f904819ca1cb889093d1f4ae0f4507daf8cb69a7",
+          "id": "resp_689206d26a58819ea54fa6761e96c6e008dee7e82168ac0e",
           "object": "response",
-          "created_at": 1753367349,
+          "created_at": 1754400466,
           "status": "completed",
           "background": false,
           "error": null,
@@ -76,11 +75,11 @@ interactions:
           "model": "gpt-4o-mini-2024-07-18",
           "output": [
             {
-              "id": "fc_68824335ae9c819c9da01ecbebf4cf4b0f4507daf8cb69a7",
+              "id": "fc_689206d2e124819ea392836352a1af1408dee7e82168ac0e",
               "type": "function_call",
               "status": "completed",
               "arguments": "{\"city\":\"Tel Aviv\"}",
-              "call_id": "call_doxSkVpdE7W0GuoGECdn5Njd",
+              "call_id": "call_olEW5YC8aZQ550zk1QoshjFb",
               "name": "get_weather"
             }
           ],
@@ -142,13 +141,13 @@ interactions:
         }
     headers:
       CF-RAY:
-      - 96441baa9b64021b-WAW
+      - 96a6a2426b9834a0-WAW
       Connection:
       - keep-alive
       Content-Type:
       - application/json
       Date:
-      - Thu, 24 Jul 2025 14:29:09 GMT
+      - Tue, 05 Aug 2025 13:27:47 GMT
       Server:
       - cloudflare
       Transfer-Encoding:
@@ -162,15 +161,19 @@ interactions:
       content-length:
       - '1713'
       openai-organization:
-      - aporia-1
+      - test_openai_org_id
       openai-processing-ms:
-      - '851'
+      - '1269'
       openai-project:
-      - proj_iedJ0uQD0V10kceXWonavbSf
+      - test_openai_project
       openai-version:
       - '2020-10-01'
       strict-transport-security:
       - max-age=31536000; includeSubDomains; preload
+      x-envoy-decorator-operation:
+      - tasksapi.openai.svc.cluster.local:8081/*
+      x-envoy-upstream-service-time:
+      - '1322'
       x-ratelimit-limit-requests:
       - '30000'
       x-ratelimit-limit-tokens:
@@ -178,13 +181,13 @@ interactions:
       x-ratelimit-remaining-requests:
       - '29999'
       x-ratelimit-remaining-tokens:
-      - '149999718'
+      - '149999717'
       x-ratelimit-reset-requests:
       - 2ms
       x-ratelimit-reset-tokens:
       - 0s
       x-request-id:
-      - req_92361f702e3ec7b8e33576d05016f5ae
+      - req_faac7163fec08ff724fbd0862ff1b09c
     status:
       code: 200
       message: OK
@@ -199,14 +202,14 @@ interactions:
           },
           {
             "arguments": "{\"city\":\"Tel Aviv\"}",
-            "call_id": "call_doxSkVpdE7W0GuoGECdn5Njd",
+            "call_id": "call_olEW5YC8aZQ550zk1QoshjFb",
             "name": "get_weather",
             "type": "function_call",
-            "id": "fc_68824335ae9c819c9da01ecbebf4cf4b0f4507daf8cb69a7",
+            "id": "fc_689206d2e124819ea392836352a1af1408dee7e82168ac0e",
             "status": "completed"
           },
           {
-            "call_id": "call_doxSkVpdE7W0GuoGECdn5Njd",
+            "call_id": "call_olEW5YC8aZQ550zk1QoshjFb",
             "output": "The weather in Tel Aviv is currently 25\u00b0C and clear.",
             "type": "function_call_output"
           }
@@ -249,8 +252,7 @@ interactions:
       content-type:
       - application/json
       cookie:
-      - __cf_bm=kgghBRtwuSWduZYkoR5RBCSbdjjVHyM8ZEvcUHZ.KWQ-1753367348-1.0.1.1-MIMvLzFBijimUS21ShaMFcY6r9dbryTfAULOLdnjLfHYtRKdV1Qm7IE1RQWcVcA7_R0hDndE0LKi2UMynqyWV_YUezoJDqah6hSualhzJj4;
-        _cfuvid=sqsTB.vpipdxMJKy1hQfMFLXyM41JO21LyTh3AnFwZw-1753367348258-0.0.1.1-604800000
+      - redacted_cookie
       host:
       - api.openai.com
       x-stainless-async:
@@ -265,9 +267,9 @@ interactions:
     body:
       string: |-
         {
-          "id": "resp_68824335fc04819cb4235fa3028adc900f4507daf8cb69a7",
+          "id": "resp_689206d3f64c819e9b8882202f24270a08dee7e82168ac0e",
           "object": "response",
-          "created_at": 1753367350,
+          "created_at": 1754400467,
           "status": "completed",
           "background": false,
           "error": null,
@@ -278,7 +280,7 @@ interactions:
           "model": "gpt-4o-mini-2024-07-18",
           "output": [
             {
-              "id": "msg_688243396378819caa45a06d28dc05f20f4507daf8cb69a7",
+              "id": "msg_689206d46268819ea8ae9b1b3712f27f08dee7e82168ac0e",
               "type": "message",
               "status": "completed",
               "content": [
@@ -350,13 +352,13 @@ interactions:
         }
     headers:
       CF-RAY:
-      - 96441bb0ecde021b-WAW
+      - 96a6a24bfe0234a0-WAW
       Connection:
       - keep-alive
       Content-Type:
       - application/json
       Date:
-      - Thu, 24 Jul 2025 14:29:13 GMT
+      - Tue, 05 Aug 2025 13:27:48 GMT
       Server:
       - cloudflare
       Transfer-Encoding:
@@ -370,15 +372,19 @@ interactions:
       content-length:
       - '1797'
       openai-organization:
-      - aporia-1
+      - test_openai_org_id
       openai-processing-ms:
-      - '3609'
+      - '716'
       openai-project:
-      - proj_iedJ0uQD0V10kceXWonavbSf
+      - test_openai_project
       openai-version:
       - '2020-10-01'
       strict-transport-security:
       - max-age=31536000; includeSubDomains; preload
+      x-envoy-decorator-operation:
+      - tasksapi.openai.svc.cluster.local:8081/*
+      x-envoy-upstream-service-time:
+      - '724'
       x-ratelimit-limit-requests:
       - '30000'
       x-ratelimit-limit-tokens:
@@ -392,7 +398,7 @@ interactions:
       x-ratelimit-reset-tokens:
       - 0s
       x-request-id:
-      - req_235029f4a0a3b4fe38cdd80565d69765
+      - req_7d22bfdc2780a3daccc60a91e2a1bf6c
     status:
       code: 200
       message: OK

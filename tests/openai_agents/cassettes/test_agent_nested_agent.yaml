@@ -1,0 +1,1013 @@
+interactions:
+- request:
+    body: |-
+      {
+        "data": [
+          {
+            "object": "trace.span",
+            "id": "span_5ac542294f2240a78bcdc4da",
+            "trace_id": "trace_abdfc1703e024d5bb53ea54c498d5c45",
+            "parent_id": "span_de40102bfed94e61b26b7488",
+            "started_at": "2025-08-05T13:27:48.457547+00:00",
+            "ended_at": "2025-08-05T13:27:50.056971+00:00",
+            "span_data": {
+              "type": "response",
+              "response_id": "resp_689206d5a3a881a3896b7b86b32242f80aa1e3193f315160"
+            },
+            "error": null
+          },
+          {
+            "object": "trace.span",
+            "id": "span_de40102bfed94e61b26b7488",
+            "trace_id": "trace_abdfc1703e024d5bb53ea54c498d5c45",
+            "parent_id": null,
+            "started_at": "2025-08-05T13:27:48.457547+00:00",
+            "ended_at": "2025-08-05T13:27:50.057977+00:00",
+            "span_data": {
+              "type": "agent",
+              "name": "SimpleAgent",
+              "handoffs": [],
+              "tools": [],
+              "output_type": "str"
+            },
+            "error": null
+          },
+          {
+            "object": "trace",
+            "id": "trace_50ec3930a0be4982a5720712116c76ea",
+            "workflow_name": "Agent workflow",
+            "group_id": null,
+            "metadata": null
+          },
+          {
+            "object": "trace.span",
+            "id": "span_3c26e09792fa4b808afcde5a",
+            "trace_id": "trace_50ec3930a0be4982a5720712116c76ea",
+            "parent_id": "span_0a012443a92344ba934df13a",
+            "started_at": "2025-08-05T13:27:50.057977+00:00",
+            "ended_at": "2025-08-05T13:27:50.651446+00:00",
+            "span_data": {
+              "type": "response",
+              "response_id": "resp_689206d68ec081a3a3f475d5ba3dfb860aa1e3193f315160"
+            },
+            "error": null
+          },
+          {
+            "object": "trace.span",
+            "id": "span_0a012443a92344ba934df13a",
+            "trace_id": "trace_50ec3930a0be4982a5720712116c76ea",
+            "parent_id": null,
+            "started_at": "2025-08-05T13:27:50.057977+00:00",
+            "ended_at": "2025-08-05T13:27:50.651950+00:00",
+            "span_data": {
+              "type": "agent",
+              "name": "SimpleAgent",
+              "handoffs": [],
+              "tools": [],
+              "output_type": "str"
+            },
+            "error": null
+          },
+          {
+            "object": "trace",
+            "id": "trace_1925183358954d33b5015482483ae422",
+            "workflow_name": "Agent workflow",
+            "group_id": null,
+            "metadata": null
+          },
+          {
+            "object": "trace.span",
+            "id": "span_0b7c2f2f09c34301bc085142",
+            "trace_id": "trace_1925183358954d33b5015482483ae422",
+            "parent_id": "span_7a289572353942b8a06323de",
+            "started_at": "2025-08-05T13:27:50.718478+00:00",
+            "ended_at": "2025-08-05T13:27:52.209930+00:00",
+            "span_data": {
+              "type": "response",
+              "response_id": "resp_689206d7b688819d98946774f148079404c0f7d3b227fb57"
+            },
+            "error": null
+          },
+          {
+            "object": "trace.span",
+            "id": "span_0488fd63113a47caa259b81f",
+            "trace_id": "trace_1925183358954d33b5015482483ae422",
+            "parent_id": "span_7a289572353942b8a06323de",
+            "started_at": "2025-08-05T13:27:52.210935+00:00",
+            "ended_at": "2025-08-05T13:27:52.211438+00:00",
+            "span_data": {
+              "type": "function",
+              "name": "failing_weather_tool",
+              "input": "{\"city\":\"Tel Aviv\"}",
+              "output": "An error occurred while running the tool. Please try again. Error: Tool failed as intended for testing",
+              "mcp_data": null
+            },
+            "error": {
+              "message": "Error running tool (non-fatal)",
+              "data": {
+                "tool_name": "failing_weather_tool",
+                "error": "Tool failed as intended for testing"
+              }
+            }
+          },
+          {
+            "object": "trace.span",
+            "id": "span_33a12ec5d52444c3bf5ab775",
+            "trace_id": "trace_1925183358954d33b5015482483ae422",
+            "parent_id": "span_7a289572353942b8a06323de",
+            "started_at": "2025-08-05T13:27:52.211438+00:00",
+            "ended_at": "2025-08-05T13:27:54.018602+00:00",
+            "span_data": {
+              "type": "response",
+              "response_id": "resp_689206d8ab28819d8e8e3e615626af3704c0f7d3b227fb57"
+            },
+            "error": null
+          },
+          {
+            "object": "trace.span",
+            "id": "span_7a289572353942b8a06323de",
+            "trace_id": "trace_1925183358954d33b5015482483ae422",
+            "parent_id": null,
+            "started_at": "2025-08-05T13:27:50.718478+00:00",
+            "ended_at": "2025-08-05T13:27:54.018602+00:00",
+            "span_data": {
+              "type": "agent",
+              "name": "FailingAgent",
+              "handoffs": [],
+              "tools": [
+                "failing_weather_tool"
+              ],
+              "output_type": "str"
+            },
+            "error": null
+          },
+          {
+            "object": "trace",
+            "id": "trace_a8a6d449c95d4cb9a177dba68f7b8268",
+            "workflow_name": "Agent workflow",
+            "group_id": null,
+            "metadata": null
+          }
+        ]
+      }
+    headers:
+      accept:
+      - '*/*'
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      content-length:
+      - '3503'
+      content-type:
+      - application/json
+      cookie:
+      - redacted_cookie
+      host:
+      - api.openai.com
+      openai-beta:
+      - traces=v1
+    method: POST
+    uri: https://api.openai.com/v1/traces/ingest
+  response:
+    body:
+      string: ''
+    headers:
+      CF-RAY:
+      - 96a6a2783ac1248b-KBP
+      Connection:
+      - keep-alive
+      Date:
+      - Tue, 05 Aug 2025 13:27:55 GMT
+      Server:
+      - cloudflare
+      X-Content-Type-Options:
+      - nosniff
+      alt-svc:
+      - h3=":443"; ma=86400
+      cf-cache-status:
+      - DYNAMIC
+      openai-organization:
+      - test_openai_org_id
+      openai-processing-ms:
+      - '90'
+      openai-version:
+      - '2020-10-01'
+      strict-transport-security:
+      - max-age=31536000; includeSubDomains; preload
+      x-envoy-decorator-operation:
+      - tracesapi.tracesapi.svc.cluster.local:8081/*
+      x-envoy-upstream-service-time:
+      - '97'
+      x-request-id:
+      - req_4eaccc2cf34b3b3f57dcfe1c1a6bf668
+    status:
+      code: 204
+      message: No Content
+- request:
+    body: |-
+      {
+        "include": [],
+        "input": [
+          {
+            "content": "What is the weather in Tel Aviv?",
+            "role": "user"
+          }
+        ],
+        "instructions": "Be a helpful assistant. If the user asks about weather, call the weather agent.",
+        "model": "gpt-4o-mini",
+        "stream": false,
+        "tools": [
+          {
+            "name": "call_weather_agent",
+            "parameters": {
+              "properties": {
+                "city": {
+                  "title": "City",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "city"
+              ],
+              "title": "call_weather_agent_args",
+              "type": "object",
+              "additionalProperties": false
+            },
+            "strict": true,
+            "type": "function",
+            "description": ""
+          }
+        ]
+      }
+    headers:
+      accept:
+      - application/json
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      content-length:
+      - '477'
+      content-type:
+      - application/json
+      cookie:
+      - redacted_cookie
+      host:
+      - api.openai.com
+      x-stainless-async:
+      - async:asyncio
+      x-stainless-read-timeout:
+      - '600'
+      x-stainless-retry-count:
+      - '1'
+    method: POST
+    uri: https://api.openai.com/v1/responses
+  response:
+    body:
+      string: |-
+        {
+          "id": "resp_689206db46c8819c844611b5d12bf4330d615fd2040af8a0",
+          "object": "response",
+          "created_at": 1754400475,
+          "status": "completed",
+          "background": false,
+          "error": null,
+          "incomplete_details": null,
+          "instructions": "Be a helpful assistant. If the user asks about weather, call the weather agent.",
+          "max_output_tokens": null,
+          "max_tool_calls": null,
+          "model": "gpt-4o-mini-2024-07-18",
+          "output": [
+            {
+              "id": "fc_689206dbdd40819c860b2cb4b7331c340d615fd2040af8a0",
+              "type": "function_call",
+              "status": "completed",
+              "arguments": "{\"city\":\"Tel Aviv\"}",
+              "call_id": "call_6iNnLaPpt0jioL0EHVxZf67R",
+              "name": "call_weather_agent"
+            }
+          ],
+          "parallel_tool_calls": true,
+          "previous_response_id": null,
+          "prompt_cache_key": null,
+          "reasoning": {
+            "effort": null,
+            "summary": null
+          },
+          "safety_identifier": null,
+          "service_tier": "default",
+          "store": true,
+          "temperature": 1.0,
+          "text": {
+            "format": {
+              "type": "text"
+            }
+          },
+          "tool_choice": "auto",
+          "tools": [
+            {
+              "type": "function",
+              "description": null,
+              "name": "call_weather_agent",
+              "parameters": {
+                "properties": {
+                  "city": {
+                    "title": "City",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "city"
+                ],
+                "title": "call_weather_agent_args",
+                "type": "object",
+                "additionalProperties": false
+              },
+              "strict": true
+            }
+          ],
+          "top_logprobs": 0,
+          "top_p": 1.0,
+          "truncation": "disabled",
+          "usage": {
+            "input_tokens": 70,
+            "input_tokens_details": {
+              "cached_tokens": 0
+            },
+            "output_tokens": 17,
+            "output_tokens_details": {
+              "reasoning_tokens": 0
+            },
+            "total_tokens": 87
+          },
+          "user": null,
+          "metadata": {}
+        }
+    headers:
+      CF-RAY:
+      - 96a6a27839e2ca35-KBP
+      Connection:
+      - keep-alive
+      Content-Type:
+      - application/json
+      Date:
+      - Tue, 05 Aug 2025 13:27:56 GMT
+      Server:
+      - cloudflare
+      Transfer-Encoding:
+      - chunked
+      X-Content-Type-Options:
+      - nosniff
+      alt-svc:
+      - h3=":443"; ma=86400
+      cf-cache-status:
+      - DYNAMIC
+      content-length:
+      - '1802'
+      openai-organization:
+      - test_openai_org_id
+      openai-processing-ms:
+      - '777'
+      openai-project:
+      - test_openai_project
+      openai-version:
+      - '2020-10-01'
+      strict-transport-security:
+      - max-age=31536000; includeSubDomains; preload
+      x-envoy-decorator-operation:
+      - tasksapi.openai.svc.cluster.local:8081/*
+      x-envoy-upstream-service-time:
+      - '783'
+      x-ratelimit-limit-requests:
+      - '30000'
+      x-ratelimit-limit-tokens:
+      - '150000000'
+      x-ratelimit-remaining-requests:
+      - '29999'
+      x-ratelimit-remaining-tokens:
+      - '149999715'
+      x-ratelimit-reset-requests:
+      - 2ms
+      x-ratelimit-reset-tokens:
+      - 0s
+      x-request-id:
+      - req_987ebece5fbb940d00d4411525e4ed50
+    status:
+      code: 200
+      message: OK
+- request:
+    body: |-
+      {
+        "include": [],
+        "input": [
+          {
+            "content": "What is the weather in Tel Aviv?",
+            "role": "user"
+          }
+        ],
+        "instructions": "get weather",
+        "model": "gpt-4o-mini",
+        "stream": false,
+        "tools": [
+          {
+            "name": "get_weather",
+            "parameters": {
+              "properties": {
+                "city": {
+                  "title": "City",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "city"
+              ],
+              "title": "get_weather_args",
+              "type": "object",
+              "additionalProperties": false
+            },
+            "strict": true,
+            "type": "function",
+            "description": ""
+          }
+        ]
+      }
+    headers:
+      accept:
+      - application/json
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      content-length:
+      - '395'
+      content-type:
+      - application/json
+      cookie:
+      - redacted_cookie
+      host:
+      - api.openai.com
+      x-stainless-async:
+      - async:asyncio
+      x-stainless-read-timeout:
+      - '600'
+      x-stainless-retry-count:
+      - '0'
+    method: POST
+    uri: https://api.openai.com/v1/responses
+  response:
+    body:
+      string: |-
+        {
+          "id": "resp_689206dc38c081a09f05c1406e9e98ac03ba4ea690c32c5b",
+          "object": "response",
+          "created_at": 1754400476,
+          "status": "completed",
+          "background": false,
+          "error": null,
+          "incomplete_details": null,
+          "instructions": "get weather",
+          "max_output_tokens": null,
+          "max_tool_calls": null,
+          "model": "gpt-4o-mini-2024-07-18",
+          "output": [
+            {
+              "id": "fc_689206ddd2dc81a0898cd743aa236b3a03ba4ea690c32c5b",
+              "type": "function_call",
+              "status": "completed",
+              "arguments": "{\"city\":\"Tel Aviv\"}",
+              "call_id": "call_F8pSPbEA892NZEbtmuD9RWi8",
+              "name": "get_weather"
+            }
+          ],
+          "parallel_tool_calls": true,
+          "previous_response_id": null,
+          "prompt_cache_key": null,
+          "reasoning": {
+            "effort": null,
+            "summary": null
+          },
+          "safety_identifier": null,
+          "service_tier": "default",
+          "store": true,
+          "temperature": 1.0,
+          "text": {
+            "format": {
+              "type": "text"
+            }
+          },
+          "tool_choice": "auto",
+          "tools": [
+            {
+              "type": "function",
+              "description": null,
+              "name": "get_weather",
+              "parameters": {
+                "properties": {
+                  "city": {
+                    "title": "City",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "city"
+                ],
+                "title": "get_weather_args",
+                "type": "object",
+                "additionalProperties": false
+              },
+              "strict": true
+            }
+          ],
+          "top_logprobs": 0,
+          "top_p": 1.0,
+          "truncation": "disabled",
+          "usage": {
+            "input_tokens": 53,
+            "input_tokens_details": {
+              "cached_tokens": 0
+            },
+            "output_tokens": 16,
+            "output_tokens_details": {
+              "reasoning_tokens": 0
+            },
+            "total_tokens": 69
+          },
+          "user": null,
+          "metadata": {}
+        }
+    headers:
+      CF-RAY:
+      - 96a6a27fcc70ca35-KBP
+      Connection:
+      - keep-alive
+      Content-Type:
+      - application/json
+      Date:
+      - Tue, 05 Aug 2025 13:27:58 GMT
+      Server:
+      - cloudflare
+      Transfer-Encoding:
+      - chunked
+      X-Content-Type-Options:
+      - nosniff
+      alt-svc:
+      - h3=":443"; ma=86400
+      cf-cache-status:
+      - DYNAMIC
+      content-length:
+      - '1713'
+      openai-organization:
+      - test_openai_org_id
+      openai-processing-ms:
+      - '1853'
+      openai-project:
+      - test_openai_project
+      openai-version:
+      - '2020-10-01'
+      strict-transport-security:
+      - max-age=31536000; includeSubDomains; preload
+      x-envoy-decorator-operation:
+      - tasksapi.openai.svc.cluster.local:8081/*
+      x-envoy-upstream-service-time:
+      - '1859'
+      x-ratelimit-limit-requests:
+      - '30000'
+      x-ratelimit-limit-tokens:
+      - '150000000'
+      x-ratelimit-remaining-requests:
+      - '29999'
+      x-ratelimit-remaining-tokens:
+      - '149999730'
+      x-ratelimit-reset-requests:
+      - 2ms
+      x-ratelimit-reset-tokens:
+      - 0s
+      x-request-id:
+      - req_9d6420082fddc46743653a5b63601596
+    status:
+      code: 200
+      message: OK
+- request:
+    body: |-
+      {
+        "include": [],
+        "input": [
+          {
+            "content": "What is the weather in Tel Aviv?",
+            "role": "user"
+          },
+          {
+            "arguments": "{\"city\":\"Tel Aviv\"}",
+            "call_id": "call_F8pSPbEA892NZEbtmuD9RWi8",
+            "name": "get_weather",
+            "type": "function_call",
+            "id": "fc_689206ddd2dc81a0898cd743aa236b3a03ba4ea690c32c5b",
+            "status": "completed"
+          },
+          {
+            "call_id": "call_F8pSPbEA892NZEbtmuD9RWi8",
+            "output": "The weather in Tel Aviv is currently 35\u00b0C and sunny.",
+            "type": "function_call_output"
+          }
+        ],
+        "instructions": "get weather",
+        "model": "gpt-4o-mini",
+        "stream": false,
+        "tools": [
+          {
+            "name": "get_weather",
+            "parameters": {
+              "properties": {
+                "city": {
+                  "title": "City",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "city"
+              ],
+              "title": "get_weather_args",
+              "type": "object",
+              "additionalProperties": false
+            },
+            "strict": true,
+            "type": "function",
+            "description": ""
+          }
+        ]
+      }
+    headers:
+      accept:
+      - application/json
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      content-length:
+      - '740'
+      content-type:
+      - application/json
+      cookie:
+      - redacted_cookie
+      host:
+      - api.openai.com
+      x-stainless-async:
+      - async:asyncio
+      x-stainless-read-timeout:
+      - '600'
+      x-stainless-retry-count:
+      - '0'
+    method: POST
+    uri: https://api.openai.com/v1/responses
+  response:
+    body:
+      string: |-
+        {
+          "id": "resp_689206de472481a0a1f01eda1cc6c8d603ba4ea690c32c5b",
+          "object": "response",
+          "created_at": 1754400478,
+          "status": "completed",
+          "background": false,
+          "error": null,
+          "incomplete_details": null,
+          "instructions": "get weather",
+          "max_output_tokens": null,
+          "max_tool_calls": null,
+          "model": "gpt-4o-mini-2024-07-18",
+          "output": [
+            {
+              "id": "msg_689206de9c4c81a0867f68502fa010b403ba4ea690c32c5b",
+              "type": "message",
+              "status": "completed",
+              "content": [
+                {
+                  "type": "output_text",
+                  "annotations": [],
+                  "logprobs": [],
+                  "text": "The weather in Tel Aviv is currently 35\u00b0C and sunny."
+                }
+              ],
+              "role": "assistant"
+            }
+          ],
+          "parallel_tool_calls": true,
+          "previous_response_id": null,
+          "prompt_cache_key": null,
+          "reasoning": {
+            "effort": null,
+            "summary": null
+          },
+          "safety_identifier": null,
+          "service_tier": "default",
+          "store": true,
+          "temperature": 1.0,
+          "text": {
+            "format": {
+              "type": "text"
+            }
+          },
+          "tool_choice": "auto",
+          "tools": [
+            {
+              "type": "function",
+              "description": null,
+              "name": "get_weather",
+              "parameters": {
+                "properties": {
+                  "city": {
+                    "title": "City",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "city"
+                ],
+                "title": "get_weather_args",
+                "type": "object",
+                "additionalProperties": false
+              },
+              "strict": true
+            }
+          ],
+          "top_logprobs": 0,
+          "top_p": 1.0,
+          "truncation": "disabled",
+          "usage": {
+            "input_tokens": 90,
+            "input_tokens_details": {
+              "cached_tokens": 0
+            },
+            "output_tokens": 15,
+            "output_tokens_details": {
+              "reasoning_tokens": 0
+            },
+            "total_tokens": 105
+          },
+          "user": null,
+          "metadata": {}
+        }
+    headers:
+      CF-RAY:
+      - 96a6a28c791eca35-KBP
+      Connection:
+      - keep-alive
+      Content-Type:
+      - application/json
+      Date:
+      - Tue, 05 Aug 2025 13:27:59 GMT
+      Server:
+      - cloudflare
+      Transfer-Encoding:
+      - chunked
+      X-Content-Type-Options:
+      - nosniff
+      alt-svc:
+      - h3=":443"; ma=86400
+      cf-cache-status:
+      - DYNAMIC
+      content-length:
+      - '1825'
+      openai-organization:
+      - test_openai_org_id
+      openai-processing-ms:
+      - '703'
+      openai-project:
+      - test_openai_project
+      openai-version:
+      - '2020-10-01'
+      strict-transport-security:
+      - max-age=31536000; includeSubDomains; preload
+      x-envoy-decorator-operation:
+      - tasksapi.openai.svc.cluster.local:8081/*
+      x-envoy-upstream-service-time:
+      - '709'
+      x-ratelimit-limit-requests:
+      - '30000'
+      x-ratelimit-limit-tokens:
+      - '150000000'
+      x-ratelimit-remaining-requests:
+      - '29999'
+      x-ratelimit-remaining-tokens:
+      - '149999692'
+      x-ratelimit-reset-requests:
+      - 2ms
+      x-ratelimit-reset-tokens:
+      - 0s
+      x-request-id:
+      - req_99b9d7151e7678000961299acb39b23c
+    status:
+      code: 200
+      message: OK
+- request:
+    body: |-
+      {
+        "include": [],
+        "input": [
+          {
+            "content": "What is the weather in Tel Aviv?",
+            "role": "user"
+          },
+          {
+            "arguments": "{\"city\":\"Tel Aviv\"}",
+            "call_id": "call_6iNnLaPpt0jioL0EHVxZf67R",
+            "name": "call_weather_agent",
+            "type": "function_call",
+            "id": "fc_689206dbdd40819c860b2cb4b7331c340d615fd2040af8a0",
+            "status": "completed"
+          },
+          {
+            "call_id": "call_6iNnLaPpt0jioL0EHVxZf67R",
+            "output": "The weather in Tel Aviv is currently 35\u00b0C and sunny.",
+            "type": "function_call_output"
+          }
+        ],
+        "instructions": "Be a helpful assistant. If the user asks about weather, call the weather agent.",
+        "model": "gpt-4o-mini",
+        "stream": false,
+        "tools": [
+          {
+            "name": "call_weather_agent",
+            "parameters": {
+              "properties": {
+                "city": {
+                  "title": "City",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "city"
+              ],
+              "title": "call_weather_agent_args",
+              "type": "object",
+              "additionalProperties": false
+            },
+            "strict": true,
+            "type": "function",
+            "description": ""
+          }
+        ]
+      }
+    headers:
+      accept:
+      - application/json
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      content-length:
+      - '829'
+      content-type:
+      - application/json
+      cookie:
+      - redacted_cookie
+      host:
+      - api.openai.com
+      x-stainless-async:
+      - async:asyncio
+      x-stainless-read-timeout:
+      - '600'
+      x-stainless-retry-count:
+      - '0'
+    method: POST
+    uri: https://api.openai.com/v1/responses
+  response:
+    body:
+      string: |-
+        {
+          "id": "resp_689206df31e0819cb6e2e1ab5c20cbca0d615fd2040af8a0",
+          "object": "response",
+          "created_at": 1754400479,
+          "status": "completed",
+          "background": false,
+          "error": null,
+          "incomplete_details": null,
+          "instructions": "Be a helpful assistant. If the user asks about weather, call the weather agent.",
+          "max_output_tokens": null,
+          "max_tool_calls": null,
+          "model": "gpt-4o-mini-2024-07-18",
+          "output": [
+            {
+              "id": "msg_689206df9128819cb7fb7d40b6c638b60d615fd2040af8a0",
+              "type": "message",
+              "status": "completed",
+              "content": [
+                {
+                  "type": "output_text",
+                  "annotations": [],
+                  "logprobs": [],
+                  "text": "The weather in Tel Aviv is currently 35\u00b0C and sunny."
+                }
+              ],
+              "role": "assistant"
+            }
+          ],
+          "parallel_tool_calls": true,
+          "previous_response_id": null,
+          "prompt_cache_key": null,
+          "reasoning": {
+            "effort": null,
+            "summary": null
+          },
+          "safety_identifier": null,
+          "service_tier": "default",
+          "store": true,
+          "temperature": 1.0,
+          "text": {
+            "format": {
+              "type": "text"
+            }
+          },
+          "tool_choice": "auto",
+          "tools": [
+            {
+              "type": "function",
+              "description": null,
+              "name": "call_weather_agent",
+              "parameters": {
+                "properties": {
+                  "city": {
+                    "title": "City",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "city"
+                ],
+                "title": "call_weather_agent_args",
+                "type": "object",
+                "additionalProperties": false
+              },
+              "strict": true
+            }
+          ],
+          "top_logprobs": 0,
+          "top_p": 1.0,
+          "truncation": "disabled",
+          "usage": {
+            "input_tokens": 109,
+            "input_tokens_details": {
+              "cached_tokens": 0
+            },
+            "output_tokens": 15,
+            "output_tokens_details": {
+              "reasoning_tokens": 0
+            },
+            "total_tokens": 124
+          },
+          "user": null,
+          "metadata": {}
+        }
+    headers:
+      CF-RAY:
+      - 96a6a29219f9ca35-KBP
+      Connection:
+      - keep-alive
+      Content-Type:
+      - application/json
+      Date:
+      - Tue, 05 Aug 2025 13:28:00 GMT
+      Server:
+      - cloudflare
+      Transfer-Encoding:
+      - chunked
+      X-Content-Type-Options:
+      - nosniff
+      alt-svc:
+      - h3=":443"; ma=86400
+      cf-cache-status:
+      - DYNAMIC
+      content-length:
+      - '1908'
+      openai-organization:
+      - test_openai_org_id
+      openai-processing-ms:
+      - '762'
+      openai-project:
+      - test_openai_project
+      openai-version:
+      - '2020-10-01'
+      strict-transport-security:
+      - max-age=31536000; includeSubDomains; preload
+      x-envoy-decorator-operation:
+      - tasksapi.openai.svc.cluster.local:8081/*
+      x-envoy-upstream-service-time:
+      - '768'
+      x-ratelimit-limit-requests:
+      - '30000'
+      x-ratelimit-limit-tokens:
+      - '150000000'
+      x-ratelimit-remaining-requests:
+      - '29999'
+      x-ratelimit-remaining-tokens:
+      - '149999675'
+      x-ratelimit-reset-requests:
+      - 2ms
+      x-ratelimit-reset-tokens:
+      - 0s
+      x-request-id:
+      - req_55bfae800c996748f07699f3d4f5e289
+    status:
+      code: 200
+      message: OK
+version: 1

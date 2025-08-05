@@ -39,9 +39,9 @@ interactions:
     body:
       string: |-
         {
-          "id": "resp_688243337a308192ad5a0082b465736200d8c8ee86c37a1e",
+          "id": "resp_689206d0cfa8819f81a444b437ac3b5209f38547f271d005",
           "object": "response",
-          "created_at": 1753367347,
+          "created_at": 1754400464,
           "status": "completed",
           "background": false,
           "error": null,
@@ -52,7 +52,7 @@ interactions:
           "model": "gpt-4o-mini-2024-07-18",
           "output": [
             {
-              "id": "msg_68824333bcc88192a74e1865c4af192e00d8c8ee86c37a1e",
+              "id": "msg_689206d17654819f9c641c9940ca4cc909f38547f271d005",
               "type": "message",
               "status": "completed",
               "content": [
@@ -103,21 +103,17 @@ interactions:
         }
     headers:
       CF-RAY:
-      - 96441ba0faa33552-WAW
+      - 96a6a236ebc3f057-WAW
       Connection:
       - keep-alive
       Content-Type:
       - application/json
       Date:
-      - Thu, 24 Jul 2025 14:29:08 GMT
+      - Tue, 05 Aug 2025 13:27:45 GMT
       Server:
       - cloudflare
       Set-Cookie:
-      - __cf_bm=kgghBRtwuSWduZYkoR5RBCSbdjjVHyM8ZEvcUHZ.KWQ-1753367348-1.0.1.1-MIMvLzFBijimUS21ShaMFcY6r9dbryTfAULOLdnjLfHYtRKdV1Qm7IE1RQWcVcA7_R0hDndE0LKi2UMynqyWV_YUezoJDqah6hSualhzJj4;
-        path=/; expires=Thu, 24-Jul-25 14:59:08 GMT; domain=.api.openai.com; HttpOnly;
-        Secure; SameSite=None
-      - _cfuvid=sqsTB.vpipdxMJKy1hQfMFLXyM41JO21LyTh3AnFwZw-1753367348258-0.0.1.1-604800000;
-        path=/; domain=.api.openai.com; HttpOnly; Secure; SameSite=None
+      - redacted_set_cookie
       Transfer-Encoding:
       - chunked
       X-Content-Type-Options:
@@ -129,15 +125,19 @@ interactions:
       content-length:
       - '1367'
       openai-organization:
-      - aporia-1
+      - test_openai_org_id
       openai-processing-ms:
-      - '726'
+      - '794'
       openai-project:
-      - proj_iedJ0uQD0V10kceXWonavbSf
+      - test_openai_project
       openai-version:
       - '2020-10-01'
       strict-transport-security:
       - max-age=31536000; includeSubDomains; preload
+      x-envoy-decorator-operation:
+      - tasksapi.openai.svc.cluster.local:8081/*
+      x-envoy-upstream-service-time:
+      - '798'
       x-ratelimit-limit-requests:
       - '30000'
       x-ratelimit-limit-tokens:
@@ -145,13 +145,13 @@ interactions:
       x-ratelimit-remaining-requests:
       - '29999'
       x-ratelimit-remaining-tokens:
-      - '149999959'
+      - '149999957'
       x-ratelimit-reset-requests:
       - 2ms
       x-ratelimit-reset-tokens:
       - 0s
       x-request-id:
-      - req_a65d8f3f2e8b9c096f5f275d4ea9f57b
+      - req_8372c6c5be3bcda1e024bab2f93ddc20
     status:
       code: 200
       message: OK

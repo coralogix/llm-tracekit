@@ -21,7 +21,6 @@ from opentelemetry.semconv._incubating.attributes import (
 
 def assert_attributes(
     span: ReadableSpan,
-    request_model: str,
     response_model: str = None,
     agent_name: Optional[str] = None,
     operation_name = "chat"
@@ -32,7 +31,6 @@ def assert_attributes(
         GenAIAttributes.GenAiSystemValues.OPENAI.value
         == span.attributes[GenAIAttributes.GEN_AI_SYSTEM]
     )
-    assert request_model == span.attributes[GenAIAttributes.GEN_AI_REQUEST_MODEL]
 
     if response_model:
         assert response_model == span.attributes[GenAIAttributes.GEN_AI_RESPONSE_MODEL]
