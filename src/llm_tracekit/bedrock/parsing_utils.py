@@ -1,11 +1,9 @@
 import json
-import logging
 import re
 from typing import Optional
 
 from llm_tracekit.span_builder import ToolCall
 
-logger = logging.getLogger(__name__)
 
 # Pre-compile regex for efficiency at the module level.
 _CONTENT_PATTERN = re.compile(r"text=([^\]}]+)", re.DOTALL)
@@ -57,10 +55,7 @@ def parse_tool_use(raw_content: str) -> Optional[ToolCall]:
             extracted_data["function_arguments"]
         )
     except (json.JSONDecodeError, TypeError):
-        logger.debug(
-            "Could not parse tool call arguments as JSON: %s",
-            extracted_data["function_arguments"],
-        )
+        pass
     return ToolCall(**extracted_data)
 
 

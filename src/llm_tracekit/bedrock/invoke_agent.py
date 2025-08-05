@@ -13,7 +13,6 @@
 # limitations under the License.
 
 import json
-import logging
 from dataclasses import dataclass
 from timeit import default_timer
 from typing import Any, Callable, Dict, List, Optional
@@ -39,8 +38,6 @@ from llm_tracekit.span_builder import (
     generate_request_attributes,
     generate_response_attributes,
 )
-
-logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -230,10 +227,6 @@ class InvokeAgentStreamWrapper(ObjectProxy):
             else:
                 self._result.prompt_history = prompt_history
         except Exception:
-            logger.exception(
-                "Failed to process Bedrock agent chat history. Raw messages: %s",
-                raw_messages,
-            )
             self._result.prompt_history = None
 
 
@@ -250,9 +243,7 @@ class InvokeAgentStreamWrapper(ObjectProxy):
                         self._result.finish_reasons.append(stop_reason)
                     
         except (json.JSONDecodeError, TypeError, AttributeError):
-            logger.debug(
-                "Could not decode rawResponse as JSON",
-            )
+            pass
 
     def _process_event(self, event):
         if "chunk" in event:
@@ -312,7 +303,4 @@ class InvokeAgentStreamWrapper(ObjectProxy):
                     if raw_messages:
                         self._process_chat_history(raw_messages)
                 except (json.JSONDecodeError, TypeError):
-                    logger.debug(
-                        "Could not decode model invocation input text as JSON: %s",
-                        model_invocation_input["text"],
-                    )
+                    pass
