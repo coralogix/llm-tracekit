@@ -24,7 +24,7 @@ from opentelemetry.semconv.schemas import Schemas
 from opentelemetry.trace import get_tracer  
 
 from llm_tracekit.instrumentation_utils import is_content_enabled
-from llm_tracekit.openai.package import _instruments
+from llm_tracekit.openai_agents.package import _instruments
 from llm_tracekit.openai_agents.tracing_processor import (
     OpenAIAgentsTracingProcessor
 )
@@ -33,6 +33,7 @@ from llm_tracekit.openai_agents.tracing_processor import (
 class OpenAIAgentsInstrumentor(BaseInstrumentor):
     def __init__(self):
         self._agent_tracer = None
+        self._processor_added = False
 
     def instrumentation_dependencies(self) -> Collection[str]:
         return _instruments
@@ -50,7 +51,9 @@ class OpenAIAgentsInstrumentor(BaseInstrumentor):
             tracer=tracer,
             capture_content=is_content_enabled()
         )
-        add_trace_processor(self._agent_tracer)
+        if not self._processor_added:
+            add_trace_processor(self._agent_tracer)
+            self._processor_added = True
 
     def _uninstrument(self, **kwargs):
         self._agent_tracer.disabled = True

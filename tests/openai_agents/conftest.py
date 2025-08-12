@@ -16,6 +16,9 @@ import os
 import pytest
 
 from llm_tracekit.openai_agents.instrumentor import OpenAIAgentsInstrumentor
+from llm_tracekit.instrumentation_utils import (
+    OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT,
+)
 
 
 @pytest.fixture(autouse=True)
@@ -25,6 +28,7 @@ def openai_env_vars():
 
 @pytest.fixture(scope="function")
 def instrument(tracer_provider, meter_provider):
+    os.environ.update({OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT: "True"})
     instrumentor = OpenAIAgentsInstrumentor()
     
     instrumentor.instrument(
@@ -33,7 +37,7 @@ def instrument(tracer_provider, meter_provider):
     )
 
     yield instrumentor
-
+    os.environ.pop(OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT, None)
     instrumentor.uninstrument()
 
 def handle_request_cookies(request):

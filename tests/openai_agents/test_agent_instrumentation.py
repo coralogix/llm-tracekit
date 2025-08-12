@@ -57,13 +57,14 @@ async def test_agent_single_turn(
 
     expected_choices = [
     {
-        'finish_reason': 'completed',
+        'finish_reason': 'stop',
         'message': {
             'role': 'assistant',
             'content': 'This is a test.'
         }
     }
     ]
+    print(final_response_span.attributes)
 
     assert_messages_in_span(
         span=final_response_span,
@@ -147,7 +148,7 @@ async def test_agent_tool_usage(
     
     expected_choices = [
     {
-        'finish_reason': 'completed',
+        'finish_reason': 'stop',
         'message': {
             'role': 'assistant',
             'content': result.final_output
@@ -225,7 +226,7 @@ async def test_agent_multi_turn(
 
     expected_choices = [
     {
-        'finish_reason': 'completed',
+        'finish_reason': 'stop',
         'message': {
             'role': 'assistant',
             'content': 'This is a test.'
@@ -316,7 +317,7 @@ async def test_agent_tool_execution_error(
 
     expected_choices = [
         {
-            'finish_reason': 'completed',
+            'finish_reason': 'stop',
             'message': {
                 'role': 'assistant',
                 'content': result.final_output
@@ -427,7 +428,7 @@ async def test_agent_nested_agent(
 
     expected_choices = [
         {
-            'finish_reason': 'completed',
+            'finish_reason': 'stop',
             'message': {
                 'role': 'assistant',
                 'content': result.final_output
@@ -450,5 +451,5 @@ async def test_agent_nested_agent(
     assert_attributes(
         span=final_response_span,
         response_model="gpt-4o-mini-2024-07-18",
-        agent_name=weather_agent.name
+        agent_name=main_agent.name
     )

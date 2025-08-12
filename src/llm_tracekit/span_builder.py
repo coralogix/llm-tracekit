@@ -220,7 +220,7 @@ class Agent:
     description: Optional[str] = None
 
     @attribute_generator
-    def generate_agent_attributes(self) -> Dict[str, Any]:
+    def generate_attributes(self) -> Dict[str, Any]:
         attributes = {
             GenAIAttributes.GEN_AI_AGENT_NAME: self.name,
             GenAIAttributes.GEN_AI_AGENT_ID: self.id,
