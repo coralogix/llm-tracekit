@@ -15,7 +15,7 @@
 
 from dataclasses import dataclass, field
 from contextvars import Token
-from typing import Any, Optional, Dict, List, Tuple, Union
+from typing import Any, Optional, Dict, List, Tuple, Union, Callable
 
 from agents import (
     AgentSpanData,
@@ -76,7 +76,7 @@ class OpenAIAgentsTracingProcessor(TracingProcessor):
         self.disabled = False
         self.tracer = tracer
         self.capture_content = capture_content
-        self._span_processors = {
+        self._span_processors: Dict[Span, Callable] = {
             AgentSpanData: self._process_agent_span,
             FunctionSpanData: self._process_function_span,
             ResponseSpanData: self._process_response_span,
