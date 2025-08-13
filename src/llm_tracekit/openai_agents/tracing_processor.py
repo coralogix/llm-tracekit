@@ -163,15 +163,14 @@ class OpenAIAgentsTracingProcessor(TracingProcessor):
                     if isinstance(msg, ResponseOutputMessage):
                         if hasattr(msg, 'role'):
                             response_role = msg.role
-                        if (msg is not None and
-                            hasattr(msg, 'content') and
-                            isinstance(msg.content, list) and
-                            len(msg.content) > 0 and
-                            hasattr(msg.content[0], 'text')):
-                                if response_content is None:
-                                    response_content = msg.content[0].text
-                                else:
-                                    response_content = f"{response_content} {msg.content[0].text}"
+                        if hasattr(msg, 'content') and isinstance(msg.content, list):
+                            for content_item in msg.content:
+                                if hasattr(content_item, 'text') and content_item.text:
+                                    text_part = content_item.text
+                                    if response_content is None:
+                                        response_content = text_part
+                                    else:
+                                        response_content = f"{response_content} {text_part}"
 
                 current_tool_calls = []
                 for part in response.output:
@@ -312,7 +311,7 @@ class OpenAIAgentsTracingProcessor(TracingProcessor):
         if state.parent_span is not None:
             state.parent_span.end()
 
-        for _, (span, context_token) in state.open_spans.items():
+        for _, (span, context_token) in reversed(list(state.open_spans.items())):
             detach(context_token)
             span.end()
 
