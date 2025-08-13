@@ -391,7 +391,7 @@ class OpenAIAgentsTracingProcessor(TracingProcessor):
                         status_code=StatusCode.ERROR, description=span.error["message"]
                     )
                 )
-        except Exception as e:
+        except Exception:
             pass
         finally:
             detach(context_token)
