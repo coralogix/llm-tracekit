@@ -1,5 +1,5 @@
 # LLM Tracekit
-This library contains modified versions of the [OpenTelemetry instrumentaions](https://github.com/open-telemetry/opentelemetry-python-contrib/) for [openai](https://openai.com/) and [bedrock](https://aws.amazon.com/bedrock/), designed to simplify LLM application development and production tracing and debugging.
+This library contains modified versions of the [OpenTelemetry instrumentaions](https://github.com/open-telemetry/opentelemetry-python-contrib/) for [OpenAI](https://openai.com/), [Bedrock](https://aws.amazon.com/bedrock/) and the [Openai Agents SDK](https://openai.github.io/openai-agents-python/), designed to simplify LLM application development and production tracing and debugging.
 
 ## Installation
 #### OpenAI
@@ -12,8 +12,14 @@ pip install llm-tracekit[openai]
 pip install llm-tracekit[bedrock]
 ```
 
+#### OpenAI Agents SDK
+>This instrumentation requires **Python 3.10+**
+```bash
+pip install llm-tracekit[openai_agents]
+```
+
 ## Usage
-This section describes how to setup up instrumentation for OpenAI or Bedrock. The examples will use the OpenAI instrumentation, but the usage is identical for both instrumentations, so you can simple replace `OpenAIInstrumentor` with `BedrockInstrumentor` if you are using Bedrock.
+This section describes how to set up instrumentation. The examples will use the OpenAI instrumentation, but the usage is similar for all instrumentations. You can replace `OpenAIInstrumentor` with `BedrockInstrumentor` or `OpenAIAgentsInstrumentor` depending on your use case.
 
 ### Setting up tracing
 You can use the `setup_export_to_coralogix` function to setup tracing and export traces to Coralogix
@@ -97,9 +103,13 @@ response = client.chat.completions.create(
 ```
 
 ### Changes from OpenTelemetry
+#### General
 * The `user` parameter in the OpenAI Chat Completions API is now recorded in the span as the `gen_ai.openai.request.user` attribute
 * The `tools` parameter in the OpenAI Chat Completions API is now recorded in the span as the `gen_ai.openai.request.tools` attributes.
 * User prompts and model responses are captured as span attributes instead of log events (see [Semantic Conventions](#semantic-conventions) below)
+#### For OpenAI Agents SDK
+* Agent & Tool Spans: Creates dedicated spans for each agent execution (`Agent - <AgentName>`) and for each tool call (`Tool - <ToolName>`), providing clear visibility into the agent's inner workings.
+* Enriched Spans: Automatically adds agent-specific attributes like the agent's `name` to the relevant spans.
 
 ## Semantic Conventions
 | Attribute | Type | Description | Examples
@@ -135,3 +145,45 @@ response = client.chat.completions.create(
 | `gen_ai.bedrock.request.tools.<tool_number>.function.name` | string | The name of the function to use in tool calls | `get_current_weather`
 | `gen_ai.bedrock.request.tools.<tool_number>.function.description` | string | Description of the function | `Get the current weather in a given location`
 | `gen_ai.bedrock.request.tools.<tool_number>.function.parameters` | string | JSON describing the schema of the function parameters | `{"type": "object", "properties": {"location": {"type": "string", "description": "The city and state, e.g. San Francisco, CA"}, "unit": {"type": "string", "enum": ["celsius", "fahrenheit"]}}, "required": ["location"]}`
+
+### OpenAI Agents SDK specific attributes
+#### Agent spans
+These spans represent the execution of a single agent. They act as parents for LLM calls, guardrails, and handoffs initiated by that agent.
+| **Attribute** | **Type** | **Description**                                                      | **Example**      |
+|---------------|----------|----------------------------------------------------------------------|------------------|
+| `type`          | string   | The type of the span, identifying it as an agent execution.          | `agent`            |
+| `agent_name`    | string   | The name of the agent being executed.                                | `Assistant`        |
+| `handoffs`      | string[] | A list of other agents that this agent is capable of handing off to. | `["WeatherAgent"]` |
+| `tools`         | string[] | A list of tools (functions) available to this agent.                 | `["get_current_weather"]`  |
+| `output_type`   | string   | The expected data type of the agent's final output.                  | `MessageOutput`    |
+
+#### Guardrail spans
+These spans represent the execution of a guardrail check.
+| **Attribute** | **Type** | **Description**                                                    | **Example**   |
+|---------------|----------|--------------------------------------------------------------------|---------------|
+| `type`          | string   | The type of the span, identifying it as a guardrail.               | `guardrail`     |
+| `name`          | string   | The unique name of the guardrail being executed.                   | `MathGuardrail` |
+| `triggered`     | boolean  | Indicates whether the guardrail condition was met (and triggered). | `false`         |
+
+### Handoff spans
+These spans represent the moment an agent attempts to delegate a task to another agent.
+| **Attribute** | **Type** | **Description**                                        | **Example**  |
+|---------------|----------|--------------------------------------------------------|--------------|
+| `type`          | string   | The type of the span, identifying it as a handoff.     | `handoff`      |
+| `from_agent`    | string   | The name of the agent initiating the handoff.          | `Assistant`    |
+| `to_agent`      | string   | The name of the agent intended to receive the handoff. | `WeatherAgent` |
+
+#### Function spans
+These spans represent the execution of a tool (a Python function).
+| **Attribute** | **Type** | **Description**                                           | **Example**                                |
+|---------------|----------|-----------------------------------------------------------|--------------------------------------------|
+| `type`          | string   | The type of the span, identifying it as a function.       | `function`                                   |
+| `name`          | string   | The name of the function that was called.                 | `get_current_weather`                                |
+| `input`         | string   | The JSON string of arguments passed to the function.      | `{"city":"Tel Aviv"}`                        |
+| `output`        | string   | The string representation of the function's return value. | `The weather in Tel Aviv is 30°C and sunny.` |
+
+#### Enriched LLM call spans
+These attributes are added to the existing `ResponseSpanData` to link LLM calls back to the responsible agent.
+| **Attribute**            | **Type** | **Description**                                     | **Example**                                                                         |
+|--------------------------|----------|-----------------------------------------------------|-------------------------------------------------------------------------------------|
+| `gen_ai.agent.name`        | string   | The name of the agent that initiated this LLM call. | `Assistant`, `WeatherAgent`                                                                           |
