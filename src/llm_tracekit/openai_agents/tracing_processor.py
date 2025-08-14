@@ -15,7 +15,7 @@
 
 from dataclasses import dataclass, field
 from contextvars import Token
-from typing import Any, Optional, Dict, List, Tuple, Union, Callable
+from typing import Any, Optional, Dict, List, Tuple, Union, Callable, Type
 
 from agents import (
     AgentSpanData,
@@ -76,7 +76,7 @@ class OpenAIAgentsTracingProcessor(TracingProcessor):
         self.disabled = False
         self.tracer = tracer
         self.capture_content = capture_content
-        self._span_processors: Dict[Span, Callable] = {
+        self._span_processors: Dict[Type[Any], Callable[..., Dict[str, Any]]] = {
             AgentSpanData: self._process_agent_span,
             FunctionSpanData: self._process_function_span,
             ResponseSpanData: self._process_response_span,
@@ -127,12 +127,12 @@ class OpenAIAgentsTracingProcessor(TracingProcessor):
                     # This nested loop is used to merge them back into a single message 
                     while idx < len(input_messages) and input_messages[idx].get('type') == 'function_call':
                         tool_call_msg = input_messages[idx]
-                        tool_call = ToolCall(
-                            id=tool_call_msg.get('call_id'),
-                            type=tool_call_msg.get('type'),
-                            function_name=tool_call_msg.get('name'),
-                            function_arguments=tool_call_msg.get('arguments')
-                        )
+                        tool_call = ToolCall.model_validate({
+                            'id': tool_call_msg.get('call_id'),
+                            'type': tool_call_msg.get('type'),
+                            'function_name': tool_call_msg.get('name'),
+                            'function_arguments': tool_call_msg.get('arguments')
+                        })
                         tool_call_buffer.append(tool_call)
                         idx += 1
                     assistant_tool_message = Message(role='assistant', content=None, tool_calls=tool_call_buffer)
@@ -159,14 +159,14 @@ class OpenAIAgentsTracingProcessor(TracingProcessor):
             response_role = 'assistant'
 
             if response.output is not None and isinstance(response.output, list) and len(response.output) > 0:
-                for msg in response.output:
-                    if isinstance(msg, ResponseOutputMessage):
-                        if hasattr(msg, 'role'):
-                            response_role = msg.role
-                        if hasattr(msg, 'content') and isinstance(msg.content, list):
-                            for content_item in msg.content:
-                                if hasattr(content_item, 'text') and content_item.text:
-                                    text_part = content_item.text
+                for output_item in response.output:
+                    if isinstance(output_item, ResponseOutputMessage):
+                        if hasattr(output_item, 'role'):
+                            response_role = output_item.role
+                        if hasattr(output_item, 'content') and isinstance(output_item.content, list):
+                            for content_part in output_item.content:
+                                if hasattr(content_part, 'text') and isinstance(content_part.text, str) and content_part.text:
+                                    text_part = content_part.text
                                     if response_content is None:
                                         response_content = text_part
                                     else:

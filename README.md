@@ -108,7 +108,7 @@ response = client.chat.completions.create(
 * The `tools` parameter in the OpenAI Chat Completions API is now recorded in the span as the `gen_ai.openai.request.tools` attributes.
 * User prompts and model responses are captured as span attributes instead of log events (see [Semantic Conventions](#semantic-conventions) below)
 #### For OpenAI Agents SDK
-* Agent & Tool Spans: Creates dedicated spans for each agent execution (`Agent - <AgentName>`) and for each tool call (`Tool - <ToolName>`), providing clear visibility into the agent's inner workings.
+* Agent & Tool Spans: Creates dedicated spans for each agent execution and for each tool call, providing clear visibility into the agent's inner workings.
 * Enriched Spans: Automatically adds agent-specific attributes like the agent's `name` to the relevant spans.
 
 ## Semantic Conventions
@@ -165,8 +165,10 @@ These spans represent the execution of a guardrail check.
 | `name`          | string   | The unique name of the guardrail being executed.                   | `MathGuardrail` |
 | `triggered`     | boolean  | Indicates whether the guardrail condition was met (and triggered). | `false`         |
 
-### Handoff spans
+#### Handoff spans
 These spans represent the moment an agent attempts to delegate a task to another agent.
+> **Handling Multiple Handoffs:** If the LLM attempts to hand off to multiple agents in a single turn, the `to_agent` attribute will only contain the name of the *first* agent in the list. The span will also be marked with an error status to indicate this ambiguity.
+
 | **Attribute** | **Type** | **Description**                                        | **Example**  |
 |---------------|----------|--------------------------------------------------------|--------------|
 | `type`          | string   | The type of the span, identifying it as a handoff.     | `handoff`      |
@@ -183,7 +185,7 @@ These spans represent the execution of a tool (a Python function).
 | `output`        | string   | The string representation of the function's return value. | `The weather in Tel Aviv is 30°C and sunny.` |
 
 #### Enriched LLM call spans
-These attributes are added to the existing `ResponseSpanData` to link LLM calls back to the responsible agent.
+These attributes are added to the existing span to link LLM calls back to the responsible agent.
 | **Attribute**            | **Type** | **Description**                                     | **Example**                                                                         |
 |--------------------------|----------|-----------------------------------------------------|-------------------------------------------------------------------------------------|
 | `gen_ai.agent.name`        | string   | The name of the agent that initiated this LLM call. | `Assistant`, `WeatherAgent`                                                                           |

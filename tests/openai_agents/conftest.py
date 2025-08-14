@@ -15,7 +15,11 @@
 import os
 import pytest
 
-from llm_tracekit.openai_agents.instrumentor import OpenAIAgentsInstrumentor
+try:
+    from llm_tracekit.openai_agents.instrumentor import OpenAIAgentsInstrumentor
+except (ImportError, ModuleNotFoundError):
+    pytest.skip("OpenAI agents not available (requires Python 3.10+)", allow_module_level=True)
+    
 from llm_tracekit.instrumentation_utils import (
     OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT,
 )

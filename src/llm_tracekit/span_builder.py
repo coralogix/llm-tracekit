@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from pydantic import BaseModel
 from dataclasses import dataclass
 from functools import wraps
 from typing import Any, Callable, Dict, List, Optional
@@ -23,13 +24,11 @@ from opentelemetry.semconv._incubating.attributes import (
 from llm_tracekit import extended_gen_ai_attributes as ExtendedGenAIAttributes
 
 
-@dataclass
-class ToolCall:
+class ToolCall(BaseModel):
     id: Optional[str] = None
     type: Optional[str] = None
     function_name: Optional[str] = None
     function_arguments: Optional[str] = None
-
 
 @dataclass
 class Message:
