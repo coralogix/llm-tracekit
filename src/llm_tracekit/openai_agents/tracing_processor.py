@@ -128,12 +128,12 @@ class OpenAIAgentsTracingProcessor(TracingProcessor):
                     while idx < len(input_messages) and input_messages[idx].get('type') == 'function_call':
                         tool_call_msg = input_messages[idx]
                         try:
-                            tool_call = ToolCall(
-                                id=tool_call_msg.get('call_id'),
-                                type=tool_call_msg.get('type'),
-                                function_name=tool_call_msg.get('name'),
-                                function_arguments=tool_call_msg.get('arguments')
-                            )
+                            tool_call = ToolCall.model_validate({
+                            'id': tool_call_msg.get('call_id'),
+                            'type': tool_call_msg.get('type'),
+                            'function_name': tool_call_msg.get('name'),
+                            'function_arguments': tool_call_msg.get('arguments')
+                            })
                         except Exception:
                             idx += 1
                             continue
