@@ -244,6 +244,45 @@ def test_chat_completion_extra_params(
 
 
 @pytest.mark.vcr()
+def test_chat_completion_with_not_given_params(
+    span_exporter, openai_client, instrument_no_content
+):
+    from openai import NOT_GIVEN
+
+    llm_model_value = "gpt-4o-mini"
+    messages_value = [{"role": "user", "content": "Say this is a test"}]
+
+    # Explicitly pass NOT_GIVEN for optional parameters
+    response = openai_client.chat.completions.create(
+        messages=messages_value,
+        model=llm_model_value,
+        temperature=NOT_GIVEN,
+        top_p=NOT_GIVEN,
+        presence_penalty=NOT_GIVEN,
+        frequency_penalty=NOT_GIVEN,
+        seed=NOT_GIVEN,
+        response_format=NOT_GIVEN,
+        stream=False,
+    )
+
+    spans = span_exporter.get_finished_spans()
+    assert len(spans) == 1
+    span = spans[0]
+
+    # Verify that NOT_GIVEN values are not present in span attributes
+    assert GenAIAttributes.GEN_AI_REQUEST_TEMPERATURE not in span.attributes
+    assert GenAIAttributes.GEN_AI_REQUEST_TOP_P not in span.attributes
+    assert GenAIAttributes.GEN_AI_REQUEST_PRESENCE_PENALTY not in span.attributes
+    assert GenAIAttributes.GEN_AI_REQUEST_FREQUENCY_PENALTY not in span.attributes
+    assert GenAIAttributes.GEN_AI_OPENAI_REQUEST_SEED not in span.attributes
+    assert GenAIAttributes.GEN_AI_OPENAI_REQUEST_RESPONSE_FORMAT not in span.attributes
+
+    # Verify that the span still has the required attributes
+    assert span.attributes[GenAIAttributes.GEN_AI_REQUEST_MODEL] == llm_model_value
+    assert span.attributes[GenAIAttributes.GEN_AI_SYSTEM] == "openai"
+
+
+@pytest.mark.vcr()
 def test_chat_completion_multiple_choices(
     span_exporter, openai_client, instrument_with_content
 ):

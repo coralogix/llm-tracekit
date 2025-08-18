@@ -16,6 +16,7 @@ from dataclasses import dataclass
 from functools import wraps
 from typing import Any, Callable, Dict, List, Optional
 
+from openai import NOT_GIVEN
 from opentelemetry.semconv._incubating.attributes import (
     gen_ai_attributes as GenAIAttributes,
 )
@@ -48,7 +49,11 @@ class Choice:
 
 
 def remove_attributes_with_null_values(attributes: Dict[str, Any]) -> Dict[str, Any]:
-    return {attr: value for attr, value in attributes.items() if value is not None}
+    return {
+        attr: value
+        for attr, value in attributes.items()
+        if value is not None and value is not NOT_GIVEN
+    }
 
 
 def attribute_generator(
