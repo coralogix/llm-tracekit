@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from pydantic import BaseModel
 from dataclasses import dataclass
 from functools import wraps
 from typing import Any, Callable, Dict, List, Optional
@@ -23,13 +24,11 @@ from opentelemetry.semconv._incubating.attributes import (
 from llm_tracekit import extended_gen_ai_attributes as ExtendedGenAIAttributes
 
 
-@dataclass
-class ToolCall:
+class ToolCall(BaseModel):
     id: Optional[str] = None
     type: Optional[str] = None
     function_name: Optional[str] = None
     function_arguments: Optional[str] = None
-
 
 @dataclass
 class Message:
@@ -211,3 +210,19 @@ def generate_choice_attributes(
                     ] = tool_call.function_arguments
 
     return attributes
+
+
+@dataclass
+class Agent:
+    id: Optional[str] = None
+    name: Optional[str] = None
+    description: Optional[str] = None
+
+    @attribute_generator
+    def generate_attributes(self) -> Dict[str, Any]:
+        attributes = {
+            GenAIAttributes.GEN_AI_AGENT_NAME: self.name,
+            GenAIAttributes.GEN_AI_AGENT_ID: self.id,
+            GenAIAttributes.GEN_AI_AGENT_DESCRIPTION: self.description,
+        }
+        return attributes

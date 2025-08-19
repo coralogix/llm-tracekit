@@ -64,6 +64,7 @@ from llm_tracekit.openai.patch import (
 class OpenAIInstrumentor(BaseInstrumentor):
     def __init__(self):
         self._meter = None
+        self._agent_tracer = None
 
     def instrumentation_dependencies(self) -> Collection[str]:
         return _instruments

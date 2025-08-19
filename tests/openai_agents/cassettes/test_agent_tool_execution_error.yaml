@@ -1,0 +1,405 @@
+interactions:
+- request:
+    body: |-
+      {
+        "include": [],
+        "input": [
+          {
+            "content": "What is the weather in Tel Aviv?",
+            "role": "user"
+          }
+        ],
+        "instructions": "to fail",
+        "model": "gpt-4o-mini",
+        "stream": false,
+        "tools": [
+          {
+            "name": "failing_weather_tool",
+            "parameters": {
+              "properties": {
+                "city": {
+                  "title": "City",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "city"
+              ],
+              "title": "failing_weather_tool_args",
+              "type": "object",
+              "additionalProperties": false
+            },
+            "strict": true,
+            "type": "function",
+            "description": ""
+          }
+        ]
+      }
+    headers:
+      accept:
+      - application/json
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      content-length:
+      - '409'
+      content-type:
+      - application/json
+      cookie:
+      - redacted_cookie
+      host:
+      - api.openai.com
+      x-stainless-async:
+      - async:asyncio
+      x-stainless-read-timeout:
+      - '600'
+      x-stainless-retry-count:
+      - '1'
+    method: POST
+    uri: https://api.openai.com/v1/responses
+  response:
+    body:
+      string: |-
+        {
+          "id": "resp_689206d7b688819d98946774f148079404c0f7d3b227fb57",
+          "object": "response",
+          "created_at": 1754400471,
+          "status": "completed",
+          "background": false,
+          "error": null,
+          "incomplete_details": null,
+          "instructions": "to fail",
+          "max_output_tokens": null,
+          "max_tool_calls": null,
+          "model": "gpt-4o-mini-2024-07-18",
+          "output": [
+            {
+              "id": "fc_689206d83c14819d9fd48676b06906c904c0f7d3b227fb57",
+              "type": "function_call",
+              "status": "completed",
+              "arguments": "{\"city\":\"Tel Aviv\"}",
+              "call_id": "call_mWRr7QRBkLb3v25zlRZdN3AT",
+              "name": "failing_weather_tool"
+            }
+          ],
+          "parallel_tool_calls": true,
+          "previous_response_id": null,
+          "prompt_cache_key": null,
+          "reasoning": {
+            "effort": null,
+            "summary": null
+          },
+          "safety_identifier": null,
+          "service_tier": "default",
+          "store": true,
+          "temperature": 1.0,
+          "text": {
+            "format": {
+              "type": "text"
+            }
+          },
+          "tool_choice": "auto",
+          "tools": [
+            {
+              "type": "function",
+              "description": null,
+              "name": "failing_weather_tool",
+              "parameters": {
+                "properties": {
+                  "city": {
+                    "title": "City",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "city"
+                ],
+                "title": "failing_weather_tool_args",
+                "type": "object",
+                "additionalProperties": false
+              },
+              "strict": true
+            }
+          ],
+          "top_logprobs": 0,
+          "top_p": 1.0,
+          "truncation": "disabled",
+          "usage": {
+            "input_tokens": 55,
+            "input_tokens_details": {
+              "cached_tokens": 0
+            },
+            "output_tokens": 18,
+            "output_tokens_details": {
+              "reasoning_tokens": 0
+            },
+            "total_tokens": 73
+          },
+          "user": null,
+          "metadata": {}
+        }
+    headers:
+      CF-RAY:
+      - 96a6a2639a102d97-KBP
+      Connection:
+      - keep-alive
+      Content-Type:
+      - application/json
+      Date:
+      - Tue, 05 Aug 2025 13:27:52 GMT
+      Server:
+      - cloudflare
+      Transfer-Encoding:
+      - chunked
+      X-Content-Type-Options:
+      - nosniff
+      alt-svc:
+      - h3=":443"; ma=86400
+      cf-cache-status:
+      - DYNAMIC
+      content-length:
+      - '1736'
+      openai-organization:
+      - test_openai_org_id
+      openai-processing-ms:
+      - '782'
+      openai-project:
+      - test_openai_project
+      openai-version:
+      - '2020-10-01'
+      strict-transport-security:
+      - max-age=31536000; includeSubDomains; preload
+      x-envoy-decorator-operation:
+      - tasksapi.openai.svc.cluster.local:8081/*
+      x-envoy-upstream-service-time:
+      - '788'
+      x-ratelimit-limit-requests:
+      - '30000'
+      x-ratelimit-limit-tokens:
+      - '150000000'
+      x-ratelimit-remaining-requests:
+      - '29999'
+      x-ratelimit-remaining-tokens:
+      - '149999727'
+      x-ratelimit-reset-requests:
+      - 2ms
+      x-ratelimit-reset-tokens:
+      - 0s
+      x-request-id:
+      - req_6559dbd3161d2182caafb0a05767ead2
+    status:
+      code: 200
+      message: OK
+- request:
+    body: |-
+      {
+        "include": [],
+        "input": [
+          {
+            "content": "What is the weather in Tel Aviv?",
+            "role": "user"
+          },
+          {
+            "arguments": "{\"city\":\"Tel Aviv\"}",
+            "call_id": "call_mWRr7QRBkLb3v25zlRZdN3AT",
+            "name": "failing_weather_tool",
+            "type": "function_call",
+            "id": "fc_689206d83c14819d9fd48676b06906c904c0f7d3b227fb57",
+            "status": "completed"
+          },
+          {
+            "call_id": "call_mWRr7QRBkLb3v25zlRZdN3AT",
+            "output": "An error occurred while running the tool. Please try again. Error: Tool failed as intended for testing",
+            "type": "function_call_output"
+          }
+        ],
+        "instructions": "to fail",
+        "model": "gpt-4o-mini",
+        "stream": false,
+        "tools": [
+          {
+            "name": "failing_weather_tool",
+            "parameters": {
+              "properties": {
+                "city": {
+                  "title": "City",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "city"
+              ],
+              "title": "failing_weather_tool_args",
+              "type": "object",
+              "additionalProperties": false
+            },
+            "strict": true,
+            "type": "function",
+            "description": ""
+          }
+        ]
+      }
+    headers:
+      accept:
+      - application/json
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      content-length:
+      - '812'
+      content-type:
+      - application/json
+      cookie:
+      - redacted_cookie
+      host:
+      - api.openai.com
+      x-stainless-async:
+      - async:asyncio
+      x-stainless-read-timeout:
+      - '600'
+      x-stainless-retry-count:
+      - '0'
+    method: POST
+    uri: https://api.openai.com/v1/responses
+  response:
+    body:
+      string: |-
+        {
+          "id": "resp_689206d8ab28819d8e8e3e615626af3704c0f7d3b227fb57",
+          "object": "response",
+          "created_at": 1754400472,
+          "status": "completed",
+          "background": false,
+          "error": null,
+          "incomplete_details": null,
+          "instructions": "to fail",
+          "max_output_tokens": null,
+          "max_tool_calls": null,
+          "model": "gpt-4o-mini-2024-07-18",
+          "output": [
+            {
+              "id": "msg_689206d92aa0819da3561b20bc5806cb04c0f7d3b227fb57",
+              "type": "message",
+              "status": "completed",
+              "content": [
+                {
+                  "type": "output_text",
+                  "annotations": [],
+                  "logprobs": [],
+                  "text": "I encountered an issue while trying to retrieve the weather for Tel Aviv. If you need up-to-date weather information, I recommend checking a reliable weather website or app. Let me know if there's anything else I can help with!"
+                }
+              ],
+              "role": "assistant"
+            }
+          ],
+          "parallel_tool_calls": true,
+          "previous_response_id": null,
+          "prompt_cache_key": null,
+          "reasoning": {
+            "effort": null,
+            "summary": null
+          },
+          "safety_identifier": null,
+          "service_tier": "default",
+          "store": true,
+          "temperature": 1.0,
+          "text": {
+            "format": {
+              "type": "text"
+            }
+          },
+          "tool_choice": "auto",
+          "tools": [
+            {
+              "type": "function",
+              "description": null,
+              "name": "failing_weather_tool",
+              "parameters": {
+                "properties": {
+                  "city": {
+                    "title": "City",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "city"
+                ],
+                "title": "failing_weather_tool_args",
+                "type": "object",
+                "additionalProperties": false
+              },
+              "strict": true
+            }
+          ],
+          "top_logprobs": 0,
+          "top_p": 1.0,
+          "truncation": "disabled",
+          "usage": {
+            "input_tokens": 103,
+            "input_tokens_details": {
+              "cached_tokens": 0
+            },
+            "output_tokens": 47,
+            "output_tokens_details": {
+              "reasoning_tokens": 0
+            },
+            "total_tokens": 150
+          },
+          "user": null,
+          "metadata": {}
+        }
+    headers:
+      CF-RAY:
+      - 96a6a26998182d97-KBP
+      Connection:
+      - keep-alive
+      Content-Type:
+      - application/json
+      Date:
+      - Tue, 05 Aug 2025 13:27:54 GMT
+      Server:
+      - cloudflare
+      Transfer-Encoding:
+      - chunked
+      X-Content-Type-Options:
+      - nosniff
+      alt-svc:
+      - h3=":443"; ma=86400
+      cf-cache-status:
+      - DYNAMIC
+      content-length:
+      - '2010'
+      openai-organization:
+      - test_openai_org_id
+      openai-processing-ms:
+      - '1632'
+      openai-project:
+      - test_openai_project
+      openai-version:
+      - '2020-10-01'
+      strict-transport-security:
+      - max-age=31536000; includeSubDomains; preload
+      x-envoy-decorator-operation:
+      - tasksapi.openai.svc.cluster.local:8081/*
+      x-envoy-upstream-service-time:
+      - '1640'
+      x-ratelimit-limit-requests:
+      - '30000'
+      x-ratelimit-limit-tokens:
+      - '150000000'
+      x-ratelimit-remaining-requests:
+      - '29999'
+      x-ratelimit-remaining-tokens:
+      - '149999680'
+      x-ratelimit-reset-requests:
+      - 2ms
+      x-ratelimit-reset-tokens:
+      - 0s
+      x-request-id:
+      - req_fb7b53ff9268035d3740ddfe22b1f891
+    status:
+      code: 200
+      message: OK
+version: 1
