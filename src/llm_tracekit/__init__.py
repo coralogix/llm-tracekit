@@ -30,3 +30,7 @@ with suppress(ImportError):
     from llm_tracekit.bedrock.instrumentor import (
         BedrockInstrumentor as BedrockInstrumentor,
     )
+with suppress(ImportError):
+    from llm_tracekit.litellm.instrumentor import (
+        LiteLLMInstrumentor as LiteLLMInstrumentor,
+    )

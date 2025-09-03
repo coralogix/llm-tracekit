@@ -1,6 +1,6 @@
 [project]
 name = "llm-tracekit"
-version = "1.4.0"
+version = "1.5.0"
 description = "Collect and send GenAI calls as spans for development and production observability."
 readme = "README.md"
 authors = [
@@ -41,10 +41,14 @@ openai_agents = [
 bedrock = [
     "boto3>=1.37.0",
 ]
+litellm = [
+    "litellm>=1.40.0",
+]
 all = [
     "openai>=1.26.0",
     "openai-agents>=0.1.0; python_version >= '3.10'",
     "boto3>=1.37.0",
+    "litellm>=1.40.0"
 ]
 
 
@@ -57,6 +61,7 @@ repository = "https://github.com/coralogix/llm-tracekit.git"
 openai = "llm_tracekit:OpenAIInstrumentor"
 openai_agents = "llm_tracekit:OpenAIAgentsInstrumentor"
 boto3 = "llm_tracekit:BedrockInstrumentor"
+litellm = "llm_tracekit:LiteLLMInstrumentor"
 
 [dependency-groups]
 dev = [
@@ -68,6 +73,7 @@ dev = [
     "pyyaml>=6.0.2",
     "ruff>=0.9.7",
     "types-boto3>=1.38.4",
+    "brotli>=1.0.0",
 ]
 
 [build-system]
