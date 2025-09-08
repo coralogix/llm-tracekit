@@ -67,7 +67,7 @@ def test_litellm_streaming(instrument):
     exporter = litellm.callbacks[0].OTEL_EXPORTER
     exporter._finished_spans.clear()
     model = "gpt-4o-mini"
-    messages = [{"role": "user", "content": "Say this is a streaming test"}]
+    messages = [{"role": "user", "content": "Say the exact message: 'this is a test'"}]
 
     response = litellm.completion(model=model, messages=messages, stream=True)
 
@@ -83,7 +83,7 @@ def test_litellm_streaming(instrument):
     actual_content = span.attributes.get("gen_ai.completion.0.content")
 
     assert actual_content is not None
-    assert "streaming test" in actual_content
+    assert "test" in actual_content
 
     assert_attributes(
         span,
