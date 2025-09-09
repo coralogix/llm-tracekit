@@ -41,6 +41,68 @@ class LitellmCallback(OpenTelemetry):
         super().__init__(config=config)
         self.capture_content = capture_content
 
+    def parse_messages(self, raw_messages: List[Dict[str, Any]]) -> List[Message]:
+        messages: List[Message] = []
+        for prompt in raw_messages:
+            content = prompt.get("content")
+            if content is not None and not isinstance(content, str):
+                content = str(content)
+
+            tool_calls_data = prompt.get("tool_calls")
+            tool_calls_list = None
+            
+            if tool_calls_data:
+                tool_calls_list = [
+                    ToolCall(
+                        id=tool_call.get("id"),
+                        type=tool_call.get("type"),
+                        function_name=tool_call.get("function", {}).get("name"),
+                        function_arguments=tool_call.get("function", {}).get("arguments"),
+                    )
+                    for tool_call in tool_calls_data
+                ]
+
+            message = Message(
+                role=prompt.get("role"),
+                content=content,
+                tool_call_id=prompt.get("tool_call_id"),
+                tool_calls=tool_calls_list,
+            )
+            messages.append(message)
+        return messages
+    
+    def parse_choices(self, raw_choices: List[Dict[str, Any]]) -> List[Choice]:
+        choices: List[Choice] = []
+        for choice_dict in raw_choices:
+            choice_message = choice_dict.get("message", {}) or {}
+            tool_calls_list = None
+
+            tool_calls = choice_message.get("tool_calls")
+
+            if tool_calls:
+                tool_calls_list = [
+                    ToolCall(
+                        id=tool_call.get("id"),
+                        type=tool_call.get("type"),
+                        function_name=tool_call.get("function", {}).get("name"),
+                        function_arguments=tool_call.get("function", {}).get("arguments"),
+                    )
+                    for tool_call in tool_calls
+                ]
+
+            content = choice_message.get("content")
+            if content is not None and not isinstance(content, str):
+                content = str(content)
+
+            choice = Choice(
+                finish_reason=choice_dict.get("finish_reason"),
+                role=choice_message.get("role"),
+                content=content,
+                tool_calls=tool_calls_list,
+            )
+            choices.append(choice)
+        return choices
+
     def set_attributes(  # noqa: PLR0915
         self, span: Span, kwargs, response_obj: Optional[Any]
     ):
@@ -59,32 +121,7 @@ class LitellmCallback(OpenTelemetry):
             response_attributes: Dict[str, Any] = {}
 
             if "messages" in kwargs:
-                raw_messages = kwargs["messages"]
-
-                for prompt in raw_messages:
-                    content = prompt.get("content")
-                    if content is not None and not isinstance(content, str):
-                        content = str(content)
-
-                    tool_calls_list = None
-                    if prompt.get("tool_calls"):
-                        tool_calls_list = [
-                            ToolCall(
-                                id=tool_call.get("id"),
-                                type=tool_call.get("type"),
-                                function_name=tool_call.get("function", {}).get("name"),
-                                function_arguments=tool_call.get("function", {}).get("arguments"),
-                            )
-                            for tool_call in prompt.get("tool_calls")
-                        ]
-
-                    message = Message(
-                        role=prompt.get("role"),
-                        content=content,
-                        tool_call_id=prompt.get("tool_call_id"),
-                        tool_calls=tool_calls_list,
-                    )
-                    messages.append(message)
+                messages = self.parse_messages(kwargs.get("messages"))
 
             if response_obj is not None:
                 response_attributes = generate_response_attributes(
@@ -95,35 +132,7 @@ class LitellmCallback(OpenTelemetry):
                 )
                 if "choices" in response_obj:
                     raw_choices = response_obj.get("choices")
-
-                    for choice_dict in raw_choices:
-                        choice_message = choice_dict.get("message", {}) or {}
-                        tool_calls_list = None
-
-                        tool_calls = choice_message.get("tool_calls")
-
-                        if tool_calls:
-                            tool_calls_list = [
-                                ToolCall(
-                                    id=tool_call.get("id"),
-                                    type=tool_call.get("type"),
-                                    function_name=tool_call.get("function", {}).get("name"),
-                                    function_arguments=tool_call.get("function", {}).get("arguments"),
-                                )
-                                for tool_call in tool_calls
-                            ]
-
-                        content = choice_message.get("content")
-                        if content is not None and not isinstance(content, str):
-                            content = str(content)
-
-                        choice = Choice(
-                            finish_reason=choice_dict.get("finish_reason"),
-                            role=choice_message.get("role"),
-                            content=content,
-                            tool_calls=tool_calls_list,
-                        )
-                        choices.append(choice)
+                    choices = self.parse_choices(raw_choices)
 
             attributes = {
                 **generate_base_attributes(

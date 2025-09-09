@@ -13,19 +13,19 @@
 # limitations under the License.
 
 
-import os
-from typing import Collection, Optional
+from typing import Collection, Optional, Union
 
 from opentelemetry.instrumentation.instrumentor import (  # type: ignore[attr-defined]
     BaseInstrumentor,
 )
 
+from llm_tracekit.coralogix import ExportConfig, generate_exporter_config
 from llm_tracekit.instrumentation_utils import is_content_enabled
 from llm_tracekit.litellm.package import _instruments
 from llm_tracekit.litellm.callback import LitellmCallback
 
 import litellm
-from litellm.integrations.opentelemetry import OpenTelemetryConfig
+from litellm.integrations.opentelemetry import OpenTelemetryConfig as LiteLLMConfig
 
 class LiteLLMInstrumentor(BaseInstrumentor):
     def __init__(
@@ -35,44 +35,23 @@ class LiteLLMInstrumentor(BaseInstrumentor):
         application_name: Optional[str] = None,
         subsystem_name: Optional[str] = None,
     ):
-        self._config: Optional[OpenTelemetryConfig] = self.generate_exporter_config(
+        self._config: Union[ExportConfig, LiteLLMConfig, None] = generate_exporter_config(
             coralogix_token,
             coralogix_endpoint,
             application_name,
             subsystem_name
         )
 
-    def generate_exporter_config(
-        self,
-        coralogix_token,
-        coralogix_endpoint,
-        application_name,
-        subsystem_name
-    ) -> Optional[OpenTelemetryConfig]:
-        if coralogix_token is None:
-            coralogix_token = os.environ.get("CX_TOKEN")
-        if coralogix_endpoint is None:
-            coralogix_endpoint = os.environ.get("CX_ENDPOINT")
-        if application_name is None:
-            application_name = os.environ.get("CX_APPLICATION_NAME")
-        if subsystem_name is None:
-            subsystem_name = os.environ.get("CX_SUBSYSTEM_NAME")
-        
-        if not coralogix_token or not coralogix_endpoint:
-            return None
-
-        headers_dict = {
-            "authorization": f"Bearer {coralogix_token}",
-            "cx-application-name": application_name,
-            "cx-subsystem-name": subsystem_name,
-        }
-        headers_string = ",".join([f"{key}={value}" for key, value in headers_dict.items()])
-        
-        return OpenTelemetryConfig(
-            exporter="otlp_http",
-            endpoint=coralogix_endpoint,
-            headers=headers_string
-        )
+        if self._config:
+            if self._config.headers is not None and self._config.endpoint is not None:
+                headers_string = ",".join([f"{key}={value}" for key, value in self._config.headers.items()])
+                self._config = LiteLLMConfig(
+                    exporter=self._config.exporter,
+                    endpoint=self._config.endpoint,
+                    headers=headers_string
+                )
+            else:
+                self._config = None
 
     def instrumentation_dependencies(self) -> Collection[str]:
         return _instruments
