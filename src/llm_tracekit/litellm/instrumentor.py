@@ -44,7 +44,7 @@ class LiteLLMInstrumentor(BaseInstrumentor):
 
         if config.headers is not None and config.endpoint is not None:
             headers_string = ",".join([f"{key}={value}" for key, value in config.headers.items()])
-            self._config = LiteLLMConfig(
+            self._config: Union[LiteLLMConfig, None] = LiteLLMConfig(
                 exporter="otlp_http",
                 endpoint=config.endpoint,
                 headers=headers_string

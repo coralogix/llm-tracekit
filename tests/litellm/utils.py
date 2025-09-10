@@ -47,3 +47,9 @@ def assert_attributes(
 
     if output_tokens is not None:
         assert output_tokens == span.attributes[GenAIAttributes.GEN_AI_USAGE_OUTPUT_TOKENS]
+
+
+def find_last_response_span(spans: list[ReadableSpan]) -> ReadableSpan:
+    for span in reversed(spans):
+        if span.name == "litellm_request":
+            return span

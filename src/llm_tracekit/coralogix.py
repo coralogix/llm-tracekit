@@ -13,7 +13,7 @@
 # limitations under the License.
 
 import os
-from typing import Optional, List, Union, Dict, Any
+from typing import Optional, List, Dict, Any
 from dataclasses import dataclass
 
 from opentelemetry import trace

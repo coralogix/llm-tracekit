@@ -16,7 +16,7 @@ import pytest
 import asyncio
 import litellm
 from tests.utils import assert_choices_in_span, assert_messages_in_span
-from tests.litellm.utils import assert_attributes
+from tests.litellm.utils import assert_attributes, find_last_response_span
 
 
 import time
@@ -34,8 +34,8 @@ def test_litellm_completion(instrument):
 
     spans = exporter.get_finished_spans()
     assert len(spans) > 0
-    span = spans[-1] # response is always the last span
-
+    span = find_last_response_span(spans) # find the response span
+    
     assert_attributes(
         span,
         "openai",
@@ -78,7 +78,7 @@ def test_litellm_streaming(instrument):
 
     spans = exporter.get_finished_spans()
     assert len(spans) > 0
-    span = spans[-1]
+    span = find_last_response_span(spans) # find the response span
 
     actual_content = span.attributes.get("gen_ai.completion.0.content")
 
@@ -129,7 +129,7 @@ def test_litellm_multi_turn(instrument):
     spans = exporter.get_finished_spans()
 
     assert len(spans) > 0
-    span = spans[-1]
+    span = find_last_response_span(spans) # find the response span
 
     assert_attributes(
         span,
@@ -181,7 +181,7 @@ def test_litellm_tool_usage(instrument):
 
     spans = exporter.get_finished_spans()
     assert len(spans) > 0
-    span = spans[-1]
+    span = find_last_response_span(spans) # find the response span
 
     assert_attributes(
         span,
@@ -230,7 +230,7 @@ async def test_litellm_async_completion(instrument):
 
     spans = exporter.get_finished_spans()
     assert len(spans) > 0
-    span = spans[-1]
+    span = find_last_response_span(spans) # find the response span
 
     assert_attributes(
         span,
