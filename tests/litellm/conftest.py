@@ -75,6 +75,10 @@ def vcr_config():
             "x-stainless-async",
             "x-stainless-raw-response",
             "x-stainless-read-timeout",
+            'x-stainless-arch',
+            'x-stainless-os',
+            'x-stainless-package-version',
+            'x-stainless-runtime-version',
             "Set-Cookie",
             "openai-organization",
             "openai-project"

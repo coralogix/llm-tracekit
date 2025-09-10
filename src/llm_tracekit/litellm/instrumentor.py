@@ -19,7 +19,7 @@ from opentelemetry.instrumentation.instrumentor import (  # type: ignore[attr-de
     BaseInstrumentor,
 )
 
-from llm_tracekit.coralogix import ExportConfig, generate_exporter_config
+from llm_tracekit.coralogix import generate_exporter_config
 from llm_tracekit.instrumentation_utils import is_content_enabled
 from llm_tracekit.litellm.package import _instruments
 from llm_tracekit.litellm.callback import LitellmCallback

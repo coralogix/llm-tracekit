@@ -19,27 +19,19 @@ interactions:
       - application/json
       host:
       - api.openai.com
-      x-stainless-arch:
-      - other:amd64
       x-stainless-lang:
       - python
-      x-stainless-os:
-      - Windows
-      x-stainless-package-version:
-      - 1.103.0
       x-stainless-runtime:
       - CPython
-      x-stainless-runtime-version:
-      - 3.11.5
     method: POST
     uri: https://api.openai.com/v1/chat/completions
   response:
     body:
       string: |-
         {
-          "id": "chatcmpl-CBOUxXRlrmrHQhBUk7ACquXO2BUMN",
+          "id": "chatcmpl-CEGakUMyxSbCaziT73ConZYSdnEmg",
           "object": "chat.completion",
-          "created": 1756831815,
+          "created": 1757516406,
           "model": "gpt-4o-mini-2024-07-18",
           "choices": [
             {
@@ -74,13 +66,13 @@ interactions:
         }
     headers:
       CF-RAY:
-      - 978e81570b9b88e8-WAW
+      - 97cfcafe287bf9da-WAW
       Connection:
       - keep-alive
       Content-Type:
       - application/json
       Date:
-      - Tue, 02 Sep 2025 16:50:16 GMT
+      - Wed, 10 Sep 2025 15:00:09 GMT
       Server:
       - cloudflare
       Set-Cookie:
@@ -100,13 +92,15 @@ interactions:
       openai-organization:
       - test_openai_org_id
       openai-processing-ms:
-      - '751'
+      - '3041'
       openai-project:
       - test_openai_project
       openai-version:
       - '2020-10-01'
       x-envoy-upstream-service-time:
-      - '1023'
+      - '3330'
+      x-openai-proxy-wasm:
+      - v0.1
       x-ratelimit-limit-requests:
       - '30000'
       x-ratelimit-limit-tokens:
@@ -120,7 +114,7 @@ interactions:
       x-ratelimit-reset-tokens:
       - 0s
       x-request-id:
-      - req_f2374061f7724e89b903ea2f2e329bb3
+      - req_d7470be3c2804a9a83668659e315d9e4
     status:
       code: 200
       message: OK
