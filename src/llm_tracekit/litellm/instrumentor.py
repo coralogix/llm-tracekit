@@ -35,23 +35,22 @@ class LiteLLMInstrumentor(BaseInstrumentor):
         application_name: Optional[str] = None,
         subsystem_name: Optional[str] = None,
     ):
-        self._config: Union[ExportConfig, LiteLLMConfig, None] = generate_exporter_config(
+        config = generate_exporter_config(
             coralogix_token,
             coralogix_endpoint,
             application_name,
             subsystem_name
         )
 
-        if self._config:
-            if self._config.headers is not None and self._config.endpoint is not None:
-                headers_string = ",".join([f"{key}={value}" for key, value in self._config.headers.items()])
-                self._config = LiteLLMConfig(
-                    exporter=self._config.exporter,
-                    endpoint=self._config.endpoint,
-                    headers=headers_string
-                )
-            else:
-                self._config = None
+        if config.headers is not None and config.endpoint is not None:
+            headers_string = ",".join([f"{key}={value}" for key, value in config.headers.items()])
+            self._config = LiteLLMConfig(
+                exporter="otlp_http",
+                endpoint=config.endpoint,
+                headers=headers_string
+            )
+        else:
+            self._config = None
 
     def instrumentation_dependencies(self) -> Collection[str]:
         return _instruments

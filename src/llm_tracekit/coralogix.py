@@ -19,14 +19,13 @@ from dataclasses import dataclass
 from opentelemetry import trace
 from opentelemetry.sdk.resources import SERVICE_NAME, Resource
 from opentelemetry.sdk.trace import TracerProvider
-from opentelemetry.sdk.trace.export import BatchSpanProcessor, SimpleSpanProcessor, SpanProcessor, SpanExporter
+from opentelemetry.sdk.trace.export import BatchSpanProcessor, SimpleSpanProcessor, SpanProcessor
 from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
 
 from llm_tracekit.instrumentation_utils import enable_capture_content
 
 @dataclass
 class ExportConfig:
-    exporter: Union[str, SpanExporter] = "otlp_http"
     endpoint: Optional[str] = None
     headers: Optional[Dict[str, Any]] = None
 
@@ -35,7 +34,7 @@ def generate_exporter_config(
         coralogix_endpoint,
         application_name,
         subsystem_name
-    ) -> Optional[ExportConfig]:
+    ) -> ExportConfig:
         if coralogix_token is None:
             coralogix_token = os.environ.get("CX_TOKEN")
         if coralogix_endpoint is None:
@@ -44,9 +43,6 @@ def generate_exporter_config(
             application_name = os.environ.get("CX_APPLICATION_NAME", "Unknown")
         if subsystem_name is None:
             subsystem_name = os.environ.get("CX_SUBSYSTEM_NAME", "Unknown")
-        
-        if not coralogix_token or not coralogix_endpoint:
-            return None
 
         headers = {
             "authorization": f"Bearer {coralogix_token}",
@@ -55,7 +51,6 @@ def generate_exporter_config(
         }
         
         return ExportConfig(
-            exporter="otlp_http",
             endpoint=coralogix_endpoint,
             headers=headers
         )
@@ -93,9 +88,6 @@ def setup_export_to_coralogix(
         application_name=application_name,
         subsystem_name=subsystem_name
     )
-
-    if not exporter_config:
-        return
     
     # set up a tracer provider to send spans to coralogix.
     tracer_provider = TracerProvider(

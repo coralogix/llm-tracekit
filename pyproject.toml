@@ -42,13 +42,13 @@ bedrock = [
     "boto3>=1.37.0",
 ]
 litellm = [
-    "litellm[proxy]>=1.40.0",
+    "litellm[proxy]>=1.52.5", # LiteLLM callbacks require proxy-specific dependencies
 ]
 all = [
     "openai>=1.26.0",
     "openai-agents>=0.1.0; python_version >= '3.10'",
     "boto3>=1.37.0",
-    "litellm[proxy]>=1.40.0"
+    "litellm[proxy]>=1.52.5"
 ]
 
 
