@@ -13,16 +13,47 @@
 # limitations under the License.
 
 import os
-from typing import Optional, List
+from typing import Optional, List, Dict, Any
+from dataclasses import dataclass
 
 from opentelemetry import trace
-from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
 from opentelemetry.sdk.resources import SERVICE_NAME, Resource
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor, SimpleSpanProcessor, SpanProcessor
+from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
 
 from llm_tracekit.instrumentation_utils import enable_capture_content
 
+@dataclass
+class ExportConfig:
+    endpoint: Optional[str] = None
+    headers: Optional[Dict[str, Any]] = None
+
+def generate_exporter_config(
+        coralogix_token,
+        coralogix_endpoint,
+        application_name,
+        subsystem_name
+    ) -> ExportConfig:
+        if coralogix_token is None:
+            coralogix_token = os.environ.get("CX_TOKEN")
+        if coralogix_endpoint is None:
+            coralogix_endpoint = os.environ.get("CX_ENDPOINT")
+        if application_name is None:
+            application_name = os.environ.get("CX_APPLICATION_NAME", "Unknown")
+        if subsystem_name is None:
+            subsystem_name = os.environ.get("CX_SUBSYSTEM_NAME", "Unknown")
+
+        headers = {
+            "authorization": f"Bearer {coralogix_token}",
+            "cx-application-name": application_name,
+            "cx-subsystem-name": subsystem_name,
+        }
+        
+        return ExportConfig(
+            endpoint=coralogix_endpoint,
+            headers=headers
+        )
 
 def setup_export_to_coralogix(
     service_name: str,
@@ -48,18 +79,16 @@ def setup_export_to_coralogix(
         processors: Optional list of SpanProcessor instances to add to the tracer provider before the exporter processor.
     """
 
-    # Read environment variables as defaults if needed
-    if coralogix_token is None:
-        coralogix_token = os.environ["CX_TOKEN"]
-    if coralogix_endpoint is None:
-        coralogix_endpoint = os.environ["CX_ENDPOINT"]
-    if application_name is None:
-        application_name = os.environ["CX_APPLICATION_NAME"]
-    if subsystem_name is None:
-        subsystem_name = os.environ["CX_SUBSYSTEM_NAME"]
     if capture_content:
         enable_capture_content()
 
+    exporter_config = generate_exporter_config(
+        coralogix_token=coralogix_token,
+        coralogix_endpoint=coralogix_endpoint,
+        application_name=application_name,
+        subsystem_name=subsystem_name
+    )
+    
     # set up a tracer provider to send spans to coralogix.
     tracer_provider = TracerProvider(
         resource=Resource.create({SERVICE_NAME: service_name}),
@@ -70,14 +99,12 @@ def setup_export_to_coralogix(
         for span_processor in processors:
             tracer_provider.add_span_processor(span_processor)
 
-    # set up an OTLP exporter to send spans to coralogix directly.
-    headers = {
-        "authorization": f"Bearer {coralogix_token}",
-        "cx-application-name": application_name,
-        "cx-subsystem-name": subsystem_name,
-    }
-    exporter = OTLPSpanExporter(endpoint=coralogix_endpoint, headers=headers)
-
+    #set up an OTLP exporter to send spans to coralogix directly.
+    exporter = OTLPSpanExporter(
+        endpoint=exporter_config.endpoint,
+        headers=exporter_config.headers
+    )
+    
     # set up a span processor to send spans to the exporter
     span_processor = (
         BatchSpanProcessor(exporter)
