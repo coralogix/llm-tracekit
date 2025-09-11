@@ -13,4 +13,4 @@
 # limitations under the License.
 
 
-_instruments = ("litellm[proxy] >= 1.52.5",)
+_instruments = ("litellm[proxy] >= 1.65.4",)

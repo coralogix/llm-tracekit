@@ -12,4 +12,4 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-_instruments = ("boto3 >= 1.37.0",)
+_instruments = ("boto3 >= 1.36.0",)
