@@ -1,5 +1,6 @@
-from typing import List, Union
-from pydantic import BaseModel, Field
+from typing import List, Union, Literal
+from pydantic import BaseModel, Field, Discriminator
+from typing_extensions import Annotated
 
 
 GR_THRESHOLD = 0.7
@@ -22,18 +23,22 @@ PromptInjectionCategories = [
 
 class BaseGuardrail(BaseModel):
     name: str
+    type: str
 
 class PII(BaseGuardrail):
+    type: Literal["pii"] = "pii"
     categories: List[str] = Field(default_factory=list)
     threshold: float = GR_THRESHOLD
 
 
 class PromptInjection(BaseGuardrail):
+    type: Literal["prompt_injection"] = "prompt_injection"
     categories: List[str] = Field(default_factory=list)
     threshold: float = GR_THRESHOLD
 
 
 class CustomGuardrail(BaseGuardrail):
+    type: Literal["custom"] = "custom"
     criteria: str
     threshold: float = GR_THRESHOLD
 
@@ -43,7 +48,7 @@ class GuardrailsRequest(BaseModel):
     application_name: str
     subsystem_name: str
     message: str
-    guardrails_config: List[Union[PII, PromptInjection, CustomGuardrail]]
+    guardrails_config: List[Annotated[Union[PII, PromptInjection, CustomGuardrail], Field(discriminator="type")]]
 
 
 class GuardrailsResult(BaseModel):
@@ -56,7 +61,7 @@ class GuardrailsResult(BaseModel):
 
 class GuardrailsResponse(BaseModel):
     results: List[GuardrailsResult]
-    guardrails_config: List[Union[PII, PromptInjection, CustomGuardrail]]
+    guardrails_config: List[Annotated[Union[PII, PromptInjection, CustomGuardrail], Field(discriminator="type")]]
 
 
 
