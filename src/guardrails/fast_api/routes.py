@@ -1,6 +1,5 @@
 from fastapi import APIRouter
-from guardrails.src.guardrails import Guardrails
-from guardrails.src.models import GuardrailsRequest, GuardrailsResponse, GuardrailsResult, BaseGuardrail
+from guardrails.src.models import GuardrailsRequest, GuardrailsResponse, GuardrailsResult
 
 router = APIRouter()
 
