@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Union
 from pydantic import BaseModel, Field
 
 
@@ -21,23 +21,36 @@ PromptInjectionCategories = [
 
 
 class BaseGuardrail(BaseModel):
-    pass
+    type: str = Field(..., description="The type of guardrail")
 
 
 class PII(BaseGuardrail):
+    type: str = Field(default="pii", description="The type of guardrail")
     name: str
     categories: List[str] = Field(default_factory=list)
     threshold: float = GR_THRESHOLD
+
 
 class PromptInjection(BaseGuardrail):
+    type: str = Field(default="prompt_injection", description="The type of guardrail")
     name: str
     categories: List[str] = Field(default_factory=list)
     threshold: float = GR_THRESHOLD
 
+
 class CustomGuardrail(BaseGuardrail):
+    type: str = Field(default="custom", description="The type of guardrail")
     name: str
     criteria: str
     threshold: float = GR_THRESHOLD
+
+
+class GuardrailsRequest(BaseModel):
+    api_key: str
+    application_name: str
+    subsystem_name: str
+    message: str
+    guardrails_config: List[Union[PII, PromptInjection, CustomGuardrail]]
 
 
 class GuardrailsResult(BaseModel):
@@ -46,6 +59,11 @@ class GuardrailsResult(BaseModel):
     score: float
     explanation: str
     threshold: float = GR_THRESHOLD
+
+
+class GuardrailsResponse(BaseModel):
+    results: List[GuardrailsResult]
+    guardrails_config: List[Union[PII, PromptInjection, CustomGuardrail]]
 
 
 

@@ -1,6 +1,7 @@
 import httpx
+import json
 from typing import List
-from .models import BaseGuardrail, GuardrailsResult
+from .models import BaseGuardrail, GuardrailsRequest, GuardrailsResult, GuardrailsResponse
 
 from .http_utils import _with_retries
 
@@ -11,7 +12,8 @@ class Guardrails:
             self.application_name = application_name
             self.subsystem_name = subsystem_name
 
-            self.base_url = "https://api.guardrails.ai/v1"
+            #self.base_url = "https://api.guardrails.ai/v1"
+            self.base_url = "http://127.0.0.1:8000"
             self.timeout = timeout
             self.retries = retries
 
@@ -24,21 +26,47 @@ class Guardrails:
     async def aclose(self) -> None:
         await self._client.aclose()
 
+    async def __aenter__(self): 
+        print("Entering guardrails context")
+        return self
+
+    async def __aexit__(self, *_): 
+        print("Exiting guardrails context")
+        await self.aclose()
+
     async def run(self, message: str, guardrails_config: List[BaseGuardrail]) -> List[GuardrailsResult]:
-        print("Running guardrails on message: \n",
-        message,
-        "\nwith guardrails config: \n",
-        guardrails_config)
-        return []
+        guardrails_request = GuardrailsRequest(
+            message=message, 
+            guardrails_config=guardrails_config,
+            api_key=self.api_key,
+            application_name=self.application_name,
+            subsystem_name=self.subsystem_name
+        )
 
-        # async def _run(message: str, guardrails_config: List[BaseGuardrail]) -> List[GuardrailsResult]:
-        #     return await self._client.post(
-        #         "/v1/guardrails",
-        #         json={"message": message, "guardrails_config": guardrails_config}
-        #     )
+        async def _run() -> httpx.Response:
+            print("running guardrails with request: \n", guardrails_request)
+            guardrails_json_request = guardrails_request.model_dump()
+            print("json request: \n", guardrails_json_request)
+            guardrails_json_request["guardrails_config"] = [g.model_dump() for g in guardrails_request.guardrails_config]
+            print("guardrails json request: \n", guardrails_json_request)
+            response = await self._client.post(
+                "/guardrails/run",
+                json=guardrails_json_request
+            )
+            
+            print(f"Response status: {response.status_code}")
+            print(f"Response content: {response.text}")
+            
+            return response
 
-        # response = await _with_retries(_run(message, guardrails_config))
-        # return response.json()
+        http_response = await _with_retries(_run)
+        
+        if http_response.status_code >= 400:
+            raise Exception(f"HTTP {http_response.status_code}: {http_response.text}")
+        
+        guardrails_response = GuardrailsResponse.model_validate_json(http_response.text)
+        print("response: \n", guardrails_response)
+        return guardrails_response.results
 
 
 
