@@ -2,10 +2,6 @@ from pydantic import BaseModel
 from typing import List
 from guardrails.src.models import BaseGuardrail, GuardrailsResult
 
-
-
-
-
 class GuardrailsRequest(BaseModel):
     message: str
     guardrails_config: List[BaseGuardrail]

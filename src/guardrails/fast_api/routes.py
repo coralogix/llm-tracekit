@@ -4,6 +4,10 @@ from guardrails.src.models import GuardrailsRequest, GuardrailsResponse, Guardra
 
 router = APIRouter()
 
+############################
+# !! This is a mock API !! #
+############################
+
 @router.get("/guardrails/health")
 async def health() -> str:
     return "OK"
@@ -11,10 +15,6 @@ async def health() -> str:
 
 @router.post("/guardrails/run")
 async def guardrails(request: GuardrailsRequest) -> GuardrailsResponse:
-    # guardrails = Guardrails(api_key=request.api_key, application_name=request.application_name, subsystem_name=request.subsystem_name)
-    # results = await guardrails.run(request.message, request.guardrails_config)
-    # return GuardrailsResponse(results=results, guardrails_config=request.guardrails_config)
-
     print("Running guardrails on message: \n",
     request.message,
     "\nwith guardrails config: \n",

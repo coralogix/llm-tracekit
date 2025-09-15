@@ -44,19 +44,12 @@ class Guardrails:
         )
 
         async def _run() -> httpx.Response:
-            print("running guardrails with request: \n", guardrails_request)
             guardrails_json_request = guardrails_request.model_dump()
-            print("json request: \n", guardrails_json_request)
             guardrails_json_request["guardrails_config"] = [g.model_dump() for g in guardrails_request.guardrails_config]
-            print("guardrails json request: \n", guardrails_json_request)
             response = await self._client.post(
                 "/guardrails/run",
                 json=guardrails_json_request
             )
-            
-            print(f"Response status: {response.status_code}")
-            print(f"Response content: {response.text}")
-            
             return response
 
         http_response = await _with_retries(_run)
@@ -65,34 +58,11 @@ class Guardrails:
             raise Exception(f"HTTP {http_response.status_code}: {http_response.text}")
         
         guardrails_response = GuardrailsResponse.model_validate_json(http_response.text)
-        print("response: \n", guardrails_response)
-        return guardrails_response.results
-
-
-
-
-
-
-#===========#
-## Example ##
-#===========#
-
-# guardrails = Guardrails(api_key="1234567890", application_name="app-test", subsystem_name="subsystem-test")
-
-# guardrails_config = [
-#     PII(name="pii", categories=PIICategories),
-#     PromptInjection(name="prompt_injection", categories=PromptInjectionCategories),
-#     CustomGuardrail(name="custom", criteria="please evaluate the message and return a boolean value"),
-# ]
-
-
-# guardrails.run(
-#     message="Hi, I'm John Doe. My email is john.doe@example.com. My phone number is 123-456-7890.", 
-#     guardrails_config=guardrails_config)
-
-
-
-
+        
+        # For debugging
+        print("\n\nHTTP response: \n", http_response.status_code, "\nGuardrails response: \n", guardrails_response, "\n\n")
+        
+        return guardrails_response
 
 
 

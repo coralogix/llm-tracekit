@@ -21,26 +21,19 @@ PromptInjectionCategories = [
 
 
 class BaseGuardrail(BaseModel):
-    type: str = Field(..., description="The type of guardrail")
-
+    name: str
 
 class PII(BaseGuardrail):
-    type: str = Field(default="pii", description="The type of guardrail")
-    name: str
     categories: List[str] = Field(default_factory=list)
     threshold: float = GR_THRESHOLD
 
 
 class PromptInjection(BaseGuardrail):
-    type: str = Field(default="prompt_injection", description="The type of guardrail")
-    name: str
     categories: List[str] = Field(default_factory=list)
     threshold: float = GR_THRESHOLD
 
 
 class CustomGuardrail(BaseGuardrail):
-    type: str = Field(default="custom", description="The type of guardrail")
-    name: str
     criteria: str
     threshold: float = GR_THRESHOLD
 

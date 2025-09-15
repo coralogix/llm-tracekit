@@ -5,29 +5,14 @@ from guardrails.src.models import PII, PromptInjection, CustomGuardrail, PIICate
 from guardrails.src.error import APIConnectionError, APITimeoutError, APIResponseError
 from guardrails.fast_api.routes import router as guardrails_router
 
+
+#############################
+# !! For testing purpose !! #
+#############################
+
 # Create FastAPI app
 app = FastAPI(title="Guardrails API")
 app.include_router(guardrails_router)
-
-# @app.get("/health")
-# async def health():
-#     print("health check")
-#     return {"status": "ok"}
-
-
-# @app.get("/health")
-# async def health():
-#     print("health check")
-#     return {"status": "ok"}
-
-
-
-# @app.post("/guardrails/run")
-# async def run(request: GuardrailsRequest):
-#     print("running guardrails")
-#     guardrails = Guardrails(api_key=request.api_key, application_name=request.application_name, subsystem_name=request.subsystem_name)
-#     results = await guardrails.run(request.message, request.guardrails_config)
-#     return GuardrailsResponse(results=results, guardrails_config=request.guardrails_config)
 
 async def main():
     print("Starting main")
@@ -44,7 +29,7 @@ async def main():
     print("Running guardrails")
     results = await guardrails.run("This is a test message", guardrails_config)
     
-    print("results: \n", results)
+    print("Results: \n", results) 
 
 if __name__ == "__main__":
     asyncio.run(main())
