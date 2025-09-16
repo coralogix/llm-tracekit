@@ -30,30 +30,30 @@ class ExportConfig:
     headers: Optional[Dict[str, Any]] = None
 
 def generate_exporter_config(
-        coralogix_token,
-        coralogix_endpoint,
-        application_name,
-        subsystem_name
+        coralogix_token: Optional[str],
+        coralogix_endpoint: Optional[str],
+        application_name: Optional[str],
+        subsystem_name: Optional[str],
     ) -> ExportConfig:
-        if coralogix_token is None:
-            coralogix_token = os.environ.get("CX_TOKEN")
-        if coralogix_endpoint is None:
-            coralogix_endpoint = os.environ.get("CX_ENDPOINT")
-        if application_name is None:
-            application_name = os.environ.get("CX_APPLICATION_NAME", "Unknown")
-        if subsystem_name is None:
-            subsystem_name = os.environ.get("CX_SUBSYSTEM_NAME", "Unknown")
+    if coralogix_token is None:
+        coralogix_token = os.environ.get("CX_TOKEN")
+    if coralogix_endpoint is None:
+        coralogix_endpoint = os.environ.get("CX_ENDPOINT")
+    if application_name is None:
+        application_name = os.environ.get("CX_APPLICATION_NAME", "Unknown")
+    if subsystem_name is None:
+        subsystem_name = os.environ.get("CX_SUBSYSTEM_NAME", "Unknown")
 
-        headers = {
-            "authorization": f"Bearer {coralogix_token}",
-            "cx-application-name": application_name,
-            "cx-subsystem-name": subsystem_name,
-        }
-        
-        return ExportConfig(
-            endpoint=coralogix_endpoint,
-            headers=headers
-        )
+    headers = {
+        "authorization": f"Bearer {coralogix_token}",
+        "cx-application-name": application_name,
+        "cx-subsystem-name": subsystem_name,
+    }
+    
+    return ExportConfig(
+        endpoint=coralogix_endpoint,
+        headers=headers
+    )
 
 def setup_export_to_coralogix(
     service_name: str,

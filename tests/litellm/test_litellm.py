@@ -23,7 +23,7 @@ import time
 
 @pytest.mark.vcr()
 def test_litellm_completion(instrument):
-    exporter = litellm.callbacks[0].OTEL_EXPORTER
+    exporter = litellm.callbacks[-1].OTEL_EXPORTER
     exporter._finished_spans.clear()
     model = "gpt-4o-mini"
     messages = [{"role": "user", "content": "Say this is a test"}]
@@ -64,7 +64,7 @@ def test_litellm_completion(instrument):
 
 @pytest.mark.vcr()
 def test_litellm_streaming(instrument):
-    exporter = litellm.callbacks[0].OTEL_EXPORTER
+    exporter = litellm.callbacks[-1].OTEL_EXPORTER
     exporter._finished_spans.clear()
     model = "gpt-4o-mini"
     messages = [{"role": "user", "content": "Say the exact message: 'this is a test'"}]
@@ -109,7 +109,7 @@ def test_litellm_streaming(instrument):
 
 @pytest.mark.vcr()
 def test_litellm_multi_turn(instrument):
-    exporter = litellm.callbacks[0].OTEL_EXPORTER
+    exporter = litellm.callbacks[-1].OTEL_EXPORTER
     exporter._finished_spans.clear()
     model = "gpt-4o-mini"
     messages = [{"role": "user", "content": "Say this is a test"}]
@@ -156,7 +156,7 @@ def test_litellm_multi_turn(instrument):
 
 @pytest.mark.vcr()
 def test_litellm_tool_usage(instrument):
-    exporter = litellm.callbacks[0].OTEL_EXPORTER
+    exporter = litellm.callbacks[-1].OTEL_EXPORTER
     exporter._finished_spans.clear()
     model = "gpt-4o-mini"
     messages = [{"role": "user", "content": "What is the weather in Tel Aviv?"}]
@@ -219,7 +219,7 @@ def test_litellm_tool_usage(instrument):
 @pytest.mark.vcr()
 @pytest.mark.asyncio()
 async def test_litellm_async_completion(instrument):
-    exporter = litellm.callbacks[0].OTEL_EXPORTER
+    exporter = litellm.callbacks[-1].OTEL_EXPORTER
     exporter._finished_spans.clear()
     model = "gpt-4o-mini"
     messages = [{"role": "user", "content": "Say this is a test"}]
