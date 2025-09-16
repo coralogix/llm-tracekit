@@ -35,29 +35,31 @@ class LiteLLMInstrumentor(BaseInstrumentor):
         application_name: Optional[str] = None,
         subsystem_name: Optional[str] = None,
     ):
-        config = generate_exporter_config(
-            coralogix_token,
-            coralogix_endpoint,
-            application_name,
-            subsystem_name
+        otel_config = generate_exporter_config(
+            coralogix_token=coralogix_token,
+            coralogix_endpoint=coralogix_endpoint,
+            application_name=application_name,
+            subsystem_name=subsystem_name
         )
-
-        if config.headers is not None and config.endpoint is not None:
-            headers_string = ",".join([f"{key}={value}" for key, value in config.headers.items()])
-            self._config: Union[LiteLLMConfig, None] = LiteLLMConfig(
-                exporter="otlp_http",
-                endpoint=config.endpoint,
-                headers=headers_string
+        
+        if otel_config.headers is not None and otel_config.endpoint is not None:
+            config: Union[LiteLLMConfig, None] = LiteLLMConfig(
+                exporter="grpc",
+                endpoint=otel_config.endpoint,
+                headers=otel_config.headers # type: ignore
             )
         else:
-            self._config = None
+            config = None
+
+        self._custom_handler = LitellmCallback(capture_content=is_content_enabled(), config=config)
 
     def instrumentation_dependencies(self) -> Collection[str]:
         return _instruments
 
     def _instrument(self, **kwargs):
-        custom_handler = LitellmCallback(capture_content=is_content_enabled(), config=self._config)
-        litellm.callbacks = [custom_handler]
+        if self._custom_handler not in litellm.callbacks:
+            litellm.callbacks.append(self._custom_handler)
 
     def _uninstrument(self, **kwargs):
-        litellm.callbacks = []
+        if self._custom_handler in litellm.callbacks:
+            litellm.callbacks.remove(self._custom_handler)
