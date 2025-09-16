@@ -3,7 +3,7 @@ import asyncio
 from typing import Any, Callable, Awaitable
 import httpx
 
-from .error import APIConnectionError, APITimeoutError, APIResponseError
+from .errors import APIConnectionError, APITimeoutError, APIResponseError
 
 def _is_retryable(status: int) -> bool:
     # Retry on typical transient codes
