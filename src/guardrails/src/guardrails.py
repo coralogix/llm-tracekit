@@ -1,6 +1,6 @@
 import httpx
 from typing import List, Union
-from .models import BaseGuardrail, GuardrailsRequest, GuardrailsResult, GuardrailsResponse, PII, PromptInjection, CustomGuardrail
+from .models import GuardrailsRequest, GuardrailsResult, GuardrailsResponse, PII, PromptInjection, CustomGuardrail
 
 from .http_utils import _with_retries
 
