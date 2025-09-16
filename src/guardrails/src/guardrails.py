@@ -1,6 +1,6 @@
 import httpx
-from typing import List
-from .models import BaseGuardrail, GuardrailsRequest, GuardrailsResult, GuardrailsResponse
+from typing import List, Union
+from .models import BaseGuardrail, GuardrailsRequest, GuardrailsResult, GuardrailsResponse, PII, PromptInjection, CustomGuardrail
 
 from .http_utils import _with_retries
 
@@ -33,7 +33,7 @@ class Guardrails:
         print("Exiting guardrails context")
         await self.aclose()
 
-    async def run(self, message: str, guardrails_config: List[BaseGuardrail]) -> List[GuardrailsResult]:
+    async def run(self, message: str, guardrails_config: List[Union[PII, PromptInjection, CustomGuardrail]]) -> List[GuardrailsResult]:
         guardrails_request = GuardrailsRequest(
             message=message, 
             guardrails_config=guardrails_config,
@@ -61,7 +61,7 @@ class Guardrails:
         # For debugging
         print("\n\nHTTP response: \n", http_response.status_code, "\nGuardrails response: \n", guardrails_response, "\n\n")
         
-        return guardrails_response
+        return guardrails_response.results
 
 
 
