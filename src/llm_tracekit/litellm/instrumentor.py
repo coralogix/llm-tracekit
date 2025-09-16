@@ -57,9 +57,9 @@ class LiteLLMInstrumentor(BaseInstrumentor):
         return _instruments
 
     def _instrument(self, **kwargs):
-        if self._custom_handler is not None and self._custom_handler not in litellm.callbacks:
+        if self._custom_handler not in litellm.callbacks:
             litellm.callbacks.append(self._custom_handler)
 
     def _uninstrument(self, **kwargs):
-        if self._custom_handler is not None and self._custom_handler in litellm.callbacks:
+        if self._custom_handler in litellm.callbacks:
             litellm.callbacks.remove(self._custom_handler)
