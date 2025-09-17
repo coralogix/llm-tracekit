@@ -33,11 +33,11 @@ guardrails = Guardrails(
 guardrail_config = [
     PII(
         name="pii-check", 
-        categories=["email", "phone",  PIICategories.address.value]
+        categories=["email", "phone", "address"]
     ),
     PromptInjection(
         name="injection-check", 
-        categories=["illegal_topics", "code_execution", PIICategories.say_command.value]
+        categories=["illegal_topics", "code_execution", "say_command"]
     ),
     CustomGuardrail(
         name="custom-check", 
@@ -237,7 +237,7 @@ cd llm-tracekit/src/guardrails
 pip install -e .
 
 # Start the development server
-PYTHONPATH=./src uvicorn guardrails.main:app --reload --host 0.0.0.0 --port 8000
+PYTHONPATH=./src uvicorn src.guardrails.tests.main:app --host 127.0.0.1 --port 8000 --reload
 ```
 
 ### HTTP API Usage

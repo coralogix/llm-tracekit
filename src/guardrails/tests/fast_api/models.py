@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 from typing import List
-from ..src.models import BaseGuardrail
+from ...src.models import BaseGuardrail
 
 class GuardrailsRequest(BaseModel):
     message: str
