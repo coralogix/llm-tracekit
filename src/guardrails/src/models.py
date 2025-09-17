@@ -5,20 +5,28 @@ from typing_extensions import Annotated
 
 GR_THRESHOLD = 0.7
 
-PIICategories = ["email", "phone", "name", "address", "credit_card", "social_security_number", "passport", "driver_license"]
+class PIICategories(Enum):
+    email = "email"
+    phone = "phone"
+    name = "name"
+    address = "address"
+    credit_card = "credit_card"
+    social_security_number = "social_security_number"
+    passport = "passport"
+    driver_license = "driver_license"
 
-PromptInjectionCategories = [
-        "change_personality", 
-        "forget_instructions", 
-        "illegal_topics", 
-        "say_command", 
-        "instructions_leakage", 
-        "code_execution", 
-        "contains_emojis", 
-        "contains_encoding", 
-        "prompt_repetition", 
-        "contains_gibberish"
-    ]
+class PromptInjectionCategories(Enum):
+    change_personality = "change_personality"
+    forget_instructions = "forget_instructions"
+    illegal_topics = "illegal_topics"
+    say_command = "say_command"
+    instructions_leakage = "instructions_leakage"
+    code_execution = "code_execution"
+    contains_emojis = "contains_emojis"
+    contains_encoding = "contains_encoding"
+    prompt_repetition = "prompt_repetition"
+    contains_gibberish = "contains_gibberish"
+    
 
 
 class BaseGuardrail(BaseModel):

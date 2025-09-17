@@ -18,8 +18,8 @@ async def main():
 
     print("Guardrails config")
     guardrails_config = [
-        PII(name="pii", categories=PIICategories),
-        PromptInjection(name="prompt_injection", categories=PromptInjectionCategories),
+        PII(name="pii", categories=PIICategories.values()),
+        PromptInjection(name="prompt_injection", categories=PromptInjectionCategories.values()),
         CustomGuardrail(name="custom", criteria="please evaluate the message and return a boolean value"),
     ]
     print("Guardrails instance")
@@ -27,7 +27,6 @@ async def main():
     
     print("Running guardrails")
     results = await guardrails.run("This is a test message", guardrails_config)
-    
     print("Results: \n", results) 
 
 if __name__ == "__main__":
