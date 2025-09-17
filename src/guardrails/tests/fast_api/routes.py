@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from ...src.models import GuardrailsRequest, GuardrailsResponse, GuardrailsResult
+from ...src.models import GuardrailsRequest, GuardrailsResponse, GuardrailsResult, BaseGuardrail
 
 router = APIRouter()
 
@@ -26,8 +26,25 @@ async def guardrails(request: GuardrailsRequest) -> GuardrailsResponse:
     request.subsystem_name,
     )
 
-    results = GuardrailsResult(name="PII-email", detected=True, score=0.9, explanation="found email address")
-    
-    return GuardrailsResponse(results=[results], guardrails_config=request.guardrails_config)
+    if request.guardrails_config is None:
+        raise ValueError("Guardrails config is required")
+    if request.api_key is None:
+        raise ValueError("API key is required")
+    if request.application_name is None:
+        raise ValueError("Application name is required")
+    if request.subsystem_name is None:
+        raise ValueError("Subsystem name is required")
+
+    def _build_guardrails_result(guardrail: BaseGuardrail):
+        return GuardrailsResult(name=guardrail.name, detected=True, score=0.9, explanation="found trigger to the guardrail")
+
+    if request.guardrails_config:
+        results = [
+                _build_guardrails_result(guardrail) for guardrail in request.guardrails_config
+            ]
+    else:
+        results = []
+
+    return GuardrailsResponse(results=results, guardrails_config=request.guardrails_config)
 
 
