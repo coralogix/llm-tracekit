@@ -51,19 +51,20 @@ guardrail_config = [
 #### Run Guardrails
 ```python
 message = "Please send payment to john.doe@example.com or call 555-123-4567"
+
 results = await guardrails.run(message, guardrail_config)
 ```
 
+### The server provides the following endpoints:
 
-The server provides the following endpoints:
-
-- `GET /guardrails/health` - Health check endpoint
 - `POST /guardrails/run` - Main guardrails analysis endpoint
+- `GET /guardrails/health` - Health check endpoint (Used for testing)
+
 
 ### HTTP API Usage
 
 ```bash
-curl -X POST "http://localhost:8000/guardrails/run" \
+curl -X POST "https://api.guardrails.ai/v1/guardrails/run" \
      -H "Content-Type: application/json" \
      -d '{
        "message": "Please call me at 555-123-4567",
@@ -92,7 +93,7 @@ from guardrails import PII, PIICategories
 # Use predefined categories
 pii_guardrail = PII(
     name="pii-detection",
-    categories=PIICategories.values,  # All available categories
+    categories=PIICategories.values(),  # All available categories
 )
 
 # Or specify custom categories
@@ -112,6 +113,7 @@ pii_guardrail = PII(
 - `passport` - Passport numbers
 - `driver_license` - Driver's license numbers
 
+
 ### Prompt Injection Protection
 
 Detects various prompt injection attacks:
@@ -122,7 +124,7 @@ from guardrails import PromptInjection, PromptInjectionCategories
 # Use all protection categories
 injection_guardrail = PromptInjection(
     name="injection-protection",
-    categories=PromptInjectionCategories.values,  # All available categories
+    categories=PromptInjectionCategories.values(),  # All available categories
 )
 
 # Or specify specific threats
@@ -132,7 +134,7 @@ injection_guardrail = PromptInjection(
 )
 ```
 
-**Available Injection Categories:**
+**Available Prompt Injection Categories:**
 - `change_personality` - Attempts to change AI personality
 - `forget_instructions` - Attempts to override system instructions
 - `illegal_topics` - Requests for illegal content
@@ -221,3 +223,64 @@ Example response:
     )
 ]
 ```
+
+
+## Testing
+### Running the Development Server
+
+```bash
+# Clone the repository
+git clone https://github.com/coralogix/llm-tracekit
+cd llm-tracekit/src/guardrails
+
+# Install in development mode
+pip install -e .
+
+# Start the development server
+PYTHONPATH=./src uvicorn guardrails.main:app --reload --host 0.0.0.0 --port 8000
+```
+
+### HTTP API Usage
+
+```bash
+curl -X POST "http://localhost:8000/guardrails/run" \
+     -H "Content-Type: application/json" \
+     -d '{
+       "message": "Please call me at 555-123-4567",
+       "api_key": "your-api-key",
+       "application_name": "test-app",
+       "subsystem_name": "content-check",
+       "guardrails_config": [
+         {
+           "name": "pii-check",
+           "type": "pii",
+           "categories": ["phone"],
+         }
+       ]
+     }'
+```
+
+### Run the tests
+
+
+
+-----------
+-----------
+
+## API Reference
+
+### Classes
+
+- **`Guardrails`**: Main client class for interacting with the guardrails service
+- **`PII`**: PII detection guardrail configuration
+- **`PromptInjection`**: Prompt injection protection configuration  
+- **`CustomGuardrail`**: Custom validation criteria configuration
+- **`GuardrailsResult`**: Individual guardrail analysis result
+- **`GuardrailsResponse`**: Complete analysis response
+
+### Constants
+
+- **`GR_THRESHOLD`**: Default threshold value (0.7)
+- **`PIICategories`**: List of all available PII detection categories
+- **`PromptInjectionCategories`**: List of all prompt injection protection categories
+- ❕Both Categories class have `values()` method, used for getting the string values of the enums.

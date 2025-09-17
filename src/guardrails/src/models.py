@@ -1,7 +1,7 @@
 from typing import List, Union, Literal
 from pydantic import BaseModel, Field
 from typing_extensions import Annotated
-
+from enum import Enum
 
 GR_THRESHOLD = 0.7
 
@@ -15,6 +15,10 @@ class PIICategories(Enum):
     passport = "passport"
     driver_license = "driver_license"
 
+    @classmethod
+    def values(cls):
+        return [category.value for category in cls.__members__.values()]
+
 class PromptInjectionCategories(Enum):
     change_personality = "change_personality"
     forget_instructions = "forget_instructions"
@@ -26,7 +30,10 @@ class PromptInjectionCategories(Enum):
     contains_encoding = "contains_encoding"
     prompt_repetition = "prompt_repetition"
     contains_gibberish = "contains_gibberish"
-    
+
+    @classmethod
+    def values(cls):
+        return [category.value for category in cls.__members__.values()]
 
 
 class BaseGuardrail(BaseModel):
