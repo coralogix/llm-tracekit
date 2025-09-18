@@ -2,11 +2,9 @@ import httpx
 import os
 from typing import List, Union
 from dotenv import load_dotenv
-from tenacity import AsyncRetrying, stop_after_attempt, wait_exponential
-
+from tenacity import AsyncRetrying, stop_after_attempt, stop_after_delay, wait_exponential
 
 from .models import GuardrailsRequest, GuardrailsResult, GuardrailsResponse, PII, PromptInjection, CustomGuardrail
-from .http_utils import _with_retries
 
 load_dotenv()
 
@@ -89,7 +87,14 @@ class Guardrails:
             )
             return response
 
-        http_response = await _with_retries(_run)
+        async for attempt in AsyncRetrying(
+            stop=(stop_after_attempt(self.retries) | stop_after_delay(self.timeout)), 
+            wait=wait_exponential(),
+            reraise=True
+        ):
+            with attempt:
+                http_response = await _run()
+
        
         if http_response.status_code >= 400:
             raise Exception(f"HTTP {http_response.status_code}: {http_response.text}")
