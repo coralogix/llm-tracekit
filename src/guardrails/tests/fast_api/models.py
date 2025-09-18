@@ -8,6 +8,7 @@ class GuardrailsRequest(BaseModel):
     api_key: str
     application_name: str
     subsystem_name: str
+    domain_url: str
 
 class GuardrailsResult(BaseModel):
     name: str

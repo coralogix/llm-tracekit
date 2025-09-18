@@ -23,8 +23,9 @@ from guardrails import Guardrails, PII, PromptInjection, CustomGuardrail, PIICat
 ```python
 guardrails = Guardrails(
     api_key="your-api-key",
-    application_name="my-app",
-    subsystem_name="content-filter"
+    application_name="my-application",
+    subsystem_name="my-subsystem"
+    domain_url="http://127.0.0.1:8000"
 )
 ```
 
@@ -69,8 +70,9 @@ curl -X POST "https://api.guardrails.ai/v1/guardrails/run" \
      -d '{
        "message": "Please call me at 555-123-4567",
        "api_key": "your-api-key",
-       "application_name": "test-app",
-       "subsystem_name": "content-check",
+       "application_name": "my-application",
+       "subsystem_name": "my-subsystem",
+       "domain_url": "http://127.0.0.1:8000"
        "guardrails_config": [
          {
            "name": "pii-check",
@@ -175,9 +177,10 @@ content_policy = CustomGuardrail(
 from guardrails import Guardrails
 
 guardrails = Guardrails(
-    api_key="your-api-key",           # Required: Your API key
-    application_name="my-app",         # Required: Application identifier
-    subsystem_name="content-filter",   # Required: Subsystem identifier
+    api_key="your-api-key",              # Required: Your API key
+    application_name="my-app",           # Required: Application identifier
+    subsystem_name="content-filter",     # Required: Subsystem identifier
+    domain_url="http://127.0.0.1:8000"   # Required: Domain
 )
 ```
 
@@ -186,9 +189,10 @@ guardrails = Guardrails(
 You can also configure using environment variables:
 
 ```bash
-export GUARDRAILS_API_KEY="your-api-key"
-export GUARDRAILS_APPLICATION_NAME="my-app"
-export GUARDRAILS_SUBSYSTEM_NAME="content-filter"
+export API_KEY="your-api-key"
+export APPLICATION_NAME="my-app"
+export SUBSYSTEM_NAME="content-filter"
+export DOMAIN_URL="http://127.0.0.1:8000"
 ```
 
 ## Response Format
@@ -250,6 +254,7 @@ curl -X POST "http://localhost:8000/guardrails/run" \
        "api_key": "your-api-key",
        "application_name": "test-app",
        "subsystem_name": "content-check",
+       "domain_url": "http://127.0.0.1:8000"
        "guardrails_config": [
          {
            "name": "pii-check",

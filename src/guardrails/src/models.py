@@ -43,25 +43,26 @@ class BaseGuardrail(BaseModel):
 class PII(BaseGuardrail):
     type: Literal["pii"] = "pii"
     categories: List[str] = Field(default_factory=list)
-    threshold: float = GR_THRESHOLD
+    threshold: float = Field(default=GR_THRESHOLD, ge=0.0, le=1.0)
 
 
 class PromptInjection(BaseGuardrail):
     type: Literal["prompt_injection"] = "prompt_injection"
     categories: List[str] = Field(default_factory=list)
-    threshold: float = GR_THRESHOLD
+    threshold: float = Field(default=GR_THRESHOLD, ge=0.0, le=1.0)
 
 
 class CustomGuardrail(BaseGuardrail):
     type: Literal["custom"] = "custom"
     criteria: str
-    threshold: float = GR_THRESHOLD
+    threshold: float = Field(default=GR_THRESHOLD, ge=0.0, le=1.0)
 
 
 class GuardrailsRequest(BaseModel):
     api_key: str
     application_name: str
     subsystem_name: str
+    domain_url: str
     message: str
     guardrails_config: List[Annotated[Union[PII, PromptInjection, CustomGuardrail], Field(discriminator="type")]]
 
@@ -69,9 +70,9 @@ class GuardrailsRequest(BaseModel):
 class GuardrailsResult(BaseModel):
     name: str
     detected: bool
-    score: float
+    score: float = Field(ge=0.0, le=1.0)
     explanation: str
-    threshold: float = GR_THRESHOLD
+    threshold: float = Field(default=GR_THRESHOLD, ge=0.0, le=1.0)
 
 
 class GuardrailsResponse(BaseModel):

@@ -9,6 +9,7 @@ import os
 
 from unittest.mock import AsyncMock, patch, MagicMock
 from fastapi.testclient import TestClient
+from pydantic_core import ValidationError
 
 
 from guardrails.tests.main import app
@@ -61,7 +62,8 @@ def guardrails_client():
     return Guardrails(
         api_key="test-api-key",
         application_name="test-app",
-        subsystem_name="test-subsystem"
+        subsystem_name="test-subsystem",
+        domain_url="test-domain-url"
     )
 
 
@@ -72,7 +74,8 @@ def sample_request_data():
         "message": "Please contact me at john.doe@example.com or call 555-123-4567",
         "api_key": "test-key",
         "application_name": "test-app",
-        "subsystem_name": "test-subsystem"
+        "subsystem_name": "test-subsystem",
+        "domain_url": "test-domain-url"
     }
 
 
@@ -206,6 +209,7 @@ class TestGuardrailModels:
             api_key="test",
             application_name="app",
             subsystem_name="subsystem",
+            domain_url="domain-url",
             message="Test message",
             guardrails_config=[pii, injection, custom]
         )
@@ -224,6 +228,7 @@ class TestGuardrailsClient:
         assert guardrails_client.api_key == "test-api-key"
         assert guardrails_client.application_name == "test-app"
         assert guardrails_client.subsystem_name == "test-subsystem"
+        assert guardrails_client.domain_url == "test-domain-url"
         assert guardrails_client.timeout == 10  # Default
         assert guardrails_client.retries == 3   # Default
     
@@ -353,18 +358,58 @@ class TestIntegrationScenarios:
 
 
     @patch.dict(os.environ, {
-    'API_KEY': 'legacy-api-key',
-    'APPLICATION_NAME': 'legacy-app-name',
-    'SUBSYSTEM_NAME': 'legacy-subsystem-name'
+    'API_KEY': 'OS-api-key',
+    'APPLICATION_NAME': 'OS-app-name',
+    'SUBSYSTEM_NAME': 'OS-subsystem-name',
+    'DOMAIN_URL': 'OS-domain-url'
     })
-    def test_guardrails_with_legacy_env_vars(self):
+    def test_guardrails_with_env_vars(self):
         """Test Guardrails initialization using legacy environment variable names"""
         guardrails = Guardrails()
         
-        assert guardrails.api_key == "legacy-api-key"
-        assert guardrails.application_name == "legacy-app-name"
-        assert guardrails.subsystem_name == "legacy-subsystem-name"
+        assert guardrails.api_key == "OS-api-key"
+        assert guardrails.application_name == "OS-app-name"
+        assert guardrails.subsystem_name == "OS-subsystem-name"
+        assert guardrails.domain_url == "OS-domain-url"
     
+
+    @patch.dict(os.environ, {
+    'API_KEY': 'OS-api-key',
+    'APPLICATION_NAME': 'OS-app-name',
+    'SUBSYSTEM_NAME': 'OS-subsystem-name',
+    'DOMAIN_URL': 'OS-domain-url'
+    })    
+    def test_guardrails_with_env_vars_and_params(self):
+        """Test Guardrails initialization using environment variable names"""
+        guardrails = Guardrails(
+            api_key="test-api-key", 
+            application_name="test-app-name", 
+            subsystem_name="test-subsystem-name",
+            domain_url="test-domain-url")
+        
+        assert guardrails.api_key == "test-api-key"
+        assert guardrails.application_name == "test-app-name"
+        assert guardrails.subsystem_name == "test-subsystem-name"
+        assert guardrails.domain_url == "test-domain-url"
+
+
+    def test_guardrails_with_no_params(self):
+        """Test Guardrails initialization using environment variable names"""
+        with pytest.raises(ValueError) as e:
+            guardrails = Guardrails()
+        
+        assert "api_key is required" in str(e.value)
+    
+
+    def test_threshold_within_range(self):
+        pii = PII(name="test-pii", categories=["email"], threshold=0.5)
+        assert pii.threshold == 0.5
+
+    @pytest.mark.parametrize("invalid_value", [-0.1, 1.1, 999])
+    def test_threshold_out_of_range(self, invalid_value):
+        with pytest.raises(ValidationError) as e:
+            PII(name="test-pii", categories=["email"], threshold=invalid_value)
+
 
 
 if __name__ == "__main__":

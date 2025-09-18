@@ -24,6 +24,8 @@ async def guardrails(request: GuardrailsRequest) -> GuardrailsResponse:
     request.application_name,
     "\nwith subsystem name: \n",
     request.subsystem_name,
+    "\nwith domain url: \n",
+    request.domain_url,
     )
 
     if request.guardrails_config is None:
@@ -34,6 +36,8 @@ async def guardrails(request: GuardrailsRequest) -> GuardrailsResponse:
         raise ValueError("Application name is required")
     if request.subsystem_name is None:
         raise ValueError("Subsystem name is required")
+    if request.domain_url is None:
+        raise ValueError("Domain url is required")
 
     def _build_guardrails_result(guardrail: BaseGuardrail):
         return GuardrailsResult(name=guardrail.name, detected=True, score=0.9, explanation="found trigger to the guardrail")

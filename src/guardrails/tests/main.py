@@ -23,7 +23,12 @@ async def main():
         CustomGuardrail(name="custom", criteria="please evaluate the message and return a boolean value"),
     ]
     print("Guardrails instance")
-    guardrails = Guardrails(api_key="1234567890", application_name="app-test", subsystem_name="subsystem-test")
+    guardrails = Guardrails(
+        api_key="1234567890", 
+        application_name="app-test", 
+        subsystem_name="subsystem-test",
+        domain_url="http://127.0.0.1:8000"
+    )
     
     print("Running guardrails")
     results = await guardrails.run("This is a test message", guardrails_config)
