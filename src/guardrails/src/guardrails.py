@@ -1,12 +1,36 @@
 import httpx
+import os
 from typing import List, Union
-from .models import GuardrailsRequest, GuardrailsResult, GuardrailsResponse, PII, PromptInjection, CustomGuardrail
+from dotenv import load_dotenv
 
+from .models import GuardrailsRequest, GuardrailsResult, GuardrailsResponse, PII, PromptInjection, CustomGuardrail
 from .http_utils import _with_retries
 
+load_dotenv()
 
 class Guardrails:
-    def __init__(self, api_key: str, application_name: str, subsystem_name: str, timeout: int = 10, retries: int = 3) -> None:
+    def __init__(self, api_key: str = None, application_name: str = None, subsystem_name: str = None, timeout: int = 10, retries: int = 3) -> None:
+
+            # Use environment variables as fallback if parameters not provided
+            if api_key is None:
+                api_key = os.getenv("API_KEY")
+            if application_name is None:
+                application_name = os.getenv("APPLICATION_NAME")
+            if subsystem_name is None:
+                subsystem_name = os.getenv("SUBSYSTEM_NAME")
+            
+            # Strip whitespace and validate required parameters
+            api_key = api_key.strip() if api_key else None
+            application_name = application_name.strip() if application_name else None
+            subsystem_name = subsystem_name.strip() if subsystem_name else None
+            
+            if not api_key:
+                raise ValueError("api_key is required. Provide it as parameter or set GUARDRAILS_API_KEY environment variable.")
+            if not application_name:
+                raise ValueError("application_name is required. Provide it as parameter or set GUARDRAILS_APPLICATION_NAME environment variable.")
+            if not subsystem_name:
+                raise ValueError("subsystem_name is required. Provide it as parameter or set GUARDRAILS_SUBSYSTEM_NAME environment variable.")
+
             self.api_key = api_key
             self.application_name = application_name
             self.subsystem_name = subsystem_name

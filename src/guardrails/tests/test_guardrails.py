@@ -5,6 +5,8 @@ This demonstrates various pytest patterns and best practices
 
 import pytest
 import asyncio
+import os
+
 from unittest.mock import AsyncMock, patch, MagicMock
 from fastapi.testclient import TestClient
 
@@ -348,6 +350,21 @@ class TestIntegrationScenarios:
         assert "pii" in types
         assert "prompt_injection" in types
         assert "custom" in types
+
+
+    @patch.dict(os.environ, {
+    'API_KEY': 'legacy-api-key',
+    'APPLICATION_NAME': 'legacy-app-name',
+    'SUBSYSTEM_NAME': 'legacy-subsystem-name'
+    })
+    def test_guardrails_with_legacy_env_vars(self):
+        """Test Guardrails initialization using legacy environment variable names"""
+        guardrails = Guardrails()
+        
+        assert guardrails.api_key == "legacy-api-key"
+        assert guardrails.application_name == "legacy-app-name"
+        assert guardrails.subsystem_name == "legacy-subsystem-name"
+    
 
 
 if __name__ == "__main__":
