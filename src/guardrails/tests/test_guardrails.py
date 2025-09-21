@@ -456,6 +456,15 @@ class TestIntegrationScenarios:
             PII(name="test-pii", categories=["email"], threshold=invalid_value)
 
 
+    def test_score_within_range(self):
+        result = GuardrailsResult(name="test-result", detected=True, score=0.5, explanation="Test explanation", threshold=0.5)
+        assert result.score == 0.5
+
+    @pytest.mark.parametrize("invalid_value", [-0.1, 1.1, 999])
+    def test_score_out_of_range(self, invalid_value):
+        with pytest.raises(ValidationError) as e:
+            GuardrailsResult(name="test-result", detected=True, score=invalid_value, explanation="Test explanation", threshold=0.5)
+
 
 if __name__ == "__main__":
     # Run tests when script is executed directly
