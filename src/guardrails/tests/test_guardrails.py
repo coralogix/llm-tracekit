@@ -440,7 +440,7 @@ class TestIntegrationScenarios:
     def test_guardrails_with_no_params(self):
         """Test Guardrails initialization using environment variable names"""
         with pytest.raises(ValueError) as e:
-            guardrails = Guardrails()
+            Guardrails()
         
         assert "api_key is required" in str(e.value)
     
@@ -451,7 +451,7 @@ class TestIntegrationScenarios:
 
     @pytest.mark.parametrize("invalid_value", [-0.1, 1.1, 999])
     def test_threshold_out_of_range(self, invalid_value):
-        with pytest.raises(ValidationError) as e:
+        with pytest.raises(ValidationError):
             PII(name="test-pii", categories=["email"], threshold=invalid_value)
 
 
@@ -461,7 +461,7 @@ class TestIntegrationScenarios:
 
     @pytest.mark.parametrize("invalid_value", [-0.1, 1.1, 999])
     def test_score_out_of_range(self, invalid_value):
-        with pytest.raises(ValidationError) as e:
+        with pytest.raises(ValidationError):
             GuardrailsResult(name="test-result", detected=True, score=invalid_value, explanation="Test explanation", threshold=0.5)
 
 
