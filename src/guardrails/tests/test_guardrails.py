@@ -438,7 +438,7 @@ class TestIntegrationScenarios:
 
 
     def test_guardrails_with_no_params(self):
-        """Test Guardrails initialization using environment variable names"""
+        """Test Guardrails initialization with missing parameters"""
         with pytest.raises(ValueError) as e:
             Guardrails()
         
