@@ -86,7 +86,7 @@ class Guardrails:
             guardrails_json_request = guardrails_request.model_dump()
             guardrails_json_request["guardrails_config"] = [g.model_dump() for g in guardrails_request.guardrails_config]
             
-            logger.debug("Sending request payload:\n%s", json.dumps(guardrails_json_request, indent=2))
+            logger.debug("Sending request payload:\n%s", guardrails_json_request)
 
             response = await self._client.post(
                 "/guardrails/run",
