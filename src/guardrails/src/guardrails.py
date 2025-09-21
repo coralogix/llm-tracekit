@@ -1,7 +1,7 @@
 import httpx
 import logging
 import os
-from typing import List, Union
+from typing import List, Union, Optional
 from dotenv import load_dotenv
 from tenacity import AsyncRetrying, stop_after_attempt, stop_after_delay, wait_exponential
 
@@ -14,10 +14,10 @@ logger = logging.getLogger(__name__)
 
 class Guardrails:
     def __init__(self, 
-        api_key: str = None, 
-        application_name: str = None, 
-        subsystem_name: str = None, 
-        domain_url: str = None,
+        api_key: Optional[str] = None, 
+        application_name: Optional[str] = None, 
+        subsystem_name: Optional[str] = None, 
+        domain_url: Optional[str] = None,
         timeout: int = 100, 
         retries: int = 3,
     ) -> None:
@@ -50,8 +50,7 @@ class Guardrails:
             self.api_key = api_key
             self.application_name = application_name
             self.subsystem_name = subsystem_name
-            #self.domain_url = "https://api.guardrails.ai/v1"
-            self.domain_url = domain_url if domain_url else "http://127.0.0.1:8000"
+            self.domain_url = domain_url
             self.timeout = timeout
             self.retries = retries
 
