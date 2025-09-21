@@ -4,10 +4,9 @@ This demonstrates various pytest patterns and best practices
 """
 
 import pytest
-import asyncio
 import os
 
-from unittest.mock import AsyncMock, patch, MagicMock
+from unittest.mock import AsyncMock, patch
 from fastapi.testclient import TestClient
 from pydantic_core import ValidationError
 from httpx import Response, Request
@@ -16,7 +15,7 @@ from guardrails.tests.main import app
 from guardrails.src.models import (
     PII, PromptInjection, CustomGuardrail,
     PIICategories, PromptInjectionCategories,
-    GuardrailsRequest, GuardrailsResponse, GuardrailsResult
+    GuardrailsRequest, GuardrailsResult
 )
 from guardrails.src.guardrails import Guardrails
 
