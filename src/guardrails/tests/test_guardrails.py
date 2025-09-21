@@ -10,7 +10,7 @@ import os
 from unittest.mock import AsyncMock, patch, MagicMock
 from fastapi.testclient import TestClient
 from pydantic_core import ValidationError
-
+from httpx import Response, Request
 
 from guardrails.tests.main import app
 from guardrails.src.models import (
@@ -229,7 +229,7 @@ class TestGuardrailsClient:
         assert guardrails_client.application_name == "test-app"
         assert guardrails_client.subsystem_name == "test-subsystem"
         assert guardrails_client.domain_url == "test-domain-url"
-        assert guardrails_client.timeout == 10  # Default
+        assert guardrails_client.timeout == 100  # Default
         assert guardrails_client.retries == 3   # Default
     
     @pytest.mark.asyncio
@@ -285,6 +285,51 @@ class TestGuardrailsClient:
             await guardrails_client.run("Test message", [sample_pii_config])
         
         assert "HTTP 500" in str(exc_info.value)
+
+    @pytest.mark.asyncio
+    @patch('httpx.AsyncClient.post')
+    async def test_async_retrying_on_failure(self, mock_post, guardrails_client, sample_pii_config):
+        """Test AsyncRetrying with mocked failed attempts"""
+        # Mock failed response
+        mock_response_failure = Response(
+            status_code=500,
+            text='Internal Server Error',
+            request=Request("POST", "https://example.com/guardrails/run")
+        )
+
+        # Mock success response
+        mock_response_success = Response(
+            status_code=200,
+            text='''{
+                "results": [{
+                    "name": "test-result",
+                    "detected": true,
+                    "score": 0.9,
+                    "explanation": "Found PII in message",
+                    "threshold": 0.8
+                }],
+                "guardrails_config": []
+            }''',
+            request=Request("POST", "https://example.com/guardrails/run")
+        )
+
+        # Set up the mock to fail twice before succeeding
+        mock_post.side_effect = [
+            mock_response_failure,  # Fail 1
+            mock_response_failure,  # Fail 2
+            mock_response_success  # Success
+        ]
+
+        # Assign the mock to the client's post method
+        guardrails_client._client.post = mock_post
+
+        # Attempt to run guardrails, expecting retries
+        results = await guardrails_client.run("Test message", [sample_pii_config])
+
+        # Verify that retries were attempted
+        assert mock_post.call_count == 3  # Ensure retries were attempted twice before success
+        assert isinstance(results, list)
+        assert len(results) == 1
 
 
 class TestIntegrationScenarios:

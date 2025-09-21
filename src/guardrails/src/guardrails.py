@@ -14,7 +14,7 @@ class Guardrails:
         application_name: str = None, 
         subsystem_name: str = None, 
         domain_url: str = None,
-        timeout: int = 10, 
+        timeout: int = 100, 
         retries: int = 3,
     ) -> None:
 
@@ -85,6 +85,9 @@ class Guardrails:
                 "/guardrails/run",
                 json=guardrails_json_request
             )
+            if response.status_code >= 400:
+                raise Exception(f"HTTP {response.status_code}: {response.text}")
+
             return response
 
         async for attempt in AsyncRetrying(
@@ -96,8 +99,6 @@ class Guardrails:
                 http_response = await _run()
 
        
-        if http_response.status_code >= 400:
-            raise Exception(f"HTTP {http_response.status_code}: {http_response.text}")
         
         guardrails_response = GuardrailsResponse.model_validate_json(http_response.text)
         
