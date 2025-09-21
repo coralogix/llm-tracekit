@@ -15,6 +15,8 @@ dependencies = [
     "opentelemetry-instrumentation>=0.53b1",
     "opentelemetry-sdk>=1.32.1",
     "opentelemetry-semantic-conventions>=0.53b1",
+
+    "tenacity>=8.0.0",
 ]
 classifiers = [
     "Development Status :: 5 - Production/Stable",
@@ -83,6 +85,7 @@ build-backend = "hatchling.build"
 [tool.mypy]
 mypy_path = "src"
 explicit_package_bases = true
+ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
 module = ["wrapt", "opentelemetry.exporter.otlp.proto.grpc.trace_exporter"]
