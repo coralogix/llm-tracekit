@@ -142,7 +142,7 @@ def choices_to_span_attributes(
         if choice.message:
             role = choice.message.role
             content = choice.message.content
-            tool_calls = parse_tool_calls(choice.message.tool_calls)
+            tool_calls = parse_tool_calls(choice.message.tool_calls) # type: ignore
 
         parsed_choices.append(
             Choice(

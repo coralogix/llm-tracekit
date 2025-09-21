@@ -12,4 +12,5 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-_instruments = ("boto3 >= 1.36.0",)
+
+_instruments = ("litellm[proxy] >= 1.65.4",)

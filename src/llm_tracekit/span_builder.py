@@ -15,7 +15,7 @@
 from pydantic import BaseModel
 from dataclasses import dataclass
 from functools import wraps
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable, Dict, List, Optional, Union
 
 from opentelemetry.semconv._incubating.attributes import (
     gen_ai_attributes as GenAIAttributes,
@@ -64,12 +64,14 @@ def attribute_generator(
 
 @attribute_generator
 def generate_base_attributes(
-    system: GenAIAttributes.GenAiSystemValues,
+    system: Union[GenAIAttributes.GenAiSystemValues, str],
     operation: GenAIAttributes.GenAiOperationNameValues = GenAIAttributes.GenAiOperationNameValues.CHAT,
 ) -> Dict[str, Any]:
+    if isinstance(system, GenAIAttributes.GenAiSystemValues):
+        system = system.value
     attributes = {
         GenAIAttributes.GEN_AI_OPERATION_NAME: operation.value,
-        GenAIAttributes.GEN_AI_SYSTEM: system.value,
+        GenAIAttributes.GEN_AI_SYSTEM: system,
     }
     return attributes
 
