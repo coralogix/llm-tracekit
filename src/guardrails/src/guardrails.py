@@ -1,4 +1,5 @@
 import httpx
+import logging
 import os
 from typing import List, Union
 from dotenv import load_dotenv
@@ -7,6 +8,9 @@ from tenacity import AsyncRetrying, stop_after_attempt, stop_after_delay, wait_e
 from .models import GuardrailsRequest, GuardrailsResult, GuardrailsResponse, PII, PromptInjection, CustomGuardrail
 
 load_dotenv()
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 class Guardrails:
     def __init__(self, 
@@ -81,28 +85,40 @@ class Guardrails:
         async def _run() -> httpx.Response:
             guardrails_json_request = guardrails_request.model_dump()
             guardrails_json_request["guardrails_config"] = [g.model_dump() for g in guardrails_request.guardrails_config]
+            
+            logger.debug("Sending request payload:\n%s", json.dumps(guardrails_json_request, indent=2))
+
             response = await self._client.post(
                 "/guardrails/run",
                 json=guardrails_json_request
             )
+
+            logger.debug("Received response with status code:\n%s\n", response.status_code, "\nResponse text:\n%s\n", response.text)
+    
+
             if response.status_code >= 400:
+                logger.error("Received error response:\n%s\n", response.text)
                 raise Exception(f"HTTP {response.status_code}: {response.text}")
 
             return response
 
+
+        logger.info("Running guardrails for message:\n%s\n", message)
+        logger.info("Guardrails config:\n%s\n", guardrails_request.guardrails_config)
+
+        attempt_number = 0
         async for attempt in AsyncRetrying(
             stop=(stop_after_attempt(self.retries) | stop_after_delay(self.timeout)), 
             wait=wait_exponential(),
             reraise=True
         ):
             with attempt:
+                attempt_number += 1
+                logger.info("Attempt %d of %d, for message: %s", attempt_number, self.retries, message)
                 http_response = await _run()
 
-       
-        
         guardrails_response = GuardrailsResponse.model_validate_json(http_response.text)
         
-        # For debugging
-        print("\n\nHTTP response: \n", http_response.status_code, "\nGuardrails response: \n", guardrails_response, "\n\n")
-        
+        logger.info(f"HTTP response: {http_response.status_code} - {http_response.text}")        
+
         return guardrails_response.results
