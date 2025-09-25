@@ -3,13 +3,13 @@ from __future__ import annotations
 class GuardrailsError(Exception):
     """Base exception for all SDK errors."""
 
-class APIConnectionError(GuardrailsError):
+class GuardrailsAPIConnectionError(GuardrailsError):
     """Network/transport errors."""
 
-class APITimeoutError(GuardrailsError):
+class GuardrailsAPITimeoutError(GuardrailsError):
     """Request timed out."""
 
-class APIResponseError(GuardrailsError):
+class GuardrailsAPIResponseError(GuardrailsError):
     """Non-2xx HTTP response."""
     def __init__(self, status_code: int, body: str | None = None, message: str | None = None):
         self.status_code = status_code
