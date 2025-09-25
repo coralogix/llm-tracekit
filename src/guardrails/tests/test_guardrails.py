@@ -24,9 +24,6 @@ from guardrails.src.guardrails import Guardrails
 client = TestClient(app)
 
 
-
-
-
 def test_health_endpoint_returns_ok():
     """Test that health endpoint returns OK status"""
     response = client.get("/guardrails/health")

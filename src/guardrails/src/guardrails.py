@@ -1,10 +1,9 @@
 import httpx
 import logging
-import os
 from typing import List, Union, Optional
 from dotenv import load_dotenv
 from tenacity import AsyncRetrying, stop_after_attempt, stop_after_delay, wait_exponential
-from pydantic import BaseModel, Field, field_validator, ConfigDict
+from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from .models import GuardrailsRequest, GuardrailsResult, GuardrailsResponse, PII, PromptInjection, CustomGuardrail
