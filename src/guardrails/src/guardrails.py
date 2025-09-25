@@ -4,8 +4,8 @@ import os
 from typing import List, Union, Optional
 from dotenv import load_dotenv
 from tenacity import AsyncRetrying, stop_after_attempt, stop_after_delay, wait_exponential
-from pydantic import Field, field_validator
-from pydantic_settings import BaseSettings
+# from pydantic import Field, field_validator
+# from pydantic_settings import BaseSettings
 
 from .models import GuardrailsRequest, GuardrailsResult, GuardrailsResponse, PII, PromptInjection, CustomGuardrail
 
