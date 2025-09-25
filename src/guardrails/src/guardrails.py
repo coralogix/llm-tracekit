@@ -4,8 +4,8 @@ import os
 from typing import List, Union, Optional
 from dotenv import load_dotenv
 from tenacity import AsyncRetrying, stop_after_attempt, stop_after_delay, wait_exponential
-# from pydantic import Field, field_validator
-# from pydantic_settings import BaseSettings
+from pydantic import BaseModel, Field, field_validator, ConfigDict
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from .models import GuardrailsRequest, GuardrailsResult, GuardrailsResponse, PII, PromptInjection, CustomGuardrail
 
@@ -13,19 +13,35 @@ from .models import GuardrailsRequest, GuardrailsResult, GuardrailsResponse, PII
 logger = logging.getLogger(__name__)
 
 
-# class GuardrailsRequestConfig(BaseSettings):
-#     api_key: str = Field(default=None, env="API_KEY")
-#     application_name: str = Field(default=None, env="APPLICATION_NAME")
-#     subsystem_name: str = Field(default=None, env="SUBSYSTEM_NAME")
-#     domain_url: str = Field(default=None, env="DOMAIN_URL")
-#     timeout: int = Field(default=10)
-#     retries: int = Field(default=3)
+class GuardrailsRequestConfig(BaseSettings):
+    """Configuration settings for Guardrails with automatic environment variable loading."""
+    
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        case_sensitive=False,
+        extra="forbid"
+    )
+    
+    api_key: str = Field(..., description="API key for authentication")
+    application_name: str = Field(..., description="Name of the application")
+    subsystem_name: str = Field(..., description="Name of the subsystem")
+    domain_url: str = Field(..., description="Domain URL for the service")
+    timeout: int = Field(default=100, ge=1, description="Request timeout in seconds")
+    retries: int = Field(default=3, ge=0, description="Number of retry attempts")
 
-
-#     @field_validator("api_key", "application_name", "subsystem_name", "domain_url")
-#     @classmethod
-#     def strip_whitespace(cls, v: str) -> str:
-#         return v.strip() if isinstance(v, str) else v
+    @field_validator('api_key', 'application_name', 'subsystem_name', 'domain_url')
+    @classmethod
+    def strip_whitespace_and_validate(cls, v: str) -> str:
+        """Strip whitespace and ensure non-empty strings."""
+        if not isinstance(v, str):
+            raise ValueError("Must be a string")
+        
+        stripped = v.strip()
+        if not stripped:
+            raise ValueError("Cannot be empty or whitespace only")
+        
+        return stripped
 
 
 class Guardrails:
@@ -39,37 +55,32 @@ class Guardrails:
     ) -> None:
         load_dotenv()
 
-        # Use environment variables as fallback if parameters not provided
-        if api_key is None:
-            api_key = os.getenv("API_KEY")
-        if application_name is None:
-            application_name = os.getenv("APPLICATION_NAME")
-        if subsystem_name is None:
-            subsystem_name = os.getenv("SUBSYSTEM_NAME")
-        if domain_url is None:
-            domain_url = os.getenv("DOMAIN_URL")
+        # Create config kwargs, only including non-None values
+        config_kwargs = {
+            'timeout': timeout,
+            'retries': retries
+        }
         
-        # Strip whitespace and validate required parameters
-        api_key = api_key.strip() if api_key else None
-        application_name = application_name.strip() if application_name else None
-        subsystem_name = subsystem_name.strip() if subsystem_name else None
-        domain_url = domain_url.strip() if domain_url else None
-
-        if not api_key:
-            raise ValueError("api_key is required. Provide it as parameter or set API_KEY environment variable.")
-        if not application_name:
-            raise ValueError("application_name is required. Provide it as parameter or set APPLICATION_NAME environment variable.")
-        if not subsystem_name:
-            raise ValueError("subsystem_name is required. Provide it as parameter or set SUBSYSTEM_NAME environment variable.")
-        if not domain_url:
-            raise ValueError("domain_url is required. Provide it as parameter or set DOMAIN_URL environment variable.")
+        # Only add optional parameters if they're provided
+        if api_key is not None:
+            config_kwargs['api_key'] = api_key
+        if application_name is not None:
+            config_kwargs['application_name'] = application_name
+        if subsystem_name is not None:
+            config_kwargs['subsystem_name'] = subsystem_name
+        if domain_url is not None:
+            config_kwargs['domain_url'] = domain_url
         
-        self.api_key = api_key
-        self.application_name = application_name
-        self.subsystem_name = subsystem_name
-        self.domain_url = domain_url
-        self.timeout = timeout
-        self.retries = retries
+        # Initialize config with validation
+        self.config = GuardrailsRequestConfig(**config_kwargs)
+        
+        # Expose config attributes at class level for backwards compatibility
+        self.api_key = self.config.api_key
+        self.application_name = self.config.application_name
+        self.subsystem_name = self.config.subsystem_name
+        self.domain_url = self.config.domain_url
+        self.timeout = self.config.timeout
+        self.retries = self.config.retries
 
         self._client = httpx.AsyncClient(
                 base_url=self.domain_url, 
