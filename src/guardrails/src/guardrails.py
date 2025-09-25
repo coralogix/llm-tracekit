@@ -1,6 +1,6 @@
 import httpx
 import logging
-from typing import List, Union, Optional
+from typing import List, Union, Optional, Any
 from dotenv import load_dotenv
 from tenacity import AsyncRetrying, stop_after_attempt, stop_after_delay, wait_exponential
 from pydantic import Field, field_validator
@@ -17,7 +17,6 @@ class GuardrailsRequestConfig(BaseSettings):
     
     model_config = SettingsConfigDict(
         env_file=".env",
-        env_file_encoding="utf-8",
         case_sensitive=False,
         extra="forbid"
     )
@@ -26,8 +25,17 @@ class GuardrailsRequestConfig(BaseSettings):
     application_name: str = Field(..., description="Name of the application")
     subsystem_name: str = Field(..., description="Name of the subsystem")
     domain_url: str = Field(..., description="Domain URL for the service")
-    timeout: int = Field(default=100, ge=1, description="Request timeout in seconds")
-    retries: int = Field(default=3, ge=0, description="Number of retry attempts")
+    timeout: Union[int, str] = Field(default=100, ge=1, description="Request timeout in seconds")
+    retries: Union[int, str] = Field(default=3, ge=0, description="Number of retry attempts")
+
+    @field_validator('timeout', 'retries', mode='before')
+    @classmethod
+    def convert_to_int(cls, v):
+        """Convert string or int to int."""
+        if isinstance(v, str):
+            return int(v.strip())
+        return int(v)
+
 
     @field_validator('api_key', 'application_name', 'subsystem_name', 'domain_url')
     @classmethod
@@ -45,31 +53,33 @@ class GuardrailsRequestConfig(BaseSettings):
 
 class Guardrails:
     def __init__(self, 
-        api_key: Optional[str] = None, 
-        application_name: Optional[str] = None, 
-        subsystem_name: Optional[str] = None, 
-        domain_url: Optional[str] = None,
-        timeout: int = 100, 
-        retries: int = 3,
-    ) -> None:
+                 api_key: Optional[Union[str, Any]] = None, 
+                 application_name: Optional[Union[str, Any]] = None, 
+                 subsystem_name: Optional[Union[str, Any]] = None, 
+                 domain_url: Optional[Union[str, Any]] = None,
+                 timeout: Union[int, str, Any] = 100, 
+                 retries: Union[int, str, Any] = 3
+                 ) -> None:
+
         load_dotenv()
 
         # Create config kwargs, only including non-None values
-        config_kwargs = {
-            'timeout': timeout,
-            'retries': retries
-        }
+        config_kwargs = {}
         
         # Only add optional parameters if they're provided
         if api_key is not None:
-            config_kwargs['api_key'] = api_key
+            config_kwargs['api_key'] = str(api_key)
         if application_name is not None:
-            config_kwargs['application_name'] = application_name
+            config_kwargs['application_name'] = str(application_name)
         if subsystem_name is not None:
-            config_kwargs['subsystem_name'] = subsystem_name
+            config_kwargs['subsystem_name'] = str(subsystem_name)
         if domain_url is not None:
-            config_kwargs['domain_url'] = domain_url
+            config_kwargs['domain_url'] = str(domain_url)
         
+        # Add numeric parameters with proper types
+        config_kwargs['timeout'] = str(timeout)
+        config_kwargs['retries'] = str(retries)
+
         # Initialize config with validation
         self.config = GuardrailsRequestConfig(**config_kwargs)
         
@@ -78,8 +88,8 @@ class Guardrails:
         self.application_name = self.config.application_name
         self.subsystem_name = self.config.subsystem_name
         self.domain_url = self.config.domain_url
-        self.timeout = self.config.timeout
-        self.retries = self.config.retries
+        self.timeout = int(self.config.timeout)
+        self.retries = int(self.config.retries)
 
         self._client = httpx.AsyncClient(
                 base_url=self.domain_url, 
