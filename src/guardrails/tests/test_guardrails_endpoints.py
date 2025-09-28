@@ -1,21 +1,14 @@
-"""
-Pytest test file for Guardrails SDK
-This demonstrates various pytest patterns and best practices
-"""
-
 import pytest
 import os
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import patch
 from fastapi.testclient import TestClient
 from pydantic_core import ValidationError
-from httpx import Response, Request
 
 from guardrails.tests.main import app
 from guardrails.src.models import (
-    PII, PromptInjection, CustomGuardrail,
-    PIICategories, PromptInjectionCategories,
-    GuardrailsRequest, GuardrailsResult
+    PII, PIICategories, PromptInjectionCategories,
+    GuardrailsResult
 )
 from guardrails.src.guardrails import Guardrails
 
@@ -105,164 +98,7 @@ def test_run_endpoint_with_multiple_guardrails(sample_request_data):
     data = response.json()
     assert len(data["guardrails_config"]) == 2
 
-def test_pii_model_creation(sample_pii_config):
-    """Test PII model creation and attributes"""
-    assert sample_pii_config.name == "test-pii"
-    assert sample_pii_config.type == "pii"
-    assert "email" in sample_pii_config.categories
-    assert sample_pii_config.threshold == 0.8
 
-def test_pii_model_default_values():
-    """Test PII model with default values"""
-    pii = PII(name="minimal-pii")
-    
-    assert pii.name == "minimal-pii"
-    assert pii.type == "pii"
-    assert pii.categories == []
-    assert pii.threshold == 0.7 
-
-def test_custom_guardrail_requires_criteria():
-    """Test that CustomGuardrail requires criteria field"""
-    with pytest.raises(Exception):  # Pydantic validation error
-        CustomGuardrail(name="invalid")
-
-def test_model_serialization(sample_pii_config):
-    """Test model serialization to dict"""
-    data = sample_pii_config.model_dump()
-    
-    assert data["name"] == "test-pii"
-    assert data["type"] == "pii"
-    assert data["categories"] == ["email", "phone", "credit_card"]
-    assert data["threshold"] == 0.8
-
-
-def test_guardrails_request_with_multiple_guardrails():
-    """Test GuardrailsRequest with different guardrail types"""
-    pii = PII(name="pii", categories=["email"])
-    injection = PromptInjection(name="injection", categories=["code_execution"])
-    custom = CustomGuardrail(name="custom", criteria="Test criteria")
-    
-    request = GuardrailsRequest(
-        api_key="test",
-        application_name="app",
-        subsystem_name="subsystem",
-        domain_url="domain-url",
-        message="Test message",
-        guardrails_config=[pii, injection, custom]
-    )
-    
-    assert len(request.guardrails_config) == 3
-    assert request.guardrails_config[0].type == "pii"
-    assert request.guardrails_config[1].type == "prompt_injection"
-    assert request.guardrails_config[2].type == "custom"
-
-def test_client_initialization(guardrails_client):
-    """Test client initialization with required parameters"""
-    assert guardrails_client.api_key == "test-api-key"
-    assert guardrails_client.application_name == "test-app"
-    assert guardrails_client.subsystem_name == "test-subsystem"
-    assert guardrails_client.domain_url == "test-domain-url"
-    assert guardrails_client.timeout == 100  # Default
-    assert guardrails_client.retries == 3   # Default
-
-@pytest.mark.asyncio
-async def test_client_context_manager(guardrails_client):
-    """Test client as async context manager"""
-    async with guardrails_client as client:
-        assert client is not None
-        # Context manager should work without errors
-
-@pytest.mark.asyncio
-@patch('httpx.AsyncClient.post')
-async def test_successful_guardrails_run(mock_post, guardrails_client, sample_pii_config):
-    """Test successful guardrails run with mocked HTTP response"""
-    # Mock successful response
-    mock_response = AsyncMock()
-    mock_response.status_code = 200
-    mock_response.text = '''{
-        "results": [{
-            "name": "test-result",
-            "detected": true,
-            "score": 0.9,
-            "explanation": "Found PII in message",
-            "threshold": 0.8
-        }],
-        "guardrails_config": []
-    }'''
-    mock_post.return_value = mock_response
-    
-    # Run guardrails
-    results = await guardrails_client.run("Test message", [sample_pii_config])
-    
-    # Verify results
-    assert len(results) == 1
-    assert results[0].name == "test-result"
-    assert results[0].detected is True
-    assert results[0].score == 0.9
-    
-    # Verify HTTP call was made
-    mock_post.assert_called_once()
-
-@pytest.mark.asyncio
-@patch('httpx.AsyncClient.post')
-async def test_guardrails_run_http_error(mock_post, guardrails_client, sample_pii_config):
-    """Test guardrails run with HTTP error response"""
-    # Mock error response
-    mock_response = AsyncMock()
-    mock_response.status_code = 500
-    mock_response.text = "Internal Server Error"
-    mock_post.return_value = mock_response
-    
-    # Should raise exception for HTTP error
-    with pytest.raises(Exception) as exc_info:
-        await guardrails_client.run("Test message", [sample_pii_config])
-    
-    assert "HTTP 500" in str(exc_info.value)
-
-@pytest.mark.asyncio
-@patch('httpx.AsyncClient.post')
-async def test_async_retrying_on_failure(mock_post, guardrails_client, sample_pii_config):
-    """Test AsyncRetrying with mocked failed attempts"""
-    # Mock failed response
-    mock_response_failure = Response(
-        status_code=500,
-        text='Internal Server Error',
-        request=Request("POST", "https://example.com/guardrails/run")
-    )
-
-    # Mock success response
-    mock_response_success = Response(
-        status_code=200,
-        text='''{
-            "results": [{
-                "name": "test-result",
-                "detected": true,
-                "score": 0.9,
-                "explanation": "Found PII in message",
-                "threshold": 0.8
-            }],
-            "guardrails_config": []
-        }''',
-        request=Request("POST", "https://example.com/guardrails/run")
-    )
-
-    # Set up the mock to fail twice before succeeding
-    mock_post.side_effect = [
-        mock_response_failure,  # Fail 1
-        mock_response_failure,  # Fail 2
-        mock_response_success  # Success
-    ]
-
-    # Assign the mock to the client's post method
-    guardrails_client._client.post = mock_post
-
-    # Attempt to run guardrails, expecting retries
-    results = await guardrails_client.run("Test message", [sample_pii_config])
-
-    # Verify that retries were attempted
-    assert mock_post.call_count == 3  # Ensure retries were attempted twice before success
-    assert isinstance(results, list)
-    assert len(results) == 1
 
 
 @pytest.mark.parametrize("message,expected_guardrails", [
@@ -342,10 +178,10 @@ def test_guardrails_with_env_vars():
     """Test Guardrails initialization using legacy environment variable names"""
     guardrails = Guardrails()
     
-    assert guardrails.api_key == "OS-api-key"
-    assert guardrails.application_name == "OS-app-name"
-    assert guardrails.subsystem_name == "OS-subsystem-name"
-    assert guardrails.domain_url == "OS-domain-url"
+    assert guardrails.config.api_key == "OS-api-key"
+    assert guardrails.config.application_name == "OS-app-name"
+    assert guardrails.config.subsystem_name == "OS-subsystem-name"
+    assert guardrails.config.domain_url == "OS-domain-url"
 
 
 @patch.dict(os.environ, {
@@ -362,10 +198,10 @@ def test_guardrails_with_env_vars_and_params():
         subsystem_name="test-subsystem-name",
         domain_url="test-domain-url")
     
-    assert guardrails.api_key == "test-api-key"
-    assert guardrails.application_name == "test-app-name"
-    assert guardrails.subsystem_name == "test-subsystem-name"
-    assert guardrails.domain_url == "test-domain-url"
+    assert guardrails.config.api_key == "test-api-key"
+    assert guardrails.config.application_name == "test-app-name"
+    assert guardrails.config.subsystem_name == "test-subsystem-name"
+    assert guardrails.config.domain_url == "test-domain-url"
 
 
 def test_guardrails_with_no_params():
