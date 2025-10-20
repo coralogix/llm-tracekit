@@ -19,7 +19,7 @@ interactions:
       x-goog-api-client:
       - google-genai-sdk/1.41.0 gl-python/3.11.5
       x-goog-api-key:
-      - AIzaSyD-xL0p8H9opidgMKNX32Kxx5Gs9u5Kpco
+      - redacted_x_goog_api_key
     method: post
     uri: https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent
   response:
@@ -37,7 +37,7 @@ interactions:
                 "role": "model"
               },
               "finishReason": "STOP",
-              "avgLogprobs": -0.02776198461651802
+              "avgLogprobs": -0.021809574216604233
             }
           ],
           "usageMetadata": {
@@ -58,7 +58,7 @@ interactions:
             ]
           },
           "modelVersion": "gemini-2.0-flash-lite",
-          "responseId": "Flz1aIHvJsLZkdUPnLz4-AM"
+          "responseId": "p_71aJOpN4zYxs0Pqdm5gAw"
         }
     headers:
       Alt-Svc:
@@ -66,11 +66,11 @@ interactions:
       Content-Type:
       - application/json; charset=UTF-8
       Date:
-      - Sun, 19 Oct 2025 21:45:59 GMT
+      - Mon, 20 Oct 2025 09:19:36 GMT
       Server:
       - scaffolding on HTTPServer2
       Server-Timing:
-      - gfet4t7; dur=438
+      - gfet4t7; dur=447
       Transfer-Encoding:
       - chunked
       Vary:

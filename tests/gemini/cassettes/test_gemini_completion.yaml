@@ -25,7 +25,7 @@ interactions:
       x-goog-api-client:
       - google-genai-sdk/1.41.0 gl-python/3.11.5
       x-goog-api-key:
-      - AIzaSyD-xL0p8H9opidgMKNX32Kxx5Gs9u5Kpco
+      - redacted_x_goog_api_key
     method: POST
     uri: https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent
   response:
@@ -64,7 +64,7 @@ interactions:
             ]
           },
           "modelVersion": "gemini-2.0-flash-lite",
-          "responseId": "E1z1aMT4F5S0nsEP97yI6AM"
+          "responseId": "pP71aLndLse-xN8P4NiRIA"
         }
     headers:
       Alt-Svc:
@@ -72,11 +72,11 @@ interactions:
       Content-Type:
       - application/json; charset=UTF-8
       Date:
-      - Sun, 19 Oct 2025 21:45:55 GMT
+      - Mon, 20 Oct 2025 09:19:33 GMT
       Server:
       - scaffolding on HTTPServer2
       Server-Timing:
-      - gfet4t7; dur=424
+      - gfet4t7; dur=528
       Transfer-Encoding:
       - chunked
       Vary:
@@ -90,7 +90,7 @@ interactions:
       X-XSS-Protection:
       - '0'
       content-length:
-      - '671'
+      - '670'
     status:
       code: 200
       message: OK

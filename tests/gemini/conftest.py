@@ -30,6 +30,8 @@ def gemini_env_vars():
 def handle_request(request):
     if 'cookie' in request.headers:
         request.headers['cookie'] = 'redacted_cookie'
+    if 'x-goog-api-key' in request.headers:
+        request.headers['x-goog-api-key'] = 'redacted_x_goog_api_key'
     return request
 
 

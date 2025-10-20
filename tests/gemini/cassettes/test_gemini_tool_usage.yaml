@@ -48,7 +48,7 @@ interactions:
       x-goog-api-client:
       - google-genai-sdk/1.41.0 gl-python/3.11.5
       x-goog-api-key:
-      - AIzaSyD-xL0p8H9opidgMKNX32Kxx5Gs9u5Kpco
+      - redacted_x_goog_api_key
     method: POST
     uri: https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent
   response:
@@ -71,7 +71,7 @@ interactions:
                 "role": "model"
               },
               "finishReason": "STOP",
-              "avgLogprobs": -0.000717658142093569
+              "avgLogprobs": -0.0008966641034930944
             }
           ],
           "usageMetadata": {
@@ -92,7 +92,7 @@ interactions:
             ]
           },
           "modelVersion": "gemini-2.0-flash-lite",
-          "responseId": "GFz1aPH5KMeakdUPvuWk4AM"
+          "responseId": "qf71aL_WHtH7xN8PmKLduA4"
         }
     headers:
       Alt-Svc:
@@ -100,11 +100,11 @@ interactions:
       Content-Type:
       - application/json; charset=UTF-8
       Date:
-      - Sun, 19 Oct 2025 21:46:01 GMT
+      - Mon, 20 Oct 2025 09:19:37 GMT
       Server:
       - scaffolding on HTTPServer2
       Server-Timing:
-      - gfet4t7; dur=555
+      - gfet4t7; dur=505
       Transfer-Encoding:
       - chunked
       Vary:
@@ -118,7 +118,7 @@ interactions:
       X-XSS-Protection:
       - '0'
       content-length:
-      - '799'
+      - '801'
     status:
       code: 200
       message: OK
@@ -197,7 +197,7 @@ interactions:
       x-goog-api-client:
       - google-genai-sdk/1.41.0 gl-python/3.11.5
       x-goog-api-key:
-      - AIzaSyD-xL0p8H9opidgMKNX32Kxx5Gs9u5Kpco
+      - redacted_x_goog_api_key
     method: POST
     uri: https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent
   response:
@@ -236,7 +236,7 @@ interactions:
             ]
           },
           "modelVersion": "gemini-2.0-flash-lite",
-          "responseId": "GVz1aJGYD73i7M8PmvC4yAM"
+          "responseId": "qv71aPnoAtbCvdIPosCl2Q4"
         }
     headers:
       Alt-Svc:
@@ -244,11 +244,11 @@ interactions:
       Content-Type:
       - application/json; charset=UTF-8
       Date:
-      - Sun, 19 Oct 2025 21:46:01 GMT
+      - Mon, 20 Oct 2025 09:19:38 GMT
       Server:
       - scaffolding on HTTPServer2
       Server-Timing:
-      - gfet4t7; dur=443
+      - gfet4t7; dur=540
       Transfer-Encoding:
       - chunked
       Vary:
