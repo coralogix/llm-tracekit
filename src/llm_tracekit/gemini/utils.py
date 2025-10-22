@@ -34,11 +34,7 @@ from llm_tracekit.span_builder import (
     generate_response_attributes,
 )
 
-_GOOGLE_GENAI_SYSTEM = getattr(
-    GenAIAttributes.GenAiSystemValues,
-    "GOOGLE_GENAI",
-    "google_genai",
-)
+_GOOGLE_GENAI_SYSTEM = GenAIAttributes.GenAiSystemValues.GEMINI.value
 _OPERATION_NAME_VALUE = GenAIAttributes.GenAiOperationNameValues.CHAT.value
 
 
@@ -290,8 +286,7 @@ def build_request_details(
     if config_attributes:
         attributes.update(config_attributes)
 
-    span_model = model or "unknown"
-    span_name = f"{_OPERATION_NAME_VALUE} {span_model}"
+    span_name = f"{_OPERATION_NAME_VALUE}"
 
     return GeminiRequestDetails(
         span_name=span_name,
@@ -578,6 +573,24 @@ def _normalize_finish_reason(value: Any) -> Optional[str]:
     if isinstance(value, str):
         return value.split(".")[-1]
 
+    name_attr = _safe_get(value, "name")
+    if isinstance(name_attr, str) and name_attr:
+        return name_attr.split(".")[-1]
+
+    value_attr = _safe_get(value, "value")
+    if isinstance(value_attr, str) and value_attr:
+        return value_attr.split(".")[-1]
+
+    stringified = str(value)
+    if not stringified:
+        return None
+    if "." in stringified:
+        candidate = stringified.split(".")[-1]
+        if candidate:
+            return candidate
+
+    return stringified
+
 
 def _safe_get(obj: Any, attribute: str) -> Any:
     if obj is None:
@@ -599,6 +612,8 @@ def _stringify_value(value: Any) -> Optional[str]:
 
     if hasattr(value, "model_dump"):
         try:
+            if hasattr(value, "model_dump_json"):
+                return value.model_dump_json()
             return json.dumps(value.model_dump())
         except (TypeError, ValueError):
             return str(value.model_dump())
