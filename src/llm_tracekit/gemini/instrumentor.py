@@ -15,13 +15,13 @@
 
 from __future__ import annotations
 
-from typing import Collection
+from typing import Collection, Union
 
 from opentelemetry.instrumentation.instrumentor import (  # type: ignore[attr-defined]
     BaseInstrumentor,
 )
 from opentelemetry.instrumentation.utils import unwrap
-from opentelemetry.metrics import get_meter
+from opentelemetry.metrics import get_meter, Meter
 from opentelemetry.semconv.schemas import Schemas
 from opentelemetry.trace import get_tracer
 from wrapt import wrap_function_wrapper
@@ -39,7 +39,7 @@ from llm_tracekit.gemini.patch import (
 
 class GeminiInstrumentor(BaseInstrumentor):
     def __init__(self) -> None:
-        self._meter = None
+        self._meter: Union[Meter, None] = None
 
     def instrumentation_dependencies(self) -> Collection[str]:
         return _instruments

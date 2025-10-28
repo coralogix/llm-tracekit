@@ -42,7 +42,7 @@ def test_gemini_completion(span_exporter, instrument):
 
     assert_attributes(
         span,
-        "google_genai",
+        "gemini",
         "chat",
         "gemini-2.0-flash-lite",
         response.model_version,
@@ -91,7 +91,7 @@ def test_gemini_completion_stream(span_exporter, instrument):
 
     assert_attributes(
         span,
-        "google_genai",
+        "gemini",
         "chat",
         "gemini-2.0-flash-lite",
         span.attributes.get(GenAIAttributes.GEN_AI_RESPONSE_MODEL),
@@ -129,7 +129,7 @@ async def test_gemini_async_completion(span_exporter, instrument):
 
     assert_attributes(
         span,
-        "google_genai",
+        "gemini",
         "chat",
         "gemini-2.0-flash-lite",
         response.model_version,
@@ -232,7 +232,7 @@ def test_gemini_tool_usage(span_exporter, instrument):
 
     assert_attributes(
         second_span,
-        "google_genai",
+        "gemini",
         "chat",
         "gemini-2.0-flash-lite",
         final_response.model_version,

@@ -442,13 +442,13 @@ def _contents_to_messages(contents: Any) -> List[Message]:
 
             if tool_responses:
                 for response_part in tool_responses:
-                    content_value = response_part.result or response_part.raw_content
-                    if content_value is None:
+                    tool_content_value = response_part.result or response_part.raw_content
+                    if tool_content_value is None:
                         continue
                     messages.append(
                         Message(
                             role="tool",
-                            content=content_value,
+                            content=tool_content_value,
                             tool_call_id=response_part.tool_call_id,
                         )
                     )
