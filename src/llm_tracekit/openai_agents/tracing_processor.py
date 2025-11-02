@@ -262,6 +262,7 @@ class OpenAIAgentsTracingProcessor(TracingProcessor):
                 capture_content=self.capture_content
             ),
             **generate_request_attributes(
+                model=response_model,
                 top_p=top_p,
                 temperature=temperature
             ),

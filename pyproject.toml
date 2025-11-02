@@ -8,7 +8,7 @@ authors = [
 ]
 license = "Apache-2.0"
 license-files = ["LICENSE.md"]
-requires-python = ">=3.9, <4.0"
+requires-python = ">3.9,<=3.13"
 dependencies = [
     "opentelemetry-api>=1.32.1",
     "opentelemetry-exporter-otlp>=1.32.1",
