@@ -4,18 +4,18 @@ This library contains modified versions of the [OpenTelemetry instrumentaions](h
 ## Installation
 #### OpenAI
 ```bash
-pip install llm-tracekit[openai]
+pip install "llm-tracekit[openai]"
 ```
 
 #### Bedrock
 ```bash
-pip install llm-tracekit[bedrock]
+pip install "llm-tracekit[bedrock]"
 ```
 
 #### OpenAI Agents SDK
 >This instrumentation requires **Python 3.10+**
 ```bash
-pip install llm-tracekit[openai_agents]
+pip install "llm-tracekit[openai_agents]"
 ```
 
 ## Usage
