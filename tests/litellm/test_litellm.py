@@ -124,7 +124,7 @@ def test_litellm_multi_turn(instrument):
     final_response = litellm.completion(model=model, messages=messages)
     completion_content = final_response.choices[0].message.content
 
-    time.sleep(0.1)
+    time.sleep(0.2)
 
     spans = exporter.get_finished_spans()
 
