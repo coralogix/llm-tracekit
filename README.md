@@ -18,8 +18,23 @@ pip install "llm-tracekit[bedrock]"
 pip install "llm-tracekit[openai_agents]"
 ```
 
+#### litellm SDK
+>This instrumentation requires **Python 3.10+**
+```bash
+pip install "llm-tracekit[litellm]"
+```
+
+#### Gemini SDK
+>This instrumentation requires **Python 3.10+**
+```bash
+pip install "llm-tracekit[gemini]"
+```
+
+
+
+
 ## Usage
-This section describes how to set up instrumentation. The examples will use the OpenAI instrumentation, but the usage is similar for all instrumentations. You can replace `OpenAIInstrumentor` with `BedrockInstrumentor` or `OpenAIAgentsInstrumentor` depending on your use case.
+This section describes how to set up instrumentation. The examples will use the OpenAI instrumentation, but the usage is similar for all instrumentations. You can replace `OpenAIInstrumentor` with `BedrockInstrumentor`, `GeminiInstrumentor`, `LiteLLMInstrumentor` or `OpenAIAgentsInstrumentor` depending on your use case.
 
 ### Setting up tracing
 You can use the `setup_export_to_coralogix` function to setup tracing and export traces to Coralogix
