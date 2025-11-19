@@ -1,0 +1,269 @@
+interactions:
+- request:
+    body: |-
+      {
+        "contents": [
+          {
+            "parts": [
+              {
+                "text": "What's the temperature in Tel Aviv?"
+              }
+            ],
+            "role": "user"
+          }
+        ],
+        "tools": [
+          {
+            "functionDeclarations": [
+              {
+                "description": "Gets the current temperature for a given location.",
+                "name": "get_current_temperature",
+                "parameters": {
+                  "properties": {
+                    "location": {
+                      "description": "The city name, e.g. Tel Aviv",
+                      "type": "STRING"
+                    }
+                  },
+                  "required": [
+                    "location"
+                  ],
+                  "type": "OBJECT"
+                }
+              }
+            ]
+          }
+        ],
+        "generationConfig": {}
+      }
+    headers:
+      accept:
+      - '*/*'
+      connection:
+      - keep-alive
+      content-type:
+      - application/json
+      host:
+      - generativelanguage.googleapis.com
+      x-goog-api-client:
+      - google-genai-sdk/1.41.0 gl-python/3.11.5
+      x-goog-api-key:
+      - redacted_x_goog_api_key
+    method: POST
+    uri: https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent
+  response:
+    body:
+      string: |-
+        {
+          "candidates": [
+            {
+              "content": {
+                "parts": [
+                  {
+                    "functionCall": {
+                      "name": "get_current_temperature",
+                      "args": {
+                        "location": "Tel Aviv"
+                      }
+                    }
+                  }
+                ],
+                "role": "model"
+              },
+              "finishReason": "STOP",
+              "avgLogprobs": -0.0008966641034930944
+            }
+          ],
+          "usageMetadata": {
+            "promptTokenCount": 37,
+            "candidatesTokenCount": 8,
+            "totalTokenCount": 45,
+            "promptTokensDetails": [
+              {
+                "modality": "TEXT",
+                "tokenCount": 37
+              }
+            ],
+            "candidatesTokensDetails": [
+              {
+                "modality": "TEXT",
+                "tokenCount": 8
+              }
+            ]
+          },
+          "modelVersion": "gemini-2.0-flash-lite",
+          "responseId": "qf71aL_WHtH7xN8PmKLduA4"
+        }
+    headers:
+      Alt-Svc:
+      - h3=":443"; ma=2592000,h3-29=":443"; ma=2592000
+      Content-Type:
+      - application/json; charset=UTF-8
+      Date:
+      - Mon, 20 Oct 2025 09:19:37 GMT
+      Server:
+      - scaffolding on HTTPServer2
+      Server-Timing:
+      - gfet4t7; dur=505
+      Transfer-Encoding:
+      - chunked
+      Vary:
+      - Origin
+      - X-Origin
+      - Referer
+      X-Content-Type-Options:
+      - nosniff
+      X-Frame-Options:
+      - SAMEORIGIN
+      X-XSS-Protection:
+      - '0'
+      content-length:
+      - '801'
+    status:
+      code: 200
+      message: OK
+- request:
+    body: |-
+      {
+        "contents": [
+          {
+            "parts": [
+              {
+                "text": "What's the temperature in Tel Aviv?"
+              }
+            ],
+            "role": "user"
+          },
+          {
+            "parts": [
+              {
+                "functionCall": {
+                  "args": {
+                    "location": "Tel Aviv"
+                  },
+                  "name": "get_current_temperature"
+                }
+              }
+            ],
+            "role": "model"
+          },
+          {
+            "parts": [
+              {
+                "functionResponse": {
+                  "name": "get_current_temperature",
+                  "response": {
+                    "result": "The current temperature in Tel Aviv is 22 degrees Celsius."
+                  }
+                }
+              }
+            ],
+            "role": "tool"
+          }
+        ],
+        "tools": [
+          {
+            "functionDeclarations": [
+              {
+                "description": "Gets the current temperature for a given location.",
+                "name": "get_current_temperature",
+                "parameters": {
+                  "properties": {
+                    "location": {
+                      "description": "The city name, e.g. Tel Aviv",
+                      "type": "STRING"
+                    }
+                  },
+                  "required": [
+                    "location"
+                  ],
+                  "type": "OBJECT"
+                }
+              }
+            ]
+          }
+        ],
+        "generationConfig": {}
+      }
+    headers:
+      accept:
+      - '*/*'
+      connection:
+      - keep-alive
+      content-type:
+      - application/json
+      host:
+      - generativelanguage.googleapis.com
+      x-goog-api-client:
+      - google-genai-sdk/1.41.0 gl-python/3.11.5
+      x-goog-api-key:
+      - redacted_x_goog_api_key
+    method: POST
+    uri: https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent
+  response:
+    body:
+      string: |-
+        {
+          "candidates": [
+            {
+              "content": {
+                "parts": [
+                  {
+                    "text": "The current temperature in Tel Aviv is 22 degrees Celsius.\n"
+                  }
+                ],
+                "role": "model"
+              },
+              "finishReason": "STOP",
+              "avgLogprobs": -0.00010341792533706342
+            }
+          ],
+          "usageMetadata": {
+            "promptTokenCount": 64,
+            "candidatesTokenCount": 14,
+            "totalTokenCount": 78,
+            "promptTokensDetails": [
+              {
+                "modality": "TEXT",
+                "tokenCount": 64
+              }
+            ],
+            "candidatesTokensDetails": [
+              {
+                "modality": "TEXT",
+                "tokenCount": 14
+              }
+            ]
+          },
+          "modelVersion": "gemini-2.0-flash-lite",
+          "responseId": "qv71aPnoAtbCvdIPosCl2Q4"
+        }
+    headers:
+      Alt-Svc:
+      - h3=":443"; ma=2592000,h3-29=":443"; ma=2592000
+      Content-Type:
+      - application/json; charset=UTF-8
+      Date:
+      - Mon, 20 Oct 2025 09:19:38 GMT
+      Server:
+      - scaffolding on HTTPServer2
+      Server-Timing:
+      - gfet4t7; dur=540
+      Transfer-Encoding:
+      - chunked
+      Vary:
+      - Origin
+      - X-Origin
+      - Referer
+      X-Content-Type-Options:
+      - nosniff
+      X-Frame-Options:
+      - SAMEORIGIN
+      X-XSS-Protection:
+      - '0'
+      content-length:
+      - '714'
+    status:
+      code: 200
+      message: OK
+version: 1

@@ -34,3 +34,7 @@ with suppress(ImportError):
     from llm_tracekit.litellm.instrumentor import (
         LiteLLMInstrumentor as LiteLLMInstrumentor,
     )
+with suppress(ImportError):
+    from llm_tracekit.gemini.instrumentor import (
+        GeminiInstrumentor as GeminiInstrumentor
+    )
