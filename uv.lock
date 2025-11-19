@@ -1327,6 +1327,7 @@ dependencies = [
     { name = "opentelemetry-instrumentation" },
     { name = "opentelemetry-sdk" },
     { name = "opentelemetry-semantic-conventions" },
+    { name = "tenacity" },
 ]
 
 [package.optional-dependencies]
@@ -1385,6 +1386,7 @@ requires-dist = [
     { name = "opentelemetry-instrumentation", specifier = ">=0.53b1" },
     { name = "opentelemetry-sdk", specifier = ">=1.32.1" },
     { name = "opentelemetry-semantic-conventions", specifier = ">=0.53b1" },
+    { name = "tenacity", specifier = ">=8.0.0" },
 ]
 provides-extras = ["openai", "openai-agents", "bedrock", "gemini", "litellm", "all"]
 
