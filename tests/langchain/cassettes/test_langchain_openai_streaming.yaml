@@ -1,0 +1,104 @@
+interactions:
+- request:
+    body: |-
+      {
+        "messages": [
+          {
+            "content": "Say this is a test",
+            "role": "user"
+          }
+        ],
+        "model": "gpt-4",
+        "stream": true,
+        "stream_options": {
+          "include_usage": true
+        }
+      }
+    headers:
+      accept:
+      - application/json
+      connection:
+      - keep-alive
+      content-type:
+      - application/json
+      host:
+      - api.openai.com
+      x-stainless-lang:
+      - python
+      x-stainless-runtime:
+      - CPython
+    method: POST
+    uri: https://api.openai.com/v1/chat/completions
+  response:
+    body:
+      string: |+
+        data: {"id":"chatcmpl-CiX4oVbwEZCDMkMLd4sA5DGwHY8Et","object":"chat.completion.chunk","created":1764729614,"model":"gpt-4-0613","service_tier":"default","system_fingerprint":null,"choices":[{"index":0,"delta":{"role":"assistant","content":"","refusal":null},"logprobs":null,"finish_reason":null}],"usage":null,"obfuscation":""}
+
+        data: {"id":"chatcmpl-CiX4oVbwEZCDMkMLd4sA5DGwHY8Et","object":"chat.completion.chunk","created":1764729614,"model":"gpt-4-0613","service_tier":"default","system_fingerprint":null,"choices":[{"index":0,"delta":{"content":"This"},"logprobs":null,"finish_reason":null}],"usage":null,"obfuscation":"275oTudQSujb9b"}
+
+        data: {"id":"chatcmpl-CiX4oVbwEZCDMkMLd4sA5DGwHY8Et","object":"chat.completion.chunk","created":1764729614,"model":"gpt-4-0613","service_tier":"default","system_fingerprint":null,"choices":[{"index":0,"delta":{"content":" is"},"logprobs":null,"finish_reason":null}],"usage":null,"obfuscation":"B8akPlESvHXFbrW"}
+
+        data: {"id":"chatcmpl-CiX4oVbwEZCDMkMLd4sA5DGwHY8Et","object":"chat.completion.chunk","created":1764729614,"model":"gpt-4-0613","service_tier":"default","system_fingerprint":null,"choices":[{"index":0,"delta":{"content":" a"},"logprobs":null,"finish_reason":null}],"usage":null,"obfuscation":""}
+
+        data: {"id":"chatcmpl-CiX4oVbwEZCDMkMLd4sA5DGwHY8Et","object":"chat.completion.chunk","created":1764729614,"model":"gpt-4-0613","service_tier":"default","system_fingerprint":null,"choices":[{"index":0,"delta":{"content":" test"},"logprobs":null,"finish_reason":null}],"usage":null,"obfuscation":"kVe7wfc1L2S3F"}
+
+        data: {"id":"chatcmpl-CiX4oVbwEZCDMkMLd4sA5DGwHY8Et","object":"chat.completion.chunk","created":1764729614,"model":"gpt-4-0613","service_tier":"default","system_fingerprint":null,"choices":[{"index":0,"delta":{"content":"."},"logprobs":null,"finish_reason":null}],"usage":null,"obfuscation":"i"}
+
+        data: {"id":"chatcmpl-CiX4oVbwEZCDMkMLd4sA5DGwHY8Et","object":"chat.completion.chunk","created":1764729614,"model":"gpt-4-0613","service_tier":"default","system_fingerprint":null,"choices":[{"index":0,"delta":{},"logprobs":null,"finish_reason":"stop"}],"usage":null,"obfuscation":"waPGQh9dbqdY"}
+
+        data: {"id":"chatcmpl-CiX4oVbwEZCDMkMLd4sA5DGwHY8Et","object":"chat.completion.chunk","created":1764729614,"model":"gpt-4-0613","service_tier":"default","system_fingerprint":null,"choices":[],"usage":{"prompt_tokens":12,"completion_tokens":5,"total_tokens":17,"prompt_tokens_details":{"cached_tokens":0,"audio_tokens":0},"completion_tokens_details":{"reasoning_tokens":0,"audio_tokens":0,"accepted_prediction_tokens":0,"rejected_prediction_tokens":0}},"obfuscation":"5i"}
+
+        data: [DONE]
+
+    headers:
+      CF-RAY:
+      - 9a7fb2b7589cef1a-WAW
+      Connection:
+      - keep-alive
+      Content-Type:
+      - text/event-stream; charset=utf-8
+      Date:
+      - Wed, 03 Dec 2025 02:40:14 GMT
+      Server:
+      - cloudflare
+      Set-Cookie: redacted_set_cookie
+      Strict-Transport-Security:
+      - max-age=31536000; includeSubDomains; preload
+      Transfer-Encoding:
+      - chunked
+      X-Content-Type-Options:
+      - nosniff
+      access-control-expose-headers:
+      - X-Request-ID
+      alt-svc:
+      - h3=":443"; ma=86400
+      cf-cache-status:
+      - DYNAMIC
+      openai-organization: test_openai_org_id
+      openai-processing-ms:
+      - '568'
+      openai-project: test_openai_project
+      openai-version:
+      - '2020-10-01'
+      x-envoy-upstream-service-time:
+      - '599'
+      x-openai-proxy-wasm:
+      - v0.1
+      x-ratelimit-limit-requests:
+      - '10000'
+      x-ratelimit-limit-tokens:
+      - '1000000'
+      x-ratelimit-remaining-requests:
+      - '9999'
+      x-ratelimit-remaining-tokens:
+      - '999993'
+      x-ratelimit-reset-requests:
+      - 6ms
+      x-ratelimit-reset-tokens:
+      - 0s
+      x-request-id:
+      - req_a93f5ae774fb4924bbb7ff4e5f32ce10
+    status:
+      code: 200
+      message: OK
+version: 1
