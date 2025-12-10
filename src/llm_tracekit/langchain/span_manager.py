@@ -14,6 +14,16 @@
 
 from __future__ import annotations
 
+"""Helpers for tracking LangChain run spans.
+
+This module keeps an in-memory registry of LangChain run IDs mapped to their
+corresponding OpenTelemetry spans. It is responsible for wiring parent/child
+relationships, keeping track of span attributes collected during the run, and
+ensuring spans reliably finish even if LangChain fails to emit matching end
+events. The callback handler treats this manager as its persistence layer for
+per-run state.
+"""
+
 from dataclasses import dataclass, field
 from timeit import default_timer
 from typing import Any, Dict, List, Optional
@@ -27,7 +37,13 @@ from opentelemetry.trace import Span, SpanKind, Tracer, set_span_in_context
 
 @dataclass
 class LangChainSpanState:
-    """Book-keeping for a LangChain span run."""
+    """Book-keeping for a LangChain span run.
+
+    The callback handler keeps a ``LangChainSpanState`` per run_id so that
+    subsequent end/error signals can enrich the same span with response data.
+    ``children`` captures LangChain's nested run graph, letting ``end_span``
+    recursively close orphaned children when a parent finishes.
+    """
 
     span: Span
     children: List[UUID] = field(default_factory=list)
@@ -38,7 +54,14 @@ class LangChainSpanState:
 
 
 class LangChainSpanManager:
-    """Creates and tracks LangChain spans keyed by LangChain run IDs."""
+    """Creates and tracks LangChain spans keyed by LangChain run IDs.
+
+    The manager acts as a tiny span registry. When a new run starts we create a
+    span (optionally linking it to its parent) and stash all mutable context we
+    will need once the run completes. When the run ends or errors, the callback
+    handler retrieves the state, updates the span, and finally asks the manager
+    to end the span (which also tears down any nested children).
+    """
 
     def __init__(self, tracer: Tracer) -> None:
         self._tracer = tracer
@@ -51,6 +74,7 @@ class LangChainSpanManager:
         span_name: str,
         attributes: Dict[str, Any],
     ) -> Span:
+        """Create and store a chat span for the provided LangChain run."""
         return self._create_span(
             run_id=run_id,
             parent_run_id=parent_run_id,
@@ -80,6 +104,7 @@ class LangChainSpanManager:
         attributes: Dict[str, Any],
         kind: SpanKind,
     ) -> Span:
+        """Internal helper that creates a span and registers its state."""
         parent_state = self._states.get(parent_run_id) if parent_run_id else None
         context = set_span_in_context(parent_state.span) if parent_state else None
 

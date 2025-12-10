@@ -176,6 +176,23 @@ def _stringify_arguments(arguments: Any) -> Optional[str]:
 
 
 def _stringify_content(content: Any) -> Optional[str]:
+    """Convert heterogeneous LangChain message content into a plain string.
+
+    The helper accepts provider-specific payloads (strings, dicts, lists of
+    content blocks, etc.) and returns a trimmed string representation suitable
+    for span attributes. Empty strings resolve to ``None`` so callers can skip
+    storing meaningless values.
+
+    Examples:
+        >>> _stringify_content("Hello world")
+        'Hello world'
+        >>> _stringify_content([{"text": "part one"}, "part two"])
+        'part one part two'
+        >>> _stringify_content({"json": [1, 2]})
+        '{"json": [1, 2]}'
+        >>> _stringify_content("   ") is None
+        True
+    """
     if content is None:
         return None
     if isinstance(content, str):
