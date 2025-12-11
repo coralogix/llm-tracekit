@@ -21,7 +21,6 @@ from opentelemetry.sdk.resources import SERVICE_NAME, Resource
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor, SimpleSpanProcessor, SpanProcessor
 from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
-from opentelemetry.sdk.trace.export import ConsoleSpanExporter
 
 from llm_tracekit.instrumentation_utils import enable_capture_content
 
@@ -101,11 +100,10 @@ def setup_export_to_coralogix(
             tracer_provider.add_span_processor(span_processor)
 
     #set up an OTLP exporter to send spans to coralogix directly.
-    # exporter = OTLPSpanExporter(
-    #     endpoint=exporter_config.endpoint,
-    #     headers=exporter_config.headers
-    # )
-    exporter = ConsoleSpanExporter()
+    exporter = OTLPSpanExporter(
+        endpoint=exporter_config.endpoint,
+        headers=exporter_config.headers
+    )
     
     # set up a span processor to send spans to the exporter
     span_processor = (

@@ -15,6 +15,8 @@
 
 from dataclasses import dataclass, field
 from contextvars import Token
+import re
+import json
 from typing import Any, Optional, Dict, List, Tuple, Union, Callable, Type
 
 from agents import (
@@ -54,6 +56,82 @@ from llm_tracekit.span_builder import (
 from opentelemetry.semconv._incubating.attributes import (
     gen_ai_attributes as GenAIAttributes,
 )
+
+_CONTEXT_HISTORY_START = "<CONVERSATION HISTORY>"
+_CONTEXT_HISTORY_END = "</CONVERSATION HISTORY>"
+_CONTEXT_ENTRY_PATTERN = re.compile(
+    r"\s*(\d+)\.\s*([\w_]+):\s*(.*?)(?=(?:\n\s*\d+\.\s*[\w_]+:)|\Z)",
+    re.DOTALL,
+)
+
+
+def _parse_context_history_message(content: Optional[str]) -> List[Message]:
+    if not content:
+        return []
+    if _CONTEXT_HISTORY_START not in content:
+        return []
+
+    try:
+        _, remainder = content.split(_CONTEXT_HISTORY_START, 1)
+        history_block, _ = remainder.split(_CONTEXT_HISTORY_END, 1)
+    except ValueError:
+        return []
+
+    history_block = history_block.strip()
+    messages: List[Message] = []
+    for match in _CONTEXT_ENTRY_PATTERN.finditer(history_block):
+        role_token = match.group(2).strip().lower()
+        payload = match.group(3).strip()
+
+        if role_token == "function_call":
+            tool_call_message = _build_context_function_call_message(payload)
+            if tool_call_message:
+                messages.append(tool_call_message)
+                continue
+        elif role_token == "function_call_output":
+            tool_output_message = _build_context_function_output_message(payload)
+            if tool_output_message:
+                messages.append(tool_output_message)
+                continue
+
+        messages.append(Message(role=role_token, content=payload))
+    return messages
+
+
+def _build_context_function_call_message(payload: str) -> Optional[Message]:
+    try:
+        call_data = json.loads(payload)
+    except json.JSONDecodeError:
+        return None
+
+    if not isinstance(call_data, dict):
+        return None
+
+    tool_call = ToolCall(
+        id=str(call_data.get("id") or call_data.get("call_id")),
+        type=str(call_data.get("type") or "function_call"),
+        function_name=call_data.get("name"),
+        function_arguments=call_data.get("arguments"),
+    )
+
+    return Message(role="assistant", content=None, tool_calls=[tool_call])
+
+def _build_context_function_output_message(payload: str) -> Optional[Message]:
+    try:
+        output_data = json.loads(payload)
+    except json.JSONDecodeError:
+        return None
+
+    if not isinstance(output_data, dict):
+        return None
+
+    tool_call_id = output_data.get("call_id")
+    content = output_data.get("output")
+    return Message(
+        role="tool",
+        tool_call_id=str(tool_call_id) if tool_call_id is not None else None,
+        content=str(content) if content is not None else None,
+    )
 
 
 @dataclass
@@ -106,6 +184,14 @@ class OpenAIAgentsTracingProcessor(TracingProcessor):
             idx = 0
             while idx < len(input_messages):
                 msg = input_messages[idx]
+                content_value = msg.get("content")
+                context_messages: List[Message] = []
+                if isinstance(content_value, str):
+                    context_messages = _parse_context_history_message(content_value)
+                if context_messages:
+                    history.extend(context_messages)
+                    idx += 1
+                    continue
                 if msg.get('role') == 'user':
                     history.append(Message(role='user', content=str(msg.get('content'))))
                     idx += 1
