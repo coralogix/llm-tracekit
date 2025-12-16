@@ -55,6 +55,9 @@ def generate_content_wrapper(
     config = _WrapperConfig(tracer=tracer, instruments=instruments, capture_content=capture_content)
 
     def traced_method(wrapped, instance, args, kwargs):
+        # Extract invocation_id if present and remove it from kwargs
+        invocation_id = kwargs.pop("invocation_id", None)
+        
         model = _get_argument(args, kwargs, name="model", position=0)
         contents = _get_argument(args, kwargs, name="contents", position=1)
         system_instruction = _get_argument(args, kwargs, name="system_instruction")
@@ -67,11 +70,16 @@ def generate_content_wrapper(
             config=config_payload,
             capture_content=config.capture_content,
         )
+        
+        # Add invocation_id to span attributes if provided
+        span_attributes = dict(request_details.span_attributes)
+        if invocation_id is not None:
+            span_attributes["invocation_id"] = invocation_id
 
         with config.tracer.start_as_current_span(
             name=request_details.span_name,
             kind=SpanKind.CLIENT,
-            attributes=request_details.span_attributes,
+            attributes=span_attributes,
             end_on_exit=False,
         ) as span:
             operation_state = _prepare_operation_state(span, request_details, config.capture_content)
@@ -107,6 +115,9 @@ def generate_content_stream_wrapper(
     config = _WrapperConfig(tracer=tracer, instruments=instruments, capture_content=capture_content)
 
     def traced_method(wrapped, instance, args, kwargs):
+        # Extract invocation_id if present and remove it from kwargs
+        invocation_id = kwargs.pop("invocation_id", None)
+        
         model = _get_argument(args, kwargs, name="model", position=0)
         contents = _get_argument(args, kwargs, name="contents", position=1)
         system_instruction = _get_argument(args, kwargs, name="system_instruction")
@@ -119,11 +130,16 @@ def generate_content_stream_wrapper(
             config=config_payload,
             capture_content=config.capture_content,
         )
+        
+        # Add invocation_id to span attributes if provided
+        span_attributes = dict(request_details.span_attributes)
+        if invocation_id is not None:
+            span_attributes["invocation_id"] = invocation_id
 
         span = config.tracer.start_span(
             name=request_details.span_name,
             kind=SpanKind.CLIENT,
-            attributes=request_details.span_attributes,
+            attributes=span_attributes,
         )
         operation_state = _prepare_operation_state(span, request_details, config.capture_content)
 
@@ -150,6 +166,9 @@ def async_generate_content_wrapper(
     config = _WrapperConfig(tracer=tracer, instruments=instruments, capture_content=capture_content)
 
     async def traced_method(wrapped, instance, args, kwargs):
+        # Extract invocation_id if present and remove it from kwargs
+        invocation_id = kwargs.pop("invocation_id", None)
+        
         model = _get_argument(args, kwargs, name="model", position=0)
         contents = _get_argument(args, kwargs, name="contents", position=1)
         system_instruction = _get_argument(args, kwargs, name="system_instruction")
@@ -162,11 +181,16 @@ def async_generate_content_wrapper(
             config=config_payload,
             capture_content=config.capture_content,
         )
+        
+        # Add invocation_id to span attributes if provided
+        span_attributes = dict(request_details.span_attributes)
+        if invocation_id is not None:
+            span_attributes["invocation_id"] = invocation_id
 
         span = config.tracer.start_span(
             name=request_details.span_name,
             kind=SpanKind.CLIENT,
-            attributes=request_details.span_attributes,
+            attributes=span_attributes,
         )
         operation_state = _prepare_operation_state(span, request_details, config.capture_content)
 
@@ -201,6 +225,9 @@ def async_generate_content_stream_wrapper(
     config = _WrapperConfig(tracer=tracer, instruments=instruments, capture_content=capture_content)
 
     async def traced_method(wrapped, instance, args, kwargs):
+        # Extract invocation_id if present and remove it from kwargs
+        invocation_id = kwargs.pop("invocation_id", None)
+        
         model = _get_argument(args, kwargs, name="model", position=0)
         contents = _get_argument(args, kwargs, name="contents", position=1)
         system_instruction = _get_argument(args, kwargs, name="system_instruction")
@@ -213,11 +240,16 @@ def async_generate_content_stream_wrapper(
             config=config_payload,
             capture_content=config.capture_content,
         )
+        
+        # Add invocation_id to span attributes if provided
+        span_attributes = dict(request_details.span_attributes)
+        if invocation_id is not None:
+            span_attributes["invocation_id"] = invocation_id
 
         span = config.tracer.start_span(
             name=request_details.span_name,
             kind=SpanKind.CLIENT,
-            attributes=request_details.span_attributes,
+            attributes=span_attributes,
         )
         operation_state = _prepare_operation_state(span, request_details, config.capture_content)
 

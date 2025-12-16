@@ -21,10 +21,11 @@ from opentelemetry.instrumentation.instrumentor import (  # type: ignore[attr-de
     BaseInstrumentor,
 )
 from opentelemetry.semconv.schemas import Schemas
-from opentelemetry.trace import get_tracer  
+from opentelemetry.trace import get_tracer
 
 from llm_tracekit.instrumentation_utils import is_content_enabled
 from llm_tracekit.openai_agents.package import _instruments
+from llm_tracekit.openai_agents.patch import patch_runner_run
 from llm_tracekit.openai_agents.tracing_processor import (
     OpenAIAgentsTracingProcessor
 )
@@ -54,6 +55,9 @@ class OpenAIAgentsInstrumentor(BaseInstrumentor):
         if not self._processor_added:
             add_trace_processor(self._agent_tracer)
             self._processor_added = True
+        
+        # Patch Runner.run to extract invocation_id
+        patch_runner_run()
 
     def _uninstrument(self, **kwargs):
         self._agent_tracer.disabled = True
