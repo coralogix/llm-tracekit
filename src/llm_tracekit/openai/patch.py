@@ -48,9 +48,16 @@ def chat_completions_create(
     """Wrap the `create` method of the `ChatCompletion` class to trace it."""
 
     def traced_method(wrapped, instance, args, kwargs):
+        # Extract invocation_id if present and remove it from kwargs
+        invocation_id = kwargs.pop("invocation_id", None)
+        
         span_attributes = {
             **get_llm_request_attributes(kwargs, instance, capture_content)
         }
+        
+        # Add invocation_id to span attributes if provided
+        if invocation_id is not None:
+            span_attributes["invocation_id"] = invocation_id
 
         span_name = f"{span_attributes[GenAIAttributes.GEN_AI_OPERATION_NAME]} {span_attributes[GenAIAttributes.GEN_AI_REQUEST_MODEL]}"
         with tracer.start_as_current_span(
@@ -100,7 +107,14 @@ def async_chat_completions_create(
     """Wrap the `create` method of the `AsyncChatCompletion` class to trace it."""
 
     async def traced_method(wrapped, instance, args, kwargs):
+        # Extract invocation_id if present and remove it from kwargs
+        invocation_id = kwargs.pop("invocation_id", None)
+        
         span_attributes = {**get_llm_request_attributes(kwargs, instance, capture_content)}
+        
+        # Add invocation_id to span attributes if provided
+        if invocation_id is not None:
+            span_attributes["invocation_id"] = invocation_id
 
         span_name = f"{span_attributes[GenAIAttributes.GEN_AI_OPERATION_NAME]} {span_attributes[GenAIAttributes.GEN_AI_REQUEST_MODEL]}"
         with tracer.start_as_current_span(
