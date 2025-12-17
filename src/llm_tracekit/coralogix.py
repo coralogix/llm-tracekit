@@ -18,7 +18,7 @@ from dataclasses import dataclass
 
 from opentelemetry import trace
 from opentelemetry.sdk.resources import SERVICE_NAME, Resource
-from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.sdk.trace import TracerProvider, SpanLimits
 from opentelemetry.sdk.trace.export import BatchSpanProcessor, SimpleSpanProcessor, SpanProcessor
 from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
 
@@ -89,9 +89,14 @@ def setup_export_to_coralogix(
         subsystem_name=subsystem_name
     )
     
+    span_attribute_limit = SpanLimits(
+        max_attributes=512
+    )
+
     # set up a tracer provider to send spans to coralogix.
     tracer_provider = TracerProvider(
         resource=Resource.create({SERVICE_NAME: service_name}),
+        span_limits=span_attribute_limit
     )
 
     # add any custom span processors before configuring the exporter processor
