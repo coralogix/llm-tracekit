@@ -56,7 +56,6 @@ class OpenAIAgentsInstrumentor(BaseInstrumentor):
             add_trace_processor(self._agent_tracer)
             self._processor_added = True
         
-        # Patch Runner.run to extract invocation_id
         patch_runner_run()
 
     def _uninstrument(self, **kwargs):

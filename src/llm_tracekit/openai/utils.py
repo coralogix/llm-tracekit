@@ -11,6 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from llm_tracekit.span_builder import ToolCall, generate_base_attributes, generate_message_attributes, Choice, generate_choice_attributes, generate_request_attributes, generate_response_attributes, Message
 
 import json
 from typing import Any, Dict, List, Mapping, Optional, Union
@@ -31,16 +32,8 @@ from opentelemetry.semconv._incubating.attributes import (
 )
 
 from llm_tracekit import extended_gen_ai_attributes as ExtendedGenAIAttributes
-from llm_tracekit.span_builder import (
-    Choice,
-    Message,
-    ToolCall,
+from common_utils.span_utils import (
     attribute_generator,
-    generate_base_attributes,
-    generate_choice_attributes,
-    generate_message_attributes,
-    generate_request_attributes,
-    generate_response_attributes,
 )
 
 

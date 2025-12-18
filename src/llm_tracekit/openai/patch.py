@@ -31,12 +31,15 @@ from llm_tracekit.openai.utils import (
     get_llm_response_attributes,
     is_streaming,
 )
-from llm_tracekit.span_builder import (
+from common_utils.span_utils import (
+    attribute_generator,
+)
+from llm_tracekit.span_builder import(
     Choice,
     ToolCall,
-    attribute_generator,
     generate_choice_attributes,
     generate_response_attributes,
+
 )
 
 
@@ -48,17 +51,10 @@ def chat_completions_create(
     """Wrap the `create` method of the `ChatCompletion` class to trace it."""
 
     def traced_method(wrapped, instance, args, kwargs):
-        # Extract invocation_id if present and remove it from kwargs
-        invocation_id = kwargs.pop("invocation_id", None)
-        
         span_attributes = {
             **get_llm_request_attributes(kwargs, instance, capture_content)
         }
         
-        # Add invocation_id to span attributes if provided
-        if invocation_id is not None:
-            span_attributes["invocation_id"] = invocation_id
-
         span_name = f"{span_attributes[GenAIAttributes.GEN_AI_OPERATION_NAME]} {span_attributes[GenAIAttributes.GEN_AI_REQUEST_MODEL]}"
         with tracer.start_as_current_span(
             name=span_name,
@@ -107,15 +103,8 @@ def async_chat_completions_create(
     """Wrap the `create` method of the `AsyncChatCompletion` class to trace it."""
 
     async def traced_method(wrapped, instance, args, kwargs):
-        # Extract invocation_id if present and remove it from kwargs
-        invocation_id = kwargs.pop("invocation_id", None)
-        
         span_attributes = {**get_llm_request_attributes(kwargs, instance, capture_content)}
         
-        # Add invocation_id to span attributes if provided
-        if invocation_id is not None:
-            span_attributes["invocation_id"] = invocation_id
-
         span_name = f"{span_attributes[GenAIAttributes.GEN_AI_OPERATION_NAME]} {span_attributes[GenAIAttributes.GEN_AI_REQUEST_MODEL]}"
         with tracer.start_as_current_span(
             name=span_name,

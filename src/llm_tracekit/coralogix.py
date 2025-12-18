@@ -61,7 +61,7 @@ def setup_export_to_coralogix(
     coralogix_endpoint: Optional[str] = None,
     application_name: Optional[str] = None,
     subsystem_name: Optional[str] = None,
-    use_batch_processor: bool = False,
+    use_batch_processor: bool = True,
     capture_content: bool = True,
     processors: Optional[List[SpanProcessor]] = None,
 ):

@@ -30,7 +30,7 @@ from agents.tracing import ResponseSpanData
 
 from openai.types.responses import ResponseInputItemParam, ResponseOutputMessage
 
-from opentelemetry.context import attach, detach, set_value, get_value
+from opentelemetry.context import attach, detach, set_value
 from opentelemetry.trace import Span as OTELSpan
 from opentelemetry.trace import (
     Status,
@@ -63,7 +63,6 @@ class _TraceState:
     open_spans: Dict[str, Tuple[OTELSpan, Token]] = field(default_factory=dict)
     agents: Dict[str, Agent] = field(default_factory=dict)
     last_agent: Optional[Agent] = None
-    invocation_id: str = None
 
 
 @dataclass
@@ -299,11 +298,6 @@ class OpenAIAgentsTracingProcessor(TracingProcessor):
             return
         state = self._get_or_create_state(trace.trace_id)
         
-        # Get invocation_id from context if available
-        invocation_id = get_value("llm_tracekit.invocation_id")
-        if invocation_id is not None and isinstance(invocation_id, str):
-            state.invocation_id = invocation_id
-
         state.parent_span = self.tracer.start_span(
             name="openai.agent",
             kind=SpanKind.CLIENT,
@@ -347,10 +341,6 @@ class OpenAIAgentsTracingProcessor(TracingProcessor):
                 )
             else:
                 initial_attributes = processor(span.span_data)
-
-        # Add invocation_id to span attributes if available
-        if state.invocation_id is not None:
-            initial_attributes["invocation_id"] = state.invocation_id
 
         if isinstance(span.span_data, AgentSpanData):
             new_span_name = f"Agent - {span.span_data.name}"
@@ -398,9 +388,6 @@ class OpenAIAgentsTracingProcessor(TracingProcessor):
                     attributes = processor(span.span_data, state, span.parent_id)
                 else:
                     attributes = processor(span.span_data)
-                # Add invocation_id to span attributes if available
-                if state.invocation_id is not None:
-                    attributes["invocation_id"] = state.invocation_id
                 open_span.set_attributes(attributes)
 
             if span.error is not None:

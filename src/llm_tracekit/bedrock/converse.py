@@ -28,18 +28,19 @@ from wrapt import ObjectProxy
 from llm_tracekit import extended_gen_ai_attributes as ExtendedGenAIAttributes
 from llm_tracekit.bedrock.utils import decode_tool_use_in_stream, record_metrics
 from llm_tracekit.instruments import Instruments
+from common_utils.span_utils import (
+    attribute_generator,
+)
 from llm_tracekit.span_builder import (
     Choice,
     Message,
     ToolCall,
-    attribute_generator,
     generate_base_attributes,
     generate_choice_attributes,
     generate_message_attributes,
     generate_request_attributes,
-    generate_response_attributes,
-)
-
+    generate_response_attributes
+    )
 
 def _combine_tool_call_content_blocks(
     content_blocks: List[Dict[str, Any]],

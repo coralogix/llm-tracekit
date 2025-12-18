@@ -66,18 +66,10 @@ def invoke_model_wrapper(
 ):
     @wraps(original_function)
     def wrapper(*args, **kwargs):
-        # Extract invocation_id if present and remove it from kwargs
-        invocation_id = kwargs.pop("invocation_id", None)
-        
         model = kwargs.get("modelId")
         span_attributes = generate_attributes_from_invoke_input(
             kwargs=kwargs, capture_content=capture_content
         )
-        
-        # Add invocation_id to span attributes if provided
-        if invocation_id is not None:
-            span_attributes["invocation_id"] = invocation_id
-        
         with tracer.start_as_current_span(
             name="bedrock.invoke_model",
             kind=SpanKind.CLIENT,
@@ -127,17 +119,10 @@ def invoke_model_with_response_stream_wrapper(
 ):
     @wraps(original_function)
     def wrapper(*args, **kwargs):
-        # Extract invocation_id if present and remove it from kwargs
-        invocation_id = kwargs.pop("invocation_id", None)
-        
         model = kwargs.get("modelId")
         span_attributes = generate_attributes_from_invoke_input(
             kwargs=kwargs, capture_content=capture_content
         )
-        
-        # Add invocation_id to span attributes if provided
-        if invocation_id is not None:
-            span_attributes["invocation_id"] = invocation_id
         
         with tracer.start_as_current_span(
             name="bedrock.invoke_model_with_response_stream",
@@ -191,18 +176,10 @@ def converse_wrapper(
 ):
     @wraps(original_function)
     def wrapper(*args, **kwargs):
-        # Extract invocation_id if present and remove it from kwargs
-        invocation_id = kwargs.pop("invocation_id", None)
-        
         model = kwargs.get("modelId")
         span_attributes = generate_attributes_from_converse_input(
             kwargs=kwargs, capture_content=capture_content
         )
-        
-        # Add invocation_id to span attributes if provided
-        if invocation_id is not None:
-            span_attributes["invocation_id"] = invocation_id
-
         with tracer.start_as_current_span(
             name="bedrock.converse",
             kind=SpanKind.CLIENT,
@@ -242,18 +219,11 @@ def converse_stream_wrapper(
 ):
     @wraps(original_function)
     def wrapper(*args, **kwargs):
-        # Extract invocation_id if present and remove it from kwargs
-        invocation_id = kwargs.pop("invocation_id", None)
-        
         model = kwargs.get("modelId")
         span_attributes = generate_attributes_from_converse_input(
             kwargs=kwargs, capture_content=capture_content
         )
         
-        # Add invocation_id to span attributes if provided
-        if invocation_id is not None:
-            span_attributes["invocation_id"] = invocation_id
-
         with tracer.start_as_current_span(
             name="bedrock.converse_stream",
             kind=SpanKind.CLIENT,
@@ -305,17 +275,9 @@ def invoke_agent_wrapper(
 ):
     @wraps(original_function)
     def wrapper(*args, **kwargs):
-        # Extract invocation_id if present and remove it from kwargs
-        invocation_id = kwargs.pop("invocation_id", None)
-        
         span_attributes = generate_attributes_from_invoke_agent_input(
             kwargs=kwargs, capture_content=capture_content
         )
-        
-        # Add invocation_id to span attributes if provided
-        if invocation_id is not None:
-            span_attributes["invocation_id"] = invocation_id
-        
         with tracer.start_as_current_span(
             name="bedrock.invoke_agent",
             kind=SpanKind.CLIENT,

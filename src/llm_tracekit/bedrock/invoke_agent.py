@@ -28,16 +28,18 @@ from llm_tracekit import extended_gen_ai_attributes as ExtendedGenAIAttributes
 from llm_tracekit.bedrock import parsing_utils
 from llm_tracekit.bedrock.utils import record_metrics
 from llm_tracekit.instruments import Instruments
+from common_utils.span_utils import (
+    attribute_generator,
+)
 from llm_tracekit.span_builder import (
     Choice,
     Message,
-    attribute_generator,
     generate_base_attributes,
     generate_choice_attributes,
     generate_message_attributes,
     generate_request_attributes,
-    generate_response_attributes,
-)
+    generate_response_attributes
+    )
 
 
 @dataclass
