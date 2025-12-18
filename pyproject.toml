@@ -63,7 +63,14 @@ langchain-all = [
     "langchain-openai>=1.0.0; python_version >= '3.10'",
     "langchain-aws>=1.0.0; python_version >= '3.10'",
 ]
-ci-core = [
+
+guardrails = [
+    "pydantic>=2.10.0",
+    "pydantic-settings>=2.0.0",
+    "httpx>=0.27.0",
+    "tenacity>=8.0.0",
+]
+all = [
     "openai>=1.26.0",
     "openai-agents>=0.1.0; python_version >= '3.10'",
     "boto3>=1.36.0",
@@ -71,6 +78,11 @@ ci-core = [
     "langchain>=1.0.0; python_version >= '3.10'",
     "langchain-openai>=1.0.0; python_version >= '3.10'",
     "langchain-aws>=1.0.0; python_version >= '3.10'",
+    "litellm[proxy]>=1.65.4",
+    "pydantic>=2.10.0",
+    "pydantic-settings>=2.0.0",
+    "httpx>=0.27.0",
+    "tenacity>=8.0.0",
 ]
 
 
@@ -103,6 +115,12 @@ dev = [
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
+
+[tool.hatch.build]
+packages = ["llm_tracekit", "guardrails_sdk"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/llm_tracekit", "src/guardrails_sdk"]
 
 [[tool.mypy.overrides]]
 module = ["wrapt", "opentelemetry.exporter.otlp.proto.grpc.trace_exporter"]

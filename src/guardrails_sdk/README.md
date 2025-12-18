@@ -13,7 +13,7 @@ pip install coralogix-guardrails-sdk
 ### Basic Example
 
 ```python
-from guardrails_sdk import Guardrails, PII, PromptInjection
+from guardrails_sdk import Guardrails, PII, PromptInjection, PIICategories, GuardrailTriggered
 
 # Initialize the Guardrails client
 guardrails = Guardrails(
@@ -24,35 +24,79 @@ guardrails = Guardrails(
 )
 
 # Check input prompt
-results = await guardrails.run_input(
-    prompt="User input here",
-    guardrails_config=[PII(categories=["email", "phone"]), PromptInjection()],
-)
-
-# Check output response
-results = await guardrails.run_output(
-    prompt="User input",
-    response="Model response",
-    guardrails_config=[PII(), PromptInjection()],
-)
-
-# Clean up
-await guardrails.aclose()
+async with guardrails.interaction():
+    prompt = "User input here"
+    try:
+        results = await guardrails.guard_prompt(
+            prompt=prompt,
+            guardrails_config=[PII(categories=[PIICategories.email]), PromptInjection()],
+        )
+        print(f"Guardrail results: {results}")
+    except GuardrailTriggered as e:
+        print(f"Guardrail triggered: {e}")
+    response = ... # LLM call
+    try:
+        results = await guardrails.guard_response(
+            guardrails_config=[PII(), PromptInjection()],
+            response=response,
+            prompt=prompt,
+        )
+        print(f"Guardrail results: {results}")
+    except GuardrailTriggered as e:
+        print(f"Guardrail triggered: {e}")
 ```
 
-### Using Context Manager
+### Complete Example with LLM Integration
 
 ```python
-async with Guardrails(
+from guardrails_sdk import Guardrails, PII, PromptInjection, PIICategories, GuardrailTriggered
+from openai import OpenAI
+
+# Initialize clients
+guardrails = Guardrails(
     api_key="your-api-key",
     application_name="my-app",
     subsystem_name="my-subsystem",
     domain_url="https://your-domain.coralogix.com",
-) as guardrails:
-    results = await guardrails.run_input(
-        prompt="User input",
-        guardrails_config=[PII(), PromptInjection()],
+)
+client = OpenAI()
+
+# Process user input
+async with guardrails.interaction():
+    prompt = "User input here"
+    
+    # Guard the input prompt
+    try:
+        await guardrails.guard_prompt(
+            prompt=prompt,
+            guardrails_config=[PromptInjection()],
+        )
+    except GuardrailTriggered as e:
+        print(f"Input blocked: {e}")
+        return
+    
+    # Call LLM
+    response = client.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=[{"role": "user", "content": prompt}],
     )
+    response_content = response.choices[0].message.content
+    
+    # Guard the output response
+    try:
+        await guardrails.guard_response(
+            guardrails_config=[
+                PromptInjection(),
+                PII(categories=[PIICategories.email, PIICategories.phone]),
+            ],
+            response=response_content,
+            prompt=prompt,
+        )
+    except GuardrailTriggered as e:
+        print(f"Output blocked: {e}")
+        return
+    
+    print(f"Response: {response_content}")
 ```
 
 ### Configuration via Environment Variables
@@ -64,6 +108,7 @@ export GUARDRAILS_API_KEY="your-api-key"
 export GUARDRAILS_APPLICATION_NAME="my-app"
 export GUARDRAILS_SUBSYSTEM_NAME="my-subsystem"
 export GUARDRAILS_DOMAIN_URL="https://your-domain.coralogix.com"
+export GUARDRAILS_TIMEOUT="100"  # Optional, default is 100 seconds
 ```
 
 Then initialize without parameters:
@@ -79,17 +124,27 @@ guardrails = Guardrails()  # Reads from environment variables
 Detect personally identifiable information:
 
 ```python
-from guardrails_sdk import PII
+from guardrails_sdk import PII, PIICategories
 
 # Detect all PII categories
 pii_guardrail = PII()
 
 # Detect specific categories
 pii_guardrail = PII(
-    categories=["email", "phone", "credit_card"],
+    categories=[PIICategories.email, PIICategories.phone, PIICategories.credit_card],
     threshold=0.8
 )
 ```
+
+Available PII categories:
+- `PIICategories.email`
+- `PIICategories.phone`
+- `PIICategories.user_name`
+- `PIICategories.address`
+- `PIICategories.credit_card`
+- `PIICategories.social_security_number`
+- `PIICategories.passport`
+- `PIICategories.driver_license`
 
 ### Prompt Injection Detection
 
@@ -115,7 +170,44 @@ custom_guardrail = CustomGuardrail(
 )
 ```
 
+## Error Handling
+
+The SDK provides specific exception types for different error scenarios:
+
+```python
+from guardrails_sdk import (
+    GuardrailsError,
+    GuardrailsAPIConnectionError,
+    GuardrailsAPITimeoutError,
+    GuardrailsAPIResponseError,
+    GuardrailTriggered,
+)
+
+try:
+    results = await guardrails.guard_prompt(
+        prompt="test",
+        guardrails_config=[PromptInjection()],
+    )
+except GuardrailTriggered as e:
+    # A guardrail detected a violation
+    print(f"Guardrail type: {e.guardrail_type}")
+    print(f"Name: {e.name}")
+    print(f"Score: {e.score}")
+    print(f"Explanation: {e.explanation}")
+except GuardrailsAPITimeoutError as e:
+    # Request timed out
+    print(f"Timeout: {e}")
+except GuardrailsAPIConnectionError as e:
+    # Network/connection error
+    print(f"Connection error: {e}")
+except GuardrailsAPIResponseError as e:
+    # Non-2xx HTTP response
+    print(f"API error {e.status_code}: {e.body}")
+except GuardrailsError as e:
+    # Any other SDK error
+    print(f"Error: {e}")
+```
+
 ## License
 
 Apache License 2.0
-

@@ -1530,6 +1530,14 @@ dependencies = [
 [package.optional-dependencies]
 bedrock = [
     { name = "boto3" },
+    { name = "google-genai" },
+    { name = "httpx" },
+    { name = "litellm", extra = ["proxy"] },
+    { name = "openai" },
+    { name = "openai-agents", marker = "python_full_version >= '3.10'" },
+    { name = "pydantic" },
+    { name = "pydantic-settings" },
+    { name = "tenacity" },
 ]
 ci-core = [
     { name = "boto3" },
@@ -1545,6 +1553,12 @@ ci-core = [
 ]
 gemini = [
     { name = "google-genai" },
+]
+guardrails = [
+    { name = "httpx" },
+    { name = "pydantic" },
+    { name = "pydantic-settings" },
+    { name = "tenacity" },
 ]
 langchain = [
     { name = "langchain", marker = "python_full_version >= '3.10'" },
@@ -1597,6 +1611,9 @@ requires-dist = [
     { name = "boto3", marker = "extra == 'ci-core'", specifier = ">=1.36.0" },
     { name = "google-genai", marker = "extra == 'ci-core'", specifier = ">=1.0.0,<2" },
     { name = "google-genai", marker = "extra == 'gemini'", specifier = ">=1.0.0,<2" },
+    { name = "httpx", marker = "extra == 'all'", specifier = ">=0.27.0" },
+    { name = "httpx", marker = "extra == 'guardrails'", specifier = ">=0.27.0" },
+    { name = "litellm", extras = ["proxy"], marker = "extra == 'all'", specifier = ">=1.65.4" },
     { name = "langchain", marker = "python_full_version >= '3.10' and extra == 'ci-core'", specifier = ">=1.0.0" },
     { name = "langchain", marker = "python_full_version >= '3.10' and extra == 'langchain'", specifier = ">=1.0.0" },
     { name = "langchain", marker = "python_full_version >= '3.10' and extra == 'langchain-all'", specifier = ">=1.0.0" },
@@ -1619,7 +1636,14 @@ requires-dist = [
     { name = "opentelemetry-instrumentation", specifier = ">=0.53b1" },
     { name = "opentelemetry-sdk", specifier = ">=1.32.1" },
     { name = "opentelemetry-semantic-conventions", specifier = ">=0.53b1" },
+    { name = "pydantic", marker = "extra == 'all'", specifier = ">=2.10.0" },
+    { name = "pydantic", marker = "extra == 'guardrails'", specifier = ">=2.10.0" },
+    { name = "pydantic-settings", marker = "extra == 'all'", specifier = ">=2.0.0" },
+    { name = "pydantic-settings", marker = "extra == 'guardrails'", specifier = ">=2.0.0" },
+    { name = "tenacity", marker = "extra == 'all'", specifier = ">=8.0.0" },
+    { name = "tenacity", marker = "extra == 'guardrails'", specifier = ">=8.0.0" },
 ]
+provides-extras = ["openai", "openai-agents", "bedrock", "gemini", "litellm", "guardrails", "all"]
 provides-extras = ["openai", "openai-agents", "bedrock", "gemini", "litellm", "langchain", "langchain-openai", "langchain-aws", "langchain-all", "ci-core"]
 
 [package.metadata.requires-dev]
@@ -2958,6 +2982,9 @@ name = "pydantic-settings"
 version = "2.10.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
+    { name = "pydantic" },
+    { name = "python-dotenv" },
+    { name = "typing-inspection" },
     { name = "pydantic", version = "2.11.5", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version == '3.10.*'" },
     { name = "pydantic", version = "2.12.5", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
     { name = "python-dotenv", marker = "python_full_version >= '3.10'" },
