@@ -1,5 +1,5 @@
 from typing import Any, List, Optional, Union, Literal
-from pydantic import BaseModel, Field, ConfigDict, field_validator# ty: ignore[unresolved-import]
+from pydantic import BaseModel, Field, ConfigDict, field_validator
 from typing_extensions import Annotated
 from enum import Enum
 
@@ -53,8 +53,7 @@ class BaseGuardrailConfig(BaseModel):
 
 class PII(BaseGuardrailConfig):
     type: Literal["pii"] = "pii"
-    categories: List[PIICategories]
-
+    categories: List[PIICategories] = Field(default_factory=lambda: list(PIICategories))
 
 class PromptInjection(BaseGuardrailConfig):
     type: Literal["prompt_injection"] = "prompt_injection"

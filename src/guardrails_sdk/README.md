@@ -8,14 +8,12 @@ Python SDK for interacting with the Coralogix Guardrails API.
 pip install coralogix-guardrails-sdk
 ```
 
-## Usage
-
-### Basic Example
+## Quick Start
 
 ```python
+import asyncio
 from guardrails_sdk import Guardrails, PII, PromptInjection, PIICategories, GuardrailTriggered
 
-# Initialize the Guardrails client
 guardrails = Guardrails(
     api_key="your-api-key",
     application_name="my-app",
@@ -23,190 +21,171 @@ guardrails = Guardrails(
     domain_url="https://your-domain.coralogix.com",
 )
 
-# Check input prompt
-async with guardrails.interaction():
-    prompt = "User input here"
-    try:
-        results = await guardrails.guard_prompt(
-            prompt=prompt,
-            guardrails_config=[PII(categories=[PIICategories.email]), PromptInjection()],
-        )
-        print(f"Guardrail results: {results}")
-    except GuardrailTriggered as e:
-        print(f"Guardrail triggered: {e}")
-    response = ... # LLM call
-    try:
-        results = await guardrails.guard_response(
-            guardrails_config=[PII(), PromptInjection()],
-            response=response,
-            prompt=prompt,
-        )
-        print(f"Guardrail results: {results}")
-    except GuardrailTriggered as e:
-        print(f"Guardrail triggered: {e}")
+async def main():
+    async with guardrails.interaction():
+        try:
+            # Guard input
+            await guardrails.guard_prompt(
+                prompt="User input here",
+                guardrails_config=[PII(categories=[PIICategories.email]), PromptInjection()],
+            )
+            
+            response = "..."  # Your LLM call here
+            
+            # Guard output
+            await guardrails.guard_response(
+                response=response,
+                prompt="User input here",
+                guardrails_config=[PII(), PromptInjection()],
+            )
+        except GuardrailTriggered as e:
+            print(f"Blocked: {e.guardrail_type}, score={e.score}, categories={e.detected_categories}")
+
+asyncio.run(main())
 ```
 
-### Complete Example with LLM Integration
+> **Note**: This SDK is async-only. All calls must be awaited. Use `asyncio.run()` from synchronous code.
 
-```python
-from guardrails_sdk import Guardrails, PII, PromptInjection, PIICategories, GuardrailTriggered
-from openai import OpenAI
-
-# Initialize clients
-guardrails = Guardrails(
-    api_key="your-api-key",
-    application_name="my-app",
-    subsystem_name="my-subsystem",
-    domain_url="https://your-domain.coralogix.com",
-)
-client = OpenAI()
-
-# Process user input
-async with guardrails.interaction():
-    prompt = "User input here"
-    
-    # Guard the input prompt
-    try:
-        await guardrails.guard_prompt(
-            prompt=prompt,
-            guardrails_config=[PromptInjection()],
-        )
-    except GuardrailTriggered as e:
-        print(f"Input blocked: {e}")
-        return
-    
-    # Call LLM
-    response = client.chat.completions.create(
-        model="gpt-4o-mini",
-        messages=[{"role": "user", "content": prompt}],
-    )
-    response_content = response.choices[0].message.content
-    
-    # Guard the output response
-    try:
-        await guardrails.guard_response(
-            guardrails_config=[
-                PromptInjection(),
-                PII(categories=[PIICategories.email, PIICategories.phone]),
-            ],
-            response=response_content,
-            prompt=prompt,
-        )
-    except GuardrailTriggered as e:
-        print(f"Output blocked: {e}")
-        return
-    
-    print(f"Response: {response_content}")
-```
-
-### Configuration via Environment Variables
-
-You can configure the Guardrails client using environment variables:
+### Environment Variables
 
 ```bash
 export GUARDRAILS_API_KEY="your-api-key"
 export GUARDRAILS_APPLICATION_NAME="my-app"
 export GUARDRAILS_SUBSYSTEM_NAME="my-subsystem"
 export GUARDRAILS_DOMAIN_URL="https://your-domain.coralogix.com"
-export GUARDRAILS_TIMEOUT="100"  # Optional, default is 100 seconds
+export GUARDRAILS_TIMEOUT="3"  # Optional, default is 10 seconds
 ```
-
-Then initialize without parameters:
 
 ```python
 guardrails = Guardrails()  # Reads from environment variables
 ```
 
+## The `interaction()` Context Manager
+
+**Required** for all guardrail calls. It:
+1. Manages the HTTP client lifecycle (connection reuse)
+2. Creates an OpenTelemetry span for tracing correlation
+
+**Important**: Don't nest interactions. Don't reuse across unrelated requests. One interaction = one user request/response cycle.
+
+## Response Schema
+
+`guard_prompt()` and `guard_response()` return `List[GuardrailsResult]`—one per guardrail. If any violation is detected (score ≥ threshold), `GuardrailTriggered` is raised instead.
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `detection_type` | `GuardrailType` | `pii` or `prompt_injection` |
+| `detected` | `bool` | Whether violation was detected |
+| `score` | `float` | Confidence score (0.0–1.0) |
+| `threshold` | `float` | Detection threshold (default: 0.7) |
+| `explanation` | `str \| None` | Human-readable explanation |
+| `detected_categories` | `Any \| None` | For PII: detected categories (e.g., `["email"]`) |
+
 ## Guardrail Types
 
 ### PII Detection
 
-Detect personally identifiable information:
+Detects personally identifiable information in text. Use on prompts to prevent users from accidentally sharing sensitive data, or on responses to ensure your LLM doesn't leak PII.
 
 ```python
 from guardrails_sdk import PII, PIICategories
 
-# Detect all PII categories
-pii_guardrail = PII()
+# Detect all PII categories (default)
+PII()
 
-# Detect specific categories
-pii_guardrail = PII(
-    categories=[PIICategories.email, PIICategories.phone, PIICategories.credit_card],
-    threshold=0.8
-)
+# Detect specific categories with custom threshold
+PII(categories=[PIICategories.email, PIICategories.phone], threshold=0.8)
 ```
 
-Available PII categories:
-- `PIICategories.email`
-- `PIICategories.phone`
-- `PIICategories.user_name`
-- `PIICategories.address`
-- `PIICategories.credit_card`
-- `PIICategories.social_security_number`
-- `PIICategories.passport`
-- `PIICategories.driver_license`
+**Available categories:**
+- `PIICategories.email` – Email addresses
+- `PIICategories.phone` – Phone numbers
+- `PIICategories.user_name` – Personal names
+- `PIICategories.address` – Physical addresses
+- `PIICategories.credit_card` – Credit card numbers
+- `PIICategories.social_security_number` – SSNs
+- `PIICategories.passport` – Passport numbers
+- `PIICategories.driver_license` – Driver's license numbers
 
 ### Prompt Injection Detection
 
-Detect prompt injection attacks:
+Detects attempts to manipulate LLM behavior through malicious prompts. Catches techniques like jailbreaking, instruction override, and role-playing attacks.
 
 ```python
 from guardrails_sdk import PromptInjection
 
-prompt_injection_guardrail = PromptInjection(threshold=0.7)
+# Default threshold (0.7)
+PromptInjection()
+
+# Custom threshold for stricter detection
+PromptInjection(threshold=0.8)
 ```
 
-### Custom Guardrails
-
-Define custom guardrails:
-
-```python
-from guardrails_sdk import CustomGuardrail
-
-custom_guardrail = CustomGuardrail(
-    name="toxicity",
-    criteria="Check if content is toxic",
-    threshold=0.8
-)
-```
+Use on user inputs to block malicious prompts before they reach your LLM.
 
 ## Error Handling
 
-The SDK provides specific exception types for different error scenarios:
-
 ```python
 from guardrails_sdk import (
-    GuardrailsError,
-    GuardrailsAPIConnectionError,
-    GuardrailsAPITimeoutError,
-    GuardrailsAPIResponseError,
-    GuardrailTriggered,
+    GuardrailsError, GuardrailsAPIConnectionError,
+    GuardrailsAPITimeoutError, GuardrailsAPIResponseError, GuardrailTriggered,
 )
 
 try:
-    results = await guardrails.guard_prompt(
-        prompt="test",
-        guardrails_config=[PromptInjection()],
-    )
+    await guardrails.guard_prompt(prompt="test", guardrails_config=[PromptInjection()])
 except GuardrailTriggered as e:
-    # A guardrail detected a violation
-    print(f"Guardrail type: {e.guardrail_type}")
-    print(f"Name: {e.name}")
-    print(f"Score: {e.score}")
-    print(f"Explanation: {e.explanation}")
-except GuardrailsAPITimeoutError as e:
-    # Request timed out
-    print(f"Timeout: {e}")
-except GuardrailsAPIConnectionError as e:
-    # Network/connection error
-    print(f"Connection error: {e}")
+    print(f"Type: {e.guardrail_type}")      # "pii", "prompt_injection"
+    print(f"Score: {e.score}")               # 0.95
+    print(f"Explanation: {e.explanation}")   # Human-readable
+    print(f"Categories: {e.detected_categories}")  # ["email", "phone"] for PII
+    print(str(e))  # "Guardrail triggered: pii | score=0.950 | ..."
+except GuardrailsAPITimeoutError:
+    ...  # Request timed out
+except GuardrailsAPIConnectionError:
+    ...  # Network error
 except GuardrailsAPIResponseError as e:
-    # Non-2xx HTTP response
-    print(f"API error {e.status_code}: {e.body}")
-except GuardrailsError as e:
-    # Any other SDK error
-    print(f"Error: {e}")
+    print(f"HTTP {e.status_code}: {e.body}")
 ```
+
+## Failure Mode Patterns
+
+Choose how to handle API failures:
+
+### Fail-Closed (High-Security)
+
+```python
+async def guard_fail_closed(guardrails, prompt, config):
+    try:
+        async with guardrails.interaction():
+            await guardrails.guard_prompt(prompt=prompt, guardrails_config=config)
+            return True, None
+    except GuardrailTriggered as e:
+        return False, f"Blocked: {e}"
+    except (GuardrailsAPITimeoutError, GuardrailsAPIConnectionError, GuardrailsAPIResponseError):
+        return False, "Guardrails unavailable—blocking request"
+```
+
+### Fail-Open (High-Availability)
+
+```python
+async def guard_fail_open(guardrails, prompt, config):
+    try:
+        async with guardrails.interaction():
+            await guardrails.guard_prompt(prompt=prompt, guardrails_config=config)
+            return True, None
+    except GuardrailTriggered as e:
+        return False, f"Blocked: {e}"
+    except (GuardrailsAPITimeoutError, GuardrailsAPIConnectionError, GuardrailsAPIResponseError) as e:
+        logging.warning(f"Guardrails unavailable, failing open: {e}")
+        return True, None  # Allow through
+```
+
+| Pattern | Use When | Trade-off |
+|---------|----------|-----------|
+| **Fail-Closed** | Security-critical, compliance | May block users during outages |
+| **Fail-Open** | High-availability requirements | May allow violations during outages |
+
+> **Tip**: For retry logic, use [tenacity](https://github.com/jd/tenacity) with `retry_if_exception_type((GuardrailsAPITimeoutError, GuardrailsAPIConnectionError))`.
 
 ## License
 
