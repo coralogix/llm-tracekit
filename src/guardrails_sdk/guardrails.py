@@ -2,13 +2,13 @@ from guardrails_sdk.span_builder import (
     generate_guardrail_response_attributes,
     generate_base_attributes,
 )
-import httpx  # ty: ignore[unresolved-import]
+import httpx 
 from typing import List, Optional, Annotated
-from pydantic import Field, StringConstraints  # ty: ignore[unresolved-import]
+from pydantic import Field, StringConstraints
 from pydantic_settings import (
     BaseSettings,
     SettingsConfigDict,
-)  # ty: ignore[unresolved-import]
+) 
 from opentelemetry import trace
 from opentelemetry.trace import SpanKind, Status, StatusCode
 from contextlib import asynccontextmanager
@@ -46,8 +46,7 @@ class GuardrailsRequestConfig(BaseSettings):
     application_name: NonEmptyStr = Field(..., description="Name of the application")
     subsystem_name: NonEmptyStr = Field(..., description="Name of the subsystem")
     domain_url: NonEmptyStr = Field(..., description="Domain URL for the service")
-    timeout: int = Field(default=100, ge=1, description="Request timeout in seconds")
-
+    timeout: int = Field(default=10, ge=1, description="Request timeout in seconds")
 
 class Guardrails:
     def __init__(
@@ -63,6 +62,7 @@ class Guardrails:
         config_kwargs.pop("self", None)
 
         self.config = GuardrailsRequestConfig(**config_kwargs)
+        self._runner = GuardrailRunner(config=self.config)
 
     @asynccontextmanager
     async def interaction(self):
@@ -70,27 +70,66 @@ class Guardrails:
             base_url=self.config.domain_url,
             timeout=httpx.Timeout(self.config.timeout, connect=10.0),
         )
-
         with tracer.start_as_current_span(__name__):
             try:
                 yield
             finally:
                 await self._client.aclose()
 
+    async def guard_prompt(
+        self,
+        prompt: str,
+        guardrails_config: List[PII | PromptInjection | CustomGuardrail],
+    ) -> Optional[List[GuardrailsResult]]:
+        if not all([prompt, guardrails_config]):
+            return None
+        return await self._runner.run(
+            guardrails_configs=guardrails_config,
+            guardrail_endpoint=GuardrailsEndpoint.PROMPT_ENDPOINT,
+            target=GuardrailsTarget.prompt,
+            prompt=prompt,
+            client=self._client
+        )
+
+    async def guard_response(
+        self,
+        guardrails_config: List[PII | PromptInjection | CustomGuardrail],
+        response: str,
+        prompt: Optional[str] = None,
+    ) -> Optional[List[GuardrailsResult]]:
+        if not all([response, guardrails_config]):
+            return None
+        return await self._runner.run(
+            guardrails_configs=guardrails_config,
+            guardrail_endpoint=GuardrailsEndpoint.RESPONSE_ENDPOINT,
+            target=GuardrailsTarget.response,
+            prompt=prompt,
+            response=response,
+            client=self._client
+        )
+
+
+class GuardrailRunner():
+    def __init__(self, config: GuardrailsRequestConfig) -> None:
+        self.config = config
+
     async def _send_request(
         self,
         guardrails_request: GuardrailsRequest,
         guardrail_endpoint: GuardrailsEndpoint,
+        client: httpx.AsyncClient
     ) -> httpx.Response:
         guardrails_json_request = guardrails_request.model_dump(
             mode="json", exclude_none=True
         )
+        print(guardrails_json_request)
         try:
-            response = await self._client.post(
+            response = await client.post(
                 guardrail_endpoint.value,
                 json=guardrails_json_request,
                 headers={"X-Coralogix-Auth": guardrails_request.api_key},
             )
+            print(response.text)
         except httpx.TimeoutException as e:
             raise GuardrailsAPITimeoutError(
                 f"Request to {guardrail_endpoint.value} timed out after {self.config.timeout}s"
@@ -107,41 +146,12 @@ class Guardrails:
 
         return response
 
-    async def guard_prompt(
-        self,
-        prompt: str,
-        guardrails_config: List[PII | PromptInjection | CustomGuardrail],
-    ) -> Optional[List[GuardrailsResult]]:
-        if not all([prompt, guardrails_config]):
-            return None
-        return await self.run(
-            guardrails_configs=guardrails_config,
-            guardrail_endpoint=GuardrailsEndpoint.PROMPT_ENDPOINT,
-            target=GuardrailsTarget.prompt,
-            prompt=prompt,
-        )
-
-    async def guard_response(
-        self,
-        guardrails_config: List[PII | PromptInjection | CustomGuardrail],
-        response: str,
-        prompt: Optional[str] = None,
-    ) -> Optional[List[GuardrailsResult]]:
-        if not all([response, guardrails_config]):
-            return None
-        return await self.run(
-            guardrails_configs=guardrails_config,
-            guardrail_endpoint=GuardrailsEndpoint.RESPONSE_ENDPOINT,
-            target=GuardrailsTarget.response,
-            prompt=prompt,
-            response=response,
-        )
-
     async def run(
         self,
         guardrails_configs: List[PII | PromptInjection | CustomGuardrail],
         guardrail_endpoint: GuardrailsEndpoint,
         target: GuardrailsTarget,
+        client: httpx.AsyncClient,
         prompt: Optional[str] = None,
         response: Optional[str] = None,
     ) -> List[GuardrailsResult]:
@@ -170,7 +180,8 @@ class Guardrails:
             )
             try:
                 http_response = await self._send_request(
-                    guardrails_request, guardrail_endpoint
+                    guardrails_request, guardrail_endpoint,
+                    client=client
                 )
                 if not http_response.text or http_response.text.strip() == "":
                     return GuardrailsResponse(results=[])
@@ -196,6 +207,7 @@ class Guardrails:
                             name=resp.name,
                             score=resp.score,
                             explanation=resp.explanation,
+                            detected_categories=resp.detected_categories
                         )
             except Exception as e:
                 span.set_status(Status(StatusCode.ERROR, str(e)))
