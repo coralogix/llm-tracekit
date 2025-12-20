@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import os
+import logging
 from typing import Optional, List, Dict, Any
 from dataclasses import dataclass
 
@@ -23,6 +24,8 @@ from opentelemetry.sdk.trace.export import BatchSpanProcessor, SimpleSpanProcess
 from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
 
 from llm_tracekit.instrumentation_utils import enable_capture_content
+
+logger = logging.getLogger(__name__)
 
 @dataclass
 class ExportConfig:
@@ -64,6 +67,7 @@ def setup_export_to_coralogix(
     use_batch_processor: bool = False,
     capture_content: bool = True,
     processors: Optional[List[SpanProcessor]] = None,
+    span_attribute_count_limit: int = 512,
 ):
     """
     Setup OpenAI spans to be exported to Coralogix.
@@ -77,6 +81,7 @@ def setup_export_to_coralogix(
         use_batch_processor: Whether to use a batch processor or a simple processor.
         capture_content: Whether to capture the content of the messages.
         processors: Optional list of SpanProcessor instances to add to the tracer provider before the exporter processor.
+        span_attribute_count_limit: The maximum number of span attributes.
     """
 
     if capture_content:
@@ -89,8 +94,28 @@ def setup_export_to_coralogix(
         subsystem_name=subsystem_name
     )
     
+    env_limit_raw = os.environ.get("OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT")
+    effective_limit = span_attribute_count_limit
+    if env_limit_raw is not None:
+        try:
+            env_limit = int(env_limit_raw)
+        except ValueError:
+            logger.warning(
+                "Invalid OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT=%r; using configured limit %s",
+                env_limit_raw,
+                span_attribute_count_limit,
+            )
+        else:
+            effective_limit = env_limit
+            if env_limit < span_attribute_count_limit:
+                logger.warning(
+                    "OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT=%s is lower than requested %s; spans may drop attributes.",
+                    env_limit,
+                    span_attribute_count_limit,
+                )
+
     span_attribute_limit = SpanLimits(
-        max_attributes=512
+        max_span_attributes=effective_limit,
     )
 
     # set up a tracer provider to send spans to coralogix.
