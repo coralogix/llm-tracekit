@@ -1,14 +1,11 @@
+import os
 from guardrails_sdk.span_builder import (
     generate_guardrail_response_attributes,
     generate_base_attributes,
 )
-import httpx 
-from typing import List, Optional, Annotated
-from pydantic import Field, StringConstraints
-from pydantic_settings import (
-    BaseSettings,
-    SettingsConfigDict,
-) 
+import httpx
+from typing import List, Optional, Dict
+from dataclasses import dataclass
 from opentelemetry import trace
 from opentelemetry.trace import SpanKind, Status, StatusCode
 from contextlib import asynccontextmanager
@@ -32,42 +29,60 @@ from .error import (
 
 
 tracer = trace.get_tracer(__name__)
-NonEmptyStr = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1)]
+
+DEFAULT_TIMEOUT = 10
 
 
-class GuardrailsRequestConfig(BaseSettings):
-    """Configuration settings for Guardrails with automatic environment variable loading."""
+def _get_env_or_default(value: Optional[str], env_var: str, default: str = "") -> str:
+    if value is not None:
+        return value
+    return os.environ.get(env_var, default)
 
-    model_config = SettingsConfigDict(
-        env_file=".env", case_sensitive=False, extra="forbid"
-    )
 
-    api_key: NonEmptyStr = Field(..., description="API key for authentication")
-    application_name: NonEmptyStr = Field(..., description="Name of the application")
-    subsystem_name: NonEmptyStr = Field(..., description="Name of the subsystem")
-    domain_url: NonEmptyStr = Field(..., description="Domain URL for the service")
-    timeout: int = Field(default=10, ge=1, description="Request timeout in seconds")
+@dataclass
+class GuardrailsConfig:
+    api_key: str
+    application_name: str
+    subsystem_name: str
+    cx_endpoint: str
+    timeout: int
+
 
 class Guardrails:
+    """Guardrails client for protecting LLM conversations.
+
+    Configuration can be provided via constructor arguments or environment variables:
+        - CX_TOKEN: API token for Coralogix authentication
+        - CX_ENDPOINT: Coralogix guardrails endpoint URL
+        - CX_APPLICATION_NAME: Application name for tracing (default: "Unknown")
+        - CX_SUBSYSTEM_NAME: Subsystem name for tracing (default: "Unknown")
+    """
+
     def __init__(
         self,
         api_key: str | None = None,
+        cx_endpoint: str | None = None,
         application_name: str | None = None,
         subsystem_name: str | None = None,
-        domain_url: str | None = None,
         timeout: int | None = None,
     ) -> None:
-        local_vars = locals().copy()
-        config_kwargs = {k: v for k, v in local_vars.items() if v is not None}
-        config_kwargs.pop("self", None)
-
-        self.config = GuardrailsRequestConfig(**config_kwargs)
+        self.config = GuardrailsConfig(
+            api_key=_get_env_or_default(api_key, "CX_TOKEN"),
+            cx_endpoint=_get_env_or_default(cx_endpoint, "CX_ENDPOINT"),
+            application_name=_get_env_or_default(
+                application_name, "CX_APPLICATION_NAME", "Unknown"
+            ),
+            subsystem_name=_get_env_or_default(
+                subsystem_name, "CX_SUBSYSTEM_NAME", "Unknown"
+            ),
+            timeout=timeout if timeout is not None else DEFAULT_TIMEOUT,
+        )
         self._runner = GuardrailRunner(config=self.config)
 
     @asynccontextmanager
-    async def interaction(self):
+    async def guarded_session(self):
         self._client = httpx.AsyncClient(
-            base_url=self.config.domain_url,
+            base_url=self.config.cx_endpoint,
             timeout=httpx.Timeout(self.config.timeout, connect=10.0),
         )
         with tracer.start_as_current_span(__name__):
@@ -80,7 +95,7 @@ class Guardrails:
         self,
         prompt: str,
         guardrails_config: List[PII | PromptInjection | CustomGuardrail],
-    ) -> Optional[List[GuardrailsResult]]:
+    ) -> Optional[GuardrailsResponse]:
         if not all([prompt, guardrails_config]):
             return None
         return await self._runner.run(
@@ -88,7 +103,7 @@ class Guardrails:
             guardrail_endpoint=GuardrailsEndpoint.PROMPT_ENDPOINT,
             target=GuardrailsTarget.prompt,
             prompt=prompt,
-            client=self._client
+            client=self._client,
         )
 
     async def guard_response(
@@ -96,7 +111,7 @@ class Guardrails:
         guardrails_config: List[PII | PromptInjection | CustomGuardrail],
         response: str,
         prompt: Optional[str] = None,
-    ) -> Optional[List[GuardrailsResult]]:
+    ) -> Optional[GuardrailsResponse]:
         if not all([response, guardrails_config]):
             return None
         return await self._runner.run(
@@ -105,38 +120,36 @@ class Guardrails:
             target=GuardrailsTarget.response,
             prompt=prompt,
             response=response,
-            client=self._client
+            client=self._client,
         )
 
 
-class GuardrailRunner():
-    def __init__(self, config: GuardrailsRequestConfig) -> None:
+class GuardrailRunner:
+    def __init__(self, config: GuardrailsConfig) -> None:
         self.config = config
 
     async def _send_request(
         self,
         guardrails_request: GuardrailsRequest,
         guardrail_endpoint: GuardrailsEndpoint,
-        client: httpx.AsyncClient
+        client: httpx.AsyncClient,
     ) -> httpx.Response:
         guardrails_json_request = guardrails_request.model_dump(
             mode="json", exclude_none=True
         )
-        print(guardrails_json_request)
         try:
             response = await client.post(
                 guardrail_endpoint.value,
                 json=guardrails_json_request,
-                headers={"X-Coralogix-Auth": guardrails_request.api_key},
+                headers=self._get_headers(),
             )
-            print(response.text)
         except httpx.TimeoutException as e:
             raise GuardrailsAPITimeoutError(
                 f"Request to {guardrail_endpoint.value} timed out after {self.config.timeout}s"
             ) from e
         except httpx.ConnectError as e:
             raise GuardrailsAPIConnectionError(
-                f"Failed to connect to {self.config.domain_url}"
+                f"Failed to connect to {self.config.cx_endpoint}"
             ) from e
         except httpx.RequestError as e:
             raise GuardrailsAPIConnectionError(f"Request error: {str(e)}") from e
@@ -146,6 +159,13 @@ class GuardrailRunner():
 
         return response
 
+    def _get_headers(self) -> Dict[str, str]:
+        return {
+            "X-Coralogix-Auth": f"{self.config.api_key}",
+            "cx-application-name": self.config.application_name,
+            "cx-subsystem-name": self.config.subsystem_name,
+        }
+
     async def run(
         self,
         guardrails_configs: List[PII | PromptInjection | CustomGuardrail],
@@ -154,12 +174,10 @@ class GuardrailRunner():
         client: httpx.AsyncClient,
         prompt: Optional[str] = None,
         response: Optional[str] = None,
-    ) -> List[GuardrailsResult]:
+    ) -> GuardrailsResponse:
         guardrails_request = GuardrailsRequest(
-            api_key=self.config.api_key,
             application=self.config.application_name,
             subsystem=self.config.subsystem_name,
-            domain_url=self.config.domain_url,
             prompt=prompt,
             response=response,
             guardrails_configs=guardrails_configs,
@@ -178,10 +196,10 @@ class GuardrailRunner():
                     response=guardrails_request.response,
                 )
             )
+            print(guardrails_request)
             try:
                 http_response = await self._send_request(
-                    guardrails_request, guardrail_endpoint,
-                    client=client
+                    guardrails_request, guardrail_endpoint, client=client
                 )
                 if not http_response.text or http_response.text.strip() == "":
                     return GuardrailsResponse(results=[])
@@ -207,10 +225,11 @@ class GuardrailRunner():
                             name=resp.name,
                             score=resp.score,
                             explanation=resp.explanation,
-                            detected_categories=resp.detected_categories
+                            detected_categories=resp.detected_categories,
                         )
+                return GuardrailsResponse(results=guardrails_response.results)
+            except GuardrailTriggered:
+                raise
             except Exception as e:
                 span.set_status(Status(StatusCode.ERROR, str(e)))
                 raise
-
-        return guardrails_response.results

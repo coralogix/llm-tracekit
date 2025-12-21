@@ -65,10 +65,8 @@ class CustomGuardrail(BaseGuardrailConfig):
 
 
 class GuardrailsRequest(BaseModel):
-    api_key: str
     application: str
     subsystem: str
-    domain_url: str
     prompt: Optional[str] = None
     response: Optional[str]
     guardrails_configs: List[Annotated[Union[PII, PromptInjection, CustomGuardrail], Field(discriminator="type")]]
