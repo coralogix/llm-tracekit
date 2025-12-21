@@ -11,6 +11,16 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from llm_tracekit.span_builder import (
+    Choice,
+    Message,
+    ToolCall,
+    generate_base_attributes,
+    generate_choice_attributes,
+    generate_message_attributes,
+    generate_request_attributes,
+    generate_response_attributes
+    )
 
 import json
 from collections import defaultdict
@@ -29,16 +39,8 @@ from wrapt import ObjectProxy
 from llm_tracekit import extended_gen_ai_attributes as ExtendedGenAIAttributes
 from llm_tracekit.bedrock.utils import decode_tool_use_in_stream, record_metrics
 from llm_tracekit.instruments import Instruments
-from llm_tracekit.span_builder import (
-    Choice,
-    Message,
-    ToolCall,
+from common_utils.span_utils import (
     attribute_generator,
-    generate_base_attributes,
-    generate_choice_attributes,
-    generate_message_attributes,
-    generate_request_attributes,
-    generate_response_attributes,
 )
 
 

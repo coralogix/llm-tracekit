@@ -12,10 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from common_utils.span_utils import attribute_generator
 from pydantic import BaseModel
 from dataclasses import dataclass
-from functools import wraps
-from typing import Any, Callable, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Union
 
 from opentelemetry.semconv._incubating.attributes import (
     gen_ai_attributes as GenAIAttributes,
@@ -44,23 +44,6 @@ class Choice:
     role: Optional[str] = None
     content: Optional[str] = None
     tool_calls: Optional[List[ToolCall]] = None
-
-
-def remove_attributes_with_null_values(attributes: Dict[str, Any]) -> Dict[str, Any]:
-    return {attr: value for attr, value in attributes.items() if value is not None}
-
-
-def attribute_generator(
-    original_function: Callable[..., Dict[str, Any]],
-) -> Callable[..., Dict[str, Any]]:
-    @wraps(original_function)
-    def wrapper(*args, **kwargs) -> Dict[str, Any]:
-        attributes = original_function(*args, **kwargs)
-
-        return remove_attributes_with_null_values(attributes)
-
-    return wrapper
-
 
 @attribute_generator
 def generate_base_attributes(

@@ -297,7 +297,7 @@ class OpenAIAgentsTracingProcessor(TracingProcessor):
         if self.disabled:
             return
         state = self._get_or_create_state(trace.trace_id)
-
+        
         state.parent_span = self.tracer.start_span(
             name="openai.agent",
             kind=SpanKind.CLIENT,

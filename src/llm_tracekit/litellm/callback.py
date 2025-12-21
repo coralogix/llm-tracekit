@@ -25,7 +25,7 @@ from opentelemetry.semconv._incubating.attributes import (
 from typing import List, Dict, Any, Optional
 from opentelemetry.trace import Span
 
-from llm_tracekit.span_builder import (
+from common_utils.span_utils import (
     Choice,
     Message,
     ToolCall,

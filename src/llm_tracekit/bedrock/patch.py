@@ -123,6 +123,7 @@ def invoke_model_with_response_stream_wrapper(
         span_attributes = generate_attributes_from_invoke_input(
             kwargs=kwargs, capture_content=capture_content
         )
+        
         with tracer.start_as_current_span(
             name="bedrock.invoke_model_with_response_stream",
             kind=SpanKind.CLIENT,
@@ -179,7 +180,6 @@ def converse_wrapper(
         span_attributes = generate_attributes_from_converse_input(
             kwargs=kwargs, capture_content=capture_content
         )
-
         with tracer.start_as_current_span(
             name="bedrock.converse",
             kind=SpanKind.CLIENT,
@@ -223,7 +223,7 @@ def converse_stream_wrapper(
         span_attributes = generate_attributes_from_converse_input(
             kwargs=kwargs, capture_content=capture_content
         )
-
+        
         with tracer.start_as_current_span(
             name="bedrock.converse_stream",
             kind=SpanKind.CLIENT,

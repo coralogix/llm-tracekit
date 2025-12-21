@@ -4,7 +4,6 @@ from typing import Optional
 
 from llm_tracekit.span_builder import ToolCall
 
-
 # Pre-compile regex for efficiency at the module level.
 _CONTENT_PATTERN = re.compile(r"text=([^\]}]+)", re.DOTALL)
 _ANSWER_PATTERN = re.compile(r"<answer>(.*?)</answer>", re.DOTALL)

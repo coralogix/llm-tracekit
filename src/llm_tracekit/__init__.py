@@ -38,3 +38,14 @@ with suppress(ImportError):
     from llm_tracekit.gemini.instrumentor import (
         GeminiInstrumentor as GeminiInstrumentor
     )
+with suppress(ImportError):
+    from guardrails_sdk import (
+        Guardrails as Guardrails,
+        GuardrailsResult as GuardrailsResult,
+        GuardrailsResponse as GuardrailsResponse,
+        PII as PII,
+        PromptInjection as PromptInjection,
+        CustomGuardrail as CustomGuardrail,
+        GuardrailsRequest as GuardrailsRequest,
+        guardrails_interation_context as guardrails_interation_context,
+    )
