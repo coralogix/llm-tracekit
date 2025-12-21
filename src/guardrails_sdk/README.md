@@ -16,13 +16,13 @@ from guardrails_sdk import Guardrails, PII, PromptInjection, PIICategories, Guar
 
 guardrails = Guardrails(
     api_key="your-api-key",
+    cx_endpoint="https://your-domain.coralogix.com",
     application_name="my-app",
     subsystem_name="my-subsystem",
-    domain_url="https://your-domain.coralogix.com",
 )
 
 async def main():
-    async with guardrails.interaction():
+    async with guardrails.guarded_session():
         try:
             # Guard input
             await guardrails.guard_prompt(
@@ -49,24 +49,23 @@ asyncio.run(main())
 ### Environment Variables
 
 ```bash
-export GUARDRAILS_API_KEY="your-api-key"
-export GUARDRAILS_APPLICATION_NAME="my-app"
-export GUARDRAILS_SUBSYSTEM_NAME="my-subsystem"
-export GUARDRAILS_DOMAIN_URL="https://your-domain.coralogix.com"
-export GUARDRAILS_TIMEOUT="3"  # Optional, default is 10 seconds
+export CX_TOKEN="your-api-key"
+export CX_ENDPOINT="https://your-domain.coralogix.com"
+export CX_APPLICATION_NAME="my-app"      # Optional, default: "Unknown"
+export CX_SUBSYSTEM_NAME="my-subsystem"  # Optional, default: "Unknown"
 ```
 
 ```python
 guardrails = Guardrails()  # Reads from environment variables
 ```
 
-## The `interaction()` Context Manager
+## The `guarded_session()` Context Manager
 
 **Required** for all guardrail calls. It:
 1. Manages the HTTP client lifecycle (connection reuse)
 2. Creates an OpenTelemetry span for tracing correlation
 
-**Important**: Don't nest interactions. Don't reuse across unrelated requests. One interaction = one user request/response cycle.
+**Important**: Don't nest guarded_sessions. Don't reuse across unrelated requests. One guarded_session = one user-LLM exchange.
 
 ## Response Schema
 
@@ -156,7 +155,7 @@ Choose how to handle API failures:
 ```python
 async def guard_fail_closed(guardrails, prompt, config):
     try:
-        async with guardrails.interaction():
+        async with guardrails.guarded_session():
             await guardrails.guard_prompt(prompt=prompt, guardrails_config=config)
             return True, None
     except GuardrailTriggered as e:
@@ -170,7 +169,7 @@ async def guard_fail_closed(guardrails, prompt, config):
 ```python
 async def guard_fail_open(guardrails, prompt, config):
     try:
-        async with guardrails.interaction():
+        async with guardrails.guarded_session():
             await guardrails.guard_prompt(prompt=prompt, guardrails_config=config)
             return True, None
     except GuardrailTriggered as e:

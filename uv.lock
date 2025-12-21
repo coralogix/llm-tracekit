@@ -172,6 +172,12 @@ wheels = [
 ]
 
 [[package]]
+name = "assertpy"
+version = "1.1"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/4f/39/720b5d4463612a40a166d00999cbb715fce3edaf08a9a7588ba5985699ec/assertpy-1.1.tar.gz", hash = "sha256:acc64329934ad71a3221de185517a43af33e373bb44dc05b5a9b174394ef4833", size = 25421, upload-time = "2020-07-19T14:39:02.462Z" }
+
+[[package]]
 name = "async-timeout"
 version = "5.0.1"
 source = { registry = "https://pypi.org/simple" }
@@ -1369,6 +1375,7 @@ openai-agents = [
 
 [package.dev-dependencies]
 dev = [
+    { name = "assertpy" },
     { name = "botocore-stubs" },
     { name = "brotli" },
     { name = "mypy" },
@@ -1411,6 +1418,7 @@ provides-extras = ["openai", "openai-agents", "bedrock", "gemini", "litellm", "g
 
 [package.metadata.requires-dev]
 dev = [
+    { name = "assertpy", specifier = ">=1.1" },
     { name = "botocore-stubs", specifier = ">=1.38.4" },
     { name = "brotli", specifier = ">=1.0.0" },
     { name = "mypy", specifier = ">=1.14.1" },

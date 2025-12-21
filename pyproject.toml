@@ -80,6 +80,7 @@ litellm = "llm_tracekit:LiteLLMInstrumentor"
 
 [dependency-groups]
 dev = [
+    "assertpy>=1.1",
     "botocore-stubs>=1.38.4",
     "mypy>=1.14.1",
     "pytest>=8.3.4",
