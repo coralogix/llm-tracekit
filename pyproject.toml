@@ -47,12 +47,11 @@ gemini = [
 litellm = [
     "litellm[proxy]>=1.65.4", # LiteLLM callbacks require proxy-specific dependencies
 ]
-all = [
+ci-core = [
     "openai>=1.26.0",
     "openai-agents>=0.1.0; python_version >= '3.10'",
     "boto3>=1.36.0",
-    "google-genai>=1.0.0,<2",
-    "litellm[proxy]>=1.65.4"
+    "google-genai>=1.0.0,<2"
 ]
 
 
