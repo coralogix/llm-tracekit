@@ -450,3 +450,6 @@ class AsyncStreamWrapper(BaseStreamWrapper):
             handle_span_exception(self.span, error)
             self.cleanup()
             raise
+
+    def parse(self):
+        return self.stream.parse()

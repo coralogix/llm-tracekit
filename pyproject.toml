@@ -1,6 +1,6 @@
 [project]
 name = "llm-tracekit"
-version = "1.6.0"
+version = "1.6.1"
 description = "Collect and send GenAI calls as spans for development and production observability."
 readme = "README.md"
 authors = [
@@ -63,15 +63,12 @@ langchain-all = [
     "langchain-openai>=1.0.0; python_version >= '3.10'",
     "langchain-aws>=1.0.0; python_version >= '3.10'",
 ]
-all = [
+ci-core = [
     "openai>=1.26.0",
     "openai-agents>=0.1.0; python_version >= '3.10'",
-    "boto3>=1.36.0",
+    "boto3>=1.36.0
     "google-genai>=1.0.0,<2",
-    "litellm[proxy]>=1.65.4",
-    "langchain>=1.0.0; python_version >= '3.10'",
-    "langchain-openai>=1.0.0; python_version >= '3.10'",
-    "langchain-aws>=1.0.0; python_version >= '3.10'",
+    "litellm[proxy]>=1.65.4"
 ]
 
 
