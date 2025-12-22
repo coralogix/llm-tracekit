@@ -34,7 +34,7 @@ EXPLANATION: Final = ("guardrails.{target}.{guardrail_type}.explanation")
 The explanation of the guardrail result from guardrail response.
 """
 
-THRESHOLD: Final = ("guardrails.{target}.{guardrail_type}.threshold")
+DETECTION_THRESHOLD: Final = ("guardrails.{target}.{guardrail_type}.detection_threshold")
 """
 The threshold of the guardrail.
 """

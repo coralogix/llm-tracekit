@@ -5,7 +5,7 @@ from guardrails_sdk.guardrails_span_attributes import (
     NAME,
     SCORE,
     EXPLANATION,
-    THRESHOLD,
+    DETECTION_THRESHOLD,
     CUSTOM_GUARDRAIL_NAME,
     PROMPT,
     RESPONSE,
@@ -47,7 +47,7 @@ def generate_guardrail_response_attributes(
             EXPLANATION.format(
                 target=target, guardrail_type=guardrail_type
             ): result.explanation,
-            THRESHOLD.format(
+            DETECTION_THRESHOLD.format(
                 target=target, guardrail_type=guardrail_type
             ): result.threshold,
         }

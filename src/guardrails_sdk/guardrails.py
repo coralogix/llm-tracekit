@@ -31,7 +31,7 @@ from .error import (
 tracer = trace.get_tracer(__name__)
 
 DEFAULT_TIMEOUT = 10
-
+GUARDRAILS_ENDPOINT_PREFIX = "/api/v1/guardrails/
 
 def _get_env_or_default(value: Optional[str], env_var: str, default: str = "") -> str:
     if value is not None:
@@ -52,7 +52,7 @@ class Guardrails:
     """Guardrails client for protecting LLM conversations.
 
     Configuration can be provided via constructor arguments or environment variables:
-        - CX_TOKEN: API token for Coralogix authentication
+        - CX_GUARDRAILS_TOKEN: API token for Coralogix authentication
         - CX_ENDPOINT: Coralogix guardrails endpoint URL
         - CX_APPLICATION_NAME: Application name for tracing (default: "Unknown")
         - CX_SUBSYSTEM_NAME: Subsystem name for tracing (default: "Unknown")
@@ -67,7 +67,7 @@ class Guardrails:
         timeout: int | None = None,
     ) -> None:
         self.config = GuardrailsConfig(
-            api_key=_get_env_or_default(api_key, "CX_TOKEN"),
+            api_key=_get_env_or_default(api_key, "CX_GUARDRAILS_TOKEN"),
             cx_endpoint=_get_env_or_default(cx_endpoint, "CX_ENDPOINT"),
             application_name=_get_env_or_default(
                 application_name, "CX_APPLICATION_NAME", "Unknown"
@@ -77,7 +77,7 @@ class Guardrails:
             ),
             timeout=timeout if timeout is not None else DEFAULT_TIMEOUT,
         )
-        self._runner = GuardrailRunner(config=self.config)
+        self._sender = GuardrailRequestSender(config=self.config)
 
     @asynccontextmanager
     async def guarded_session(self):
@@ -85,7 +85,7 @@ class Guardrails:
             base_url=self.config.cx_endpoint,
             timeout=httpx.Timeout(self.config.timeout, connect=10.0),
         )
-        with tracer.start_as_current_span(__name__):
+        with tracer.start_as_current_span("Guarded session"):
             try:
                 yield
             finally:
@@ -98,7 +98,7 @@ class Guardrails:
     ) -> Optional[GuardrailsResponse]:
         if not all([prompt, guardrails_config]):
             return None
-        return await self._runner.run(
+        return await self._sender.run(
             guardrails_configs=guardrails_config,
             guardrail_endpoint=GuardrailsEndpoint.PROMPT_ENDPOINT,
             target=GuardrailsTarget.prompt,
@@ -114,7 +114,7 @@ class Guardrails:
     ) -> Optional[GuardrailsResponse]:
         if not all([response, guardrails_config]):
             return None
-        return await self._runner.run(
+        return await self._sender.run(
             guardrails_configs=guardrails_config,
             guardrail_endpoint=GuardrailsEndpoint.RESPONSE_ENDPOINT,
             target=GuardrailsTarget.response,
@@ -124,7 +124,7 @@ class Guardrails:
         )
 
 
-class GuardrailRunner:
+class GuardrailRequestSender:
     def __init__(self, config: GuardrailsConfig) -> None:
         self.config = config
 
@@ -139,7 +139,7 @@ class GuardrailRunner:
         )
         try:
             response = await client.post(
-                guardrail_endpoint.value,
+                GUARDRAILS_ENDPOINT_PREFIX + guardrail_endpoint.value,
                 json=guardrails_json_request,
                 headers=self._get_headers(),
             )
@@ -196,7 +196,6 @@ class GuardrailRunner:
                     response=guardrails_request.response,
                 )
             )
-            print(guardrails_request)
             try:
                 http_response = await self._send_request(
                     guardrails_request, guardrail_endpoint, client=client
