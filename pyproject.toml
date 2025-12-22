@@ -113,3 +113,8 @@ only-include = [
     "src",
     "tests",
 ]
+
+[tool.uv]
+override-dependencies = [
+    "boto3>=1.40.19",
+]
