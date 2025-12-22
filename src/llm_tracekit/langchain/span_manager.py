@@ -12,8 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from __future__ import annotations
-
 """Helpers for tracking LangChain run spans.
 
 This module keeps an in-memory registry of LangChain run IDs mapped to their
@@ -23,6 +21,8 @@ ensuring spans reliably finish even if LangChain fails to emit matching end
 events. The callback handler treats this manager as its persistence layer for
 per-run state.
 """
+
+from __future__ import annotations
 
 from dataclasses import dataclass, field
 from timeit import default_timer
