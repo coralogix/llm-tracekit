@@ -49,7 +49,7 @@ asyncio.run(main())
 ### Environment Variables
 
 ```bash
-export CX_TOKEN="your-api-key"
+export CX_GUARDRAILS_TOKEN="your-api-key"
 export CX_ENDPOINT="https://your-domain.coralogix.com"
 export CX_APPLICATION_NAME="my-app"      # Optional, default: "Unknown"
 export CX_SUBSYSTEM_NAME="my-subsystem"  # Optional, default: "Unknown"

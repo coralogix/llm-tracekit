@@ -20,7 +20,7 @@ import pytest
 def guardrails_env_vars():
     """Set up environment variables for guardrails configuration."""
     env_vars = {
-        "CX_TOKEN": "test-api-key",
+        "CX_GUARDRAILS_TOKEN": "test-api-key",
         "CX_APPLICATION_NAME": "test-app",
         "CX_SUBSYSTEM_NAME": "test-subsystem",
         "CX_ENDPOINT": "https://test.coralogix.com",
@@ -44,7 +44,7 @@ def guardrails_env_vars():
 def clear_guardrails_env_vars():
     """Clear all guardrails environment variables."""
     env_keys = [
-        "CX_TOKEN",
+        "CX_GUARDRAILS_TOKEN",
         "CX_APPLICATION_NAME", 
         "CX_SUBSYSTEM_NAME",
         "CX_ENDPOINT",
