@@ -20,6 +20,7 @@ from tests.litellm.utils import assert_attributes, find_last_response_span
 
 
 import time
+import sys
 
 @pytest.mark.vcr()
 def test_litellm_completion(instrument):
@@ -107,6 +108,7 @@ def test_litellm_streaming(instrument):
     assert_choices_in_span(span=span, expected_choices=[choice], expect_content=True)
 
 
+@pytest.mark.skipif(sys.version_info < (3, 10), reason="Undefined behaviour in Python <3.10")
 @pytest.mark.vcr()
 def test_litellm_multi_turn(instrument):
     exporter = litellm.callbacks[-1].OTEL_EXPORTER
