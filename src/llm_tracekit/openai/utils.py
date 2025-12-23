@@ -216,26 +216,26 @@ def get_llm_request_attributes(kwargs, client_instance, capture_content: bool):
                 continue
 
             attributes[
-                ExtendedGenAIAttributes.GEN_AI_OPENAI_REQUEST_TOOLS_TYPE.format(
+                ExtendedGenAIAttributes.GEN_AI_REQUEST_TOOLS_TYPE.format(
                     tool_index=index
                 )
             ] = tool.get("type", "function")
             function = tool.get("function")
             if function is not None and isinstance(function, Mapping):
                 attributes[
-                    ExtendedGenAIAttributes.GEN_AI_OPENAI_REQUEST_TOOLS_FUNCTION_NAME.format(
+                    ExtendedGenAIAttributes.GEN_AI_REQUEST_TOOLS_FUNCTION_NAME.format(
                         tool_index=index
                     )
                 ] = function.get("name")
                 attributes[
-                    ExtendedGenAIAttributes.GEN_AI_OPENAI_REQUEST_TOOLS_FUNCTION_DESCRIPTION.format(
+                    ExtendedGenAIAttributes.GEN_AI_REQUEST_TOOLS_FUNCTION_DESCRIPTION.format(
                         tool_index=index
                     )
                 ] = function.get("description")
                 function_parameters = function.get("parameters")
                 if function_parameters is not None:
                     attributes[
-                        ExtendedGenAIAttributes.GEN_AI_OPENAI_REQUEST_TOOLS_FUNCTION_PARAMETERS.format(
+                        ExtendedGenAIAttributes.GEN_AI_REQUEST_TOOLS_FUNCTION_PARAMETERS.format(
                             tool_index=index
                         )
                     ] = json.dumps(function_parameters)

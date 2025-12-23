@@ -1,6 +1,6 @@
 [project]
 name = "llm-tracekit"
-version = "1.6.1"
+version = "1.7.0"
 description = "Collect and send GenAI calls as spans for development and production observability."
 readme = "README.md"
 authors = [
@@ -92,4 +92,9 @@ ignore_missing_imports = true
 only-include = [
     "src",
     "tests",
+]
+
+[tool.uv]
+override-dependencies = [
+    "boto3>=1.40.19",
 ]
