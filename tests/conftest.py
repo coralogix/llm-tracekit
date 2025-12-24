@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import json
+import sys
 from typing import Generator
 
 import pytest
@@ -30,6 +31,12 @@ from opentelemetry.sdk.trace.export.in_memory_span_exporter import (
 )
 
 pytest.register_assert_rewrite("tests.utils")
+
+collect_ignore = []
+
+if sys.version_info < (3, 10):
+    collect_ignore.append("openai_agents")
+    collect_ignore.append("langchain")
 
 
 @pytest.fixture(scope="function", name="span_exporter")

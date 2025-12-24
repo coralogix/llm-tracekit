@@ -1,6 +1,6 @@
 [project]
 name = "llm-tracekit"
-version = "1.6.1"
+version = "1.7.0"
 description = "Collect and send GenAI calls as spans for development and production observability."
 readme = "README.md"
 authors = [
@@ -47,11 +47,30 @@ gemini = [
 litellm = [
     "litellm[proxy]>=1.65.4", # LiteLLM callbacks require proxy-specific dependencies
 ]
+langchain = [
+    "langchain>=1.0.0; python_version >= '3.10'",
+]
+langchain-openai = [
+    "langchain>=1.0.0; python_version >= '3.10'",
+    "langchain-openai>=1.0.0; python_version >= '3.10'",
+]
+langchain-aws = [
+    "langchain>=1.0.0; python_version >= '3.10'",
+    "langchain-aws>=1.0.0; python_version >= '3.10'",
+]
+langchain-all = [
+    "langchain>=1.0.0; python_version >= '3.10'",
+    "langchain-openai>=1.0.0; python_version >= '3.10'",
+    "langchain-aws>=1.0.0; python_version >= '3.10'",
+]
 ci-core = [
     "openai>=1.26.0",
     "openai-agents>=0.1.0; python_version >= '3.10'",
     "boto3>=1.36.0",
-    "google-genai>=1.0.0,<2"
+    "google-genai>=1.0.0,<2",
+    "langchain>=1.0.0; python_version >= '3.10'",
+    "langchain-openai>=1.0.0; python_version >= '3.10'",
+    "langchain-aws>=1.0.0; python_version >= '3.10'",
 ]
 
 
@@ -66,6 +85,7 @@ openai_agents = "llm_tracekit:OpenAIAgentsInstrumentor"
 boto3 = "llm_tracekit:BedrockInstrumentor"
 gemini = "llm_tracekit:GeminiInstrumentor"
 litellm = "llm_tracekit:LiteLLMInstrumentor"
+langchain = "llm_tracekit:LangChainInstrumentor"
 
 [dependency-groups]
 dev = [
@@ -92,4 +112,9 @@ ignore_missing_imports = true
 only-include = [
     "src",
     "tests",
+]
+
+[tool.uv]
+override-dependencies = [
+    "boto3>=1.40.19",
 ]

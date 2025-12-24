@@ -1,0 +1,78 @@
+interactions:
+- request:
+    body: |-
+      {
+        "top_p": 0.9,
+        "anthropic_version": "bedrock-2023-05-31",
+        "messages": [
+          {
+            "role": "user",
+            "content": "Say this is a test"
+          }
+        ],
+        "max_tokens": 256,
+        "temperature": 0.2
+      }
+    headers:
+      Accept:
+      - !!binary |
+        YXBwbGljYXRpb24vanNvbg==
+      Content-Type:
+      - !!binary |
+        YXBwbGljYXRpb24vanNvbg==
+      X-Amz-Date:
+      - !!binary |
+        MjAyNTEyMDNUMjEyMjAzWg==
+      amz-sdk-invocation-id:
+      - !!binary |
+        YWE4ZGFhYWQtZjQ4YS00MWVhLWIxYTktZDhkMDU5NTg1ZDli
+      amz-sdk-request:
+      - !!binary |
+        YXR0ZW1wdD0x
+    method: POST
+    uri: https://bedrock-runtime.us-east-1.amazonaws.com/model/anthropic.claude-3-5-sonnet-20240620-v1%3A0/invoke
+  response:
+    body:
+      string: |-
+        {
+          "id": "msg_bdrk_01A6UmRGzJGfHoB4VcaKFDGz",
+          "type": "message",
+          "role": "assistant",
+          "model": "claude-3-5-sonnet-20240620",
+          "content": [
+            {
+              "type": "text",
+              "text": "This is a test."
+            }
+          ],
+          "stop_reason": "end_turn",
+          "stop_sequence": null,
+          "usage": {
+            "input_tokens": 12,
+            "output_tokens": 8
+          }
+        }
+    headers:
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '260'
+      Content-Type:
+      - application/json
+      Date:
+      - Wed, 03 Dec 2025 21:22:05 GMT
+      Set-Cookie: redacted_set_cookie
+      X-Amzn-Bedrock-Input-Token-Count:
+      - '12'
+      X-Amzn-Bedrock-Invocation-Latency:
+      - '490'
+      X-Amzn-Bedrock-Output-Token-Count:
+      - '8'
+      openai-organization: test_openai_org_id
+      openai-project: test_openai_project
+      x-amzn-RequestId:
+      - 798fbeed-ba62-4c9d-9c24-e7105a4d51d1
+    status:
+      code: 200
+      message: OK
+version: 1

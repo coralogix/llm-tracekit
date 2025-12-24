@@ -19,6 +19,34 @@ GEN_AI_OPENAI_REQUEST_USER: Final = "gen_ai.openai.request.user"
 The user of the request.
 """
 
+GEN_AI_REQUEST_TOOLS_TYPE: Final = (
+    "gen_ai.request.tools.{tool_index}.type"
+)
+"""
+The type of the tool. Expected to be `function`.
+"""
+
+GEN_AI_REQUEST_TOOLS_FUNCTION_NAME: Final = (
+    "gen_ai.request.tools.{tool_index}.function.name"
+)
+"""
+The name of the tool function.
+"""
+
+GEN_AI_REQUEST_TOOLS_FUNCTION_DESCRIPTION: Final = (
+    "gen_ai.request.tools.{tool_index}.function.description"
+)
+"""
+The description of the tool function.
+"""
+
+GEN_AI_REQUEST_TOOLS_FUNCTION_PARAMETERS: Final = (
+    "gen_ai.request.tools.{tool_index}.function.parameters"
+)
+"""
+The parameters of the tool function in JSON format.
+"""
+
 GEN_AI_OPENAI_REQUEST_TOOLS_TYPE: Final = (
     "gen_ai.openai.request.tools.{tool_index}.type"
 )

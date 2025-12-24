@@ -1,0 +1,246 @@
+interactions:
+- request:
+    body: |-
+      {
+        "top_p": 0.9,
+        "tools": [
+          {
+            "name": "get_current_weather",
+            "description": "Return today's weather for the provided city.",
+            "input_schema": {
+              "properties": {
+                "location": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "location"
+              ],
+              "type": "object"
+            }
+          }
+        ],
+        "anthropic_version": "bedrock-2023-05-31",
+        "messages": [
+          {
+            "role": "user",
+            "content": "What's the weather in Seattle and San Francisco today?"
+          }
+        ],
+        "system": "you are a helpful assistant",
+        "max_tokens": 256,
+        "temperature": 0.2
+      }
+    headers:
+      Accept:
+      - !!binary |
+        YXBwbGljYXRpb24vanNvbg==
+      Content-Type:
+      - !!binary |
+        YXBwbGljYXRpb24vanNvbg==
+      X-Amz-Date:
+      - !!binary |
+        MjAyNTEyMDNUMjE0NTI0Wg==
+      amz-sdk-invocation-id:
+      - !!binary |
+        NzllZTMwMmEtMDgwMi00MjhhLTk2YTktYjI3MWJkMWE4NTZl
+      amz-sdk-request:
+      - !!binary |
+        YXR0ZW1wdD0x
+    method: POST
+    uri: https://bedrock-runtime.us-east-1.amazonaws.com/model/anthropic.claude-3-5-sonnet-20240620-v1%3A0/invoke
+  response:
+    body:
+      string: |-
+        {
+          "id": "msg_bdrk_01E9GVyPZXwCbiFBaYkC9Poz",
+          "type": "message",
+          "role": "assistant",
+          "model": "claude-3-5-sonnet-20240620",
+          "content": [
+            {
+              "type": "text",
+              "text": "To answer your question about the weather in Seattle and San Francisco today, I'll need to use the get_current_weather function for both cities. Let me fetch that information for you."
+            },
+            {
+              "type": "tool_use",
+              "id": "toolu_bdrk_01MzSosgHmBpuWtxUuB6g6aq",
+              "name": "get_current_weather",
+              "input": {
+                "location": "Seattle"
+              }
+            },
+            {
+              "type": "tool_use",
+              "id": "toolu_bdrk_01L44fMoG59Pt9KPUaeL5X6U",
+              "name": "get_current_weather",
+              "input": {
+                "location": "San Francisco"
+              }
+            }
+          ],
+          "stop_reason": "tool_use",
+          "stop_sequence": null,
+          "usage": {
+            "input_tokens": 376,
+            "output_tokens": 133
+          }
+        }
+    headers:
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '683'
+      Content-Type:
+      - application/json
+      Date:
+      - Wed, 03 Dec 2025 21:45:29 GMT
+      Set-Cookie: redacted_set_cookie
+      X-Amzn-Bedrock-Input-Token-Count:
+      - '376'
+      X-Amzn-Bedrock-Invocation-Latency:
+      - '3206'
+      X-Amzn-Bedrock-Output-Token-Count:
+      - '133'
+      openai-organization: test_openai_org_id
+      openai-project: test_openai_project
+      x-amzn-RequestId:
+      - 9f462e5e-fe26-40e6-ad25-ab0f2193fe78
+    status:
+      code: 200
+      message: OK
+- request:
+    body: |-
+      {
+        "top_p": 0.9,
+        "tools": [
+          {
+            "name": "get_current_weather",
+            "description": "Return today's weather for the provided city.",
+            "input_schema": {
+              "properties": {
+                "location": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "location"
+              ],
+              "type": "object"
+            }
+          }
+        ],
+        "anthropic_version": "bedrock-2023-05-31",
+        "messages": [
+          {
+            "role": "user",
+            "content": "What's the weather in Seattle and San Francisco today?"
+          },
+          {
+            "role": "assistant",
+            "content": [
+              {
+                "type": "text",
+                "text": "To answer your question about the weather in Seattle and San Francisco today, I'll need to use the get_current_weather function for both cities. Let me fetch that information for you."
+              },
+              {
+                "type": "tool_use",
+                "name": "get_current_weather",
+                "input": {
+                  "location": "Seattle"
+                },
+                "id": "toolu_bdrk_01MzSosgHmBpuWtxUuB6g6aq"
+              },
+              {
+                "type": "tool_use",
+                "name": "get_current_weather",
+                "input": {
+                  "location": "San Francisco"
+                },
+                "id": "toolu_bdrk_01L44fMoG59Pt9KPUaeL5X6U"
+              }
+            ]
+          },
+          {
+            "role": "user",
+            "content": [
+              {
+                "type": "tool_result",
+                "content": "50 degrees and raining",
+                "tool_use_id": "toolu_bdrk_01MzSosgHmBpuWtxUuB6g6aq"
+              },
+              {
+                "type": "tool_result",
+                "content": "70 degrees and sunny",
+                "tool_use_id": "toolu_bdrk_01L44fMoG59Pt9KPUaeL5X6U"
+              }
+            ]
+          }
+        ],
+        "system": "you are a helpful assistant",
+        "max_tokens": 256,
+        "temperature": 0.2
+      }
+    headers:
+      Accept:
+      - !!binary |
+        YXBwbGljYXRpb24vanNvbg==
+      Content-Type:
+      - !!binary |
+        YXBwbGljYXRpb24vanNvbg==
+      X-Amz-Date:
+      - !!binary |
+        MjAyNTEyMDNUMjE0NTI4Wg==
+      amz-sdk-invocation-id:
+      - !!binary |
+        NjM4NjBmMWItM2U2Ni00MjQwLTk1ZDAtODIzMzI1MGJkNTMz
+      amz-sdk-request:
+      - !!binary |
+        YXR0ZW1wdD0x
+    method: POST
+    uri: https://bedrock-runtime.us-east-1.amazonaws.com/model/anthropic.claude-3-5-sonnet-20240620-v1%3A0/invoke
+  response:
+    body:
+      string: |-
+        {
+          "id": "msg_bdrk_01Yc7W2SHXzrgtw6k9y2JXG9",
+          "type": "message",
+          "role": "assistant",
+          "model": "claude-3-5-sonnet-20240620",
+          "content": [
+            {
+              "type": "text",
+              "text": "Thank you for waiting. I've retrieved the current weather information for both cities. Here's the weather report for today:\n\n1. Seattle: The weather in Seattle today is 50 degrees and raining.\n2. San Francisco: The weather in San Francisco today is 70 degrees and sunny.\n\nAs you can see, there's quite a difference in the weather between these two West Coast cities today. Seattle is experiencing cooler temperatures with rain, which is fairly typical for the city. On the other hand, San Francisco is enjoying warmer temperatures with sunny skies, making it a pleasant day in the Bay Area.\n\nIs there anything else you'd like to know about the weather in these cities or any other locations?"
+            }
+          ],
+          "stop_reason": "end_turn",
+          "stop_sequence": null,
+          "usage": {
+            "input_tokens": 586,
+            "output_tokens": 154
+          }
+        }
+    headers:
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '946'
+      Content-Type:
+      - application/json
+      Date:
+      - Wed, 03 Dec 2025 21:45:34 GMT
+      Set-Cookie: redacted_set_cookie
+      X-Amzn-Bedrock-Input-Token-Count:
+      - '586'
+      X-Amzn-Bedrock-Invocation-Latency:
+      - '4097'
+      X-Amzn-Bedrock-Output-Token-Count:
+      - '154'
+      openai-organization: test_openai_org_id
+      openai-project: test_openai_project
+      x-amzn-RequestId:
+      - 3683c43e-2697-434f-bfaf-33f437889a89
+    status:
+      code: 200
+      message: OK
+version: 1
