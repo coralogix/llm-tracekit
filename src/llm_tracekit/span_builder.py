@@ -47,7 +47,18 @@ class Choice:
 
 
 def remove_attributes_with_null_values(attributes: Dict[str, Any]) -> Dict[str, Any]:
-    return {attr: value for attr, value in attributes.items() if value is not None}
+    from dataclasses import MISSING
+    from openai import NOT_GIVEN
+    from pydantic_core import PydanticUndefined
+    to_remove = (
+        None,
+        MISSING,
+        NOT_GIVEN,
+        PydanticUndefined,
+    )
+
+    return {attr: value for attr, value in attributes.items() if value not in to_remove}
+
 
 
 def attribute_generator(
