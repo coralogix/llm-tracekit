@@ -43,6 +43,7 @@ class GuardrailsClientConfig:
     subsystem_name: str
     cx_endpoint: str
     timeout: int
+    suppress_guardrails_triggered_exception: bool
 
 
 class Guardrails:
@@ -73,6 +74,7 @@ class Guardrails:
                 subsystem_name, "CX_SUBSYSTEM_NAME", "Unknown"
             ),
             timeout=timeout if timeout is not None else DEFAULT_TIMEOUT,
+            suppress_guardrails_triggered_exception=os.environ.get("DISABLE_GUARDRAIL_TRIGGERED_EXCEPTIONS", "").lower() == "true"
         )
         self._sender = GuardrailRequestSender(config=self.config)
 
@@ -214,7 +216,7 @@ class GuardrailRequestSender:
                     )
                 )
                 for resp in guardrails_response.results:
-                    if resp.detected:
+                    if resp.detected and not self.config.suppress_guardrails_triggered_exception:
                         raise GuardrailTriggered(
                             guardrail_type=resp.detection_type.value,
                             name=resp.name,
