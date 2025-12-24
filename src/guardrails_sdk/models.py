@@ -1,3 +1,4 @@
+from optparse import Option
 from typing import Any, List, Optional, Union, Literal
 from pydantic import BaseModel, Field, ConfigDict, field_validator
 from typing_extensions import Annotated
@@ -69,7 +70,22 @@ class GuardrailsRequest(BaseModel):
     subsystem: str
     prompt: Optional[str] = None
     response: Optional[str]
-    guardrails_configs: List[Annotated[Union[PII, PromptInjection, CustomGuardrail], Field(discriminator="type")]]
+    guardrails_configs: List[PII | PromptInjection | CustomGuardrail]
+
+class GuardrailsConfig(BaseModel):
+    pii: Optional[PII] = None
+    prompt_injection: Optional[PromptInjection] = None
+    custom_guardrail: Optional[List[CustomGuardrail]] = Field(default_factory=list)
+
+    def to_list(self) -> List:
+        out = []
+        if self.pii is not None:
+            out.append(self.pii)
+        if self.prompt_injection is not None:
+            out.append(self.prompt_injection)
+        if self.custom_guardrail:
+            out.extend(self.custom_guardrail)
+        return out
 
 
 class GuardrailsResult(BaseModel):
