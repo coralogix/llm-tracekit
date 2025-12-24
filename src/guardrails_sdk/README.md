@@ -59,7 +59,12 @@ export CX_GUARDRAILS_TOKEN="your-api-key"
 export CX_ENDPOINT="https://your-domain.coralogix.com"
 export CX_APPLICATION_NAME="my-app"      # Optional, default: "Unknown"
 export CX_SUBSYSTEM_NAME="my-subsystem"  # Optional, default: "Unknown"
+export DISABLE_GUARDRAIL_TRIGGERED_EXCEPTIONS="true"  # Optional, disables raising exceptions on violations
 ```
+
+**Note on `DISABLE_GUARDRAIL_TRIGGERED_EXCEPTIONS`**: 
+- **Default behavior (not set)**: Guardrail violations will raise `GuardrailTriggered` exceptions (fail-closed behavior)
+- **When set to `"true"`**: Violations are detected and returned in the response, but exceptions are not raised, allowing you to inspect the results manually (fail-open behavior)
 
 ```python
 guardrails = Guardrails()  # Reads from environment variables
