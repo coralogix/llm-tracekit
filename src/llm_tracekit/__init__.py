@@ -47,5 +47,4 @@ with suppress(ImportError):
         PromptInjection as PromptInjection,
         CustomGuardrail as CustomGuardrail,
         GuardrailsRequest as GuardrailsRequest,
-        guardrails_interation_context as guardrails_interation_context,
     )

@@ -11,13 +11,10 @@ from opentelemetry.trace import SpanKind, Status, StatusCode
 from contextlib import asynccontextmanager
 
 from .models import (
+    GuardrailsConfig,
     GuardrailsEndpoint,
     GuardrailsRequest,
-    GuardrailsResult,
     GuardrailsResponse,
-    PII,
-    PromptInjection,
-    CustomGuardrail,
     GuardrailsTarget,
 )
 from .error import (
@@ -31,7 +28,7 @@ from .error import (
 tracer = trace.get_tracer(__name__)
 
 DEFAULT_TIMEOUT = 10
-GUARDRAILS_ENDPOINT_PREFIX = "/api/v1/guardrails/
+GUARDRAILS_ENDPOINT_PREFIX = "/api/v1/guardrails/"
 
 def _get_env_or_default(value: Optional[str], env_var: str, default: str = "") -> str:
     if value is not None:
@@ -40,7 +37,7 @@ def _get_env_or_default(value: Optional[str], env_var: str, default: str = "") -
 
 
 @dataclass
-class GuardrailsConfig:
+class GuardrailsClientConfig:
     api_key: str
     application_name: str
     subsystem_name: str
@@ -66,7 +63,7 @@ class Guardrails:
         subsystem_name: str | None = None,
         timeout: int | None = None,
     ) -> None:
-        self.config = GuardrailsConfig(
+        self.config = GuardrailsClientConfig(
             api_key=_get_env_or_default(api_key, "CX_GUARDRAILS_TOKEN"),
             cx_endpoint=_get_env_or_default(cx_endpoint, "CX_ENDPOINT"),
             application_name=_get_env_or_default(
@@ -94,7 +91,7 @@ class Guardrails:
     async def guard_prompt(
         self,
         prompt: str,
-        guardrails_config: List[PII | PromptInjection | CustomGuardrail],
+        guardrails_config: GuardrailsConfig,
     ) -> Optional[GuardrailsResponse]:
         if not all([prompt, guardrails_config]):
             return None
@@ -108,7 +105,7 @@ class Guardrails:
 
     async def guard_response(
         self,
-        guardrails_config: List[PII | PromptInjection | CustomGuardrail],
+        guardrails_config: GuardrailsConfig,
         response: str,
         prompt: Optional[str] = None,
     ) -> Optional[GuardrailsResponse]:
@@ -125,9 +122,8 @@ class Guardrails:
 
 
 class GuardrailRequestSender:
-    def __init__(self, config: GuardrailsConfig) -> None:
+    def __init__(self, config: GuardrailsClientConfig) -> None:
         self.config = config
-
     async def _send_request(
         self,
         guardrails_request: GuardrailsRequest,
@@ -168,7 +164,7 @@ class GuardrailRequestSender:
 
     async def run(
         self,
-        guardrails_configs: List[PII | PromptInjection | CustomGuardrail],
+        guardrails_configs: GuardrailsConfig,
         guardrail_endpoint: GuardrailsEndpoint,
         target: GuardrailsTarget,
         client: httpx.AsyncClient,
@@ -180,7 +176,7 @@ class GuardrailRequestSender:
             subsystem=self.config.subsystem_name,
             prompt=prompt,
             response=response,
-            guardrails_configs=guardrails_configs,
+            guardrails_configs=guardrails_configs.to_list(),
         )
         span_name = f"guardrails.{guardrail_endpoint.value}"
 
