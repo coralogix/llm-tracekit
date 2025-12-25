@@ -22,6 +22,10 @@ from opentelemetry.semconv._incubating.attributes import (
 )
 
 from llm_tracekit import extended_gen_ai_attributes as ExtendedGenAIAttributes
+try:
+    from openai import NOT_GIVEN
+except ImportError:
+    NOT_GIVEN = None  # type: ignore[assignment]
 
 
 class ToolCall(BaseModel):
@@ -47,7 +51,13 @@ class Choice:
 
 
 def remove_attributes_with_null_values(attributes: Dict[str, Any]) -> Dict[str, Any]:
-    return {attr: value for attr, value in attributes.items() if value is not None}
+    to_remove = (
+        None,
+        NOT_GIVEN,
+    )
+
+    return {attr: value for attr, value in attributes.items() if value not in to_remove}
+
 
 
 def attribute_generator(

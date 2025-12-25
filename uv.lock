@@ -1,5 +1,5 @@
 version = 1
-revision = 2
+revision = 3
 requires-python = ">3.9, <=3.13"
 resolution-markers = [
     "python_full_version >= '3.13' and platform_python_implementation == 'PyPy'",
@@ -1517,7 +1517,7 @@ sdist = { url = "https://files.pythonhosted.org/packages/5b/97/103969becae757aaf
 
 [[package]]
 name = "llm-tracekit"
-version = "1.7.0"
+version = "1.7.1"
 source = { editable = "." }
 dependencies = [
     { name = "opentelemetry-api" },

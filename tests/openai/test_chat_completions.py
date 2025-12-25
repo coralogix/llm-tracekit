@@ -35,6 +35,8 @@ from tests.openai.utils import (
 )
 from tests.utils import assert_choices_in_span, assert_messages_in_span
 
+from openai import NOT_GIVEN
+from llm_tracekit.span_builder import remove_attributes_with_null_values
 
 @pytest.mark.vcr()
 def test_chat_completion_with_content(
@@ -750,3 +752,27 @@ def chat_completion_multiple_tools_streaming(
     assert_choices_in_span(
         span=spans[0], expected_choices=[choice], expect_content=expect_content
     )
+
+
+def test_remove_attributes_with_null_values_filters_none_and_not_given():
+    """Test that remove_attributes_with_null_values filters out None and NOT_GIVEN values."""
+
+    attributes = {
+        "key1": "value1",
+        "key2": None,
+        "key3": NOT_GIVEN,
+        "key4": "value4",
+        "key5": 0,
+        "key6": "",
+        "key7": False,
+    }
+
+    result = remove_attributes_with_null_values(attributes)
+
+    assert result == {
+        "key1": "value1",
+        "key4": "value4",
+        "key5": 0,
+        "key6": "",
+        "key7": False,
+    }
