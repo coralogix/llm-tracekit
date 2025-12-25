@@ -25,7 +25,7 @@ from llm_tracekit import extended_gen_ai_attributes as ExtendedGenAIAttributes
 try:
     from openai import NOT_GIVEN
 except ImportError:
-    NOT_GIVEN = None
+    NOT_GIVEN = None  # type: ignore[assignment]
 
 
 class ToolCall(BaseModel):
