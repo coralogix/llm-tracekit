@@ -11,13 +11,24 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from types import NoneType
 
 from functools import wraps
 from typing import Any, Callable, Dict
 
 
 def remove_attributes_with_null_values(attributes: Dict[str, Any]) -> Dict[str, Any]:
-    return {attr: value for attr, value in attributes.items() if value is not None}
+    from dataclasses import MISSING
+    from openai import NOT_GIVEN
+    to_remove = (
+        None,
+        NoneType,
+        MISSING,
+        NOT_GIVEN,
+    )
+
+    return {attr: value for attr, value in attributes.items() if value not in to_remove}
+
 
 
 def attribute_generator(
@@ -26,7 +37,5 @@ def attribute_generator(
     @wraps(original_function)
     def wrapper(*args, **kwargs) -> Dict[str, Any]:
         attributes = original_function(*args, **kwargs)
-
         return remove_attributes_with_null_values(attributes)
-
     return wrapper

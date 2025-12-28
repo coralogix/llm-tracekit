@@ -76,6 +76,8 @@ class Guardrails:
             timeout=timeout if timeout is not None else DEFAULT_TIMEOUT,
             suppress_guardrails_triggered_exception=os.environ.get("DISABLE_GUARDRAIL_TRIGGERED_EXCEPTIONS", "").lower() == "true"
         )
+        if "https://" not in self.config.cx_endpoint:
+            self.config.cx_endpoint = "https://" + self.config.cx_endpoint
         self._sender = GuardrailRequestSender(config=self.config)
 
     @asynccontextmanager

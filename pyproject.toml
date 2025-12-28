@@ -1,6 +1,6 @@
 [project]
 name = "llm-tracekit"
-version = "1.7.0"
+version = "1.7.1"
 description = "Collect and send GenAI calls as spans for development and production observability."
 readme = "README.md"
 authors = [
@@ -101,6 +101,9 @@ packages = ["llm_tracekit", "guardrails_sdk"]
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/llm_tracekit", "src/guardrails_sdk"]
+
+[tool.hatch.build.targets.wheel.force-include]
+"src/common_utils" = "common_utils"
 
 [[tool.mypy.overrides]]
 module = ["wrapt", "opentelemetry.exporter.otlp.proto.grpc.trace_exporter"]
