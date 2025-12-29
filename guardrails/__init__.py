@@ -1,12 +1,12 @@
 from .guardrails import Guardrails
 from .models import (
-    GuardrailsResult,
+    GuardrailsResultBase,
     GuardrailsResponse,
     PII,
     PromptInjection,
     CustomGuardrail,
-    GuardrailsRequest,
-    PIICategories,
+    GuardrailRequest,
+    PIICategorie,
 )
 from .error import (
     GuardrailsError,
@@ -21,8 +21,8 @@ __all__ = [
     "PII",
     "PromptInjection",
     "CustomGuardrail",
-    "GuardrailsRequest",
-    "GuardrailsResult",
+    "GuardrailRequest",
+    "GuardrailsResultBase",
     "GuardrailsResponse",
     "PIICategories",
     "GuardrailsError",

@@ -31,7 +31,7 @@ from llm_tracekit.openai.utils import (
     get_llm_response_attributes,
     is_streaming,
 )
-from common_utils.span_utils import (
+from core.span_utils import (
     attribute_generator,
 )
 from llm_tracekit.span_builder import(

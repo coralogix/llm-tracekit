@@ -15,7 +15,7 @@
 import pytest
 from assertpy import assert_that
 
-from guardrails_sdk.error import (
+from guardrails.error import (
     GuardrailsError,
     GuardrailsAPIConnectionError,
     GuardrailsAPITimeoutError,

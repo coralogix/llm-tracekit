@@ -17,7 +17,7 @@ from assertpy import assert_that
 from unittest.mock import AsyncMock, patch
 import httpx
 
-from guardrails_sdk import (
+from guardrails import (
     Guardrails,
     PII,
     PromptInjection,
@@ -27,7 +27,7 @@ from guardrails_sdk import (
     GuardrailsAPIConnectionError,
     GuardrailsAPIResponseError,
 )
-from guardrails_sdk.models import GuardrailType
+from guardrails.models import GuardrailType
 
 
 class TestGuardrailsInit:
@@ -65,7 +65,7 @@ class TestGuardrailsInit:
         """When env vars are missing, empty strings/defaults are used."""
         guardrails = Guardrails()
         assert_that(guardrails.config.api_key).is_equal_to("")
-        assert_that(guardrails.config.cx_endpoint).is_equal_to("")
+        assert_that(guardrails.config.cx_endpoint).is_equal_to("https://")  # https:// is added as prefix
         assert_that(guardrails.config.application_name).is_equal_to("Unknown")
         assert_that(guardrails.config.subsystem_name).is_equal_to("Unknown")
 
@@ -112,7 +112,7 @@ class TestGuardrailsGuardPrompt:
             
             assert_that(results.results).is_length(1)
             assert_that(results.results[0].detected).is_false()
-            assert_that(results.results[0].detection_type).is_equal_to(GuardrailType.pii)
+            assert_that(results.results[0].type).is_equal_to(GuardrailType.pii)
 
     @pytest.mark.asyncio
     async def test_guard_prompt_detection_raises(self, guardrails_client):
@@ -366,7 +366,7 @@ class TestGuardrailsRequestFormat:
             
             # Verify the endpoint
             call_args = mock_post.call_args
-            assert_that(call_args.args[0]).is_equal_to("guard_prompt")
+            assert_that(call_args.args[0]).is_equal_to("/api/v1/guardrails/guard_prompt")
 
     @pytest.mark.asyncio
     async def test_guard_response_uses_correct_endpoint(self, guardrails_client):
@@ -382,4 +382,4 @@ class TestGuardrailsRequestFormat:
                 )
             
             call_args = mock_post.call_args
-            assert_that(call_args.args[0]).is_equal_to("guard_response")
+            assert_that(call_args.args[0]).is_equal_to("/api/v1/guardrails/guard_response")

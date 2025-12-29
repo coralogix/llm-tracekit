@@ -32,7 +32,7 @@ from opentelemetry.semconv._incubating.attributes import (
 )
 
 from llm_tracekit import extended_gen_ai_attributes as ExtendedGenAIAttributes
-from common_utils.span_utils import (
+from core.span_utils import (
     attribute_generator,
 )
 

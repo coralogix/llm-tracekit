@@ -43,12 +43,12 @@ with suppress(ImportError):
         LangChainInstrumentor as LangChainInstrumentor,
     )
 with suppress(ImportError):
-    from guardrails_sdk import (
+    from guardrails import (
         Guardrails as Guardrails,
-        GuardrailsResult as GuardrailsResult,
+        GuardrailsResultBase as GuardrailsResultBase,
         GuardrailsResponse as GuardrailsResponse,
         PII as PII,
         PromptInjection as PromptInjection,
         CustomGuardrail as CustomGuardrail,
-        GuardrailsRequest as GuardrailsRequest,
+        GuardrailRequest as GuardrailRequest,
     )

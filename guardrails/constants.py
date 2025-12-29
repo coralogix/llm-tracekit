@@ -1,0 +1,3 @@
+
+DEFAULT_TIMEOUT = 10
+GUARDRAILS_ENDPOINT_PREFIX = "/api/v1/guardrails/"

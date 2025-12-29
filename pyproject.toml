@@ -118,10 +118,10 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build]
-packages = ["llm_tracekit", "guardrails_sdk"]
+packages = ["llm_tracekit", "guardrails", "core"]
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/llm_tracekit", "src/guardrails_sdk"]
+packages = ["llm_tracekit", "guardrails", "core"]
 
 [[tool.mypy.overrides]]
 module = ["wrapt", "opentelemetry.exporter.otlp.proto.grpc.trace_exporter"]

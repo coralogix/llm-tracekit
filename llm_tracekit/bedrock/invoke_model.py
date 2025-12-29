@@ -39,7 +39,7 @@ from wrapt import ObjectProxy
 from llm_tracekit import extended_gen_ai_attributes as ExtendedGenAIAttributes
 from llm_tracekit.bedrock.utils import decode_tool_use_in_stream, record_metrics
 from llm_tracekit.instruments import Instruments
-from common_utils.span_utils import (
+from core.span_utils import (
     attribute_generator,
 )
 

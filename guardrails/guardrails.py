@@ -1,5 +1,6 @@
 import os
-from guardrails_sdk.span_builder import (
+from guardrails.guardrails.constants import DEFAULT_TIMEOUT, GUARDRAILS_ENDPOINT_PREFIX
+from guardrails.span_builder import (
     generate_guardrail_response_attributes,
     generate_base_attributes,
 )
@@ -11,9 +12,9 @@ from opentelemetry.trace import SpanKind, Status, StatusCode
 from contextlib import asynccontextmanager
 
 from .models import (
-    GuardrailsConfig,
+    GuardrailConfigType,
     GuardrailsEndpoint,
-    GuardrailsRequest,
+    GuardrailRequest,
     GuardrailsResponse,
     GuardrailsTarget,
 )
@@ -27,8 +28,6 @@ from .error import (
 
 tracer = trace.get_tracer(__name__)
 
-DEFAULT_TIMEOUT = 10
-GUARDRAILS_ENDPOINT_PREFIX = "/api/v1/guardrails/"
 
 def _get_env_or_default(value: Optional[str], env_var: str, default: str = "") -> str:
     if value is not None:
@@ -58,11 +57,11 @@ class Guardrails:
 
     def __init__(
         self,
-        api_key: str | None = None,
-        cx_endpoint: str | None = None,
-        application_name: str | None = None,
-        subsystem_name: str | None = None,
-        timeout: int | None = None,
+        api_key: Optional[str] = None,
+        cx_endpoint: Optional[str] = None,
+        application_name: Optional[str] = None,
+        subsystem_name: Optional[str] = None,
+        timeout: Optional[int] = None,
     ) -> None:
         self.config = GuardrailsClientConfig(
             api_key=_get_env_or_default(api_key, "CX_GUARDRAILS_TOKEN"),
@@ -76,6 +75,8 @@ class Guardrails:
             timeout=timeout if timeout is not None else DEFAULT_TIMEOUT,
             suppress_guardrails_triggered_exception=os.environ.get("DISABLE_GUARDRAIL_TRIGGERED_EXCEPTIONS", "").lower() == "true"
         )
+        if "https://" not in self.config.cx_endpoint:
+            self.config.cx_endpoint = "https://" + self.config.cx_endpoint
         self._sender = GuardrailRequestSender(config=self.config)
 
     @asynccontextmanager
@@ -93,9 +94,9 @@ class Guardrails:
     async def guard_prompt(
         self,
         prompt: str,
-        guardrails_config: GuardrailsConfig,
+        guardrails_config: List[GuardrailConfigType],
     ) -> Optional[GuardrailsResponse]:
-        if not all([prompt, guardrails_config]):
+        if not prompt or not guardrails_config:
             return None
         return await self._sender.run(
             guardrails_configs=guardrails_config,
@@ -107,11 +108,11 @@ class Guardrails:
 
     async def guard_response(
         self,
-        guardrails_config: GuardrailsConfig,
+        guardrails_config: list[GuardrailConfigType],
         response: str,
         prompt: Optional[str] = None,
     ) -> Optional[GuardrailsResponse]:
-        if not all([response, guardrails_config]):
+        if not response or not guardrails_config:
             return None
         return await self._sender.run(
             guardrails_configs=guardrails_config,
@@ -128,13 +129,15 @@ class GuardrailRequestSender:
         self.config = config
     async def _send_request(
         self,
-        guardrails_request: GuardrailsRequest,
+        guardrails_request: GuardrailRequest,
         guardrail_endpoint: GuardrailsEndpoint,
         client: httpx.AsyncClient,
     ) -> httpx.Response:
         guardrails_json_request = guardrails_request.model_dump(
             mode="json", exclude_none=True
         )
+        # print(guardrails_json_request)
+        # exit()
         try:
             response = await client.post(
                 GUARDRAILS_ENDPOINT_PREFIX + guardrail_endpoint.value,
@@ -153,7 +156,7 @@ class GuardrailRequestSender:
             raise GuardrailsAPIConnectionError(f"Request error: {str(e)}") from e
 
         if response.status_code >= 400:
-            raise GuardrailsAPIResponseError(response.status_code, response.text)
+            raise GuardrailsAPIResponseError(status_code=response.status_code, body=response.text)
 
         return response
 
@@ -166,19 +169,20 @@ class GuardrailRequestSender:
 
     async def run(
         self,
-        guardrails_configs: GuardrailsConfig,
+        guardrails_configs: List[GuardrailConfigType],
         guardrail_endpoint: GuardrailsEndpoint,
         target: GuardrailsTarget,
         client: httpx.AsyncClient,
         prompt: Optional[str] = None,
         response: Optional[str] = None,
     ) -> GuardrailsResponse:
-        guardrails_request = GuardrailsRequest(
+        guardrails_request = GuardrailRequest(
             application=self.config.application_name,
             subsystem=self.config.subsystem_name,
             prompt=prompt,
             response=response,
-            guardrails_configs=guardrails_configs.to_list(),
+            guardrails_configs=guardrails_configs,
+            timeout=self.config.timeout
         )
         span_name = f"guardrails.{guardrail_endpoint.value}"
 
@@ -206,9 +210,9 @@ class GuardrailRequestSender:
                     )
                 except Exception as json_error:
                     raise GuardrailsAPIResponseError(
-                        http_response.status_code,
-                        http_response.text,
-                        f"Failed to parse response as JSON: {str(json_error)}",
+                        status_code=http_response.status_code,
+                        body=http_response.text,
+                        message=f"Failed to parse response as JSON: {str(json_error)}",
                     ) from json_error
                 span.set_attributes(
                     generate_guardrail_response_attributes(
@@ -218,11 +222,11 @@ class GuardrailRequestSender:
                 for resp in guardrails_response.results:
                     if resp.detected and not self.config.suppress_guardrails_triggered_exception:
                         raise GuardrailTriggered(
-                            guardrail_type=resp.detection_type.value,
-                            name=resp.name,
+                            guardrail_type=resp.type.value,
+                            name=getattr(resp, 'name', None),
                             score=resp.score,
-                            explanation=resp.explanation,
-                            detected_categories=resp.detected_categories,
+                            explanation=getattr(resp, 'explanation', None),
+                            detected_categories=getattr(resp, 'detected_categories', None),
                         )
                 return GuardrailsResponse(results=guardrails_response.results)
             except GuardrailTriggered:

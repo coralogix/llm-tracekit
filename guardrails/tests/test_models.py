@@ -16,11 +16,11 @@ import pytest
 from assertpy import assert_that
 from pydantic import ValidationError
 
-from guardrails_sdk.models import (
+from guardrails.models import (
     PII,
     PromptInjection,
     PIICategories,
-    GuardrailsResult,
+    GuardrailsResultBase,
     GuardrailsResponse,
     GuardrailType,
     GR_THRESHOLD,
@@ -80,44 +80,34 @@ class TestPromptInjection:
 
 
 class TestPIICategories:
-    def test_all_categories_exist(self):
-        expected = [
-            "email", "phone", "user_name", "address",
-            "credit_card", "social_security_number", "passport", "driver_license"
-        ]
-        assert_that(PIICategories.values()).is_equal_to(expected)
 
     def test_category_values(self):
         assert_that(PIICategories.email.value).is_equal_to("email")
         assert_that(PIICategories.credit_card.value).is_equal_to("credit_card")
 
 
-class TestGuardrailsResult:
+class TestGuardrailsResultBase:
     def test_result_parsing(self):
         data = {
             "type": "pii",
             "detected": True,
             "score": 0.95,
             "threshold": 0.7,
-            "explanation": "Email detected",
-            "detected_categories": ["email"],
         }
-        result = GuardrailsResult.model_validate(data)
-        assert_that(result.detection_type).is_equal_to(GuardrailType.pii)
+        result = GuardrailsResultBase.model_validate(data)
+        assert_that(result.type).is_equal_to(GuardrailType.pii)
         assert_that(result.detected).is_true()
         assert_that(result.score).is_equal_to(0.95)
-        assert_that(result.explanation).is_equal_to("Email detected")
-        assert_that(result.detected_categories).is_equal_to(["email"])
 
     def test_result_case_insensitive_type(self):
-        """Test that detection_type handles case variations from API."""
+        """Test that type handles case variations from API."""
         data = {
             "type": "PII",
             "detected": False,
             "score": 0.1,
         }
-        result = GuardrailsResult.model_validate(data)
-        assert_that(result.detection_type).is_equal_to(GuardrailType.pii)
+        result = GuardrailsResultBase.model_validate(data)
+        assert_that(result.type).is_equal_to(GuardrailType.pii)
 
     def test_result_prompt_injection_type(self):
         data = {
@@ -125,12 +115,12 @@ class TestGuardrailsResult:
             "detected": True,
             "score": 0.85,
         }
-        result = GuardrailsResult.model_validate(data)
-        assert_that(result.detection_type).is_equal_to(GuardrailType.prompt_injection)
+        result = GuardrailsResultBase.model_validate(data)
+        assert_that(result.type).is_equal_to(GuardrailType.prompt_injection)
 
     def test_result_score_validation(self):
         with pytest.raises(ValidationError):
-            GuardrailsResult.model_validate({
+            GuardrailsResultBase.model_validate({
                 "type": "pii",
                 "detected": False,
                 "score": 1.5,
@@ -142,10 +132,8 @@ class TestGuardrailsResult:
             "detected": False,
             "score": 0.1,
         }
-        result = GuardrailsResult.model_validate(data)
-        assert_that(result.explanation).is_none()
-        assert_that(result.detected_categories).is_none()
-        assert_that(result.name).is_none()
+        result = GuardrailsResultBase.model_validate(data)
+        assert_that(result.label).is_none()
 
 
 class TestGuardrailsResponse:
@@ -162,7 +150,7 @@ class TestGuardrailsResponse:
         }
         response = GuardrailsResponse.model_validate(data)
         assert_that(response.results).is_length(2)
-        assert_that(response.results[0].detection_type).is_equal_to(GuardrailType.pii)
+        assert_that(response.results[0].type).is_equal_to(GuardrailType.pii)
         assert_that(response.results[1].detected).is_true()
 
     def test_response_from_json(self):

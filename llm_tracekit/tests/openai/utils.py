@@ -46,8 +46,8 @@ def assert_completion_attributes(
 def assert_all_attributes(
     span: ReadableSpan,
     request_model: str,
-    response_id: str = None,
-    response_model: str = None,
+    response_id: Optional[str] = None,
+    response_model: Optional[str] = None,
     input_tokens: Optional[int] = None,
     output_tokens: Optional[int] = None,
     operation_name: str = "chat",

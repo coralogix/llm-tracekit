@@ -1,6 +1,6 @@
-from guardrails_sdk.models import GuardrailType, GuardrailsResponse
+from guardrails.models import GuardrailType, GuardrailsResponse
 from typing import Any, Dict, Optional
-from guardrails_sdk.guardrails_span_attributes import (
+from guardrails.guardrails_span_attributes import (
     LABEL,
     NAME,
     SCORE,
@@ -12,7 +12,7 @@ from guardrails_sdk.guardrails_span_attributes import (
     APPLICATION_NAME,
     SUBSYSTEM_NAME,
 )
-from common_utils.span_utils import attribute_generator
+from core.span_utils import attribute_generator
 
 
 @attribute_generator
@@ -37,25 +37,26 @@ def generate_guardrail_response_attributes(
 ) -> Dict[str, Any]:
     span_attributes: dict[str, Any] = {}
     for result in guardrail_response.results:
-        guardrail_type = result.detection_type.value
+        guardrail_type = result.type.value
         result_attributes: dict[str, Any] = {
             LABEL.format(
                 target=target, guardrail_type=guardrail_type
             ): result.label.value if result.label else None,
-            NAME.format(target=target, guardrail_type=guardrail_type): result.name,
+            NAME.format(target=target, guardrail_type=guardrail_type): getattr(result, 'name', None),
             SCORE.format(target=target, guardrail_type=guardrail_type): result.score,
             EXPLANATION.format(
                 target=target, guardrail_type=guardrail_type
-            ): result.explanation,
+            ): getattr(result, 'explanation', None),
             DETECTION_THRESHOLD.format(
                 target=target, guardrail_type=guardrail_type
             ): result.threshold,
         }
-        if result.detection_type.value == GuardrailType.custom.value and result.name:
+        result_name = getattr(result, 'name', None)
+        if result.type.value == GuardrailType.custom.value and result_name:
                 result_attributes[
                 CUSTOM_GUARDRAIL_NAME.format(
                     target=target, guardrail_type=guardrail_type
-                )] = result.name
+                )] = result_name
 
         span_attributes.update(result_attributes)
 

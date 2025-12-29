@@ -12,7 +12,7 @@ pip install coralogix-guardrails-sdk
 
 ```python
 import asyncio
-from guardrails_sdk import Guardrails, GuardrailsConfig, PII, PromptInjection, PIICategories, GuardrailTriggered
+from guardrails import Guardrails, Guardrail, PII, PromptInjection, PIICategories, GuardrailTriggered
 
 guardrails = Guardrails(
     api_key="your-api-key",
@@ -27,7 +27,7 @@ async def main():
             # Guard input
             await guardrails.guard_prompt(
                 prompt="User input here",
-                guardrails_config=GuardrailsConfig(
+                guardrails_config=Guardrail(
                     pii=PII(categories=[PIICategories.email]),
                     prompt_injection=PromptInjection()
                 ),
@@ -37,7 +37,7 @@ async def main():
             
             # Guard output
             await guardrails.guard_response(
-                guardrails_config=GuardrailsConfig(
+                guardrails_config=Guardrail(
                     pii=PII(categories=[PIICategories.email]),
                     prompt_injection=PromptInjection()
                 ),
@@ -80,7 +80,7 @@ guardrails = Guardrails()  # Reads from environment variables
 
 ## Response Schema
 
-`guard_prompt()` and `guard_response()` return `List[GuardrailsResult]`—one per guardrail. If any violation is detected (score ≥ threshold), `GuardrailTriggered` is raised instead.
+`guard_prompt()` and `guard_response()` return `List[GuardrailsResultBase]`—one per guardrail. If any violation is detected (score ≥ threshold), `GuardrailTriggered` is raised instead.
 
 | Field | Type | Description |
 |-------|------|-------------|
@@ -98,7 +98,7 @@ guardrails = Guardrails()  # Reads from environment variables
 Detects personally identifiable information in text. Use on prompts to prevent users from accidentally sharing sensitive data, or on responses to ensure your LLM doesn't leak PII.
 
 ```python
-from guardrails_sdk import PII, PIICategories
+from guardrails import PII, PIICategories
 
 # Detect all PII categories (default)
 PII()
@@ -122,7 +122,7 @@ PII(categories=[PIICategories.email, PIICategories.phone], threshold=0.8)
 Detects attempts to manipulate LLM behavior through malicious prompts. Catches techniques like jailbreaking, instruction override, and role-playing attacks.
 
 ```python
-from guardrails_sdk import PromptInjection
+from guardrails import PromptInjection
 
 # Default threshold (0.7)
 PromptInjection()
@@ -133,21 +133,21 @@ PromptInjection(threshold=0.8)
 
 Use on user inputs to block malicious prompts before they reach your LLM.
 
-### GuardrailsConfig
+### Guardrail
 
-The `GuardrailsConfig` class is used to configure which guardrails to apply. You can specify any combination of PII detection, prompt injection detection, and custom guardrails.
+The `Guardrail` class is used to configure which guardrails to apply. You can specify any combination of PII detection, prompt injection detection, and custom guardrails.
 
 ```python
-from guardrails_sdk import GuardrailsConfig, PII, PromptInjection, PIICategories
+from guardrails import Guardrail, PII, PromptInjection, PIICategories
 
 # Use only PII detection
-config = GuardrailsConfig(pii=PII(categories=[PIICategories.email]))
+config = Guardrail(pii=PII(categories=[PIICategories.email]))
 
 # Use only prompt injection detection
-config = GuardrailsConfig(prompt_injection=PromptInjection())
+config = Guardrail(prompt_injection=PromptInjection())
 
 # Use both PII and prompt injection detection
-config = GuardrailsConfig(
+config = Guardrail(
     pii=PII(categories=[PIICategories.email]),
     prompt_injection=PromptInjection()
 )
@@ -156,7 +156,7 @@ config = GuardrailsConfig(
 ## Error Handling
 
 ```python
-from guardrails_sdk import (
+from guardrails import (
     GuardrailsError, GuardrailsAPIConnectionError,
     GuardrailsAPITimeoutError, GuardrailsAPIResponseError, GuardrailTriggered,
 )
@@ -164,7 +164,7 @@ from guardrails_sdk import (
 try:
     await guardrails.guard_prompt(
         prompt="test",
-        guardrails_config=GuardrailsConfig(prompt_injection=PromptInjection())
+        guardrails_config=Guardrail(prompt_injection=PromptInjection())
     )
 except GuardrailTriggered as e:
     print(f"Type: {e.guardrail_type}")      # "pii", "prompt_injection"
@@ -187,7 +187,7 @@ Choose how to handle API failures:
 ### Fail-Closed (High-Security)
 
 ```python
-async def guard_fail_closed(guardrails, prompt, config: GuardrailsConfig):
+async def guard_fail_closed(guardrails, prompt, config: Guardrail):
     try:
         async with guardrails.guarded_session():
             await guardrails.guard_prompt(prompt=prompt, guardrails_config=config)
@@ -201,7 +201,7 @@ async def guard_fail_closed(guardrails, prompt, config: GuardrailsConfig):
 ### Fail-Open (High-Availability)
 
 ```python
-async def guard_fail_open(guardrails, prompt, config: GuardrailsConfig):
+async def guard_fail_open(guardrails, prompt, config: Guardrail):
     try:
         async with guardrails.guarded_session():
             await guardrails.guard_prompt(prompt=prompt, guardrails_config=config)

@@ -21,7 +21,7 @@ from opentelemetry.semconv._incubating.attributes import (
 
 def assert_attributes(
     span: ReadableSpan,
-    response_model: str = None,
+    response_model: Optional[str] = None,
     agent_name: Optional[str] = None,
     operation_name = "chat"
 ):

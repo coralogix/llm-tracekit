@@ -1,4 +1,5 @@
 from __future__ import annotations
+from typing import List, Optional
 
 class GuardrailsError(Exception):
     """Base exception for all SDK errors."""
@@ -11,6 +12,22 @@ class GuardrailsAPITimeoutError(GuardrailsError):
 
 class GuardrailsAPIResponseError(GuardrailsError):
     """Non-2xx HTTP response."""
+    
+    def __init__(
+        self,
+        status_code: int,
+        body: Optional[str] = None,
+        message: Optional[str] = None,
+    ):
+        self.status_code = status_code
+        self.body = body
+        if message:
+            self.message = message
+        elif body:
+            self.message = f"HTTP {status_code}: {body}"
+        else:
+            self.message = f"HTTP {status_code}"
+        super().__init__(self.message)
 
 class GuardrailTriggered(GuardrailsError):
     """A guardrail detected a violation."""
@@ -18,11 +35,11 @@ class GuardrailTriggered(GuardrailsError):
     def __init__(
         self,
         guardrail_type: str,
-        name: str | None = None,
-        score: float | None = None,
-        explanation: str | None = None,
-        detected_categories: str | None = None,
-        message: str | None = None,
+        name: Optional[str]= None,
+        score: Optional[float]= None,
+        explanation: Optional[str]= None,
+        detected_categories: Optional[List[str]]= None,
+        message: Optional[str]= None,
     ):
         self.guardrail_type = guardrail_type
         self.name = name
