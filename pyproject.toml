@@ -1,91 +1,30 @@
 [project]
-name = "llm-tracekit"
-version = "1.7.0"
-description = "Collect and send GenAI calls as spans for development and production observability."
+name = "llm-tracekit-monorepo"
+version = "0.0.0"
+description = "Monorepo for LLM tracing packages - this package installs nothing."
 readme = "README.md"
 authors = [
     { name="Coralogix Ltd.", email="info@coralogix.com" },
 ]
 license = "Apache-2.0"
-license-files = ["LICENSE.md"]
-requires-python = ">3.9,<=3.13"
-dependencies = [
-    "opentelemetry-api>=1.32.1",
-    "opentelemetry-exporter-otlp>=1.32.1",
-    "opentelemetry-instrumentation>=0.53b1",
-    "opentelemetry-sdk>=1.32.1",
-    "opentelemetry-semantic-conventions>=0.53b1",
-]
-classifiers = [
-    "Development Status :: 5 - Production/Stable",
-    "Framework :: OpenTelemetry :: Instrumentations",
-    "Intended Audience :: Developers",
-    "License :: OSI Approved :: Apache Software License",
-    "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.8",
-    "Programming Language :: Python :: 3.9",
-    "Programming Language :: Python :: 3.10",
-    "Programming Language :: Python :: 3.11",
-    "Programming Language :: Python :: 3.12",
-    "Programming Language :: Python :: 3.13",
-]
-
-[project.optional-dependencies]
-openai = [
-    "openai>=1.26.0",
-]
-openai_agents = [
-    "openai>=1.26.0",
-    "openai-agents>=0.1.0; python_version >= '3.10'",
-]
-bedrock = [
-    "boto3>=1.36.0",
-]
-gemini = [
-    "google-genai>=1.0.0,<2",
-]
-litellm = [
-    "litellm[proxy]>=1.65.4", # LiteLLM callbacks require proxy-specific dependencies
-]
-langchain = [
-    "langchain>=1.0.0; python_version >= '3.10'",
-]
-langchain-openai = [
-    "langchain>=1.0.0; python_version >= '3.10'",
-    "langchain-openai>=1.0.0; python_version >= '3.10'",
-]
-langchain-aws = [
-    "langchain>=1.0.0; python_version >= '3.10'",
-    "langchain-aws>=1.0.0; python_version >= '3.10'",
-]
-langchain-all = [
-    "langchain>=1.0.0; python_version >= '3.10'",
-    "langchain-openai>=1.0.0; python_version >= '3.10'",
-    "langchain-aws>=1.0.0; python_version >= '3.10'",
-]
-ci-core = [
-    "openai>=1.26.0",
-    "openai-agents>=0.1.0; python_version >= '3.10'",
-    "boto3>=1.36.0",
-    "google-genai>=1.0.0,<2",
-    "langchain>=1.0.0; python_version >= '3.10'",
-    "langchain-openai>=1.0.0; python_version >= '3.10'",
-    "langchain-aws>=1.0.0; python_version >= '3.10'",
-]
-
+requires-python = ">=3.9,<3.14"
+dependencies = []
 
 [project.urls]
 homepage = "https://coralogix.com"
 repository = "https://github.com/coralogix/llm-tracekit.git"
 
+[tool.uv.workspace]
+members = ["packages/*"]
 
-[project.entry-points.opentelemetry_instrumentor]
-openai = "llm_tracekit:OpenAIInstrumentor"
-openai_agents = "llm_tracekit:OpenAIAgentsInstrumentor"
-boto3 = "llm_tracekit:BedrockInstrumentor"
-gemini = "llm_tracekit:GeminiInstrumentor"
-litellm = "llm_tracekit:LiteLLMInstrumentor"
-langchain = "llm_tracekit:LangChainInstrumentor"
+[tool.uv.sources]
+llm-tracekit = { workspace = true }
+llm-tracekit-openai = { workspace = true }
+llm-tracekit-openai-agents = { workspace = true }
+llm-tracekit-bedrock = { workspace = true }
+llm-tracekit-gemini = { workspace = true }
+llm-tracekit-langchain = { workspace = true }
+llm-tracekit-litellm = { workspace = true }
 
 [dependency-groups]
 dev = [
@@ -104,15 +43,15 @@ dev = [
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
+[tool.hatch.build.targets.sdist]
+only-include = ["src"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/llm_tracekit_monorepo"]
+
 [[tool.mypy.overrides]]
 module = ["wrapt", "opentelemetry.exporter.otlp.proto.grpc.trace_exporter"]
 ignore_missing_imports = true
-
-[tool.hatch.build.targets.sdist]
-only-include = [
-    "src",
-    "tests",
-]
 
 [tool.uv]
 override-dependencies = [

@@ -7,20 +7,30 @@ jobs:
   build:
       name: Build distribution
       runs-on: ubuntu-latest
+      strategy:
+        matrix:
+          package:
+            - llm-tracekit
+            - llm-tracekit-openai
+            - llm-tracekit-openai-agents
+            - llm-tracekit-bedrock
+            - llm-tracekit-gemini
+            - llm-tracekit-langchain
+            - llm-tracekit-litellm
       steps:
       - uses: actions/checkout@v4
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: ">=3.8"
+          python-version: ">=3.9"
       - name: Install uv
         uses: astral-sh/setup-uv@v5
-      - name: Build a binary wheel and a source tarball
-        run: uv build
+      - name: Build package ${{ matrix.package }}
+        run: uv build --package ${{ matrix.package }}
       - name: Store the distribution packages
         uses: actions/upload-artifact@v4
         with:
-          name: python-package-distributions
+          name: python-package-${{ matrix.package }}
           path: dist/
 
   publish-to-pypi:
@@ -28,20 +38,30 @@ jobs:
       needs:
       - build
       runs-on: ubuntu-latest
+      strategy:
+        matrix:
+          package:
+            - llm-tracekit
+            - llm-tracekit-openai
+            - llm-tracekit-openai-agents
+            - llm-tracekit-bedrock
+            - llm-tracekit-gemini
+            - llm-tracekit-langchain
+            - llm-tracekit-litellm
       environment:
           name: pypi
-          url: https://pypi.org/project/llm-tracekit/
+          url: https://pypi.org/project/${{ matrix.package }}/
       permissions:
           id-token: write
       steps:
       - name: Install uv
         uses: astral-sh/setup-uv@v5
-      - name: Download all the dists
+      - name: Download ${{ matrix.package }} dist
         uses: actions/download-artifact@v4
         with:
-          name: python-package-distributions
+          name: python-package-${{ matrix.package }}
           path: dist/
-      - name: Publish distribution to PyPI
+      - name: Publish ${{ matrix.package }} to PyPI
         run: uv publish --trusted-publishing always
         env:
           UV_PUBLISH_URL: https://upload.pypi.org/legacy/

@@ -1,0 +1,54 @@
+[project]
+name = "llm-tracekit-langchain"
+version = "1.7.0"
+description = "LangChain instrumentation for LLM tracing."
+readme = "README.md"
+authors = [
+    { name="Coralogix Ltd.", email="info@coralogix.com" },
+]
+license = "Apache-2.0"
+license-files = ["LICENSE"]
+requires-python = ">=3.10,<3.14"
+dependencies = [
+    "llm-tracekit>=1.7.0",
+    "langchain>=1.0.0",
+]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Framework :: OpenTelemetry :: Instrumentations",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+]
+
+[project.optional-dependencies]
+openai = [
+    "langchain-openai>=1.0.0",
+]
+aws = [
+    "langchain-aws>=1.0.0",
+]
+all = [
+    "langchain-openai>=1.0.0",
+    "langchain-aws>=1.0.0",
+]
+
+[project.urls]
+homepage = "https://coralogix.com"
+repository = "https://github.com/coralogix/llm-tracekit.git"
+
+[project.entry-points.opentelemetry_instrumentor]
+langchain = "llm_tracekit_langchain:LangChainInstrumentor"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.sdist]
+only-include = [
+    "src",
+]

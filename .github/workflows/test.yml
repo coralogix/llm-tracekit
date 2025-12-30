@@ -5,13 +5,13 @@ on:
   pull_request:
 
 jobs:
-  tests:
+  tests-core:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
         python-version: ["3.9", "3.10", "3.11", "3.12", "3.13"]
-    name: Unit Tests - Python ${{ matrix.python-version }}
+    name: Core Tests - Python ${{ matrix.python-version }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -26,10 +26,156 @@ jobs:
 
       - name: Run Core tests
         run: |
-          uv run --group=dev --locked --extra ci-core pytest tests/ --ignore=tests/litellm/ -sv
+          uv sync --group=dev
+          uv run pytest packages/llm-tracekit/tests/ -sv
         shell: bash
-      
+
+  tests-openai:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.9", "3.10", "3.11", "3.12", "3.13"]
+    name: OpenAI Tests - Python ${{ matrix.python-version }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup python ${{ matrix.python-version}}
+        uses: actions/setup-python@v5.0.0
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: Run OpenAI tests
+        run: |
+          uv sync --group=dev --package llm-tracekit-openai
+          uv run pytest packages/llm-tracekit-openai/tests/ -sv
+        shell: bash
+
+  tests-openai-agents:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.10", "3.11", "3.12", "3.13"]
+    name: OpenAI Agents Tests - Python ${{ matrix.python-version }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup python ${{ matrix.python-version}}
+        uses: actions/setup-python@v5.0.0
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: Run OpenAI Agents tests
+        run: |
+          uv sync --group=dev --package llm-tracekit-openai-agents
+          uv run pytest packages/llm-tracekit-openai-agents/tests/ -sv
+        shell: bash
+
+  tests-bedrock:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.9", "3.10", "3.11", "3.12", "3.13"]
+    name: Bedrock Tests - Python ${{ matrix.python-version }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup python ${{ matrix.python-version}}
+        uses: actions/setup-python@v5.0.0
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: Run Bedrock tests
+        run: |
+          uv sync --group=dev --package llm-tracekit-bedrock
+          uv run pytest packages/llm-tracekit-bedrock/tests/ -sv
+        shell: bash
+
+  tests-gemini:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.9", "3.10", "3.11", "3.12", "3.13"]
+    name: Gemini Tests - Python ${{ matrix.python-version }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup python ${{ matrix.python-version}}
+        uses: actions/setup-python@v5.0.0
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: Run Gemini tests
+        run: |
+          uv sync --group=dev --package llm-tracekit-gemini
+          uv run pytest packages/llm-tracekit-gemini/tests/ -sv
+        shell: bash
+
+  tests-langchain:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.10", "3.11", "3.12", "3.13"]
+    name: LangChain Tests - Python ${{ matrix.python-version }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup python ${{ matrix.python-version}}
+        uses: actions/setup-python@v5.0.0
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: Run LangChain tests
+        run: |
+          uv sync --group=dev --package llm-tracekit-langchain --extra all
+          uv run pytest packages/llm-tracekit-langchain/tests/ -sv
+        shell: bash
+
+  tests-litellm:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.9", "3.10", "3.11", "3.12", "3.13"]
+    name: LiteLLM Tests - Python ${{ matrix.python-version }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup python ${{ matrix.python-version}}
+        uses: actions/setup-python@v5.0.0
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+
       - name: Run LiteLLM tests
         run: |
-          uv run --group=dev --locked --extra litellm pytest tests/litellm/ -sv
+          uv sync --group=dev --package llm-tracekit-litellm
+          uv run pytest packages/llm-tracekit-litellm/tests/ -sv
         shell: bash
