@@ -1,46 +1,58 @@
 name: Publish Python distribution to PyPI
 on:
   release:
-    types: [ published ]
+    types: [published]
 
 jobs:
   build:
-      name: Build distribution
-      runs-on: ubuntu-latest
-      steps:
+    name: Build distribution
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        package:
+          - llm-tracekit
+          - llm-tracekit-core
+          - llm-tracekit-openai
+          - llm-tracekit-bedrock
+          - llm-tracekit-gemini
+          - llm-tracekit-litellm
+          - llm-tracekit-openai-agents
+          - llm-tracekit-guardrails
+    steps:
       - uses: actions/checkout@v4
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: ">=3.8"
+          python-version: ">=3.9"
       - name: Install uv
         uses: astral-sh/setup-uv@v5
-      - name: Build a binary wheel and a source tarball
-        run: uv build
+      - name: Build ${{ matrix.package }}
+        run: uv build --package ${{ matrix.package }}
       - name: Store the distribution packages
         uses: actions/upload-artifact@v4
         with:
-          name: python-package-distributions
+          name: python-package-${{ matrix.package }}
           path: dist/
 
   publish-to-pypi:
-      name: Publish Python distribution to PyPI
-      needs:
+    name: Publish Python distribution to PyPI
+    needs:
       - build
-      runs-on: ubuntu-latest
-      environment:
-          name: pypi
-          url: https://pypi.org/project/llm-tracekit/
-      permissions:
-          id-token: write
-      steps:
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/project/llm-tracekit/
+    permissions:
+      id-token: write
+    steps:
       - name: Install uv
         uses: astral-sh/setup-uv@v5
       - name: Download all the dists
         uses: actions/download-artifact@v4
         with:
-          name: python-package-distributions
+          pattern: python-package-*
           path: dist/
+          merge-multiple: true
       - name: Publish distribution to PyPI
         run: uv publish --trusted-publishing always
         env:

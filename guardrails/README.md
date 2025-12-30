@@ -5,14 +5,20 @@ Python SDK for interacting with the Coralogix Guardrails API.
 ## Installation
 
 ```bash
-pip install coralogix-guardrails-sdk
+pip install guardrails
+```
+
+Or via the meta-package:
+
+```bash
+pip install llm-tracekit[guardrails]
 ```
 
 ## Quick Start
 
 ```python
 import asyncio
-from guardrails import Guardrails, Guardrail, PII, PromptInjection, PIICategories, GuardrailTriggered
+from guardrails import Guardrails, PII, PromptInjection, PIICategorie, GuardrailTriggered
 
 guardrails = Guardrails(
     api_key="your-api-key",
@@ -27,20 +33,20 @@ async def main():
             # Guard input
             await guardrails.guard_prompt(
                 prompt="User input here",
-                guardrails_config=Guardrail(
-                    pii=PII(categories=[PIICategories.email]),
-                    prompt_injection=PromptInjection()
-                ),
+                guardrails_config=[
+                    PII(categories=[PIICategorie.email]),
+                    PromptInjection()
+                ],
             )
             
             response = "..."  # Your LLM call here
             
             # Guard output
             await guardrails.guard_response(
-                guardrails_config=Guardrail(
-                    pii=PII(categories=[PIICategories.email]),
-                    prompt_injection=PromptInjection()
-                ),
+                guardrails_config=[
+                    PII(categories=[PIICategorie.email]),
+                    PromptInjection()
+                ],
                 response=response,
                 prompt="User input here",
             )
@@ -67,6 +73,8 @@ export DISABLE_GUARDRAIL_TRIGGERED_EXCEPTIONS="true"  # Optional, disables raisi
 - **When set to `"true"`**: Violations are detected and returned in the response, but exceptions are not raised, allowing you to inspect the results manually (fail-open behavior)
 
 ```python
+from guardrails import Guardrails
+
 guardrails = Guardrails()  # Reads from environment variables
 ```
 
@@ -80,7 +88,7 @@ guardrails = Guardrails()  # Reads from environment variables
 
 ## Response Schema
 
-`guard_prompt()` and `guard_response()` return `List[GuardrailsResultBase]`—one per guardrail. If any violation is detected (score ≥ threshold), `GuardrailTriggered` is raised instead.
+`guard_prompt()` and `guard_response()` return `GuardrailsResponse`—containing results for each guardrail. If any violation is detected (score ≥ threshold), `GuardrailTriggered` is raised instead.
 
 | Field | Type | Description |
 |-------|------|-------------|
@@ -98,24 +106,24 @@ guardrails = Guardrails()  # Reads from environment variables
 Detects personally identifiable information in text. Use on prompts to prevent users from accidentally sharing sensitive data, or on responses to ensure your LLM doesn't leak PII.
 
 ```python
-from guardrails import PII, PIICategories
+from guardrails import PII, PIICategorie
 
 # Detect all PII categories (default)
 PII()
 
 # Detect specific categories with custom threshold
-PII(categories=[PIICategories.email, PIICategories.phone], threshold=0.8)
+PII(categories=[PIICategorie.email, PIICategorie.phone], threshold=0.8)
 ```
 
 **Available categories:**
-- `PIICategories.email` – Email addresses
-- `PIICategories.phone` – Phone numbers
-- `PIICategories.user_name` – Personal names
-- `PIICategories.address` – Physical addresses
-- `PIICategories.credit_card` – Credit card numbers
-- `PIICategories.social_security_number` – SSNs
-- `PIICategories.passport` – Passport numbers
-- `PIICategories.driver_license` – Driver's license numbers
+- `PIICategorie.email` – Email addresses
+- `PIICategorie.phone` – Phone numbers
+- `PIICategorie.user_name` – Personal names
+- `PIICategorie.address` – Physical addresses
+- `PIICategorie.credit_card` – Credit card numbers
+- `PIICategorie.social_security_number` – SSNs
+- `PIICategorie.passport` – Passport numbers
+- `PIICategorie.driver_license` – Driver's license numbers
 
 ### Prompt Injection Detection
 
@@ -133,25 +141,29 @@ PromptInjection(threshold=0.8)
 
 Use on user inputs to block malicious prompts before they reach your LLM.
 
-### Guardrail
+### Custom Guardrails
 
-The `Guardrail` class is used to configure which guardrails to apply. You can specify any combination of PII detection, prompt injection detection, and custom guardrails.
+### Combining Guardrails
+
+Pass a list of guardrails to check multiple conditions:
 
 ```python
-from guardrails import Guardrail, PII, PromptInjection, PIICategories
+from guardrails import PII, PromptInjection, PIICategorie
 
 # Use only PII detection
-config = Guardrail(pii=PII(categories=[PIICategories.email]))
+config = [PII(categories=[PIICategorie.email])]
 
 # Use only prompt injection detection
-config = Guardrail(prompt_injection=PromptInjection())
+config = [PromptInjection()]
 
 # Use both PII and prompt injection detection
-config = Guardrail(
-    pii=PII(categories=[PIICategories.email]),
-    prompt_injection=PromptInjection()
-)
+config = [
+    PII(categories=[PIICategorie.email]),
+    PromptInjection()
+]
 
+await guardrails.guard_prompt(prompt="...", guardrails_config=config)
+```
 
 ## Error Handling
 
@@ -159,12 +171,13 @@ config = Guardrail(
 from guardrails import (
     GuardrailsError, GuardrailsAPIConnectionError,
     GuardrailsAPITimeoutError, GuardrailsAPIResponseError, GuardrailTriggered,
+    PromptInjection,
 )
 
 try:
     await guardrails.guard_prompt(
         prompt="test",
-        guardrails_config=Guardrail(prompt_injection=PromptInjection())
+        guardrails_config=[PromptInjection()]
     )
 except GuardrailTriggered as e:
     print(f"Type: {e.guardrail_type}")      # "pii", "prompt_injection"
@@ -187,7 +200,10 @@ Choose how to handle API failures:
 ### Fail-Closed (High-Security)
 
 ```python
-async def guard_fail_closed(guardrails, prompt, config: Guardrail):
+from guardrails import PII, PromptInjection, PIICategorie
+
+async def guard_fail_closed(guardrails, prompt):
+    config = [PII(categories=[PIICategorie.email]), PromptInjection()]
     try:
         async with guardrails.guarded_session():
             await guardrails.guard_prompt(prompt=prompt, guardrails_config=config)
@@ -201,7 +217,11 @@ async def guard_fail_closed(guardrails, prompt, config: Guardrail):
 ### Fail-Open (High-Availability)
 
 ```python
-async def guard_fail_open(guardrails, prompt, config: Guardrail):
+import logging
+from guardrails import PII, PromptInjection, PIICategorie
+
+async def guard_fail_open(guardrails, prompt):
+    config = [PII(categories=[PIICategorie.email]), PromptInjection()]
     try:
         async with guardrails.guarded_session():
             await guardrails.guard_prompt(prompt=prompt, guardrails_config=config)
