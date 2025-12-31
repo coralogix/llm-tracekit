@@ -1,4 +1,3 @@
 DEFAULT_TIMEOUT = 10
-GUARDRAILS_ENDPOINT_PREFIX = "/api/v1/guardrails/"
+GUARDRAILS_ENDPOINT_URL = "/api/v1/guardrails/guard"
 DEFAULT_THRESHOLD = 0.7
-

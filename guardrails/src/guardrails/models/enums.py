@@ -1,9 +1,4 @@
-from enum import Enum
-
-
-class GuardrailsEndpoint(Enum):
-    PROMPT_ENDPOINT = "guard_prompt"
-    RESPONSE_ENDPOINT = "guard_response"
+from enum import Enum, auto
 
 
 class PIICategorie(Enum):
@@ -32,3 +27,9 @@ class GuardrailsTarget(Enum):
     prompt = "prompt"
     response = "response"
 
+
+class Role(Enum):
+    User = "user"
+    Assistant = "assistant"
+    System = "system"
+    Tool = "tool"

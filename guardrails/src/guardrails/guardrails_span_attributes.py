@@ -14,53 +14,47 @@
 
 from typing import Final
 
-LABEL: Final = ("guardrails.{target}.{guardrail_type}.label")
+LABEL: Final = "guardrails.{target}.{guardrail_type}.label"
 """
 The label of the guardrail from guardrail response.
 """
 
-NAME: Final = ("guardrails.{target}.{guardrail_type}.name")
+NAME: Final = "guardrails.{target}.{guardrail_type}.name"
 """
 The name of the guardrail from guardrail response.
 """
 
-SCORE: Final = ("guardrails.{target}.{guardrail_type}.score")
+SCORE: Final = "guardrails.{target}.{guardrail_type}.score"
 """
 The score of the guardrail from guardrail response.
 """
 
-EXPLANATION: Final = ("guardrails.{target}.{guardrail_type}.explanation")
-"""
-The explanation of the guardrail result from guardrail response.
-"""
-
-DETECTION_THRESHOLD: Final = ("guardrails.{target}.{guardrail_type}.detection_threshold")
+DETECTION_THRESHOLD: Final = "guardrails.{target}.{guardrail_type}.detection_threshold"
 """
 The threshold of the guardrail.
 """
 
-CUSTOM_GUARDRAIL_NAME: Final = ("guardrails.{target}.{guardrail_type}.name")
+CUSTOM_GUARDRAIL_NAME: Final = "guardrails.{target}.{guardrail_type}.name"
 """
 The custom guardrail spesific name.
 """
 
-PROMPT: Final = ("guardrails.prompt")
+PROMPT: Final = "guardrails.prompt[{index}]"
 """
-The evaluated prompt.
-"""
-
-RESPONSE: Final = ("guardrails.response")
-"""
-The valuated response.
+The evaluated prompt at index.
 """
 
-APPLICATION_NAME: Final = ("cx.application.name")
+RESPONSE: Final = "guardrails.response[{index}]"
+"""
+The evaluated response at index.
+"""
+
+APPLICATION_NAME: Final = "cx.application.name"
 """
 The application name.
 """
 
-SUBSYSTEM_NAME: Final = ("cx.subsystem.name")
+SUBSYSTEM_NAME: Final = "cx.subsystem.name"
 """
 The subsystem name.
 """
-

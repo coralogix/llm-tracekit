@@ -16,10 +16,150 @@ import pytest
 from assertpy import assert_that
 from pydantic import ValidationError
 
-from guardrails.models.request import PII, PromptInjection
+from guardrails.models.request import (
+    PII,
+    PromptInjection,
+    Message,
+    GuardrailRequest,
+    normalize_message,
+    normalize_messages,
+)
 from guardrails.models.constants import DEFAULT_THRESHOLD
-from guardrails.models.enums import PIICategorie, GuardrailType
+from guardrails.models.enums import PIICategorie, GuardrailType, Role, GuardrailsTarget
 from guardrails.models.response import GuardrailsResultBase, GuardrailsResponse
+
+
+class TestMessage:
+    def test_message_with_role_enum(self):
+        msg = Message(role=Role.User, content="Hello")
+        assert_that(msg.role).is_equal_to(Role.User)
+        assert_that(msg.content).is_equal_to("Hello")
+
+    def test_message_with_string_role_lowercase(self):
+        msg = Message(role="user", content="Hello")
+        assert_that(msg.role).is_equal_to(Role.User)
+
+    def test_message_with_string_role_uppercase(self):
+        msg = Message(role="USER", content="Hello")
+        assert_that(msg.role).is_equal_to(Role.User)
+
+    def test_message_with_string_role_mixed_case(self):
+        msg = Message(role="Assistant", content="Hello")
+        assert_that(msg.role).is_equal_to(Role.Assistant)
+
+    def test_message_all_roles_as_strings(self):
+        roles = [
+            ("user", Role.User),
+            ("assistant", Role.Assistant),
+            ("system", Role.System),
+            ("tool", Role.Tool),
+        ]
+        for string_role, expected_enum in roles:
+            msg = Message(role=string_role, content="test")
+            assert_that(msg.role).is_equal_to(expected_enum)
+
+    def test_message_invalid_role_string(self):
+        with pytest.raises(ValidationError):
+            Message(role="invalid_role", content="Hello")
+
+    def test_message_from_dict(self):
+        data = {"role": "user", "content": "Hello from dict"}
+        msg = Message(**data)
+        assert_that(msg.role).is_equal_to(Role.User)
+        assert_that(msg.content).is_equal_to("Hello from dict")
+
+    def test_message_serialization(self):
+        msg = Message(role=Role.User, content="Hello")
+        data = msg.model_dump(mode="json")
+        assert_that(data["role"]).is_equal_to("user")
+        assert_that(data["content"]).is_equal_to("Hello")
+
+
+class TestNormalizeMessage:
+    def test_normalize_message_from_message_object(self):
+        original = Message(role=Role.User, content="Hello")
+        result = normalize_message(original)
+        assert_that(result).is_equal_to(original)
+
+    def test_normalize_message_from_dict(self):
+        data = {"role": "user", "content": "Hello"}
+        result = normalize_message(data)
+        assert_that(result.role).is_equal_to(Role.User)
+        assert_that(result.content).is_equal_to("Hello")
+
+    def test_normalize_message_from_dict_with_role_enum(self):
+        data = {"role": Role.User, "content": "Hello"}
+        result = normalize_message(data)
+        assert_that(result.role).is_equal_to(Role.User)
+
+    def test_normalize_message_invalid_type(self):
+        with pytest.raises(ValueError):
+            normalize_message("invalid")
+
+    def test_normalize_messages_list(self):
+        messages = [
+            {"role": "user", "content": "Hello"},
+            Message(role=Role.Assistant, content="Hi"),
+            {"role": "system", "content": "Be helpful"},
+        ]
+        result = normalize_messages(messages)
+        
+        assert_that(result).is_length(3)
+        assert_that(result[0].role).is_equal_to(Role.User)
+        assert_that(result[1].role).is_equal_to(Role.Assistant)
+        assert_that(result[2].role).is_equal_to(Role.System)
+
+    def test_normalize_messages_none(self):
+        result = normalize_messages(None)
+        assert_that(result).is_none()
+
+
+class TestGuardrailRequest:
+    def test_request_with_dict_messages(self):
+        request = GuardrailRequest(
+            application="test",
+            subsystem="test",
+            messages=[
+                {"role": "user", "content": "Hello"},
+                {"role": "assistant", "content": "Hi"},
+            ],
+            guardrails_configs=[PII()],
+            target=GuardrailsTarget.prompt,
+            timeout=10,
+        )
+        
+        assert_that(request.messages).is_length(2)
+        assert_that(request.messages[0].role).is_equal_to(Role.User)
+        assert_that(request.messages[1].role).is_equal_to(Role.Assistant)
+
+    def test_request_with_mixed_messages(self):
+        request = GuardrailRequest(
+            application="test",
+            subsystem="test",
+            messages=[
+                {"role": "user", "content": "Hello"},
+                Message(role=Role.Assistant, content="Hi"),
+            ],
+            guardrails_configs=[PII()],
+            target=GuardrailsTarget.prompt,
+            timeout=10,
+        )
+        
+        assert_that(request.messages).is_length(2)
+        assert_that(all(isinstance(m, Message) for m in request.messages)).is_true()
+
+    def test_request_serialization(self):
+        request = GuardrailRequest(
+            application="test",
+            subsystem="test",
+            messages=[{"role": "user", "content": "Hello"}],
+            guardrails_configs=[PII()],
+            target=GuardrailsTarget.prompt,
+            timeout=10,
+        )
+        
+        data = request.model_dump(mode="json")
+        assert_that(data["messages"][0]["role"]).is_equal_to("user")
 
 
 class TestPII:
@@ -75,7 +215,6 @@ class TestPromptInjection:
 
 
 class TestPIICategories:
-
     def test_category_values(self):
         assert_that(PIICategorie.email_address.value).is_equal_to("email_address")
         assert_that(PIICategorie.credit_card.value).is_equal_to("credit_card")
@@ -115,11 +254,13 @@ class TestGuardrailsResultBase:
 
     def test_result_score_validation(self):
         with pytest.raises(ValidationError):
-            GuardrailsResultBase.model_validate({
-                "type": "pii",
-                "detected": False,
-                "score": 1.5,
-            })
+            GuardrailsResultBase.model_validate(
+                {
+                    "type": "pii",
+                    "detected": False,
+                    "score": 1.5,
+                }
+            )
 
     def test_result_optional_fields(self):
         data = {

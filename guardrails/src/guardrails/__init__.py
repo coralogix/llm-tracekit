@@ -1,9 +1,10 @@
 from .guardrails import Guardrails
-from .models.enums import PIICategorie
+from .models.enums import PIICategorie, Role
 from .models.request import (
     PII,
     PromptInjection,
     GuardrailRequest,
+    Message,
 )
 from .models.response import (
     GuardrailsResultBase,
@@ -14,20 +15,42 @@ from .error import (
     GuardrailsAPIConnectionError,
     GuardrailsAPITimeoutError,
     GuardrailsAPIResponseError,
-    GuardrailTriggered,
+    GuardrailViolation,
+    GuardrailsTriggered,
+)
+from .response_converter import (
+    convert_gemini,
+    convert_langchain,
+    convert_litellm,
+    convert_openai_agents,
+    convert_bedrock_converse,
 )
 
 __all__ = [
+    # Main client
     "Guardrails",
+    # Request models
     "PII",
     "PromptInjection",
     "GuardrailRequest",
+    "Message",
+    # Response models
     "GuardrailsResultBase",
     "GuardrailsResponse",
+    # Enums
     "PIICategorie",
+    "Role",
+    # Errors
     "GuardrailsError",
     "GuardrailsAPIConnectionError",
     "GuardrailsAPITimeoutError",
     "GuardrailsAPIResponseError",
-    "GuardrailTriggered",
+    "GuardrailsTriggered",
+    "GuardrailViolation",
+    # Converters
+    "convert_gemini",
+    "convert_langchain",
+    "convert_litellm",
+    "convert_openai_agents",
+    "convert_bedrock_converse",
 ]

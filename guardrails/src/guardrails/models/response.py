@@ -34,4 +34,3 @@ GuardrailsResponseType = Union[PIIResult, PromptInjectionResult]
 
 class GuardrailsResponse(BaseModel):
     results: List[GuardrailsResponseType] = Field(default_factory=list)
-

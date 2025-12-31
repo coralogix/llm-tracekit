@@ -29,9 +29,9 @@ def guardrails_env_vars():
     for key, value in env_vars.items():
         original_values[key] = os.environ.get(key)
         os.environ[key] = value
-    
+
     yield env_vars
-    
+
     # Restore original values
     for key, original_value in original_values.items():
         if original_value is None:
@@ -45,18 +45,17 @@ def clear_guardrails_env_vars():
     """Clear all guardrails environment variables."""
     env_keys = [
         "CX_GUARDRAILS_TOKEN",
-        "CX_APPLICATION_NAME", 
+        "CX_APPLICATION_NAME",
         "CX_SUBSYSTEM_NAME",
         "CX_ENDPOINT",
     ]
     original_values = {}
     for key in env_keys:
         original_values[key] = os.environ.pop(key, None)
-    
+
     yield
-    
+
     # Restore original values
     for key, original_value in original_values.items():
         if original_value is not None:
             os.environ[key] = original_value
-
