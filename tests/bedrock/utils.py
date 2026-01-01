@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Iterable, List, Optional
+from collections.abc import Iterable
 
 from opentelemetry.sdk.trace import ReadableSpan
 from opentelemetry.semconv._incubating.attributes import (
@@ -31,7 +31,7 @@ from llm_tracekit.instruments import (
 IMAGE_DATA = b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01\x01\x00\x00\x00\x007n\xf9$\x00\x00\x00\nIDATx\x01c`\x00\x00\x00\x02\x00\x01su\x01\x18\x00\x00\x00\x00IEND\xaeB`\x82"
 
 
-def assert_tool_definitions_in_span(span: ReadableSpan, tools: List[dict]):
+def assert_tool_definitions_in_span(span: ReadableSpan, tools: list[dict]):
     assert span.attributes is not None
 
     for index, tool in enumerate(tools):
@@ -64,20 +64,19 @@ def assert_tool_definitions_in_span(span: ReadableSpan, tools: List[dict]):
 def assert_attributes_in_span(
     span: ReadableSpan,
     span_name: str,
-    request_model: Optional[str] = None,
-    response_model: Optional[str] = None,
-    usage_input_tokens: Optional[int] = None,
-    usage_output_tokens: Optional[int] = None,
-    finish_reasons: Optional[Iterable[str]] = None,
-    error: Optional[str] = None,
-    max_tokens: Optional[int] = None,
-    temperature: Optional[float] = None,
-    top_p: Optional[float] = None,
-    top_k: Optional[int] = None,
-    agent_id: Optional[str] = None,
-    agent_alias_id: Optional[str] = None,
-    foundation_model: Optional[str] = None,
-
+    request_model: str | None = None,
+    response_model: str | None = None,
+    usage_input_tokens: int | None = None,
+    usage_output_tokens: int | None = None,
+    finish_reasons: Iterable[str] | None = None,
+    error: str | None = None,
+    max_tokens: int | None = None,
+    temperature: float | None = None,
+    top_p: float | None = None,
+    top_k: int | None = None,
+    agent_id: str | None = None,
+    agent_alias_id: str | None = None,
+    foundation_model: str | None = None,
 ):
     assert span.name == span_name
     assert span.attributes is not None
@@ -107,12 +106,12 @@ def assert_attributes_in_span(
 
 def assert_expected_metrics(
     metrics,
-    usage_input_tokens: Optional[int] = None,
-    usage_output_tokens: Optional[int] = None,
-    error: Optional[str] = None,
-    request_model: Optional[str] = None,
-    response_model: Optional[str] = None,
-    foundation_model: Optional[str] = None,
+    usage_input_tokens: int | None = None,
+    usage_output_tokens: int | None = None,
+    error: str | None = None,
+    request_model: str | None = None,
+    response_model: str | None = None,
+    foundation_model: str | None = None,
 ):
     attributes = {
         GenAIAttributes.GEN_AI_OPERATION_NAME: GenAIAttributes.GenAiOperationNameValues.CHAT.value,

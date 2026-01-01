@@ -12,11 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
 import base64
+import os
 
-import pytest
 import brotli
+import pytest
 
 from llm_tracekit.instrumentation_utils import (
     OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT,
@@ -41,14 +41,14 @@ def handle_response(response):
     headers["openai-organization"] = "test_openai_org_id"
     headers["openai-project"] = "test_openai_project"
     headers["Set-Cookie"] = "redacted_set_cookie"
-    if 'Content-Encoding' in headers and 'br' in headers['Content-Encoding']:
-        body = response.get('body', {}).get('string')
+    if "Content-Encoding" in headers and "br" in headers["Content-Encoding"]:
+        body = response.get("body", {}).get("string")
         if body and isinstance(body, bytes):
             try:
                 decoded_body = brotli.decompress(body)
-                response['body']['string'] = decoded_body
-                del headers['Content-Encoding']
-                
+                response["body"]["string"] = decoded_body
+                del headers["Content-Encoding"]
+
             except brotli.error:
                 pass
     return response
@@ -101,6 +101,7 @@ def vcr_config():
         "decode_compressed_response": True,
         "before_record_response": before_record_response,
     }
+
 
 @pytest.fixture(scope="function")
 def instrument_langchain(tracer_provider, meter_provider):

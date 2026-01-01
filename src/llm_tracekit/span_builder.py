@@ -12,49 +12,51 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from pydantic import BaseModel
+from collections.abc import Callable
 from dataclasses import dataclass
 from functools import wraps
-from typing import Any, Callable, Dict, List, Optional, Union
+from typing import Any
 
 from opentelemetry.semconv._incubating.attributes import (
     gen_ai_attributes as GenAIAttributes,
 )
+from pydantic import BaseModel
 
 from llm_tracekit import extended_gen_ai_attributes as ExtendedGenAIAttributes
 
 
 class ToolCall(BaseModel):
-    id: Optional[str] = None
-    type: Optional[str] = None
-    function_name: Optional[str] = None
-    function_arguments: Optional[str] = None
+    id: str | None = None
+    type: str | None = None
+    function_name: str | None = None
+    function_arguments: str | None = None
+
 
 @dataclass
 class Message:
-    role: Optional[str] = None
-    content: Optional[str] = None
-    tool_call_id: Optional[str] = None
-    tool_calls: Optional[List[ToolCall]] = None
+    role: str | None = None
+    content: str | None = None
+    tool_call_id: str | None = None
+    tool_calls: list[ToolCall] | None = None
 
 
 @dataclass
 class Choice:
-    finish_reason: Optional[str] = None
-    role: Optional[str] = None
-    content: Optional[str] = None
-    tool_calls: Optional[List[ToolCall]] = None
+    finish_reason: str | None = None
+    role: str | None = None
+    content: str | None = None
+    tool_calls: list[ToolCall] | None = None
 
 
-def remove_attributes_with_null_values(attributes: Dict[str, Any]) -> Dict[str, Any]:
+def remove_attributes_with_null_values(attributes: dict[str, Any]) -> dict[str, Any]:
     return {attr: value for attr, value in attributes.items() if value is not None}
 
 
 def attribute_generator(
-    original_function: Callable[..., Dict[str, Any]],
-) -> Callable[..., Dict[str, Any]]:
+    original_function: Callable[..., dict[str, Any]],
+) -> Callable[..., dict[str, Any]]:
     @wraps(original_function)
-    def wrapper(*args, **kwargs) -> Dict[str, Any]:
+    def wrapper(*args, **kwargs) -> dict[str, Any]:
         attributes = original_function(*args, **kwargs)
 
         return remove_attributes_with_null_values(attributes)
@@ -64,9 +66,9 @@ def attribute_generator(
 
 @attribute_generator
 def generate_base_attributes(
-    system: Union[GenAIAttributes.GenAiSystemValues, str],
+    system: GenAIAttributes.GenAiSystemValues | str,
     operation: GenAIAttributes.GenAiOperationNameValues = GenAIAttributes.GenAiOperationNameValues.CHAT,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     if isinstance(system, GenAIAttributes.GenAiSystemValues):
         system = system.value
     attributes = {
@@ -78,14 +80,14 @@ def generate_base_attributes(
 
 @attribute_generator
 def generate_request_attributes(
-    model: Optional[str] = None,
-    temperature: Optional[float] = None,
-    top_p: Optional[float] = None,
-    top_k: Optional[int] = None,
-    max_tokens: Optional[int] = None,
-    presence_penalty: Optional[float] = None,
-    frequency_penalty: Optional[float] = None,
-) -> Dict[str, Any]:
+    model: str | None = None,
+    temperature: float | None = None,
+    top_p: float | None = None,
+    top_k: int | None = None,
+    max_tokens: int | None = None,
+    presence_penalty: float | None = None,
+    frequency_penalty: float | None = None,
+) -> dict[str, Any]:
     attributes = {
         GenAIAttributes.GEN_AI_REQUEST_MODEL: model,
         GenAIAttributes.GEN_AI_REQUEST_TEMPERATURE: temperature,
@@ -100,8 +102,8 @@ def generate_request_attributes(
 
 @attribute_generator
 def generate_message_attributes(
-    messages: List[Message], capture_content: bool
-) -> Dict[str, Any]:
+    messages: list[Message], capture_content: bool
+) -> dict[str, Any]:
     attributes = {}
     for index, message in enumerate(messages):
         attributes[
@@ -147,12 +149,12 @@ def generate_message_attributes(
 
 @attribute_generator
 def generate_response_attributes(
-    model: Optional[str] = None,
-    finish_reasons: Optional[List[str]] = None,
-    id: Optional[str] = None,
-    usage_input_tokens: Optional[int] = None,
-    usage_output_tokens: Optional[int] = None,
-) -> Dict[str, Any]:
+    model: str | None = None,
+    finish_reasons: list[str] | None = None,
+    id: str | None = None,
+    usage_input_tokens: int | None = None,
+    usage_output_tokens: int | None = None,
+) -> dict[str, Any]:
     attributes = {
         GenAIAttributes.GEN_AI_RESPONSE_MODEL: model,
         GenAIAttributes.GEN_AI_RESPONSE_FINISH_REASONS: finish_reasons,
@@ -165,8 +167,8 @@ def generate_response_attributes(
 
 @attribute_generator
 def generate_choice_attributes(
-    choices: List[Choice], capture_content: bool
-) -> Dict[str, Any]:
+    choices: list[Choice], capture_content: bool
+) -> dict[str, Any]:
     attributes = {}
     for index, choice in enumerate(choices):
         attributes[
@@ -216,12 +218,12 @@ def generate_choice_attributes(
 
 @dataclass
 class Agent:
-    id: Optional[str] = None
-    name: Optional[str] = None
-    description: Optional[str] = None
+    id: str | None = None
+    name: str | None = None
+    description: str | None = None
 
     @attribute_generator
-    def generate_attributes(self) -> Dict[str, Any]:
+    def generate_attributes(self) -> dict[str, Any]:
         attributes = {
             GenAIAttributes.GEN_AI_AGENT_NAME: self.name,
             GenAIAttributes.GEN_AI_AGENT_ID: self.id,

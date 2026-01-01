@@ -26,7 +26,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from timeit import default_timer
-from typing import Any, Dict, List, Optional
+from typing import Any
 from uuid import UUID
 
 from opentelemetry.semconv._incubating.attributes import (
@@ -46,11 +46,11 @@ class LangChainSpanState:
     """
 
     span: Span
-    children: List[UUID] = field(default_factory=list)
+    children: list[UUID] = field(default_factory=list)
     start_time: float = field(default_factory=default_timer)
-    span_attributes: Dict[str, Any] = field(default_factory=dict)
-    system_value: Optional[str] = None
-    request_model: Optional[str] = None
+    span_attributes: dict[str, Any] = field(default_factory=dict)
+    system_value: str | None = None
+    request_model: str | None = None
 
 
 class LangChainSpanManager:
@@ -65,14 +65,14 @@ class LangChainSpanManager:
 
     def __init__(self, tracer: Tracer) -> None:
         self._tracer = tracer
-        self._states: Dict[UUID, LangChainSpanState] = {}
+        self._states: dict[UUID, LangChainSpanState] = {}
 
     def create_chat_span(
         self,
         run_id: UUID,
-        parent_run_id: Optional[UUID],
+        parent_run_id: UUID | None,
         span_name: str,
-        attributes: Dict[str, Any],
+        attributes: dict[str, Any],
     ) -> Span:
         """Create and store a chat span for the provided LangChain run."""
         return self._create_span(
@@ -83,7 +83,7 @@ class LangChainSpanManager:
             kind=SpanKind.CLIENT,
         )
 
-    def get_state(self, run_id: UUID) -> Optional[LangChainSpanState]:
+    def get_state(self, run_id: UUID) -> LangChainSpanState | None:
         return self._states.get(run_id)
 
     def end_span(self, run_id: UUID) -> None:
@@ -99,9 +99,9 @@ class LangChainSpanManager:
     def _create_span(
         self,
         run_id: UUID,
-        parent_run_id: Optional[UUID],
+        parent_run_id: UUID | None,
         span_name: str,
-        attributes: Dict[str, Any],
+        attributes: dict[str, Any],
         kind: SpanKind,
     ) -> Span:
         """Internal helper that creates a span and registers its state."""

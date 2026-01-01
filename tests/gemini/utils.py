@@ -12,22 +12,22 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Optional
 
 from opentelemetry.sdk.trace import ReadableSpan
 from opentelemetry.semconv._incubating.attributes import (
     gen_ai_attributes as GenAIAttributes,
 )
 
+
 def assert_attributes(
     span: ReadableSpan,
     system: str,
     operation_name: str,
     request_model: str,
-    response_model: Optional[str] = None,
-    response_id: Optional[str] = None,
-    input_tokens: Optional[int] = None,
-    output_tokens: Optional[int] = None
+    response_model: str | None = None,
+    response_id: str | None = None,
+    input_tokens: int | None = None,
+    output_tokens: int | None = None,
 ):
     assert system == span.attributes[GenAIAttributes.GEN_AI_SYSTEM]
 
@@ -37,12 +37,16 @@ def assert_attributes(
 
     if response_model is not None:
         assert response_model == span.attributes[GenAIAttributes.GEN_AI_RESPONSE_MODEL]
-        
+
     if response_id is not None:
-        assert response_id == span.attributes[GenAIAttributes.GEN_AI_RESPONSE_ID]   
+        assert response_id == span.attributes[GenAIAttributes.GEN_AI_RESPONSE_ID]
 
     if input_tokens is not None:
-        assert input_tokens == span.attributes[GenAIAttributes.GEN_AI_USAGE_INPUT_TOKENS]   
+        assert (
+            input_tokens == span.attributes[GenAIAttributes.GEN_AI_USAGE_INPUT_TOKENS]
+        )
 
     if output_tokens is not None:
-        assert output_tokens == span.attributes[GenAIAttributes.GEN_AI_USAGE_OUTPUT_TOKENS]
+        assert (
+            output_tokens == span.attributes[GenAIAttributes.GEN_AI_USAGE_OUTPUT_TOKENS]
+        )

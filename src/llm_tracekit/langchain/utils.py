@@ -15,7 +15,8 @@
 from __future__ import annotations
 
 import json
-from typing import Any, Iterable, List, Optional, Sequence, Tuple
+from collections.abc import Iterable, Sequence
+from typing import Any
 
 from langchain_core.messages import BaseMessage  # type: ignore
 from langchain_core.outputs import Generation  # type: ignore
@@ -25,15 +26,15 @@ from llm_tracekit.span_builder import Choice, Message, ToolCall
 
 def flatten_message_batches(
     message_batches: Sequence[Sequence[BaseMessage]],
-) -> List[BaseMessage]:
-    flattened: List[BaseMessage] = []
+) -> list[BaseMessage]:
+    flattened: list[BaseMessage] = []
     for batch in message_batches:
         flattened.extend(batch)
     return flattened
 
 
-def build_prompt_history(messages: Iterable[BaseMessage]) -> List[Message]:
-    history: List[Message] = []
+def build_prompt_history(messages: Iterable[BaseMessage]) -> list[Message]:
+    history: list[Message] = []
     for message in messages:
         history.append(
             Message(
@@ -48,9 +49,9 @@ def build_prompt_history(messages: Iterable[BaseMessage]) -> List[Message]:
 
 def build_response_choices(
     generations: Sequence[Sequence[Generation]],
-) -> Tuple[List[Choice], List[str], Optional[int], Optional[int]]:
-    choices: List[Choice] = []
-    finish_reasons: List[str] = []
+) -> tuple[list[Choice], list[str], int | None, int | None]:
+    choices: list[Choice] = []
+    finish_reasons: list[str] = []
     input_tokens_total = 0
     output_tokens_total = 0
     has_input_usage = False
@@ -94,7 +95,7 @@ def build_response_choices(
     )
 
 
-def _parse_tool_calls(message: BaseMessage) -> Optional[List[ToolCall]]:
+def _parse_tool_calls(message: BaseMessage) -> list[ToolCall] | None:
     tool_calls = getattr(message, "tool_calls", None)
     if not tool_calls and isinstance(getattr(message, "additional_kwargs", None), dict):
         tool_calls = message.additional_kwargs.get("tool_calls")  # type: ignore[assignment]
@@ -102,7 +103,7 @@ def _parse_tool_calls(message: BaseMessage) -> Optional[List[ToolCall]]:
     if not tool_calls:
         return None
 
-    parsed_calls: List[ToolCall] = []
+    parsed_calls: list[ToolCall] = []
     for tool_call in tool_calls:  # type: ignore[assignment]
         if isinstance(tool_call, dict):
             function = tool_call.get("function") or {}
@@ -121,7 +122,9 @@ def _parse_tool_calls(message: BaseMessage) -> Optional[List[ToolCall]]:
             )
         else:
             function = getattr(tool_call, "function", None)
-            function_name = _safe_getattr(function, "name") or getattr(tool_call, "name", None)
+            function_name = _safe_getattr(function, "name") or getattr(
+                tool_call, "name", None
+            )
             function_arguments = _safe_getattr(function, "arguments")
             if function_arguments is None:
                 function_arguments = getattr(tool_call, "args", None)
@@ -138,7 +141,7 @@ def _parse_tool_calls(message: BaseMessage) -> Optional[List[ToolCall]]:
     return parsed_calls or None
 
 
-def _get_tool_call_id(message: BaseMessage) -> Optional[str]:
+def _get_tool_call_id(message: BaseMessage) -> str | None:
     tool_call_id = getattr(message, "tool_call_id", None)
     if tool_call_id is not None:
         return tool_call_id
@@ -149,7 +152,7 @@ def _get_tool_call_id(message: BaseMessage) -> Optional[str]:
     return tool_call_id
 
 
-def _extract_finish_reason(generation: Generation, message: BaseMessage) -> Optional[str]:
+def _extract_finish_reason(generation: Generation, message: BaseMessage) -> str | None:
     generation_info = getattr(generation, "generation_info", None)
     if isinstance(generation_info, dict):
         finish_reason = generation_info.get("finish_reason")
@@ -164,7 +167,7 @@ def _extract_finish_reason(generation: Generation, message: BaseMessage) -> Opti
     return None
 
 
-def _stringify_arguments(arguments: Any) -> Optional[str]:
+def _stringify_arguments(arguments: Any) -> str | None:
     if arguments is None:
         return None
     if isinstance(arguments, str):
@@ -175,7 +178,7 @@ def _stringify_arguments(arguments: Any) -> Optional[str]:
         return str(arguments)
 
 
-def _stringify_content(content: Any) -> Optional[str]:
+def _stringify_content(content: Any) -> str | None:
     """Convert heterogeneous LangChain message content into a plain string.
 
     The helper accepts provider-specific payloads (strings, dicts, lists of
@@ -217,7 +220,7 @@ def _stringify_content(content: Any) -> Optional[str]:
     return string_content if string_content.strip() else None
 
 
-def _get_message_role(message: BaseMessage) -> Optional[str]:
+def _get_message_role(message: BaseMessage) -> str | None:
     role = getattr(message, "role", None)
     if role:
         return role
