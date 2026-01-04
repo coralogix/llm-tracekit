@@ -20,7 +20,7 @@ from typing import Any, Iterable, List, Optional, Sequence, Tuple
 from langchain_core.messages import BaseMessage  # type: ignore
 from langchain_core.outputs import Generation  # type: ignore
 
-from llm_tracekit.span_builder import Choice, Message, ToolCall
+from llm_tracekit_core.span_builder import Choice, Message, ToolCall
 
 
 def flatten_message_batches(
@@ -232,3 +232,4 @@ def _get_message_role(message: BaseMessage) -> Optional[str]:
 
 def _safe_getattr(obj: Any, name: str) -> Any:
     return getattr(obj, name, None)
+

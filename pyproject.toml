@@ -14,5 +14,6 @@ members = [
     "instrumentations/bedrock",
     "instrumentations/gemini",
     "instrumentations/litellm",
+    "instrumentations/langchain",
 ]
 

@@ -21,8 +21,7 @@ from langchain_core.tools import tool
 
 from langchain_openai import ChatOpenAI
 
-from tests.langchain.utils import assert_span_attributes
-from tests.utils import assert_choices_in_span, assert_messages_in_span
+from tests_langchain.utils import assert_span_attributes, assert_choices_in_span, assert_messages_in_span
 
 
 def _get_chat_spans(spans):
@@ -269,3 +268,4 @@ def test_langchain_openai_streaming(span_exporter, instrument_langchain):
         },
     }
     assert_choices_in_span(span, [choice], expect_content=True)
+

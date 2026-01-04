@@ -21,8 +21,7 @@ from langchain_core.tools import tool
 
 from langchain_aws import ChatBedrock
 
-from tests.utils import assert_choices_in_span, assert_messages_in_span
-from tests.langchain.utils import assert_span_attributes
+from tests_langchain.utils import assert_span_attributes, assert_choices_in_span, assert_messages_in_span
 
 
 _MODEL_ID = "anthropic.claude-3-5-sonnet-20240620-v1:0"
@@ -48,9 +47,9 @@ def test_langchain_bedrock_completion(span_exporter, instrument_langchain):
     response = llm.invoke([HumanMessage(content="Say this is a test")])
 
     span = _get_chat_spans(span_exporter.get_finished_spans())[-1]
-    
+
     assert span
-    
+
     assert_span_attributes(
         span,
         request_model=_MODEL_ID,
@@ -60,7 +59,7 @@ def test_langchain_bedrock_completion(span_exporter, instrument_langchain):
 
     user_message = {"role": "user", "content": "Say this is a test"}
     assert_messages_in_span(span=span, expected_messages=[user_message], expect_content=True)
-    
+
     choice = {
         "finish_reason": "end_turn",
         "message": {
@@ -89,7 +88,7 @@ def test_langchain_bedrock_multi_turn(span_exporter, instrument_langchain):
     ]
 
     first_response = llm.invoke(conversation)
-    
+
     conversation.append(first_response)
     conversation.append(HumanMessage(content="Now do it again"))
 
@@ -113,7 +112,7 @@ def test_langchain_bedrock_multi_turn(span_exporter, instrument_langchain):
         {"role": "user", "content": "Now do it again"},
     ]
     assert_messages_in_span(span=span, expected_messages=expected_messages, expect_content=True)
-    
+
     choice = {
         "finish_reason": "end_turn",
         "message": {
@@ -300,3 +299,4 @@ def test_langchain_bedrock_streaming(span_exporter, instrument_langchain):
         },
     }
     assert_choices_in_span(span, [choice], expect_content=True)
+

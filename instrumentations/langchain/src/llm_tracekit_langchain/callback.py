@@ -27,16 +27,16 @@ from opentelemetry.semconv._incubating.attributes import (
     gen_ai_attributes as GenAIAttributes,
 )
 
-from llm_tracekit import extended_gen_ai_attributes as ExtendedGenAIAttributes
-from llm_tracekit.instrumentation_utils import handle_span_exception
-from llm_tracekit.instruments import Instruments
-from llm_tracekit.langchain.span_manager import LangChainSpanManager, LangChainSpanState
-from llm_tracekit.langchain.utils import (
+import llm_tracekit_core.extended_gen_ai_attributes as ExtendedGenAIAttributes
+from llm_tracekit_core import handle_span_exception
+from llm_tracekit_core.instruments import Instruments
+from llm_tracekit_langchain.span_manager import LangChainSpanManager, LangChainSpanState
+from llm_tracekit_langchain.utils import (
     build_prompt_history,
     build_response_choices,
     flatten_message_batches,
 )
-from llm_tracekit.span_builder import (
+from llm_tracekit_core.span_builder import (
     generate_base_attributes,
     generate_choice_attributes,
     generate_message_attributes,
@@ -389,3 +389,4 @@ def _generate_available_tools_attributes(invocation_params: Dict[str, Any]) -> D
         ] = serialized_parameters
 
     return attributes
+

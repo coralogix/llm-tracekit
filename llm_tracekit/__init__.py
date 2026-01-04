@@ -39,7 +39,7 @@ with suppress(ImportError):
         GeminiInstrumentor as GeminiInstrumentor
     )
 with suppress(ImportError):
-    from llm_tracekit.langchain.instrumentor import (
+    from llm_tracekit_langchain import (
         LangChainInstrumentor as LangChainInstrumentor,
     )
 with suppress(ImportError):

@@ -26,10 +26,10 @@ from opentelemetry.semconv.schemas import Schemas
 from opentelemetry.trace import Tracer, get_tracer
 from wrapt import wrap_function_wrapper
 
-from llm_tracekit.instrumentation_utils import is_content_enabled
-from llm_tracekit.instruments import Instruments
-from llm_tracekit.langchain.callback import LangChainCallbackHandler
-from llm_tracekit.langchain.package import _instruments
+from llm_tracekit_core import is_content_enabled
+from llm_tracekit_core.instruments import Instruments
+from llm_tracekit_langchain.callback import LangChainCallbackHandler
+from llm_tracekit_langchain.package import _instruments
 
 
 class LangChainInstrumentor(BaseInstrumentor):
@@ -98,3 +98,4 @@ class _BaseCallbackManagerInitWrapper:
                 return
 
         instance.add_handler(handler, inherit=True)  # type: ignore[attr-defined]
+
