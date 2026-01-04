@@ -22,10 +22,10 @@ jobs:
 
       - name: Run Ruff
         run: |
-          uv run --group=dev --locked --all-extras ruff check src
+          uv run --group=dev --locked --all-extras ruff check guardrails instrumentations core
         shell: bash
 
       - name: Run Mypy
         run: |
-          uv run --group=dev --locked --all-extras mypy src
+          uv run --group=dev --locked --all-extras mypy .
         shell: bash

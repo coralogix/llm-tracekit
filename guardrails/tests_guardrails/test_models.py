@@ -228,6 +228,9 @@ class TestGuardrailsResultBase:
             "score": 0.1,
         }
         result = GuardrailsResultBase.model_validate(data)
+        assert_that(result.type).is_equal_to(GuardrailType.pii)
+        assert_that(result.detected).is_false()
+        assert_that(result.score).is_equal_to(0.1)
 
 
 class TestGuardrailsResponse:

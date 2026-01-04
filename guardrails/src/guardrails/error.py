@@ -42,6 +42,7 @@ class GuardrailViolation(GuardrailsError):
         guardrail_type: str,
         name: Optional[str] = None,
         score: Optional[float] = None,
+        detected_categories: Optional[str] = None
     ):
         self.guardrail_type = guardrail_type
         self.name = name

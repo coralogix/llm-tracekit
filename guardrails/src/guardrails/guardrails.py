@@ -1,5 +1,3 @@
-from importlib.resources import contents
-from operator import concat
 import os
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
@@ -131,7 +129,7 @@ class Guardrails:
     ) -> Optional[GuardrailsResponse]:
         if not response:
             return None
-        messages: list[Message] = []
+        messages: list[Union[Message, dict[str, Any]]] = []
         if prompt:
             messages.append(Message(role=Role.USER, content=prompt))
         messages.append(Message(role=Role.ASSISTANT, content=response))
