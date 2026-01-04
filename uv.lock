@@ -1849,6 +1849,19 @@ name = "llm-tracekit-workspace"
 version = "0.0.0"
 source = { virtual = "." }
 
+[package.optional-dependencies]
+ci-core = [
+    { name = "llm-tracekit-bedrock" },
+    { name = "llm-tracekit-gemini" },
+    { name = "llm-tracekit-guardrails" },
+    { name = "llm-tracekit-langchain" },
+    { name = "llm-tracekit-openai" },
+    { name = "llm-tracekit-openai-agents" },
+]
+litellm = [
+    { name = "llm-tracekit-litellm" },
+]
+
 [package.dev-dependencies]
 dev = [
     { name = "assertpy" },
@@ -1864,6 +1877,16 @@ dev = [
 ]
 
 [package.metadata]
+requires-dist = [
+    { name = "llm-tracekit-bedrock", marker = "extra == 'ci-core'", editable = "instrumentations/bedrock" },
+    { name = "llm-tracekit-gemini", marker = "extra == 'ci-core'", editable = "instrumentations/gemini" },
+    { name = "llm-tracekit-guardrails", marker = "extra == 'ci-core'", editable = "guardrails" },
+    { name = "llm-tracekit-langchain", marker = "extra == 'ci-core'", editable = "instrumentations/langchain" },
+    { name = "llm-tracekit-litellm", marker = "extra == 'litellm'", editable = "instrumentations/litellm" },
+    { name = "llm-tracekit-openai", marker = "extra == 'ci-core'", editable = "instrumentations/openai" },
+    { name = "llm-tracekit-openai-agents", marker = "extra == 'ci-core'", editable = "instrumentations/openai_agents" },
+]
+provides-extras = ["ci-core", "litellm"]
 
 [package.metadata.requires-dev]
 dev = [

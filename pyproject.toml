@@ -4,6 +4,19 @@ version = "0.0.0"
 description = "Workspace for LLM Tracekit packages"
 requires-python = ">3.9,<=3.13"
 
+[project.optional-dependencies]
+ci-core = [
+    "llm-tracekit-openai",
+    "llm-tracekit-bedrock",
+    "llm-tracekit-gemini",
+    "llm-tracekit-openai-agents",
+    "llm-tracekit-guardrails",
+    "llm-tracekit-langchain",
+]
+litellm = [
+    "llm-tracekit-litellm",
+]
+
 [dependency-groups]
 dev = [
     "mypy>=1.0.0",
@@ -30,6 +43,16 @@ members = [
     "instrumentations/litellm",
     "instrumentations/langchain",
 ]
+
+[tool.uv.sources]
+llm-tracekit-core = { workspace = true }
+llm-tracekit-openai = { workspace = true }
+llm-tracekit-bedrock = { workspace = true }
+llm-tracekit-gemini = { workspace = true }
+llm-tracekit-litellm = { workspace = true }
+llm-tracekit-openai-agents = { workspace = true }
+llm-tracekit-guardrails = { workspace = true }
+llm-tracekit-langchain = { workspace = true }
 
 [tool.mypy]
 ignore_missing_imports = true
