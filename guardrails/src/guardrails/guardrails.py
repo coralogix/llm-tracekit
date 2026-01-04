@@ -1,7 +1,9 @@
+from importlib.resources import contents
+from operator import concat
 import os
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
-from typing import List, Optional, Dict
+from typing import Optional, Any, Union
 
 import httpx
 from opentelemetry import trace
@@ -12,8 +14,6 @@ from .models.request import (
     GuardrailConfigType,
     GuardrailRequest,
     Message,
-    MessageInput,
-    normalize_messages,
 )
 from .models.enums import GuardrailsTarget, Role
 from .models.response import GuardrailsResponse
@@ -31,7 +31,6 @@ tracer = trace.get_tracer(__name__)
 
 
 def _get_env(value: Optional[str], env_var: str, default: str = "") -> str:
-    """Get value from argument, environment variable, or default."""
     return value if value is not None else os.environ.get(env_var, default)
 
 
@@ -46,14 +45,6 @@ class GuardrailsClientConfig:
 
 
 class Guardrails:
-    """Guardrails client for protecting LLM conversations.
-
-    Configuration via constructor arguments or environment variables:
-        - CX_GUARDRAILS_TOKEN: API token for authentication
-        - CX_ENDPOINT: Coralogix guardrails endpoint URL
-        - CX_APPLICATION_NAME: Application name (default: "Unknown")
-        - CX_SUBSYSTEM_NAME: Subsystem name (default: "Unknown")
-    """
 
     def __init__(
         self,
@@ -81,7 +72,6 @@ class Guardrails:
 
     @asynccontextmanager
     async def guarded_session(self):
-        """Context manager for guardrail calls. Required for all guard operations."""
         self._client = httpx.AsyncClient(
             base_url=self.config.cx_endpoint,
             timeout=httpx.Timeout(self.config.timeout, connect=10.0),
@@ -94,60 +84,50 @@ class Guardrails:
 
     async def guard(
         self,
-        messages: List[MessageInput],
-        guardrails_config: List[GuardrailConfigType],
+        messages: list[Union[Message, dict[str, Any]]],
+        guardrails_config: list[GuardrailConfigType],
         target: GuardrailsTarget,
     ) -> Optional[GuardrailsResponse]:
-        """Guard messages against configured guardrails.
-        
-        Args:
-            messages: List of messages (Message objects or {"role": "...", "content": "..."} dicts)
-            guardrails_config: List of guardrail configurations (PII, PromptInjection)
-            target: Whether guarding prompt or response
-            
-        Returns:
-            GuardrailsResponse with results, or None if messages/config empty
-        """
         if not messages or not guardrails_config:
             return None
-        normalized = normalize_messages(messages)
-        if not normalized:
-            return None
-        return await self._sender.run(guardrails_config, target, normalized, self._client)
+        history: list[Message] = [self._to_messages(msg) for msg in messages]
+        if target == GuardrailsTarget.response and history[-1].role is not Role.Assistant:
+            raise AttributeError(f"target of {GuardrailsTarget.response} was given but last message is not a response")
+        return await self._sender.run(guardrails_config, target, history, self._client)
+
+    def _to_messages(self, msg: Union[Message, dict[str, Any]]):
+        return msg if isinstance(msg, Message) else Message(msg)
 
     async def guard_prompt(
         self,
         prompt: str,
-        guardrails_config: List[GuardrailConfigType],
+        guardrails_config: list[GuardrailConfigType],
     ) -> Optional[GuardrailsResponse]:
-        """Guard a user prompt against configured guardrails."""
         if not prompt:
             return None
-        return await self.guard([{"role": "user", "content": prompt}], guardrails_config, GuardrailsTarget.prompt)
+        return await self.guard([Message(role=Role.User, content=prompt)], guardrails_config, GuardrailsTarget.prompt)
 
     async def guard_response(
         self,
-        guardrails_config: List[GuardrailConfigType],
+        guardrails_config: list[GuardrailConfigType],
         response: str,
         prompt: Optional[str] = None,
     ) -> Optional[GuardrailsResponse]:
-        """Guard an LLM response against configured guardrails."""
         if not response:
             return None
-        messages: List[MessageInput] = []
+        messages: list[Message] = []
         if prompt:
-            messages.append({"role": "user", "content": prompt})
-        messages.append({"role": "assistant", "content": response})
+            messages.append(Message(role=Role.User, content=prompt))
+        messages.append(Message(role=Role.Assistant, content=response))
         return await self.guard(messages, guardrails_config, GuardrailsTarget.response)
 
 
 class GuardrailRequestSender:
-    """Internal class for sending guardrail requests."""
     
     def __init__(self, config: GuardrailsClientConfig) -> None:
         self.config = config
 
-    def _get_headers(self) -> Dict[str, str]:
+    def _get_headers(self) -> dict[str, str]:
         return {
             "X-Coralogix-Auth": self.config.api_key,
             "cx-application-name": self.config.application_name,
@@ -174,9 +154,9 @@ class GuardrailRequestSender:
 
     async def run(
         self,
-        guardrails_configs: List[GuardrailConfigType],
+        guardrails_configs: list[GuardrailConfigType],
         target: GuardrailsTarget,
-        messages: List[Message],
+        messages: list[Message],
         client: httpx.AsyncClient,
     ) -> GuardrailsResponse:
         request = GuardrailRequest(
@@ -198,8 +178,6 @@ class GuardrailRequestSender:
             try:
                 http_response = await self._send_request(request, client)
                 return self._handle_response(http_response, span, target)
-            except GuardrailsTriggered:
-                raise
             except Exception as e:
                 span.set_status(Status(StatusCode.ERROR, str(e)))
                 raise
@@ -218,16 +196,15 @@ class GuardrailRequestSender:
             ) from e
 
         span.set_attributes(generate_guardrail_response_attributes(result, target.value))
-        
         if not self.config.suppress_exceptions:
             violations = [
                 GuardrailViolation(
-                    guardrail_type=r.type.value,
-                    name=getattr(r, "name", None),
-                    score=r.score,
-                    detected_categories=getattr(r, "detected_categories", None),
+                    guardrail_type=res.type.value,
+                    name=getattr(res, "name", None),
+                    score=res.score,
+                    detected_categories=getattr(res, "detected_categories", None),
                 )
-                for r in result.results if r.detected
+                for res in result.results if res.detected
             ]
             if violations:
                 raise GuardrailsTriggered(violations)

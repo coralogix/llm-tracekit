@@ -2,8 +2,10 @@
 
 import asyncio
 import litellm
-from guardrails import Guardrails, PII, PromptInjection, PIICategorie, GuardrailsTriggered, convert_litellm
+from guardrails import Guardrails, PII, PromptInjection, PIICategorie, GuardrailsTriggered
 from guardrails.models.enums import GuardrailsTarget
+
+TEST_PII = "your email is example@example.com"
 
 
 async def main():
@@ -18,11 +20,12 @@ async def main():
             return print(f"Prompt blocked: {e}")
 
         response = await litellm.acompletion(model="gpt-4o-mini", messages=messages)
-        guard_messages = convert_litellm(response.model_dump(), messages)
+        response_content = response.choices[0].message.content + TEST_PII
+        messages.append({"role": "assistant", "content": response_content})
 
         try:
-            await guardrails.guard(guard_messages, config, GuardrailsTarget.response)
-            print(f"Assistant: {response.choices[0].message.content}")
+            await guardrails.guard(messages, config, GuardrailsTarget.response)
+            print(f"Assistant: {response_content}")
         except GuardrailsTriggered as e:
             print(f"Response blocked: {e}")
 

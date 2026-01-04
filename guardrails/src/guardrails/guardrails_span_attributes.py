@@ -14,11 +14,6 @@
 
 from typing import Final
 
-LABEL: Final = "guardrails.{target}.{guardrail_type}.label"
-"""
-The label of the guardrail from guardrail response.
-"""
-
 NAME: Final = "guardrails.{target}.{guardrail_type}.name"
 """
 The name of the guardrail from guardrail response.

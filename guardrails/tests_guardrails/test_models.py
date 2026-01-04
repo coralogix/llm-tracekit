@@ -21,8 +21,6 @@ from guardrails.models.request import (
     PromptInjection,
     Message,
     GuardrailRequest,
-    normalize_message,
-    normalize_messages,
 )
 from guardrails.models.constants import DEFAULT_THRESHOLD
 from guardrails.models.enums import PIICategorie, GuardrailType, Role, GuardrailsTarget
@@ -73,46 +71,6 @@ class TestMessage:
         data = msg.model_dump(mode="json")
         assert_that(data["role"]).is_equal_to("user")
         assert_that(data["content"]).is_equal_to("Hello")
-
-
-class TestNormalizeMessage:
-    def test_normalize_message_from_message_object(self):
-        original = Message(role=Role.User, content="Hello")
-        result = normalize_message(original)
-        assert_that(result).is_equal_to(original)
-
-    def test_normalize_message_from_dict(self):
-        data = {"role": "user", "content": "Hello"}
-        result = normalize_message(data)
-        assert_that(result.role).is_equal_to(Role.User)
-        assert_that(result.content).is_equal_to("Hello")
-
-    def test_normalize_message_from_dict_with_role_enum(self):
-        data = {"role": Role.User, "content": "Hello"}
-        result = normalize_message(data)
-        assert_that(result.role).is_equal_to(Role.User)
-
-    def test_normalize_message_invalid_type(self):
-        with pytest.raises(ValueError):
-            normalize_message("invalid")
-
-    def test_normalize_messages_list(self):
-        messages = [
-            {"role": "user", "content": "Hello"},
-            Message(role=Role.Assistant, content="Hi"),
-            {"role": "system", "content": "Be helpful"},
-        ]
-        result = normalize_messages(messages)
-        
-        assert_that(result).is_length(3)
-        assert_that(result[0].role).is_equal_to(Role.User)
-        assert_that(result[1].role).is_equal_to(Role.Assistant)
-        assert_that(result[2].role).is_equal_to(Role.System)
-
-    def test_normalize_messages_none(self):
-        result = normalize_messages(None)
-        assert_that(result).is_none()
-
 
 class TestGuardrailRequest:
     def test_request_with_dict_messages(self):
@@ -269,7 +227,6 @@ class TestGuardrailsResultBase:
             "score": 0.1,
         }
         result = GuardrailsResultBase.model_validate(data)
-        assert_that(result.label).is_none()
 
 
 class TestGuardrailsResponse:

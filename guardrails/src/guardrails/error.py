@@ -71,5 +71,5 @@ class GuardrailsTriggered(GuardrailsError):
         self.triggered = triggered
         messages = [str(t) for t in triggered]
         super().__init__(
-            f"{len(triggered)} guardrails triggered:\n" + "\n".join(messages)
+            f"{len(triggered)} guardrails triggered: " + "\n".join(messages)
         )

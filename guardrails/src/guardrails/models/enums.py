@@ -19,10 +19,6 @@ class GuardrailType(Enum):
     custom = "custom"
 
 
-class Label(Enum):
-    P1 = "P1"
-
-
 class GuardrailsTarget(Enum):
     prompt = "prompt"
     response = "response"

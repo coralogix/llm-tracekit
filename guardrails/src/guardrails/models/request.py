@@ -32,15 +32,14 @@ ROLE_MAP = {
 
 
 class Message(BaseModel):
-    """Message model that accepts both Role enum and string role values.
-    
-    Examples:
-        Message(role=Role.User, content="Hello")
-        Message(role="user", content="Hello")  
-        {"role": "user", "content": "Hello"}  # via GuardrailRequest
-    """
     role: Role
     content: Any
+
+    def __init__(self, data: Optional[Dict[str, Any]] = None, **kwargs: Any) -> None:
+        if data is not None:
+            super().__init__(**data)
+        else:
+            super().__init__(**kwargs)
 
     @field_validator("role", mode="before")
     @classmethod
@@ -52,28 +51,6 @@ class Message(BaseModel):
             if role is None:
                 raise ValueError(f"Invalid role '{v}'. Must be one of: {set(ROLE_MAP.keys())}")
             return role
-        raise ValueError(f"Role must be a string or Role enum, got {type(v)}")
-
-
-# Type alias for flexible message input (Message object or dict)
-MessageInput = Union[Message, Dict[str, Any]]
-
-
-def normalize_message(msg: MessageInput) -> Message:
-    """Convert a dict or Message to a Message object."""
-    if isinstance(msg, Message):
-        return msg
-    if isinstance(msg, dict):
-        return Message(**msg)
-    raise ValueError(f"Expected Message or dict, got {type(msg)}")
-
-
-def normalize_messages(messages: Optional[List[MessageInput]]) -> Optional[List[Message]]:
-    """Convert a list of dicts/Messages to a list of Message objects."""
-    if messages is None:
-        return None
-    return [normalize_message(msg) for msg in messages]
-
 
 class GuardrailRequest(BaseModel):
     application: str
@@ -82,8 +59,3 @@ class GuardrailRequest(BaseModel):
     guardrails_configs: List[GuardrailConfigType]
     target: GuardrailsTarget
     timeout: int
-
-    @field_validator("messages", mode="before")
-    @classmethod
-    def validate_messages(cls, v: Optional[List[MessageInput]]) -> Optional[List[Message]]:
-        return normalize_messages(v)

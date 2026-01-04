@@ -63,7 +63,6 @@ async def test_agent_single_turn(
         }
     }
     ]
-    print(final_response_span.attributes)
 
     assert_messages_in_span(
         span=final_response_span,

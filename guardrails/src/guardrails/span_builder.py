@@ -2,7 +2,6 @@ from guardrails.models.enums import GuardrailType
 from guardrails.models.response import GuardrailsResponse
 from typing import Any, Dict, List, Optional
 from guardrails.guardrails_span_attributes import (
-    LABEL,
     NAME,
     SCORE,
     DETECTION_THRESHOLD,
@@ -44,9 +43,6 @@ def generate_guardrail_response_attributes(
     for result in guardrail_response.results:
         guardrail_type = result.type.value
         result_attributes: dict[str, Any] = {
-            LABEL.format(
-                target=target, guardrail_type=guardrail_type
-            ): result.label.value if result.label else None,
             NAME.format(target=target, guardrail_type=guardrail_type): getattr(
                 result, "name", None
             ),

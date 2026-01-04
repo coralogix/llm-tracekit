@@ -77,26 +77,6 @@ await guardrails.guard(messages, [PII()], GuardrailsTarget.response)
 
 See [`examples/direct_guard_example.py`](examples/direct_guard_example.py) for more details.
 
-## SDK Converters
-
-Convert messages from popular LLM SDKs to guardrails format:
-
-| SDK | Converter | Example |
-|-----|-----------|---------|
-| LiteLLM | `convert_litellm(response, messages)` | [`examples/litellm_example.py`](examples/litellm_example.py) |
-| OpenAI Agents | `convert_openai_agents(response, input_items)` | [`examples/openai_agents_example.py`](examples/openai_agents_example.py) |
-| AWS Bedrock | `convert_bedrock_converse(response, messages, system)` | [`examples/bedrock_example.py`](examples/bedrock_example.py) |
-| Google Gemini | `convert_gemini(response, contents)` | [`examples/gemini_example.py`](examples/gemini_example.py) |
-| LangChain | `convert_langchain(response, history)` | [`examples/langchain_example.py`](examples/langchain_example.py) |
-
-```python
-from guardrails import convert_litellm
-
-response = litellm.completion(model="gpt-4", messages=messages)
-guard_messages = convert_litellm(response.model_dump(), messages)
-await guardrails.guard(guard_messages, [PII()], GuardrailsTarget.response)
-```
-
 ## Guardrail Types
 
 ### PII Detection
