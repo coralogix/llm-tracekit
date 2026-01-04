@@ -33,6 +33,15 @@ litellm = ["llm-tracekit-litellm>=1.0.0"]
 openai-agents = ["llm-tracekit-openai-agents>=1.0.0"]
 guardrails = ["llm-tracekit-guardrails>=1.0.0"]
 langchain = ["llm-tracekit-langchain>=1.0.0"]
+# CI extras for testing
+ci-core = [
+    "llm-tracekit-openai>=1.0.0",
+    "llm-tracekit-bedrock>=1.0.0",
+    "llm-tracekit-gemini>=1.0.0",
+    "llm-tracekit-openai-agents>=1.0.0",
+    "llm-tracekit-guardrails>=1.0.0",
+    "llm-tracekit-langchain>=1.0.0",
+]
 
 [project.urls]
 homepage = "https://coralogix.com"
