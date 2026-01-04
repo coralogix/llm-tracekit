@@ -91,8 +91,8 @@ class Guardrails:
         if not messages or not guardrails_config:
             return None
         history: list[Message] = [self._to_messages(msg) for msg in messages]
-        if target == GuardrailsTarget.response and history[-1].role is not Role.Assistant:
-            raise AttributeError(f"target of {GuardrailsTarget.response} was given but last message is not a response")
+        if target == GuardrailsTarget.RESPONSE and history[-1].role is not Role.ASSISTANT:
+            raise AttributeError(f"target of {GuardrailsTarget.RESPONSE} was given but last message is not a response")
         return await self._sender.run(guardrails_config, target, history, self._client)
 
     def _to_messages(self, msg: Union[Message, dict[str, Any]]):
@@ -105,7 +105,7 @@ class Guardrails:
     ) -> Optional[GuardrailsResponse]:
         if not prompt:
             return None
-        return await self.guard([Message(role=Role.User, content=prompt)], guardrails_config, GuardrailsTarget.prompt)
+        return await self.guard([Message(role=Role.USER, content=prompt)], guardrails_config, GuardrailsTarget.PROMPT)
 
     async def guard_response(
         self,
@@ -117,9 +117,9 @@ class Guardrails:
             return None
         messages: list[Message] = []
         if prompt:
-            messages.append(Message(role=Role.User, content=prompt))
-        messages.append(Message(role=Role.Assistant, content=response))
-        return await self.guard(messages, guardrails_config, GuardrailsTarget.response)
+            messages.append(Message(role=Role.USER, content=prompt))
+        messages.append(Message(role=Role.ASSISTANT, content=response))
+        return await self.guard(messages, guardrails_config, GuardrailsTarget.RESPONSE)
 
 
 class GuardrailRequestSender:
@@ -147,9 +147,6 @@ class GuardrailRequestSender:
             raise GuardrailsAPIConnectionError(f"Failed to connect to {self.config.cx_endpoint}") from e
         except httpx.RequestError as e:
             raise GuardrailsAPIConnectionError(f"Request error: {e}") from e
-
-        if response.status_code >= 400:
-            raise GuardrailsAPIResponseError(status_code=response.status_code, body=response.text)
         return response
 
     async def run(
@@ -172,8 +169,8 @@ class GuardrailRequestSender:
             span.set_attributes(generate_base_attributes(
                 application_name=request.application,
                 subsystem_name=request.subsystem,
-                prompts=[m.content for m in messages if m.role == Role.User],
-                responses=[m.content for m in messages if m.role == Role.Assistant],
+                prompts=[m.content for m in messages if m.role == Role.USER],
+                responses=[m.content for m in messages if m.role == Role.ASSISTANT],
             ))
             try:
                 http_response = await self._send_request(request, client)

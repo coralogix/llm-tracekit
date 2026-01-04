@@ -52,7 +52,7 @@ def generate_guardrail_response_attributes(
             ): result.threshold,
         }
         result_name = getattr(result, "name", None)
-        if result.type.value == GuardrailType.custom.value and result_name:
+        if result.type.value == GuardrailType.CUSTOM.value and result_name:
             result_attributes[
                 CUSTOM_GUARDRAIL_NAME.format(
                     target=target, guardrail_type=guardrail_type

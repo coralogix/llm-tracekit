@@ -24,10 +24,10 @@ GuardrailConfigType = Union[PII, PromptInjection]
 
 # Role string to enum mapping
 ROLE_MAP = {
-    "user": Role.User,
-    "assistant": Role.Assistant,
-    "system": Role.System,
-    "tool": Role.Tool,
+    "user": Role.USER,
+    "assistant": Role.ASSISTANT,
+    "system": Role.SYSTEM,
+    "tool": Role.TOOL,
 }
 
 
