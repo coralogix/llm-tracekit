@@ -124,7 +124,7 @@ class TestGuardrailsGuardPrompt:
 
             assert_that(results.results).is_length(1)
             assert_that(results.results[0].detected).is_false()
-            assert_that(results.results[0].type).is_equal_to(GuardrailType.pii)
+            assert_that(results.results[0].type).is_equal_to(GuardrailType.PII)
 
     @pytest.mark.asyncio
     async def test_guard_prompt_detection_raises(self, guardrails_client):
@@ -153,7 +153,7 @@ class TestGuardrailsGuardPrompt:
                     await guardrails_client.guard_prompt(
                         prompt="My email is test@example.com",
                         guardrails_config=[
-                            PII(categories=[PIICategorie.email_address])
+                            PII(categories=[PIICategorie.EMAIL_ADDRESS])
                         ],
                     )
 

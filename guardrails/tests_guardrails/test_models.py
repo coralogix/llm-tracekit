@@ -29,28 +29,28 @@ from guardrails.models.response import GuardrailsResultBase, GuardrailsResponse
 
 class TestMessage:
     def test_message_with_role_enum(self):
-        msg = Message(role=Role.User, content="Hello")
-        assert_that(msg.role).is_equal_to(Role.User)
+        msg = Message(role=Role.USER, content="Hello")
+        assert_that(msg.role).is_equal_to(Role.USER)
         assert_that(msg.content).is_equal_to("Hello")
 
     def test_message_with_string_role_lowercase(self):
         msg = Message(role="user", content="Hello")
-        assert_that(msg.role).is_equal_to(Role.User)
+        assert_that(msg.role).is_equal_to(Role.USER)
 
     def test_message_with_string_role_uppercase(self):
         msg = Message(role="USER", content="Hello")
-        assert_that(msg.role).is_equal_to(Role.User)
+        assert_that(msg.role).is_equal_to(Role.USER)
 
     def test_message_with_string_role_mixed_case(self):
         msg = Message(role="Assistant", content="Hello")
-        assert_that(msg.role).is_equal_to(Role.Assistant)
+        assert_that(msg.role).is_equal_to(Role.ASSISTANT)
 
     def test_message_all_roles_as_strings(self):
         roles = [
-            ("user", Role.User),
-            ("assistant", Role.Assistant),
-            ("system", Role.System),
-            ("tool", Role.Tool),
+            ("user", Role.USER),
+            ("assistant", Role.ASSISTANT),
+            ("system", Role.SYSTEM),
+            ("tool", Role.TOOL),
         ]
         for string_role, expected_enum in roles:
             msg = Message(role=string_role, content="test")
@@ -63,11 +63,11 @@ class TestMessage:
     def test_message_from_dict(self):
         data = {"role": "user", "content": "Hello from dict"}
         msg = Message(**data)
-        assert_that(msg.role).is_equal_to(Role.User)
+        assert_that(msg.role).is_equal_to(Role.USER)
         assert_that(msg.content).is_equal_to("Hello from dict")
 
     def test_message_serialization(self):
-        msg = Message(role=Role.User, content="Hello")
+        msg = Message(role=Role.USER, content="Hello")
         data = msg.model_dump(mode="json")
         assert_that(data["role"]).is_equal_to("user")
         assert_that(data["content"]).is_equal_to("Hello")
@@ -83,13 +83,13 @@ class TestGuardrailRequest:
                 {"role": "assistant", "content": "Hi"},
             ],
             guardrails_configs=[PII()],
-            target=GuardrailsTarget.prompt,
+            target=GuardrailsTarget.PROMPT, 
             timeout=10,
         )
 
         assert_that(request.messages).is_length(2)
-        assert_that(request.messages[0].role).is_equal_to(Role.User)
-        assert_that(request.messages[1].role).is_equal_to(Role.Assistant)
+        assert_that(request.messages[0].role).is_equal_to(Role.USER)
+        assert_that(request.messages[1].role).is_equal_to(Role.ASSISTANT)
 
     def test_request_with_mixed_messages(self):
         request = GuardrailRequest(
@@ -97,10 +97,10 @@ class TestGuardrailRequest:
             subsystem="test",
             messages=[
                 {"role": "user", "content": "Hello"},
-                Message(role=Role.Assistant, content="Hi"),
+                Message(role=Role.ASSISTANT, content="Hi"),
             ],
             guardrails_configs=[PII()],
-            target=GuardrailsTarget.prompt,
+            target=GuardrailsTarget.PROMPT,
             timeout=10,
         )
 
@@ -113,7 +113,7 @@ class TestGuardrailRequest:
             subsystem="test",
             messages=[{"role": "user", "content": "Hello"}],
             guardrails_configs=[PII()],
-            target=GuardrailsTarget.prompt,
+            target=GuardrailsTarget.PROMPT,
             timeout=10,
         )
 
@@ -129,10 +129,10 @@ class TestPII:
         assert_that(pii.categories).is_length(len(PIICategorie))
 
     def test_pii_custom_categories(self):
-        pii = PII(categories=[PIICategorie.email_address, PIICategorie.phone_number])
+        pii = PII(categories=[PIICategorie.EMAIL_ADDRESS, PIICategorie.PHONE_NUMBER])
         assert_that(pii.categories).is_length(2)
-        assert_that(pii.categories).contains(PIICategorie.email_address)
-        assert_that(pii.categories).contains(PIICategorie.phone_number)
+        assert_that(pii.categories).contains(PIICategorie.EMAIL_ADDRESS)
+        assert_that(pii.categories).contains(PIICategorie.PHONE_NUMBER)
 
     def test_pii_custom_threshold(self):
         pii = PII(threshold=0.9)
@@ -145,7 +145,7 @@ class TestPII:
             PII(threshold=-0.1)
 
     def test_pii_serialization(self):
-        pii = PII(categories=[PIICategorie.email_address], threshold=0.8)
+        pii = PII(categories=[PIICategorie.EMAIL_ADDRESS], threshold=0.8)
         data = pii.model_dump(mode="json")
         assert_that(data["type"]).is_equal_to("pii")
         assert_that(data["threshold"]).is_equal_to(0.8)
@@ -175,8 +175,8 @@ class TestPromptInjection:
 
 class TestPIICategories:
     def test_category_values(self):
-        assert_that(PIICategorie.email_address.value).is_equal_to("email_address")
-        assert_that(PIICategorie.credit_card.value).is_equal_to("credit_card")
+        assert_that(PIICategorie.EMAIL_ADDRESS.value).is_equal_to("email_address")
+        assert_that(PIICategorie.CREDIT_CARD.value).is_equal_to("credit_card")
 
 
 class TestGuardrailsResultBase:
@@ -188,7 +188,7 @@ class TestGuardrailsResultBase:
             "threshold": 0.7,
         }
         result = GuardrailsResultBase.model_validate(data)
-        assert_that(result.type).is_equal_to(GuardrailType.pii)
+        assert_that(result.type).is_equal_to(GuardrailType.PII)
         assert_that(result.detected).is_true()
         assert_that(result.score).is_equal_to(0.95)
 
@@ -200,7 +200,7 @@ class TestGuardrailsResultBase:
             "score": 0.1,
         }
         result = GuardrailsResultBase.model_validate(data)
-        assert_that(result.type).is_equal_to(GuardrailType.pii)
+        assert_that(result.type).is_equal_to(GuardrailType.PII)
 
     def test_result_prompt_injection_type(self):
         data = {
@@ -209,7 +209,7 @@ class TestGuardrailsResultBase:
             "score": 0.85,
         }
         result = GuardrailsResultBase.model_validate(data)
-        assert_that(result.type).is_equal_to(GuardrailType.prompt_injection)
+        assert_that(result.type).is_equal_to(GuardrailType.PROMPT_INJECTION)
 
     def test_result_score_validation(self):
         with pytest.raises(ValidationError):
@@ -228,7 +228,7 @@ class TestGuardrailsResultBase:
             "score": 0.1,
         }
         result = GuardrailsResultBase.model_validate(data)
-        assert_that(result.type).is_equal_to(GuardrailType.pii)
+        assert_that(result.type).is_equal_to(GuardrailType.PII)
         assert_that(result.detected).is_false()
         assert_that(result.score).is_equal_to(0.1)
 
@@ -247,7 +247,7 @@ class TestGuardrailsResponse:
         }
         response = GuardrailsResponse.model_validate(data)
         assert_that(response.results).is_length(2)
-        assert_that(response.results[0].type).is_equal_to(GuardrailType.pii)
+        assert_that(response.results[0].type).is_equal_to(GuardrailType.PII)
         assert_that(response.results[1].detected).is_true()
 
     def test_response_from_json(self):

@@ -101,12 +101,10 @@ class TestGuardrailViolation:
         assert_that(message).contains("score=0.950")
         assert_that(message).contains("detected_categories=['email']")
 
-    def test_violation_custom_message(self):
-        violation = GuardrailViolation(
-            guardrail_type="pii",
-            message="Custom error message",
-        )
-        assert_that(str(violation)).is_equal_to("Custom error message")
+    def test_violation_minimal_message(self):
+        """Test violation with only guardrail_type produces minimal message."""
+        violation = GuardrailViolation(guardrail_type="pii")
+        assert_that(str(violation)).is_equal_to("Guardrail triggered: pii")
 
     def test_violation_prompt_injection(self):
         violation = GuardrailViolation(

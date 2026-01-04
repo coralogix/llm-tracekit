@@ -42,16 +42,19 @@ class GuardrailViolation(GuardrailsError):
         guardrail_type: str,
         name: Optional[str] = None,
         score: Optional[float] = None,
-        detected_categories: Optional[str] = None
+        detected_categories: Optional[List[str]] = None
     ):
         self.guardrail_type = guardrail_type
         self.name = name
         self.score = score
+        self.detected_categories = detected_categories
         parts = [f"Guardrail triggered: {guardrail_type}"]
         if name:
             parts.append(f"{name=}")
         if score is not None:
             parts.append(f"score={score:.3f}")
+        if detected_categories:
+            parts.append(f"{detected_categories=}")
         error_message = " | ".join(parts)
 
         super().__init__(error_message)
