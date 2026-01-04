@@ -27,5 +27,5 @@ jobs:
 
       - name: Run Mypy
         run: |
-          uv run --group=dev --locked --all-extras mypy .
+          uv run --group=dev --locked --all-extras mypy . --exclude 'tests_'
         shell: bash

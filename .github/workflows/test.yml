@@ -24,7 +24,7 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@v5
 
-      - name: Run Core tests
+      - name: Run tests
         run: |
           uv run --group=dev --locked --extra ci-core pytest . --ignore=instrumentations/litellm/tests_litellm/ -sv
         shell: bash
