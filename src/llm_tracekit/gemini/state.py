@@ -16,7 +16,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from opentelemetry.trace import Span
 
@@ -31,16 +31,16 @@ class GeminiSpanContext:
     span: Span
     capture_content: bool
     start_time_ns: int
-    request_attributes: Dict[str, Any]
+    request_attributes: dict[str, Any]
 
 
 @dataclass
 class GeminiOperationState:
     span_context: GeminiSpanContext
-    stream_state: Optional[GeminiStreamState] = None
-    response_details: Optional[GeminiResponseDetails] = None
-    error_type: Optional[str] = None
-    finish_reasons: List[str] = field(default_factory=list)
+    stream_state: GeminiStreamState | None = None
+    response_details: GeminiResponseDetails | None = None
+    error_type: str | None = None
+    finish_reasons: list[str] = field(default_factory=list)
     span_finished: bool = False
     metrics_recorded: bool = False
 

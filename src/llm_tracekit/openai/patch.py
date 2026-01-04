@@ -13,7 +13,7 @@
 # limitations under the License.
 
 from timeit import default_timer
-from typing import Any, Dict, Optional, Union
+from typing import Any
 
 from openai import AsyncStream, Stream
 from opentelemetry.semconv._incubating.attributes import (
@@ -100,7 +100,9 @@ def async_chat_completions_create(
     """Wrap the `create` method of the `AsyncChatCompletion` class to trace it."""
 
     async def traced_method(wrapped, instance, args, kwargs):
-        span_attributes = {**get_llm_request_attributes(kwargs, instance, capture_content)}
+        span_attributes = {
+            **get_llm_request_attributes(kwargs, instance, capture_content)
+        }
 
         span_name = f"{span_attributes[GenAIAttributes.GEN_AI_OPERATION_NAME]} {span_attributes[GenAIAttributes.GEN_AI_REQUEST_MODEL]}"
         with tracer.start_as_current_span(
@@ -147,7 +149,7 @@ def _record_metrics(
     duration: float,
     result,
     span_attributes: dict,
-    error_type: Optional[str],
+    error_type: str | None,
 ):
     common_attributes = {
         GenAIAttributes.GEN_AI_OPERATION_NAME: GenAIAttributes.GenAiOperationNameValues.CHAT.value,
@@ -244,22 +246,23 @@ class ChoiceBuffer:
 
 class BaseStreamWrapper:
     span: Span
-    response_id: Optional[str] = None
-    response_model: Optional[str] = None
-    service_tier: Optional[str] = None
-    finish_reasons: list = []
-    prompt_tokens: Optional[int] = 0
-    completion_tokens: Optional[int] = 0
+    response_id: str | None = None
+    response_model: str | None = None
+    service_tier: str | None = None
+    finish_reasons: list[str]
+    prompt_tokens: int | None = 0
+    completion_tokens: int | None = 0
 
     def __init__(
         self,
-        stream: Union[Stream, AsyncStream],
+        stream: Stream | AsyncStream,
         span: Span,
         capture_content: bool,
     ):
         self.stream = stream
         self.span = span
         self.choice_buffers: list[ChoiceBuffer] = []
+        self.finish_reasons = []
         self._span_started = False
         self.capture_content = capture_content
 
@@ -270,7 +273,7 @@ class BaseStreamWrapper:
             self._span_started = True
 
     @attribute_generator
-    def _generate_response_attributes(self) -> Dict[str, Any]:
+    def _generate_response_attributes(self) -> dict[str, Any]:
         parsed_choices = []
         for choice in self.choice_buffers:
             content = None
@@ -383,6 +386,8 @@ class BaseStreamWrapper:
 
 
 class StreamWrapper(BaseStreamWrapper):
+    stream: Stream
+
     def __enter__(self):
         self.setup()
         return self
@@ -418,6 +423,8 @@ class StreamWrapper(BaseStreamWrapper):
 
 
 class AsyncStreamWrapper(BaseStreamWrapper):
+    stream: AsyncStream
+
     async def __aenter__(self):
         self.setup()
         return self
@@ -450,6 +457,3 @@ class AsyncStreamWrapper(BaseStreamWrapper):
             handle_span_exception(self.span, error)
             self.cleanup()
             raise
-
-    def parse(self):
-        return self.stream.parse()

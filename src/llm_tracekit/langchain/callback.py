@@ -17,7 +17,7 @@ from __future__ import annotations
 import json
 from collections.abc import Mapping
 from timeit import default_timer
-from typing import Any, Dict, List, Optional
+from typing import Any
 from uuid import UUID
 
 from langchain_core.callbacks import BaseCallbackHandler  # type: ignore
@@ -66,13 +66,13 @@ class LangChainCallbackHandler(BaseCallbackHandler):  # type: ignore[misc]
 
     def on_chat_model_start(
         self,
-        serialized: Dict[str, Any],
-        messages: List[List[BaseMessage]],
+        serialized: dict[str, Any],
+        messages: list[list[BaseMessage]],
         *,
         run_id: UUID,
-        parent_run_id: Optional[UUID] = None,
-        tags: Optional[List[str]] = None,
-        metadata: Optional[Dict[str, Any]] = None,
+        parent_run_id: UUID | None = None,
+        tags: list[str] | None = None,
+        metadata: dict[str, Any] | None = None,
         **kwargs: Any,
     ) -> Any:
         provider_name = serialized.get("name")
@@ -87,21 +87,27 @@ class LangChainCallbackHandler(BaseCallbackHandler):  # type: ignore[misc]
         if request_model is None:
             return None
 
-        prompt_history = build_prompt_history(
-            flatten_message_batches(messages)
-        )
+        prompt_history = build_prompt_history(flatten_message_batches(messages))
 
         request_attributes = generate_request_attributes(
             model=request_model,
-            temperature=_get_value(invocation_params, metadata, "temperature", "ls_temperature"),
+            temperature=_get_value(
+                invocation_params, metadata, "temperature", "ls_temperature"
+            ),
             top_p=_get_value(invocation_params, metadata, "top_p"),
             top_k=_get_value(invocation_params, metadata, "top_k"),
-            max_tokens=_get_value(invocation_params, metadata, "max_tokens", "ls_max_tokens"),
-            presence_penalty=_get_value(invocation_params, metadata, "presence_penalty"),
-            frequency_penalty=_get_value(invocation_params, metadata, "frequency_penalty"),
+            max_tokens=_get_value(
+                invocation_params, metadata, "max_tokens", "ls_max_tokens"
+            ),
+            presence_penalty=_get_value(
+                invocation_params, metadata, "presence_penalty"
+            ),
+            frequency_penalty=_get_value(
+                invocation_params, metadata, "frequency_penalty"
+            ),
         )
 
-        span_attributes: Dict[str, Any] = {
+        span_attributes: dict[str, Any] = {
             **generate_base_attributes(system=system_value),
             **request_attributes,
             **generate_message_attributes(
@@ -109,13 +115,17 @@ class LangChainCallbackHandler(BaseCallbackHandler):  # type: ignore[misc]
             ),
         }
 
-        available_tool_attributes = _generate_available_tools_attributes(invocation_params)
+        available_tool_attributes = _generate_available_tools_attributes(
+            invocation_params
+        )
         if available_tool_attributes:
             span_attributes.update(available_tool_attributes)
 
         stop_sequences = _get_value(invocation_params, metadata, "stop")
         if stop_sequences is not None:
-            span_attributes[GenAIAttributes.GEN_AI_REQUEST_STOP_SEQUENCES] = stop_sequences
+            span_attributes[GenAIAttributes.GEN_AI_REQUEST_STOP_SEQUENCES] = (
+                stop_sequences
+            )
 
         seed = _get_value(invocation_params, metadata, "seed")
         if seed is not None:
@@ -125,7 +135,9 @@ class LangChainCallbackHandler(BaseCallbackHandler):  # type: ignore[misc]
         if provider_attr:
             span_attributes[_PROVIDER_ATTRIBUTE] = provider_attr
 
-        span_name = f"{GenAIAttributes.GenAiOperationNameValues.CHAT.value} {request_model}"
+        span_name = (
+            f"{GenAIAttributes.GenAiOperationNameValues.CHAT.value} {request_model}"
+        )
         self._span_manager.create_chat_span(
             run_id=run_id,
             parent_run_id=parent_run_id,
@@ -143,7 +155,7 @@ class LangChainCallbackHandler(BaseCallbackHandler):  # type: ignore[misc]
         response: LLMResult,  # type: ignore[override]
         *,
         run_id: UUID,
-        parent_run_id: Optional[UUID] = None,
+        parent_run_id: UUID | None = None,
         **kwargs: Any,
     ) -> Any:
         state = self._span_manager.get_state(run_id)
@@ -195,7 +207,7 @@ class LangChainCallbackHandler(BaseCallbackHandler):  # type: ignore[misc]
         error: BaseException,
         *,
         run_id: UUID,
-        parent_run_id: Optional[UUID] = None,
+        parent_run_id: UUID | None = None,
         **kwargs: Any,
     ) -> Any:
         state = self._span_manager.get_state(run_id)
@@ -222,10 +234,10 @@ class LangChainCallbackHandler(BaseCallbackHandler):  # type: ignore[misc]
         state: LangChainSpanState,
         *,
         duration: float,
-        response_model: Optional[str],
-        usage_input_tokens: Optional[int],
-        usage_output_tokens: Optional[int],
-        error_type: Optional[str],
+        response_model: str | None,
+        usage_input_tokens: int | None,
+        usage_output_tokens: int | None,
+        error_type: str | None,
     ) -> None:
         if self._instruments is None:
             return
@@ -234,13 +246,15 @@ class LangChainCallbackHandler(BaseCallbackHandler):  # type: ignore[misc]
         if isinstance(system_value, GenAIAttributes.GenAiSystemValues):
             system_value = system_value.value
 
-        common_attributes: Dict[str, Any] = {
+        common_attributes: dict[str, Any] = {
             GenAIAttributes.GEN_AI_OPERATION_NAME: GenAIAttributes.GenAiOperationNameValues.CHAT.value,
         }
         if system_value is not None:
             common_attributes[GenAIAttributes.GEN_AI_SYSTEM] = system_value
         if state.request_model:
-            common_attributes[GenAIAttributes.GEN_AI_REQUEST_MODEL] = state.request_model
+            common_attributes[GenAIAttributes.GEN_AI_REQUEST_MODEL] = (
+                state.request_model
+            )
         if response_model:
             common_attributes[GenAIAttributes.GEN_AI_RESPONSE_MODEL] = response_model
         if error_type:
@@ -272,7 +286,7 @@ class LangChainCallbackHandler(BaseCallbackHandler):  # type: ignore[misc]
             )
 
 
-def _extract_invocation_params(kwargs: Dict[str, Any]) -> Dict[str, Any]:
+def _extract_invocation_params(kwargs: dict[str, Any]) -> dict[str, Any]:
     invocation_params = kwargs.get("invocation_params")
     if isinstance(invocation_params, dict):
         params = invocation_params.get("params")
@@ -283,8 +297,8 @@ def _extract_invocation_params(kwargs: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def _extract_request_model(
-    params: Dict[str, Any], metadata: Optional[Dict[str, Any]]
-) -> Optional[str]:
+    params: dict[str, Any], metadata: dict[str, Any] | None
+) -> str | None:
     for key in ("model_name", "model", "model_id"):
         value = params.get(key)
         if isinstance(value, str):
@@ -297,7 +311,7 @@ def _extract_request_model(
     return None
 
 
-def _extract_response_model(llm_output: Optional[Dict[str, Any]]) -> Optional[str]:
+def _extract_response_model(llm_output: dict[str, Any] | None) -> str | None:
     if isinstance(llm_output, dict):
         for key in ("model_name", "model"):
             value = llm_output.get(key)
@@ -306,7 +320,7 @@ def _extract_response_model(llm_output: Optional[Dict[str, Any]]) -> Optional[st
     return None
 
 
-def _extract_response_id(llm_output: Optional[Dict[str, Any]]) -> Optional[str]:
+def _extract_response_id(llm_output: dict[str, Any] | None) -> str | None:
     if isinstance(llm_output, dict):
         response_id = llm_output.get("id")
         if response_id is not None:
@@ -315,8 +329,8 @@ def _extract_response_id(llm_output: Optional[Dict[str, Any]]) -> Optional[str]:
 
 
 def _get_value(
-    params: Dict[str, Any], metadata: Optional[Dict[str, Any]], *keys: str
-) -> Optional[Any]:
+    params: dict[str, Any], metadata: dict[str, Any] | None, *keys: str
+) -> Any | None:
     for key in keys:
         if key in params and params[key] is not None:
             return params[key]
@@ -327,12 +341,14 @@ def _get_value(
     return None
 
 
-def _generate_available_tools_attributes(invocation_params: Dict[str, Any]) -> Dict[str, Any]:
+def _generate_available_tools_attributes(
+    invocation_params: dict[str, Any],
+) -> dict[str, Any]:
     tools = invocation_params.get("tools")
     if not isinstance(tools, list):
         return {}
 
-    attributes: Dict[str, Any] = {}
+    attributes: dict[str, Any] = {}
     for tool_index, tool in enumerate(tools):
         if not isinstance(tool, Mapping):
             continue

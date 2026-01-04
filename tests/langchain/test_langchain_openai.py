@@ -15,10 +15,8 @@
 import json
 
 import pytest
-
 from langchain_core.messages import HumanMessage, SystemMessage, ToolMessage
 from langchain_core.tools import tool
-
 from langchain_openai import ChatOpenAI
 
 from tests.langchain.utils import assert_span_attributes
@@ -42,12 +40,18 @@ def test_langchain_openai_completion(span_exporter, instrument_langchain):
     assert_span_attributes(
         span,
         request_model="gpt-4o-mini",
-        input_tokens=response.usage_metadata.get("input_tokens") if response.usage_metadata else None,
-        output_tokens=response.usage_metadata.get("output_tokens") if response.usage_metadata else None,
+        input_tokens=response.usage_metadata.get("input_tokens")
+        if response.usage_metadata
+        else None,
+        output_tokens=response.usage_metadata.get("output_tokens")
+        if response.usage_metadata
+        else None,
     )
 
     user_message = {"role": "user", "content": "Say this is a test"}
-    assert_messages_in_span(span=span, expected_messages=[user_message], expect_content=True)
+    assert_messages_in_span(
+        span=span, expected_messages=[user_message], expect_content=True
+    )
 
     choice = {
         "finish_reason": "stop",
@@ -80,8 +84,12 @@ def test_langchain_openai_multi_turn(span_exporter, instrument_langchain):
     assert_span_attributes(
         span,
         request_model="gpt-4o-mini",
-        input_tokens=final_response.usage_metadata.get("input_tokens") if final_response.usage_metadata else None,
-        output_tokens=final_response.usage_metadata.get("output_tokens") if final_response.usage_metadata else None,
+        input_tokens=final_response.usage_metadata.get("input_tokens")
+        if final_response.usage_metadata
+        else None,
+        output_tokens=final_response.usage_metadata.get("output_tokens")
+        if final_response.usage_metadata
+        else None,
     )
 
     expected_messages = [
@@ -90,7 +98,9 @@ def test_langchain_openai_multi_turn(span_exporter, instrument_langchain):
         {"role": "assistant", "content": first_response.content},
         {"role": "user", "content": "Now do it again"},
     ]
-    assert_messages_in_span(span=span, expected_messages=expected_messages, expect_content=True)
+    assert_messages_in_span(
+        span=span, expected_messages=expected_messages, expect_content=True
+    )
 
     choice = {
         "finish_reason": "stop",
@@ -107,7 +117,9 @@ def test_langchain_openai_tool_call(span_exporter, instrument_langchain):
     llm = ChatOpenAI(model="gpt-4o-mini", temperature=0)
 
     @tool
-    def get_current_weather(location: str) -> str:  # pragma: no cover - executed via LangChain
+    def get_current_weather(
+        location: str,
+    ) -> str:  # pragma: no cover - executed via LangChain
         """Return mock weather for a given location."""
         if location == "Seattle, WA":
             return "50 degrees and raining"
@@ -173,14 +185,16 @@ def test_langchain_openai_tool_call(span_exporter, instrument_langchain):
                 "id": call.get("id"),
                 "type": call.get("type", "tool_call"),
                 "function": {
-                    "name": (function.get("name") if isinstance(function, dict) else None)
+                    "name": (
+                        function.get("name") if isinstance(function, dict) else None
+                    )
                     or call.get("name"),
                     "arguments": normalized_arguments,
                 },
             }
         )
 
-    final_history = history + [first_response] + tool_messages
+    final_history = [*history, first_response, *tool_messages]
     final_response = tool_llm.invoke(final_history)
 
     chat_spans = _get_chat_spans(span_exporter.get_finished_spans())
@@ -190,12 +204,19 @@ def test_langchain_openai_tool_call(span_exporter, instrument_langchain):
     assert_span_attributes(
         first_span,
         request_model="gpt-4o-mini",
-        input_tokens=first_response.usage_metadata.get("input_tokens") if first_response.usage_metadata else None,
-        output_tokens=first_response.usage_metadata.get("output_tokens") if first_response.usage_metadata else None,
+        input_tokens=first_response.usage_metadata.get("input_tokens")
+        if first_response.usage_metadata
+        else None,
+        output_tokens=first_response.usage_metadata.get("output_tokens")
+        if first_response.usage_metadata
+        else None,
     )
     first_messages = [
         {"role": "system", "content": "You're a helpful assistant."},
-        {"role": "user", "content": "What's the weather in Seattle and San Francisco today?"},
+        {
+            "role": "user",
+            "content": "What's the weather in Seattle and San Francisco today?",
+        },
     ]
     assert_messages_in_span(first_span, first_messages, expect_content=True)
 
@@ -213,16 +234,28 @@ def test_langchain_openai_tool_call(span_exporter, instrument_langchain):
     assert_span_attributes(
         second_span,
         request_model="gpt-4o-mini",
-        input_tokens=final_response.usage_metadata.get("input_tokens") if final_response.usage_metadata else None,
-        output_tokens=final_response.usage_metadata.get("output_tokens") if final_response.usage_metadata else None,
+        input_tokens=final_response.usage_metadata.get("input_tokens")
+        if final_response.usage_metadata
+        else None,
+        output_tokens=final_response.usage_metadata.get("output_tokens")
+        if final_response.usage_metadata
+        else None,
     )
 
     second_messages = [
         first_messages[0],
         first_messages[1],
         {"role": "assistant", "tool_calls": expected_tool_calls},
-        {"role": "tool", "tool_call_id": expected_tool_calls[0]["id"], "content": "50 degrees and raining"},
-        {"role": "tool", "tool_call_id": expected_tool_calls[1]["id"], "content": "70 degrees and sunny"},
+        {
+            "role": "tool",
+            "tool_call_id": expected_tool_calls[0]["id"],
+            "content": "50 degrees and raining",
+        },
+        {
+            "role": "tool",
+            "tool_call_id": expected_tool_calls[1]["id"],
+            "content": "70 degrees and sunny",
+        },
     ]
     assert_messages_in_span(second_span, second_messages, expect_content=True)
 
@@ -254,8 +287,12 @@ def test_langchain_openai_streaming(span_exporter, instrument_langchain):
     assert_span_attributes(
         span,
         request_model="gpt-4",
-        input_tokens=full_message.usage_metadata.get("input_tokens") if full_message.usage_metadata else None,
-        output_tokens=full_message.usage_metadata.get("output_tokens") if full_message.usage_metadata else None,
+        input_tokens=full_message.usage_metadata.get("input_tokens")
+        if full_message.usage_metadata
+        else None,
+        output_tokens=full_message.usage_metadata.get("output_tokens")
+        if full_message.usage_metadata
+        else None,
     )
 
     user_message = {"role": "user", "content": "Say this is a test"}

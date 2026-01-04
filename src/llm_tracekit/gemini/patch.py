@@ -15,9 +15,10 @@
 
 from __future__ import annotations
 
+from collections.abc import AsyncIterator, Iterator
 from dataclasses import dataclass
 from time import perf_counter_ns
-from typing import Any, AsyncIterator, Iterator, Optional
+from typing import Any
 
 from opentelemetry.semconv._incubating.attributes import (
     gen_ai_attributes as GenAIAttributes,
@@ -31,7 +32,6 @@ from llm_tracekit.gemini.utils import (
 )
 from llm_tracekit.instrumentation_utils import handle_span_exception
 from llm_tracekit.instruments import Instruments
-
 
 _GEMINI_SYSTEM_VALUE = getattr(
     GenAIAttributes.GenAiSystemValues,
@@ -52,7 +52,9 @@ def generate_content_wrapper(
     instruments: Instruments,
     capture_content: bool,
 ):
-    config = _WrapperConfig(tracer=tracer, instruments=instruments, capture_content=capture_content)
+    config = _WrapperConfig(
+        tracer=tracer, instruments=instruments, capture_content=capture_content
+    )
 
     def traced_method(wrapped, instance, args, kwargs):
         model = _get_argument(args, kwargs, name="model", position=0)
@@ -74,7 +76,9 @@ def generate_content_wrapper(
             attributes=request_details.span_attributes,
             end_on_exit=False,
         ) as span:
-            operation_state = _prepare_operation_state(span, request_details, config.capture_content)
+            operation_state = _prepare_operation_state(
+                span, request_details, config.capture_content
+            )
 
             try:
                 result = wrapped(*args, **kwargs)
@@ -82,10 +86,14 @@ def generate_content_wrapper(
                     response=result,
                     capture_content=config.capture_content,
                 )
-                operation_state.finish_reasons = operation_state.response_details.finish_reasons
+                operation_state.finish_reasons = (
+                    operation_state.response_details.finish_reasons
+                )
 
                 if span.is_recording():
-                    span.set_attributes(operation_state.response_details.span_attributes)
+                    span.set_attributes(
+                        operation_state.response_details.span_attributes
+                    )
 
                 span.end()
                 operation_state.mark_span_finished()
@@ -104,7 +112,9 @@ def generate_content_stream_wrapper(
     instruments: Instruments,
     capture_content: bool,
 ):
-    config = _WrapperConfig(tracer=tracer, instruments=instruments, capture_content=capture_content)
+    config = _WrapperConfig(
+        tracer=tracer, instruments=instruments, capture_content=capture_content
+    )
 
     def traced_method(wrapped, instance, args, kwargs):
         model = _get_argument(args, kwargs, name="model", position=0)
@@ -125,7 +135,9 @@ def generate_content_stream_wrapper(
             kind=SpanKind.CLIENT,
             attributes=request_details.span_attributes,
         )
-        operation_state = _prepare_operation_state(span, request_details, config.capture_content)
+        operation_state = _prepare_operation_state(
+            span, request_details, config.capture_content
+        )
 
         try:
             stream = wrapped(*args, **kwargs)
@@ -147,7 +159,9 @@ def async_generate_content_wrapper(
     instruments: Instruments,
     capture_content: bool,
 ):
-    config = _WrapperConfig(tracer=tracer, instruments=instruments, capture_content=capture_content)
+    config = _WrapperConfig(
+        tracer=tracer, instruments=instruments, capture_content=capture_content
+    )
 
     async def traced_method(wrapped, instance, args, kwargs):
         model = _get_argument(args, kwargs, name="model", position=0)
@@ -168,7 +182,9 @@ def async_generate_content_wrapper(
             kind=SpanKind.CLIENT,
             attributes=request_details.span_attributes,
         )
-        operation_state = _prepare_operation_state(span, request_details, config.capture_content)
+        operation_state = _prepare_operation_state(
+            span, request_details, config.capture_content
+        )
 
         try:
             result = await wrapped(*args, **kwargs)
@@ -176,7 +192,9 @@ def async_generate_content_wrapper(
                 response=result,
                 capture_content=config.capture_content,
             )
-            operation_state.finish_reasons = operation_state.response_details.finish_reasons
+            operation_state.finish_reasons = (
+                operation_state.response_details.finish_reasons
+            )
 
             if span.is_recording():
                 span.set_attributes(operation_state.response_details.span_attributes)
@@ -198,7 +216,9 @@ def async_generate_content_stream_wrapper(
     instruments: Instruments,
     capture_content: bool,
 ):
-    config = _WrapperConfig(tracer=tracer, instruments=instruments, capture_content=capture_content)
+    config = _WrapperConfig(
+        tracer=tracer, instruments=instruments, capture_content=capture_content
+    )
 
     async def traced_method(wrapped, instance, args, kwargs):
         model = _get_argument(args, kwargs, name="model", position=0)
@@ -219,7 +239,9 @@ def async_generate_content_stream_wrapper(
             kind=SpanKind.CLIENT,
             attributes=request_details.span_attributes,
         )
-        operation_state = _prepare_operation_state(span, request_details, config.capture_content)
+        operation_state = _prepare_operation_state(
+            span, request_details, config.capture_content
+        )
 
         try:
             stream = await wrapped(*args, **kwargs)
@@ -248,7 +270,7 @@ class GeminiStreamWrapper(Iterator[Any]):
         self._instruments = instruments
         self._finalized = False
 
-    def __iter__(self) -> "GeminiStreamWrapper":
+    def __iter__(self) -> GeminiStreamWrapper:
         return self
 
     def __next__(self):
@@ -269,7 +291,7 @@ class GeminiStreamWrapper(Iterator[Any]):
             self._stream.close()
         self._finalize()
 
-    def __enter__(self) -> "GeminiStreamWrapper":
+    def __enter__(self) -> GeminiStreamWrapper:
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
@@ -322,7 +344,7 @@ class GeminiAsyncStreamWrapper(AsyncIterator[Any]):
         self._instruments = instruments
         self._finalized = False
 
-    def __aiter__(self) -> "GeminiAsyncStreamWrapper":
+    def __aiter__(self) -> GeminiAsyncStreamWrapper:
         return self
 
     async def __anext__(self):
@@ -344,7 +366,7 @@ class GeminiAsyncStreamWrapper(AsyncIterator[Any]):
             await close_method()
         await self._finalize()
 
-    async def __aenter__(self) -> "GeminiAsyncStreamWrapper":
+    async def __aenter__(self) -> GeminiAsyncStreamWrapper:
         return self
 
     async def __aexit__(self, exc_type, exc_val, exc_tb):
@@ -407,7 +429,9 @@ def _handle_exception(operation_state: GeminiOperationState, error: Exception) -
     operation_state.mark_span_finished()
 
 
-def _record_metrics(operation_state: GeminiOperationState, instruments: Instruments) -> None:
+def _record_metrics(
+    operation_state: GeminiOperationState, instruments: Instruments
+) -> None:
     if operation_state.metrics_recorded:
         return
 
@@ -429,7 +453,9 @@ def _record_metrics(operation_state: GeminiOperationState, instruments: Instrume
 
     response_details = operation_state.response_details
     if response_details is not None and response_details.model is not None:
-        common_attributes[GenAIAttributes.GEN_AI_RESPONSE_MODEL] = response_details.model
+        common_attributes[GenAIAttributes.GEN_AI_RESPONSE_MODEL] = (
+            response_details.model
+        )
 
     if operation_state.error_type is not None:
         common_attributes["error.type"] = operation_state.error_type
@@ -443,9 +469,9 @@ def _record_metrics(operation_state: GeminiOperationState, instruments: Instrume
         usage = response_details.usage
         if usage.prompt_tokens is not None:
             input_attributes = dict(common_attributes)
-            input_attributes[
-                GenAIAttributes.GEN_AI_TOKEN_TYPE
-            ] = GenAIAttributes.GenAiTokenTypeValues.INPUT.value
+            input_attributes[GenAIAttributes.GEN_AI_TOKEN_TYPE] = (
+                GenAIAttributes.GenAiTokenTypeValues.INPUT.value
+            )
             instruments.token_usage_histogram.record(
                 usage.prompt_tokens,
                 attributes=input_attributes,
@@ -453,9 +479,9 @@ def _record_metrics(operation_state: GeminiOperationState, instruments: Instrume
 
         if usage.candidates_tokens is not None:
             completion_attributes = dict(common_attributes)
-            completion_attributes[
-                GenAIAttributes.GEN_AI_TOKEN_TYPE
-            ] = GenAIAttributes.GenAiTokenTypeValues.COMPLETION.value
+            completion_attributes[GenAIAttributes.GEN_AI_TOKEN_TYPE] = (
+                GenAIAttributes.GenAiTokenTypeValues.COMPLETION.value
+            )
             instruments.token_usage_histogram.record(
                 usage.candidates_tokens,
                 attributes=completion_attributes,
@@ -464,7 +490,7 @@ def _record_metrics(operation_state: GeminiOperationState, instruments: Instrume
     operation_state.mark_metrics_recorded()
 
 
-def _get_argument(args, kwargs, name: str, position: Optional[int] = None):
+def _get_argument(args, kwargs, name: str, position: int | None = None):
     if name in kwargs:
         return kwargs[name]
     if position is not None and len(args) > position:
@@ -473,8 +499,8 @@ def _get_argument(args, kwargs, name: str, position: Optional[int] = None):
 
 
 __all__ = [
-    "generate_content_wrapper",
-    "generate_content_stream_wrapper",
-    "async_generate_content_wrapper",
     "async_generate_content_stream_wrapper",
+    "async_generate_content_wrapper",
+    "generate_content_stream_wrapper",
+    "generate_content_wrapper",
 ]

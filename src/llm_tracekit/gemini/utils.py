@@ -16,8 +16,9 @@
 from __future__ import annotations
 
 import json
+from collections.abc import Iterable, Sequence
 from dataclasses import dataclass, field
-from typing import Any, Dict, Iterable, List, Optional, Sequence
+from typing import Any
 
 from opentelemetry.semconv._incubating.attributes import (
     gen_ai_attributes as GenAIAttributes,
@@ -40,52 +41,52 @@ _OPERATION_NAME_VALUE = GenAIAttributes.GenAiOperationNameValues.CHAT.value
 
 @dataclass
 class GeminiUsage:
-    prompt_tokens: Optional[int] = None
-    candidates_tokens: Optional[int] = None
+    prompt_tokens: int | None = None
+    candidates_tokens: int | None = None
 
 
 @dataclass
 class GeminiRequestDetails:
     span_name: str
-    span_attributes: Dict[str, Any]
-    model: Optional[str]
+    span_attributes: dict[str, Any]
+    model: str | None
 
 
 @dataclass
 class GeminiResponseDetails:
-    span_attributes: Dict[str, Any]
-    model: Optional[str]
-    response_id: Optional[str]
-    finish_reasons: List[str] = field(default_factory=list)
+    span_attributes: dict[str, Any]
+    model: str | None
+    response_id: str | None
+    finish_reasons: list[str] = field(default_factory=list)
     usage: GeminiUsage = field(default_factory=GeminiUsage)
-    choices: List[Choice] = field(default_factory=list)
+    choices: list[Choice] = field(default_factory=list)
 
 
 @dataclass
 class GeminiPartialToolCall:
     index: int
-    tool_call_id: Optional[str] = None
-    name: Optional[str] = None
-    arguments: Optional[str] = None
+    tool_call_id: str | None = None
+    name: str | None = None
+    arguments: str | None = None
 
 
 @dataclass
 class GeminiToolResponsePart:
     index: int
-    tool_call_id: Optional[str] = None
-    name: Optional[str] = None
-    result: Optional[str] = None
-    raw_content: Optional[str] = None
+    tool_call_id: str | None = None
+    name: str | None = None
+    result: str | None = None
+    raw_content: str | None = None
 
 
 @dataclass
 class GeminiToolCallBuffer:
     index: int
-    tool_call_id: Optional[str] = None
-    function_name: Optional[str] = None
-    arguments: List[str] = field(default_factory=list)
+    tool_call_id: str | None = None
+    function_name: str | None = None
+    arguments: list[str] = field(default_factory=list)
 
-    def add_arguments(self, value: Optional[str], capture_content: bool) -> None:
+    def add_arguments(self, value: str | None, capture_content: bool) -> None:
         if not capture_content:
             return
         if value is None:
@@ -93,7 +94,7 @@ class GeminiToolCallBuffer:
         self.arguments.append(value)
 
     def to_tool_call(self, capture_content: bool) -> ToolCall:
-        arguments_value: Optional[str] = None
+        arguments_value: str | None = None
         if capture_content and self.arguments:
             arguments_value = "".join(self.arguments)
 
@@ -108,12 +109,12 @@ class GeminiToolCallBuffer:
 @dataclass
 class GeminiCandidateBuffer:
     index: int
-    role: Optional[str] = None
-    finish_reason: Optional[str] = None
-    text_parts: List[str] = field(default_factory=list)
-    tool_calls: Dict[int, GeminiToolCallBuffer] = field(default_factory=dict)
+    role: str | None = None
+    finish_reason: str | None = None
+    text_parts: list[str] = field(default_factory=list)
+    tool_calls: dict[int, GeminiToolCallBuffer] = field(default_factory=dict)
 
-    def append_text(self, text: Optional[str]) -> None:
+    def append_text(self, text: str | None) -> None:
         if text is None:
             return
         self.text_parts.append(text)
@@ -133,11 +134,11 @@ class GeminiCandidateBuffer:
         buffer.add_arguments(tool_call.arguments, capture_content)
 
     def to_choice(self, capture_content: bool) -> Choice:
-        content_value: Optional[str] = None
+        content_value: str | None = None
         if self.text_parts:
             content_value = "".join(self.text_parts)
 
-        tool_calls_list: Optional[List[ToolCall]] = None
+        tool_calls_list: list[ToolCall] | None = None
         if self.tool_calls:
             tool_calls_list = [
                 self.tool_calls[index].to_tool_call(capture_content)
@@ -155,10 +156,10 @@ class GeminiCandidateBuffer:
 @dataclass
 class GeminiStreamState:
     capture_content: bool
-    model: Optional[str] = None
-    response_id: Optional[str] = None
+    model: str | None = None
+    response_id: str | None = None
     usage: GeminiUsage = field(default_factory=GeminiUsage)
-    candidate_buffers: Dict[int, GeminiCandidateBuffer] = field(default_factory=dict)
+    candidate_buffers: dict[int, GeminiCandidateBuffer] = field(default_factory=dict)
 
     def ingest_chunk(self, chunk: Any) -> None:
         if chunk is None:
@@ -178,7 +179,9 @@ class GeminiStreamState:
         if usage.candidates_tokens is not None:
             self.usage.candidates_tokens = usage.candidates_tokens
 
-        for index, candidate in enumerate(_iter_sequence(_safe_get(chunk, "candidates"))):
+        for index, candidate in enumerate(
+            _iter_sequence(_safe_get(chunk, "candidates"))
+        ):
             buffer = self._get_candidate_buffer(candidate_index=index)
             finish_reason_candidate = _normalize_finish_reason(
                 _safe_get(candidate, "finish_reason")
@@ -210,7 +213,7 @@ class GeminiStreamState:
             if choice.finish_reason is not None
         ]
 
-        normalized_finish_reasons: List[str] = []
+        normalized_finish_reasons: list[str] = []
         for finish_reason in finish_reasons:
             normalized_value = _normalize_finish_reason(finish_reason)
             if normalized_value is None:
@@ -225,7 +228,9 @@ class GeminiStreamState:
                 usage_input_tokens=self.usage.prompt_tokens,
                 usage_output_tokens=self.usage.candidates_tokens,
             ),
-            **generate_choice_attributes(choices=choices, capture_content=self.capture_content),
+            **generate_choice_attributes(
+                choices=choices, capture_content=self.capture_content
+            ),
         }
 
         return GeminiResponseDetails(
@@ -246,7 +251,7 @@ class GeminiStreamState:
 
 
 def build_request_details(
-    model: Optional[str],
+    model: str | None,
     contents: Any,
     system_instruction: Any,
     config: Any,
@@ -276,7 +281,7 @@ def build_request_details(
         capture_content=capture_content,
     )
 
-    attributes: Dict[str, Any] = {
+    attributes: dict[str, Any] = {
         **generate_base_attributes(system=_GOOGLE_GENAI_SYSTEM),
         **request_attributes,
         **message_attributes,
@@ -309,7 +314,7 @@ def build_response_details(
 def extract_tool_call_from_part(
     part: Any,
     fallback_index: int,
-) -> Optional[GeminiPartialToolCall]:
+) -> GeminiPartialToolCall | None:
     function_call = _safe_get(part, "function_call")
     if function_call is None:
         return None
@@ -333,7 +338,7 @@ def extract_tool_call_from_part(
 def extract_tool_response_from_part(
     part: Any,
     fallback_index: int,
-) -> Optional[GeminiToolResponsePart]:
+) -> GeminiToolResponsePart | None:
     function_response = _safe_get(part, "function_response")
     if function_response is None:
         return None
@@ -343,8 +348,8 @@ def extract_tool_response_from_part(
         response_index = fallback_index
 
     response_payload = _safe_get(function_response, "response")
-    result_value: Optional[str] = None
-    raw_content_value: Optional[str] = None
+    result_value: str | None = None
+    raw_content_value: str | None = None
 
     if response_payload is not None:
         result_candidate = _safe_get(response_payload, "result")
@@ -356,7 +361,11 @@ def extract_tool_response_from_part(
     if result_value is None and isinstance(response_payload, str):
         result_value = response_payload
 
-    if raw_content_value is None and response_payload is not None and not isinstance(response_payload, str):
+    if (
+        raw_content_value is None
+        and response_payload is not None
+        and not isinstance(response_payload, str)
+    ):
         raw_content_value = _stringify_value(response_payload)
 
     return GeminiToolResponsePart(
@@ -387,31 +396,41 @@ def extract_usage_metadata(value: Any) -> GeminiUsage:
     )
 
 
-def _config_to_request_attributes(config: Any) -> Dict[str, Any]:
+def _config_to_request_attributes(config: Any) -> dict[str, Any]:
     if config is None:
         return {}
 
-    attributes: Dict[str, Any] = {}
+    attributes: dict[str, Any] = {}
 
     candidate_count = _safe_get(config, "candidate_count")
-    if candidate_count is not None and hasattr(GenAIAttributes, "GEN_AI_REQUEST_CANDIDATE_COUNT"):
-        attributes[getattr(GenAIAttributes, "GEN_AI_REQUEST_CANDIDATE_COUNT")] = candidate_count
+    if candidate_count is not None and hasattr(
+        GenAIAttributes, "GEN_AI_REQUEST_CANDIDATE_COUNT"
+    ):
+        attributes[getattr(GenAIAttributes, "GEN_AI_REQUEST_CANDIDATE_COUNT")] = (
+            candidate_count
+        )
 
     stop_sequences = _safe_get(config, "stop_sequences")
-    if stop_sequences is not None and hasattr(GenAIAttributes, "GEN_AI_REQUEST_STOP_SEQUENCES"):
+    if stop_sequences is not None and hasattr(
+        GenAIAttributes, "GEN_AI_REQUEST_STOP_SEQUENCES"
+    ):
         attributes[getattr(GenAIAttributes, "GEN_AI_REQUEST_STOP_SEQUENCES")] = list(
             _iter_sequence(stop_sequences)
         )
 
     response_mime_type = _safe_get(config, "response_mime_type")
-    if response_mime_type is not None and hasattr(GenAIAttributes, "GEN_AI_RESPONSE_CONTENT_TYPE"):
-        attributes[getattr(GenAIAttributes, "GEN_AI_RESPONSE_CONTENT_TYPE")] = response_mime_type
+    if response_mime_type is not None and hasattr(
+        GenAIAttributes, "GEN_AI_RESPONSE_CONTENT_TYPE"
+    ):
+        attributes[getattr(GenAIAttributes, "GEN_AI_RESPONSE_CONTENT_TYPE")] = (
+            response_mime_type
+        )
 
     return attributes
 
 
-def _contents_to_messages(contents: Any) -> List[Message]:
-    messages: List[Message] = []
+def _contents_to_messages(contents: Any) -> list[Message]:
+    messages: list[Message] = []
     for entry in _iter_sequence(contents):
         if entry is None:
             continue
@@ -428,8 +447,8 @@ def _contents_to_messages(contents: Any) -> List[Message]:
         role = _safe_get(entry, "role")
 
         if role == "tool":
-            tool_responses: List[GeminiToolResponsePart] = []
-            tool_text_fragments: List[str] = []
+            tool_responses: list[GeminiToolResponsePart] = []
+            tool_text_fragments: list[str] = []
             for part_index, part in enumerate(_iter_parts(entry)):
                 tool_response = extract_tool_response_from_part(part, part_index)
                 if tool_response is not None:
@@ -442,7 +461,9 @@ def _contents_to_messages(contents: Any) -> List[Message]:
 
             if tool_responses:
                 for response_part in tool_responses:
-                    tool_content_value = response_part.result or response_part.raw_content
+                    tool_content_value = (
+                        response_part.result or response_part.raw_content
+                    )
                     if tool_content_value is None:
                         continue
                     messages.append(
@@ -463,9 +484,9 @@ def _contents_to_messages(contents: Any) -> List[Message]:
 
                 continue
 
-        text_fragments: List[str] = []
-        tool_call_buffers: Dict[int, GeminiToolCallBuffer] = {}
-        message_tool_call_id: Optional[str] = None
+        text_fragments: list[str] = []
+        tool_call_buffers: dict[int, GeminiToolCallBuffer] = {}
+        message_tool_call_id: str | None = None
         for part_index, part in enumerate(_iter_parts(entry)):
             text_value = _extract_text_from_part(part)
             if text_value is not None:
@@ -484,13 +505,13 @@ def _contents_to_messages(contents: Any) -> List[Message]:
                     buffer.function_name = partial_tool_call.name
                 buffer.add_arguments(partial_tool_call.arguments, capture_content=True)
 
-        content_value: Optional[str] = None
+        content_value: str | None = None
         if text_fragments:
             content_value = "".join(text_fragments)
         elif not tool_call_buffers:
             content_value = _stringify_value(entry)
 
-        tool_calls_list: Optional[List[ToolCall]] = None
+        tool_calls_list: list[ToolCall] | None = None
         if tool_call_buffers:
             sorted_buffers = [buffer for _, buffer in sorted(tool_call_buffers.items())]
             for buffer in sorted_buffers:
@@ -503,7 +524,9 @@ def _contents_to_messages(contents: Any) -> List[Message]:
                     id=buffer.tool_call_id,
                     type="function",
                     function_name=buffer.function_name,
-                    function_arguments="".join(buffer.arguments) if buffer.arguments else None,
+                    function_arguments="".join(buffer.arguments)
+                    if buffer.arguments
+                    else None,
                 )
                 for buffer in sorted_buffers
             ]
@@ -543,7 +566,7 @@ def _iter_sequence(value: Any) -> Iterable[Any]:
     return (value,)
 
 
-def _extract_text_from_part(part: Any) -> Optional[str]:
+def _extract_text_from_part(part: Any) -> str | None:
     if part is None:
         return None
     if isinstance(part, str):
@@ -556,7 +579,7 @@ def _extract_text_from_part(part: Any) -> Optional[str]:
     return None
 
 
-def _normalize_arguments(value: Any) -> Optional[str]:
+def _normalize_arguments(value: Any) -> str | None:
     if value is None:
         return None
     if isinstance(value, str):
@@ -567,7 +590,7 @@ def _normalize_arguments(value: Any) -> Optional[str]:
         return str(value)
 
 
-def _normalize_finish_reason(value: Any) -> Optional[str]:
+def _normalize_finish_reason(value: Any) -> str | None:
     if value is None:
         return None
     if isinstance(value, str):
@@ -602,7 +625,7 @@ def _safe_get(obj: Any, attribute: str) -> Any:
     return getattr(obj, attribute, None)
 
 
-def _stringify_value(value: Any) -> Optional[str]:
+def _stringify_value(value: Any) -> str | None:
     if value is None:
         return None
     if isinstance(value, str):
@@ -633,7 +656,7 @@ def _stringify_value(value: Any) -> Optional[str]:
     return str(value)
 
 
-def _as_int(value: Any) -> Optional[int]:
+def _as_int(value: Any) -> int | None:
     if value is None:
         return None
     if isinstance(value, int):
@@ -644,7 +667,7 @@ def _as_int(value: Any) -> Optional[int]:
         return None
 
 
-def _coerce_model_name(candidate: Any) -> Optional[str]:
+def _coerce_model_name(candidate: Any) -> str | None:
     if candidate is None:
         return None
     if isinstance(candidate, str):
@@ -664,7 +687,7 @@ def _coerce_model_name(candidate: Any) -> Optional[str]:
     return None
 
 
-def _extract_model_name(value: Any) -> Optional[str]:
+def _extract_model_name(value: Any) -> str | None:
     if value is None:
         return None
 
@@ -678,7 +701,9 @@ def _extract_model_name(value: Any) -> Optional[str]:
         model_candidate = _coerce_model_name(response_metadata)
         if model_candidate:
             return model_candidate
-        model_candidate = _coerce_model_name(_safe_get(response_metadata, "model_version"))
+        model_candidate = _coerce_model_name(
+            _safe_get(response_metadata, "model_version")
+        )
         if model_candidate:
             return model_candidate
 
@@ -688,7 +713,9 @@ def _extract_model_name(value: Any) -> Optional[str]:
         if model_candidate:
             return model_candidate
         candidate_metadata = _safe_get(candidate, "metadata")
-        model_candidate = _coerce_model_name(_safe_get(candidate_metadata, "model_version"))
+        model_candidate = _coerce_model_name(
+            _safe_get(candidate_metadata, "model_version")
+        )
         if model_candidate:
             return model_candidate
 

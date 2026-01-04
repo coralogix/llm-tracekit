@@ -15,17 +15,17 @@ jobs:
       - name: Setup python
         uses: actions/setup-python@v5.0.0
         with:
-         python-version: '>=3.9 <=3.13'
+         python-version: '>=3.10 <=3.13'
 
       - name: Install uv
         uses: astral-sh/setup-uv@v5
 
       - name: Run Ruff
         run: |
-          uv run --group=dev --locked --all-extras ruff check src
+          uv run --group=dev --locked --all-extras ruff check
         shell: bash
 
       - name: Run Mypy
         run: |
-          uv run --group=dev --locked --all-extras mypy src
+          uv run --group=dev --locked --all-extras mypy
         shell: bash

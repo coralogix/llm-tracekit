@@ -12,32 +12,38 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
 import logging
-from typing import Optional, List, Dict, Any
+import os
 from dataclasses import dataclass
+from typing import Any
 
 from opentelemetry import trace
-from opentelemetry.sdk.resources import SERVICE_NAME, Resource
-from opentelemetry.sdk.trace import TracerProvider, SpanLimits
-from opentelemetry.sdk.trace.export import BatchSpanProcessor, SimpleSpanProcessor, SpanProcessor
 from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
+from opentelemetry.sdk.resources import SERVICE_NAME, Resource
+from opentelemetry.sdk.trace import SpanLimits, TracerProvider
+from opentelemetry.sdk.trace.export import (
+    BatchSpanProcessor,
+    SimpleSpanProcessor,
+    SpanProcessor,
+)
 
 from llm_tracekit.instrumentation_utils import enable_capture_content
 
 logger = logging.getLogger(__name__)
 
+
 @dataclass
 class ExportConfig:
-    endpoint: Optional[str] = None
-    headers: Optional[Dict[str, Any]] = None
+    endpoint: str | None = None
+    headers: dict[str, Any] | None = None
+
 
 def generate_exporter_config(
-        coralogix_token: Optional[str],
-        coralogix_endpoint: Optional[str],
-        application_name: Optional[str],
-        subsystem_name: Optional[str],
-    ) -> ExportConfig:
+    coralogix_token: str | None,
+    coralogix_endpoint: str | None,
+    application_name: str | None,
+    subsystem_name: str | None,
+) -> ExportConfig:
     if coralogix_token is None:
         coralogix_token = os.environ.get("CX_TOKEN")
     if coralogix_endpoint is None:
@@ -52,21 +58,19 @@ def generate_exporter_config(
         "cx-application-name": application_name,
         "cx-subsystem-name": subsystem_name,
     }
-    
-    return ExportConfig(
-        endpoint=coralogix_endpoint,
-        headers=headers
-    )
+
+    return ExportConfig(endpoint=coralogix_endpoint, headers=headers)
+
 
 def setup_export_to_coralogix(
     service_name: str,
-    coralogix_token: Optional[str] = None,
-    coralogix_endpoint: Optional[str] = None,
-    application_name: Optional[str] = None,
-    subsystem_name: Optional[str] = None,
+    coralogix_token: str | None = None,
+    coralogix_endpoint: str | None = None,
+    application_name: str | None = None,
+    subsystem_name: str | None = None,
     use_batch_processor: bool = False,
     capture_content: bool = True,
-    processors: Optional[List[SpanProcessor]] = None,
+    processors: list[SpanProcessor] | None = None,
     span_attribute_count_limit: int = 512,
 ):
     """
@@ -91,9 +95,9 @@ def setup_export_to_coralogix(
         coralogix_token=coralogix_token,
         coralogix_endpoint=coralogix_endpoint,
         application_name=application_name,
-        subsystem_name=subsystem_name
+        subsystem_name=subsystem_name,
     )
-    
+
     env_limit_raw = os.environ.get("OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT")
     effective_limit = span_attribute_count_limit
     if env_limit_raw is not None:
@@ -121,7 +125,7 @@ def setup_export_to_coralogix(
     # set up a tracer provider to send spans to coralogix.
     tracer_provider = TracerProvider(
         resource=Resource.create({SERVICE_NAME: service_name}),
-        span_limits=span_attribute_limit
+        span_limits=span_attribute_limit,
     )
 
     # add any custom span processors before configuring the exporter processor
@@ -129,12 +133,11 @@ def setup_export_to_coralogix(
         for span_processor in processors:
             tracer_provider.add_span_processor(span_processor)
 
-    #set up an OTLP exporter to send spans to coralogix directly.
+    # set up an OTLP exporter to send spans to coralogix directly.
     exporter = OTLPSpanExporter(
-        endpoint=exporter_config.endpoint,
-        headers=exporter_config.headers
+        endpoint=exporter_config.endpoint, headers=exporter_config.headers
     )
-    
+
     # set up a span processor to send spans to the exporter
     span_processor = (
         BatchSpanProcessor(exporter)

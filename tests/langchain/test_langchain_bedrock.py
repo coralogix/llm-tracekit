@@ -15,15 +15,12 @@
 import json
 
 import pytest
-
+from langchain_aws import ChatBedrock
 from langchain_core.messages import HumanMessage, SystemMessage, ToolMessage
 from langchain_core.tools import tool
 
-from langchain_aws import ChatBedrock
-
-from tests.utils import assert_choices_in_span, assert_messages_in_span
 from tests.langchain.utils import assert_span_attributes
-
+from tests.utils import assert_choices_in_span, assert_messages_in_span
 
 _MODEL_ID = "anthropic.claude-3-5-sonnet-20240620-v1:0"
 _REGION_NAME = "us-east-1"
@@ -36,31 +33,37 @@ def _get_chat_spans(spans):
 @pytest.mark.vcr()
 def test_langchain_bedrock_completion(span_exporter, instrument_langchain):
     llm = ChatBedrock(
-    model_id=_MODEL_ID,
-    region_name=_REGION_NAME,
-    model_kwargs={
-        "temperature": 0.2,
-        "max_tokens": 256,
-        "top_p": 0.9,
+        model_id=_MODEL_ID,
+        region_name=_REGION_NAME,
+        model_kwargs={
+            "temperature": 0.2,
+            "max_tokens": 256,
+            "top_p": 0.9,
         },
     )
 
     response = llm.invoke([HumanMessage(content="Say this is a test")])
 
     span = _get_chat_spans(span_exporter.get_finished_spans())[-1]
-    
+
     assert span
-    
+
     assert_span_attributes(
         span,
         request_model=_MODEL_ID,
-        input_tokens=response.usage_metadata.get("input_tokens") if response.usage_metadata else None,
-        output_tokens=response.usage_metadata.get("output_tokens") if response.usage_metadata else None,
+        input_tokens=response.usage_metadata.get("input_tokens")
+        if response.usage_metadata
+        else None,
+        output_tokens=response.usage_metadata.get("output_tokens")
+        if response.usage_metadata
+        else None,
     )
 
     user_message = {"role": "user", "content": "Say this is a test"}
-    assert_messages_in_span(span=span, expected_messages=[user_message], expect_content=True)
-    
+    assert_messages_in_span(
+        span=span, expected_messages=[user_message], expect_content=True
+    )
+
     choice = {
         "finish_reason": "end_turn",
         "message": {
@@ -74,12 +77,12 @@ def test_langchain_bedrock_completion(span_exporter, instrument_langchain):
 @pytest.mark.vcr()
 def test_langchain_bedrock_multi_turn(span_exporter, instrument_langchain):
     llm = ChatBedrock(
-    model_id=_MODEL_ID,
-    region_name=_REGION_NAME,
-    model_kwargs={
-        "temperature": 0.2,
-        "max_tokens": 256,
-        "top_p": 0.9,
+        model_id=_MODEL_ID,
+        region_name=_REGION_NAME,
+        model_kwargs={
+            "temperature": 0.2,
+            "max_tokens": 256,
+            "top_p": 0.9,
         },
     )
 
@@ -89,7 +92,7 @@ def test_langchain_bedrock_multi_turn(span_exporter, instrument_langchain):
     ]
 
     first_response = llm.invoke(conversation)
-    
+
     conversation.append(first_response)
     conversation.append(HumanMessage(content="Now do it again"))
 
@@ -102,8 +105,12 @@ def test_langchain_bedrock_multi_turn(span_exporter, instrument_langchain):
     assert_span_attributes(
         span,
         request_model=_MODEL_ID,
-        input_tokens=final_response.usage_metadata.get("input_tokens") if final_response.usage_metadata else None,
-        output_tokens=final_response.usage_metadata.get("output_tokens") if final_response.usage_metadata else None,
+        input_tokens=final_response.usage_metadata.get("input_tokens")
+        if final_response.usage_metadata
+        else None,
+        output_tokens=final_response.usage_metadata.get("output_tokens")
+        if final_response.usage_metadata
+        else None,
     )
 
     expected_messages = [
@@ -112,8 +119,10 @@ def test_langchain_bedrock_multi_turn(span_exporter, instrument_langchain):
         {"role": "assistant", "content": first_response.content},
         {"role": "user", "content": "Now do it again"},
     ]
-    assert_messages_in_span(span=span, expected_messages=expected_messages, expect_content=True)
-    
+    assert_messages_in_span(
+        span=span, expected_messages=expected_messages, expect_content=True
+    )
+
     choice = {
         "finish_reason": "end_turn",
         "message": {
@@ -180,7 +189,7 @@ def test_langchain_bedrock_tool_call(span_exporter, instrument_langchain):
             }
         )
 
-    final_history = history + [first_response] + tool_messages
+    final_history = [*history, first_response, *tool_messages]
     final_response = tool_llm.invoke(final_history)
 
     chat_spans = _get_chat_spans(span_exporter.get_finished_spans())
@@ -190,8 +199,12 @@ def test_langchain_bedrock_tool_call(span_exporter, instrument_langchain):
     assert_span_attributes(
         first_span,
         request_model=_MODEL_ID,
-        input_tokens=first_response.usage_metadata.get("input_tokens") if first_response.usage_metadata else None,
-        output_tokens=first_response.usage_metadata.get("output_tokens") if first_response.usage_metadata else None,
+        input_tokens=first_response.usage_metadata.get("input_tokens")
+        if first_response.usage_metadata
+        else None,
+        output_tokens=first_response.usage_metadata.get("output_tokens")
+        if first_response.usage_metadata
+        else None,
     )
 
     assert_messages_in_span(
@@ -218,8 +231,12 @@ def test_langchain_bedrock_tool_call(span_exporter, instrument_langchain):
     assert_span_attributes(
         second_span,
         request_model=_MODEL_ID,
-        input_tokens=final_response.usage_metadata.get("input_tokens") if final_response.usage_metadata else None,
-        output_tokens=final_response.usage_metadata.get("output_tokens") if final_response.usage_metadata else None,
+        input_tokens=final_response.usage_metadata.get("input_tokens")
+        if final_response.usage_metadata
+        else None,
+        output_tokens=final_response.usage_metadata.get("output_tokens")
+        if final_response.usage_metadata
+        else None,
     )
 
     second_messages = [
@@ -281,8 +298,12 @@ def test_langchain_bedrock_streaming(span_exporter, instrument_langchain):
     assert_span_attributes(
         span,
         request_model=_MODEL_ID,
-        input_tokens=full_message.usage_metadata.get("input_tokens") if full_message.usage_metadata else None,
-        output_tokens=full_message.usage_metadata.get("output_tokens") if full_message.usage_metadata else None,
+        input_tokens=full_message.usage_metadata.get("input_tokens")
+        if full_message.usage_metadata
+        else None,
+        output_tokens=full_message.usage_metadata.get("output_tokens")
+        if full_message.usage_metadata
+        else None,
     )
 
     messages = [

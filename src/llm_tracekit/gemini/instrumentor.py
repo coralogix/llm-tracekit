@@ -15,19 +15,17 @@
 
 from __future__ import annotations
 
-from typing import Collection, Union
+from collections.abc import Collection
 
 from opentelemetry.instrumentation.instrumentor import (  # type: ignore[attr-defined]
     BaseInstrumentor,
 )
 from opentelemetry.instrumentation.utils import unwrap
-from opentelemetry.metrics import get_meter, Meter
+from opentelemetry.metrics import Meter, get_meter
 from opentelemetry.semconv.schemas import Schemas
 from opentelemetry.trace import get_tracer
 from wrapt import wrap_function_wrapper
 
-from llm_tracekit.instrumentation_utils import is_content_enabled
-from llm_tracekit.instruments import Instruments
 from llm_tracekit.gemini.package import _instruments
 from llm_tracekit.gemini.patch import (
     async_generate_content_stream_wrapper,
@@ -35,11 +33,13 @@ from llm_tracekit.gemini.patch import (
     generate_content_stream_wrapper,
     generate_content_wrapper,
 )
+from llm_tracekit.instrumentation_utils import is_content_enabled
+from llm_tracekit.instruments import Instruments
 
 
 class GeminiInstrumentor(BaseInstrumentor):
     def __init__(self) -> None:
-        self._meter: Union[Meter, None] = None
+        self._meter: Meter | None = None
 
     def instrumentation_dependencies(self) -> Collection[str]:
         return _instruments
@@ -72,7 +72,9 @@ class GeminiInstrumentor(BaseInstrumentor):
         wrap_function_wrapper(
             module="google.genai.models",
             name="Models.generate_content_stream",
-            wrapper=generate_content_stream_wrapper(tracer, instruments, capture_content),
+            wrapper=generate_content_stream_wrapper(
+                tracer, instruments, capture_content
+            ),
         )
 
         wrap_function_wrapper(

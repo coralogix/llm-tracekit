@@ -40,7 +40,7 @@ API
 ---
 """
 
-from typing import Collection
+from collections.abc import Collection
 
 import openai
 from opentelemetry.instrumentation.instrumentor import (  # type: ignore[attr-defined] # Mypy doesn't recognize the attribute

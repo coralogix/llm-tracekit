@@ -14,10 +14,11 @@
 
 import json
 from collections import defaultdict
+from collections.abc import Callable
 from contextlib import suppress
 from enum import Enum
 from timeit import default_timer
-from typing import Any, Callable, Dict, List, Optional, Union
+from typing import Any
 
 from botocore.eventstream import EventStream, EventStreamError
 from opentelemetry.semconv._incubating.attributes import (
@@ -47,7 +48,7 @@ class _ModelType(Enum):
     LLAMA3 = "llama3"
 
 
-def _get_model_type_from_model_id(model_id: Optional[str]) -> Optional[_ModelType]:
+def _get_model_type_from_model_id(model_id: str | None) -> _ModelType | None:
     if model_id is None:
         return None
 
@@ -60,8 +61,8 @@ def _get_model_type_from_model_id(model_id: Optional[str]) -> Optional[_ModelTyp
 
 
 def _parse_claude_message(
-    role: Optional[str], content: Optional[Union[str, list]]
-) -> List[Message]:
+    role: str | None, content: str | list | None
+) -> list[Message]:
     """Attempts to combine the content parts of a `converse` API message to a single message."""
     if isinstance(content, str):
         return [Message(role=role, content=content)]
@@ -71,10 +72,9 @@ def _parse_claude_message(
         for block in content:
             content_blocks_by_type[block.get("type")].append(block)
 
-
         # We follow the same logic the OTEL implementation uses:
         #  * For assistant messages (text/tool calls) - return a single message
-        #  * for user messages (text / tool call results) - return a message for each tool 
+        #  * for user messages (text / tool call results) - return a message for each tool
         #    call result, and another message for text
         messages = []
         if role == "assistant":
@@ -95,7 +95,7 @@ def _parse_claude_message(
                             function_arguments=arguments,
                         )
                     )
-            
+
             if "text" in content_blocks_by_type:
                 text_parts = [
                     block["text"]
@@ -141,8 +141,8 @@ def _parse_claude_message(
 
 @attribute_generator
 def _generate_claude_request_and_message_attributes(
-    model_id: Optional[str], parsed_body: Dict[str, Any], capture_content: bool
-) -> Dict[str, Any]:
+    model_id: str | None, parsed_body: dict[str, Any], capture_content: bool
+) -> dict[str, Any]:
     messages = []
     if "system" in parsed_body and isinstance(parsed_body["system"], str):
         messages.append(Message(role="system", content=parsed_body["system"]))
@@ -194,8 +194,8 @@ def _generate_claude_request_and_message_attributes(
 
 
 def _generate_claude_response_and_choice_attributes(
-    parsed_body: Dict[str, Any], capture_content: bool
-) -> Dict[str, Any]:
+    parsed_body: dict[str, Any], capture_content: bool
+) -> dict[str, Any]:
     finish_reason = parsed_body.get("stop_reason")
     usage_data = parsed_body.get("usage", {})
     parsed_response_message = _parse_claude_message(
@@ -221,8 +221,8 @@ def _generate_claude_response_and_choice_attributes(
 
 
 def _generate_llama_request_and_message_attributes(
-    model_id: Optional[str], parsed_body: Dict[str, Any], capture_content: bool
-) -> Dict[str, Any]:
+    model_id: str | None, parsed_body: dict[str, Any], capture_content: bool
+) -> dict[str, Any]:
     attributes = generate_request_attributes(
         model=model_id,
         max_tokens=parsed_body.get("max_gen_len"),
@@ -241,8 +241,8 @@ def _generate_llama_request_and_message_attributes(
 
 
 def _generate_llama_response_and_choice_attributes(
-    model_id: Optional[str], parsed_body: Dict[str, Any], capture_content: bool
-) -> Dict[str, Any]:
+    model_id: str | None, parsed_body: dict[str, Any], capture_content: bool
+) -> dict[str, Any]:
     finish_reason = parsed_body.get("stop_reason")
     usage_input_tokens = parsed_body.get("prompt_token_count")
     usage_output_tokens = parsed_body.get("generation_token_count")
@@ -267,8 +267,8 @@ def _generate_llama_response_and_choice_attributes(
 
 
 def generate_attributes_from_invoke_input(
-    kwargs: Dict[str, Any], capture_content: bool
-) -> Dict[str, Any]:
+    kwargs: dict[str, Any], capture_content: bool
+) -> dict[str, Any]:
     base_attributes = generate_base_attributes(
         system=GenAIAttributes.GenAiSystemValues.AWS_BEDROCK
     )
@@ -314,12 +314,12 @@ def generate_attributes_from_invoke_input(
 
 
 def record_invoke_model_result_attributes(
-    result_body: Union[str, Dict[str, Any]],
+    result_body: str | dict[str, Any],
     span: Span,
     start_time: float,
     instruments: Instruments,
     capture_content: bool,
-    model_id: Optional[str],
+    model_id: str | None,
 ):
     request_model = model_id
     response_model = model_id
@@ -378,9 +378,9 @@ class InvokeModelWithResponseStreamWrapper(ObjectProxy):
     def __init__(
         self,
         stream: EventStream,
-        stream_done_callback: Callable[[Dict[str, Union[int, str]]], None],
+        stream_done_callback: Callable[[dict[str, int | str]], None],
         stream_error_callback: Callable[[Exception], None],
-        model_id: Optional[str],
+        model_id: str | None,
     ):
         super().__init__(stream)
 
@@ -390,9 +390,9 @@ class InvokeModelWithResponseStreamWrapper(ObjectProxy):
 
         # accumulating things in the same shape of the Converse API
         # {"usage": {"inputTokens": 0, "outputTokens": 0}, "stopReason": "finish", "output": {"message": {"role": "", "content": [{"text": ""}]}
-        self._response: Dict[str, Any] = {}
-        self._message = None
-        self._content_block: Dict[str, Any] = {}
+        self._response: dict[str, Any] = {}
+        self._message: dict[str, Any] | None = None
+        self._content_block: dict[str, Any] = {}
         self._tool_json_input_buffer = ""
         self._record_message = False
 

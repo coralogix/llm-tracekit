@@ -13,8 +13,6 @@
 # limitations under the License.
 
 
-from typing import Optional
-
 from opentelemetry.sdk.trace import ReadableSpan
 from opentelemetry.semconv._incubating.attributes import (
     gen_ai_attributes as GenAIAttributes,
@@ -25,24 +23,21 @@ def assert_span_attributes(
     span: ReadableSpan,
     *,
     request_model: str,
-    response_model: Optional[str] = None,
-    response_id: Optional[str] = None,
-    input_tokens: Optional[int] = None,
-    output_tokens: Optional[int] = None,
+    response_model: str | None = None,
+    response_id: str | None = None,
+    input_tokens: int | None = None,
+    output_tokens: int | None = None,
 ):
     assert span.name == f"chat {request_model}"
     assert (
         span.attributes[GenAIAttributes.GEN_AI_OPERATION_NAME]
         == GenAIAttributes.GenAiOperationNameValues.CHAT.value
     )
-    assert (
-        span.attributes[GenAIAttributes.GEN_AI_REQUEST_MODEL] == request_model
-    )
+    assert span.attributes[GenAIAttributes.GEN_AI_REQUEST_MODEL] == request_model
 
     if response_model is not None:
         assert (
-            span.attributes.get(GenAIAttributes.GEN_AI_RESPONSE_MODEL)
-            == response_model
+            span.attributes.get(GenAIAttributes.GEN_AI_RESPONSE_MODEL) == response_model
         )
 
     if response_id is not None:

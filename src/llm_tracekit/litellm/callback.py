@@ -13,16 +13,15 @@
 # limitations under the License.
 
 
+from typing import Any
+
 from litellm.integrations.opentelemetry import OpenTelemetry, OpenTelemetryConfig
 from litellm.types.utils import (
     StandardLoggingPayload,
 )
-
 from opentelemetry.semconv._incubating.attributes import (
     gen_ai_attributes as GenAIAttributes,
 )
-
-from typing import List, Dict, Any, Optional
 from opentelemetry.trace import Span
 
 from llm_tracekit.span_builder import (
@@ -33,16 +32,17 @@ from llm_tracekit.span_builder import (
     generate_choice_attributes,
     generate_message_attributes,
     generate_request_attributes,
-    generate_response_attributes
+    generate_response_attributes,
 )
 
+
 class LitellmCallback(OpenTelemetry):
-    def __init__(self, capture_content: bool, config: Optional[OpenTelemetryConfig]):
+    def __init__(self, capture_content: bool, config: OpenTelemetryConfig | None):
         super().__init__(config=config)
         self.capture_content = capture_content
 
-    def parse_messages(self, raw_messages: List[Dict[str, Any]]) -> List[Message]:
-        messages: List[Message] = []
+    def parse_messages(self, raw_messages: list[dict[str, Any]]) -> list[Message]:
+        messages: list[Message] = []
         for prompt in raw_messages:
             content = prompt.get("content")
             if content is not None and not isinstance(content, str):
@@ -50,14 +50,16 @@ class LitellmCallback(OpenTelemetry):
 
             tool_calls_data = prompt.get("tool_calls")
             tool_calls_list = None
-            
+
             if tool_calls_data:
                 tool_calls_list = [
                     ToolCall(
                         id=tool_call.get("id"),
                         type=tool_call.get("type"),
                         function_name=tool_call.get("function", {}).get("name"),
-                        function_arguments=tool_call.get("function", {}).get("arguments"),
+                        function_arguments=tool_call.get("function", {}).get(
+                            "arguments"
+                        ),
                     )
                     for tool_call in tool_calls_data
                 ]
@@ -70,9 +72,9 @@ class LitellmCallback(OpenTelemetry):
             )
             messages.append(message)
         return messages
-    
-    def parse_choices(self, raw_choices: List[Dict[str, Any]]) -> List[Choice]:
-        choices: List[Choice] = []
+
+    def parse_choices(self, raw_choices: list[dict[str, Any]]) -> list[Choice]:
+        choices: list[Choice] = []
         for choice_dict in raw_choices:
             choice_message = choice_dict.get("message", {}) or {}
             tool_calls_list = None
@@ -85,7 +87,9 @@ class LitellmCallback(OpenTelemetry):
                         id=tool_call.get("id"),
                         type=tool_call.get("type"),
                         function_name=tool_call.get("function", {}).get("name"),
-                        function_arguments=tool_call.get("function", {}).get("arguments"),
+                        function_arguments=tool_call.get("function", {}).get(
+                            "arguments"
+                        ),
                     )
                     for tool_call in tool_calls
                 ]
@@ -103,22 +107,20 @@ class LitellmCallback(OpenTelemetry):
             choices.append(choice)
         return choices
 
-    def set_attributes(  # noqa: PLR0915
-        self, span: Span, kwargs, response_obj: Optional[Any]
-    ):
+    def set_attributes(self, span: Span, kwargs, response_obj: Any | None):
         try:
             optional_params = kwargs.get("optional_params", {})
             litellm_params = kwargs.get("litellm_params", {}) or {}
-            standard_logging_payload: Optional[StandardLoggingPayload] = kwargs.get(
+            standard_logging_payload: StandardLoggingPayload | None = kwargs.get(
                 "standard_logging_object"
             )
             if standard_logging_payload is None:
                 raise ValueError("standard_logging_object not found in kwargs")
 
-            messages: List[Message] = []
-            choices: List[Choice] = []
+            messages: list[Message] = []
+            choices: list[Choice] = []
 
-            response_attributes: Dict[str, Any] = {}
+            response_attributes: dict[str, Any] = {}
 
             if "messages" in kwargs:
                 messages = self.parse_messages(kwargs.get("messages"))
@@ -128,7 +130,9 @@ class LitellmCallback(OpenTelemetry):
                     model=response_obj.get("model"),
                     id=response_obj.get("id"),
                     usage_input_tokens=response_obj.get("usage").get("prompt_tokens"),
-                    usage_output_tokens=response_obj.get("usage").get("completion_tokens")
+                    usage_output_tokens=response_obj.get("usage").get(
+                        "completion_tokens"
+                    ),
                 )
                 if "choices" in response_obj:
                     raw_choices = response_obj.get("choices")
@@ -137,23 +141,21 @@ class LitellmCallback(OpenTelemetry):
             attributes = {
                 **generate_base_attributes(
                     system=litellm_params.get("custom_llm_provider", "Unknown"),
-                    operation=GenAIAttributes.GenAiOperationNameValues.CHAT
+                    operation=GenAIAttributes.GenAiOperationNameValues.CHAT,
                 ),
                 **generate_request_attributes(
                     model=kwargs.get("model"),
                     temperature=optional_params.get("temperature"),
                     top_p=optional_params.get("top_p"),
-                    max_tokens=optional_params.get("max_tokens")
+                    max_tokens=optional_params.get("max_tokens"),
                 ),
                 **generate_message_attributes(
-                    messages=messages,
-                    capture_content=self.capture_content
+                    messages=messages, capture_content=self.capture_content
                 ),
                 **generate_choice_attributes(
-                    choices=choices,
-                    capture_content=self.capture_content
+                    choices=choices, capture_content=self.capture_content
                 ),
-                **response_attributes
+                **response_attributes,
             }
 
             for key, value in attributes.items():
@@ -163,6 +165,6 @@ class LitellmCallback(OpenTelemetry):
                         key=key,
                         value=value,
                     )
-        
+
         except Exception:
             pass
