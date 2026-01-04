@@ -72,6 +72,7 @@ class TestMessage:
         assert_that(data["role"]).is_equal_to("user")
         assert_that(data["content"]).is_equal_to("Hello")
 
+
 class TestGuardrailRequest:
     def test_request_with_dict_messages(self):
         request = GuardrailRequest(
@@ -85,7 +86,7 @@ class TestGuardrailRequest:
             target=GuardrailsTarget.prompt,
             timeout=10,
         )
-        
+
         assert_that(request.messages).is_length(2)
         assert_that(request.messages[0].role).is_equal_to(Role.User)
         assert_that(request.messages[1].role).is_equal_to(Role.Assistant)
@@ -102,7 +103,7 @@ class TestGuardrailRequest:
             target=GuardrailsTarget.prompt,
             timeout=10,
         )
-        
+
         assert_that(request.messages).is_length(2)
         assert_that(all(isinstance(m, Message) for m in request.messages)).is_true()
 
@@ -115,7 +116,7 @@ class TestGuardrailRequest:
             target=GuardrailsTarget.prompt,
             timeout=10,
         )
-        
+
         data = request.model_dump(mode="json")
         assert_that(data["messages"][0]["role"]).is_equal_to("user")
 

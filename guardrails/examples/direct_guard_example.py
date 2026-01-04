@@ -1,7 +1,13 @@
 """Using the direct guard() API with dict messages."""
 
 import asyncio
-from guardrails import Guardrails, PII, PromptInjection, PIICategorie, GuardrailsTriggered
+from guardrails import (
+    Guardrails,
+    PII,
+    PromptInjection,
+    PIICategorie,
+    GuardrailsTriggered,
+)
 from guardrails.models.enums import GuardrailsTarget
 
 

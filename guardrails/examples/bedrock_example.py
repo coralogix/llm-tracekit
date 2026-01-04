@@ -2,7 +2,13 @@
 
 import asyncio
 import boto3
-from guardrails import Guardrails, PII, PromptInjection, PIICategorie, GuardrailsTriggered
+from guardrails import (
+    Guardrails,
+    PII,
+    PromptInjection,
+    PIICategorie,
+    GuardrailsTriggered,
+)
 from guardrails.models.enums import GuardrailsTarget
 
 TEST_PII = "your email is example@example.com"
@@ -23,12 +29,20 @@ async def main():
             {"role": "user", "content": user_content},
         ]
         try:
-            await guardrails.guard(messages, [PromptInjection()], GuardrailsTarget.prompt)
+            await guardrails.guard(
+                messages, [PromptInjection()], GuardrailsTarget.prompt
+            )
         except GuardrailsTriggered as e:
             return print(f"Prompt blocked: {e}")
 
-        response = bedrock.converse(modelId="anthropic.claude-3-sonnet-20240229-v1:0", messages=bedrock_messages, system=system)
-        response_content = response["output"]["message"]["content"][0]["text"] + TEST_PII
+        response = bedrock.converse(
+            modelId="anthropic.claude-3-sonnet-20240229-v1:0",
+            messages=bedrock_messages,
+            system=system,
+        )
+        response_content = (
+            response["output"]["message"]["content"][0]["text"] + TEST_PII
+        )
         messages.append({"role": "assistant", "content": response_content})
 
         try:

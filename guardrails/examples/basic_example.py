@@ -1,7 +1,13 @@
 """Basic Guardrails usage with guard_prompt and guard_response."""
 
 import asyncio
-from guardrails import Guardrails, PII, PromptInjection, PIICategorie, GuardrailsTriggered
+from guardrails import (
+    Guardrails,
+    PII,
+    PromptInjection,
+    PIICategorie,
+    GuardrailsTriggered,
+)
 
 
 async def main():

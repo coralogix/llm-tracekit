@@ -2,7 +2,13 @@
 
 import asyncio
 from google import genai
-from guardrails import Guardrails, PII, PromptInjection, PIICategorie, GuardrailsTriggered
+from guardrails import (
+    Guardrails,
+    PII,
+    PromptInjection,
+    PIICategorie,
+    GuardrailsTriggered,
+)
 from guardrails.models.enums import GuardrailsTarget
 
 TEST_PII = "your email is example@example.com"
@@ -19,11 +25,15 @@ async def main():
         # Guard prompt
         messages = [{"role": "user", "content": user_content}]
         try:
-            await guardrails.guard(messages, [PromptInjection()], GuardrailsTarget.prompt)
+            await guardrails.guard(
+                messages, [PromptInjection()], GuardrailsTarget.prompt
+            )
         except GuardrailsTriggered as e:
             return print(f"Prompt blocked: {e}")
 
-        response = await client.aio.models.generate_content(model="gemini-2.0-flash", contents=contents)
+        response = await client.aio.models.generate_content(
+            model="gemini-2.0-flash", contents=contents
+        )
         response_content = str(response.text) + TEST_PII
         messages.append({"role": "assistant", "content": response_content})
 

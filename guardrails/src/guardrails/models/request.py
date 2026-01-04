@@ -49,8 +49,11 @@ class Message(BaseModel):
         if isinstance(v, str):
             role = ROLE_MAP.get(v.lower())
             if role is None:
-                raise ValueError(f"Invalid role '{v}'. Must be one of: {set(ROLE_MAP.keys())}")
+                raise ValueError(
+                    f"Invalid role '{v}'. Must be one of: {set(ROLE_MAP.keys())}"
+                )
             return role
+
 
 class GuardrailRequest(BaseModel):
     application: str

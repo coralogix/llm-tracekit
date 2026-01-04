@@ -2,7 +2,13 @@
 
 import asyncio
 from openai import AsyncOpenAI
-from guardrails import Guardrails, PII, PromptInjection, PIICategorie, GuardrailsTriggered
+from guardrails import (
+    Guardrails,
+    PII,
+    PromptInjection,
+    PIICategorie,
+    GuardrailsTriggered,
+)
 from guardrails.models.enums import GuardrailsTarget
 
 TEST_PII = "your email is example@example.com"
@@ -16,11 +22,15 @@ async def main():
 
     async with guardrails.guarded_session():
         try:
-            await guardrails.guard(messages, [PromptInjection()], GuardrailsTarget.prompt)
+            await guardrails.guard(
+                messages, [PromptInjection()], GuardrailsTarget.prompt
+            )
         except GuardrailsTriggered as e:
             return print(f"Prompt blocked: {e}")
 
-        response = await client.chat.completions.create(model="gpt-4o-mini", messages=messages)
+        response = await client.chat.completions.create(
+            model="gpt-4o-mini", messages=messages
+        )
         response_content = response.choices[0].message.content + TEST_PII
         messages.append({"role": "assistant", "content": response_content})
 
@@ -33,4 +43,3 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
-

@@ -17,7 +17,10 @@ from .models.request import (
 )
 from .models.enums import GuardrailsTarget, Role
 from .models.response import GuardrailsResponse
-from .span_builder import generate_guardrail_response_attributes, generate_base_attributes
+from .span_builder import (
+    generate_guardrail_response_attributes,
+    generate_base_attributes,
+)
 from .error import (
     GuardrailsAPIResponseError,
     GuardrailsAPIConnectionError,
@@ -45,7 +48,6 @@ class GuardrailsClientConfig:
 
 
 class Guardrails:
-
     def __init__(
         self,
         api_key: Optional[str] = None,
@@ -63,10 +65,15 @@ class Guardrails:
         self.config = GuardrailsClientConfig(
             api_key=_get_env(api_key, "CX_GUARDRAILS_TOKEN"),
             cx_endpoint=endpoint,
-            application_name=_get_env(application_name, "CX_APPLICATION_NAME", "Unknown"),
+            application_name=_get_env(
+                application_name, "CX_APPLICATION_NAME", "Unknown"
+            ),
             subsystem_name=_get_env(subsystem_name, "CX_SUBSYSTEM_NAME", "Unknown"),
             timeout=timeout if timeout is not None else DEFAULT_TIMEOUT,
-            suppress_exceptions=os.environ.get("DISABLE_GUARDRAIL_TRIGGERED_EXCEPTIONS", "").lower() == "true",
+            suppress_exceptions=os.environ.get(
+                "DISABLE_GUARDRAIL_TRIGGERED_EXCEPTIONS", ""
+            ).lower()
+            == "true",
         )
         self._sender = GuardrailRequestSender(config=self.config)
 
@@ -91,8 +98,13 @@ class Guardrails:
         if not messages or not guardrails_config:
             return None
         history: list[Message] = [self._to_messages(msg) for msg in messages]
-        if target == GuardrailsTarget.RESPONSE and history[-1].role is not Role.ASSISTANT:
-            raise AttributeError(f"target of {GuardrailsTarget.RESPONSE} was given but last message is not a response")
+        if (
+            target == GuardrailsTarget.RESPONSE
+            and history[-1].role is not Role.ASSISTANT
+        ):
+            raise AttributeError(
+                f"target of {GuardrailsTarget.RESPONSE} was given but last message is not a response"
+            )
         return await self._sender.run(guardrails_config, target, history, self._client)
 
     def _to_messages(self, msg: Union[Message, dict[str, Any]]):
@@ -105,7 +117,11 @@ class Guardrails:
     ) -> Optional[GuardrailsResponse]:
         if not prompt:
             return None
-        return await self.guard([Message(role=Role.USER, content=prompt)], guardrails_config, GuardrailsTarget.PROMPT)
+        return await self.guard(
+            [Message(role=Role.USER, content=prompt)],
+            guardrails_config,
+            GuardrailsTarget.PROMPT,
+        )
 
     async def guard_response(
         self,
@@ -123,7 +139,6 @@ class Guardrails:
 
 
 class GuardrailRequestSender:
-    
     def __init__(self, config: GuardrailsClientConfig) -> None:
         self.config = config
 
@@ -134,7 +149,9 @@ class GuardrailRequestSender:
             "cx-subsystem-name": self.config.subsystem_name,
         }
 
-    async def _send_request(self, request: GuardrailRequest, client: httpx.AsyncClient) -> httpx.Response:
+    async def _send_request(
+        self, request: GuardrailRequest, client: httpx.AsyncClient
+    ) -> httpx.Response:
         try:
             response = await client.post(
                 GUARDRAILS_ENDPOINT_URL,
@@ -142,9 +159,13 @@ class GuardrailRequestSender:
                 headers=self._get_headers(),
             )
         except httpx.TimeoutException as e:
-            raise GuardrailsAPITimeoutError(f"Request timed out after {self.config.timeout}s") from e
+            raise GuardrailsAPITimeoutError(
+                f"Request timed out after {self.config.timeout}s"
+            ) from e
         except httpx.ConnectError as e:
-            raise GuardrailsAPIConnectionError(f"Failed to connect to {self.config.cx_endpoint}") from e
+            raise GuardrailsAPIConnectionError(
+                f"Failed to connect to {self.config.cx_endpoint}"
+            ) from e
         except httpx.RequestError as e:
             raise GuardrailsAPIConnectionError(f"Request error: {e}") from e
         return response
@@ -165,13 +186,17 @@ class GuardrailRequestSender:
             timeout=self.config.timeout,
         )
 
-        with tracer.start_as_current_span(f"guardrails.{target.value}", kind=SpanKind.CLIENT) as span:
-            span.set_attributes(generate_base_attributes(
-                application_name=request.application,
-                subsystem_name=request.subsystem,
-                prompts=[m.content for m in messages if m.role == Role.USER],
-                responses=[m.content for m in messages if m.role == Role.ASSISTANT],
-            ))
+        with tracer.start_as_current_span(
+            f"guardrails.{target.value}", kind=SpanKind.CLIENT
+        ) as span:
+            span.set_attributes(
+                generate_base_attributes(
+                    application_name=request.application,
+                    subsystem_name=request.subsystem,
+                    prompts=[m.content for m in messages if m.role == Role.USER],
+                    responses=[m.content for m in messages if m.role == Role.ASSISTANT],
+                )
+            )
             try:
                 http_response = await self._send_request(request, client)
                 return self._handle_response(http_response, span, target)
@@ -179,10 +204,12 @@ class GuardrailRequestSender:
                 span.set_status(Status(StatusCode.ERROR, str(e)))
                 raise
 
-    def _handle_response(self, response: httpx.Response, span: Span, target: GuardrailsTarget) -> GuardrailsResponse:
+    def _handle_response(
+        self, response: httpx.Response, span: Span, target: GuardrailsTarget
+    ) -> GuardrailsResponse:
         if not response.text or not response.text.strip():
             return GuardrailsResponse(results=[])
-        
+
         try:
             result = GuardrailsResponse.model_validate_json(response.text)
         except Exception as e:
@@ -192,7 +219,9 @@ class GuardrailRequestSender:
                 message=f"Failed to parse response: {e}",
             ) from e
 
-        span.set_attributes(generate_guardrail_response_attributes(result, target.value))
+        span.set_attributes(
+            generate_guardrail_response_attributes(result, target.value)
+        )
         if not self.config.suppress_exceptions:
             violations = [
                 GuardrailViolation(
@@ -201,9 +230,10 @@ class GuardrailRequestSender:
                     score=res.score,
                     detected_categories=getattr(res, "detected_categories", None),
                 )
-                for res in result.results if res.detected
+                for res in result.results
+                if res.detected
             ]
             if violations:
                 raise GuardrailsTriggered(violations)
-        
+
         return result

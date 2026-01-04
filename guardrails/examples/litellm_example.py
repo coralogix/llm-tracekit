@@ -2,7 +2,13 @@
 
 import asyncio
 import litellm
-from guardrails import Guardrails, PII, PromptInjection, PIICategorie, GuardrailsTriggered
+from guardrails import (
+    Guardrails,
+    PII,
+    PromptInjection,
+    PIICategorie,
+    GuardrailsTriggered,
+)
 from guardrails.models.enums import GuardrailsTarget
 
 TEST_PII = "your email is example@example.com"
@@ -15,7 +21,9 @@ async def main():
 
     async with guardrails.guarded_session():
         try:
-            await guardrails.guard(messages, [PromptInjection()], GuardrailsTarget.prompt)
+            await guardrails.guard(
+                messages, [PromptInjection()], GuardrailsTarget.prompt
+            )
         except GuardrailsTriggered as e:
             return print(f"Prompt blocked: {e}")
 
