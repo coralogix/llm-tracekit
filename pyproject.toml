@@ -4,6 +4,13 @@ version = "0.0.0"
 description = "Workspace for LLM Tracekit packages"
 requires-python = ">3.9,<=3.13"
 
+[dependency-groups]
+dev = [
+    "mypy>=1.0.0",
+    "pytest>=7.0.0",
+    "pytest-asyncio>=0.21.0",
+]
+
 [tool.uv.workspace]
 members = [
     "llm-tracekit",
