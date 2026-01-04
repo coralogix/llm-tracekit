@@ -49,6 +49,5 @@ with suppress(ImportError):
         GuardrailsResponse as GuardrailsResponse,
         PII as PII,
         PromptInjection as PromptInjection,
-        CustomGuardrail as CustomGuardrail,
         GuardrailRequest as GuardrailRequest,
     )

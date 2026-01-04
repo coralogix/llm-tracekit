@@ -48,7 +48,7 @@ def _get_current_weather_tool_definition():
 
 
 def _convert_claude_stream_to_response(stream) -> dict:
-    result = {
+    result: dict = {
         "model": "",
         "role": "",
         "content": [],
@@ -114,6 +114,7 @@ def _run_and_check_invoke_model_llama(
             }
         ),
     }
+    result: dict
     if stream:
         span_name = "bedrock.invoke_model_with_response_stream"
         stream_result = bedrock_client.invoke_model_with_response_stream(**args)
@@ -284,7 +285,7 @@ def _run_and_check_invoke_model_claude_tool_calls(
         "contentType": "application/json",
         "accept": "application/json",
     }
-    body = {
+    body: dict = {
         "anthropic_version": "bedrock-2023-05-31",
         "max_tokens": 1000,
         "messages": [

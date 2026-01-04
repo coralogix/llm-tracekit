@@ -154,7 +154,7 @@ async def test_gemini_async_completion(span_exporter, instrument):
 
 @pytest.mark.vcr()
 def test_gemini_tool_usage(span_exporter, instrument):
-    def get_current_temperature(location: str) -> int:
+    def get_current_temperature(location: str) -> str:
         return "The current temperature in " + location + " is 22 degrees Celsius."
     
     weather_function = {

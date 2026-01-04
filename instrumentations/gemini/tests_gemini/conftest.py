@@ -28,7 +28,7 @@ from opentelemetry.sdk.trace.export.in_memory_span_exporter import InMemorySpanE
 from llm_tracekit_core import OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT
 from llm_tracekit_gemini.instrumentor import GeminiInstrumentor
 
-collect_ignore = []
+collect_ignore: list[str] = []
 
 if sys.version_info < (3, 10):
     collect_ignore.append("openai_agents")

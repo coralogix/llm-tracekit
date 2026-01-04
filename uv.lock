@@ -1841,6 +1841,7 @@ dev = [
     { name = "pytest" },
     { name = "pytest-asyncio" },
     { name = "ruff" },
+    { name = "types-pyyaml" },
 ]
 
 [package.metadata]
@@ -1851,6 +1852,7 @@ dev = [
     { name = "pytest", specifier = ">=7.0.0" },
     { name = "pytest-asyncio", specifier = ">=0.21.0" },
     { name = "ruff", specifier = ">=0.4.0" },
+    { name = "types-pyyaml", specifier = ">=6.0.0" },
 ]
 
 [[package]]
@@ -3551,6 +3553,15 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/2e/43/7da22bb45aa74d92cf9c919dc80b893a97d75da7853113abbcba72866f00/types_boto3-1.42.21.tar.gz", hash = "sha256:82312add3b76fa91b08823f5d82717e6e22a67f98e574a35ffcc45419e1e4d15", size = 101286, upload-time = "2026-01-03T02:45:56.814Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/6e/d6/a2710ac9627a9d9ca1de3a06c80b08b948caf8a86b273f27fb4bb196175f/types_boto3-1.42.21-py3-none-any.whl", hash = "sha256:53fec01d6e2d5cb61eb7a5e9a9892877ca836f41f19950e2fa74bee90aadad83", size = 69676, upload-time = "2026-01-03T02:45:51.404Z" },
+]
+
+[[package]]
+name = "types-pyyaml"
+version = "6.0.12.20250915"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/7e/69/3c51b36d04da19b92f9e815be12753125bd8bc247ba0470a982e6979e71c/types_pyyaml-6.0.12.20250915.tar.gz", hash = "sha256:0f8b54a528c303f0e6f7165687dd33fafa81c807fcac23f632b63aa624ced1d3", size = 17522, upload-time = "2025-09-15T03:01:00.728Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/bd/e0/1eed384f02555dde685fff1a1ac805c1c7dcb6dd019c916fe659b1c1f9ec/types_pyyaml-6.0.12.20250915-py3-none-any.whl", hash = "sha256:e7d4d9e064e89a3b3cae120b4990cd370874d2bf12fa5f46c97018dd5d3c9ab6", size = 20338, upload-time = "2025-09-15T03:00:59.218Z" },
 ]
 
 [[package]]

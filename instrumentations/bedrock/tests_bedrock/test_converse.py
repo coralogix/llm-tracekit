@@ -52,7 +52,7 @@ def _get_current_weather_tool_definition():
 
 
 def _convert_stream_to_response(stream) -> dict:
-    result = {
+    result: dict = {
         "stopReason": "",
         "output": {
             "usage": {},
@@ -177,7 +177,7 @@ def _run_and_check_converse_tool_calls(
     stream: bool,
 ):
     tool_definition = _get_current_weather_tool_definition()
-    args = {
+    args: dict = {
         "modelId": model_id,
         "system": [{"text": "you are a helpful assistant"}],
         "messages": [
