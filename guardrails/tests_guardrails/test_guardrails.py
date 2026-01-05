@@ -380,7 +380,7 @@ class TestGuardrailsErrorHandling:
                         guardrails=[PII()],
                     )
 
-            assert_that(exc_info.value.message).contains("Failed to parse response")
+            assert_that(exc_info.value.message).contains("Got invalid response")
 
     @pytest.mark.asyncio
     async def test_empty_response_returns_empty_results(self, guardrails_client):
