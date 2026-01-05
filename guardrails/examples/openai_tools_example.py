@@ -1,23 +1,21 @@
 """
-LiteLLM with Tool Calls - Guardrails Example
-=============================================
+OpenAI SDK with Tool Calls - Guardrails Example
+================================================
 
-Demonstrates how to use Coralogix Guardrails with LiteLLM's
-unified API for multiple LLM providers.
+Demonstrates how to use Coralogix Guardrails with OpenAI's function calling API.
 
 Features:
-    - OpenAI-compatible tool definitions
-    - Multi-turn tool call conversations
+    - Tool/function call handling with guardrails protection
     - Full conversation history scanning (prompts, tool calls, responses)
     - PII detection and prompt injection prevention
 
 Prerequisites:
-    - pip install litellm guardrails llm-tracekit-litellm
-    - Set OPENAI_API_KEY (or other provider keys)
+    - pip install openai guardrails llm-tracekit-openai
+    - Set OPENAI_API_KEY environment variable
     - Set CX_TOKEN and CX_ENDPOINT for Coralogix tracing (optional)
 
 Usage:
-    python litellm_tools_example.py
+    python openai_tools_example.py
 """
 
 import asyncio
@@ -34,9 +32,9 @@ from guardrails import (
     PromptInjection,
 )
 
-# LiteLLM
-import litellm
-from llm_tracekit_litellm import LiteLLMInstrumentor, setup_export_to_coralogix
+# OpenAI SDK
+from openai import AsyncOpenAI
+from llm_tracekit_openai import OpenAIInstrumentor, setup_export_to_coralogix
 
 # -----------------------------------------------------------------------------
 # Configuration
@@ -59,6 +57,7 @@ RESPONSE_GUARDRAILS = [PII(categories=[PIICategory.EMAIL_ADDRESS, PIICategory.PH
 
 async def example_simple_tool_call():
     guardrails = Guardrails()
+    client = AsyncOpenAI()
     user_input = "What's the weather in Tel Aviv?"
 
     # Build messages incrementally
@@ -73,8 +72,17 @@ async def example_simple_tool_call():
             print(f"Prompt blocked: {e}")
             return
 
-        # Process tool calls with LiteLLM
-        response_content = await process_tool_calls(messages.copy(), [TOOLS[0]])
+        # Call OpenAI with tools (also updates messages with tool calls)
+        openai_messages = [{"role": "user", "content": user_input}]
+        response = await client.chat.completions.create(
+            model=MODEL,
+            messages=openai_messages,
+            tools=[TOOLS[0]],
+            tool_choice="auto",
+        )
+
+        # Process tool calls and get final response
+        response_content = await process_tool_calls(client, openai_messages, response.choices[0].message, messages)
 
         # Append assistant response and guard it
         messages.append({"role": "assistant", "content": response_content})
@@ -87,6 +95,7 @@ async def example_simple_tool_call():
 
 async def example_multiple_tools():
     guardrails = Guardrails()
+    client = AsyncOpenAI()
     user_input = "What's the weather in Tokyo and what time is it there?"
 
     # Build messages incrementally
@@ -101,8 +110,17 @@ async def example_multiple_tools():
             print(f"Prompt blocked: {e}")
             return
 
-        # Process tool calls with LiteLLM
-        response_content = await process_tool_calls(messages.copy(), TOOLS)
+        # Call with multiple tools (also updates messages with tool calls)
+        openai_messages = [{"role": "user", "content": user_input}]
+        response = await client.chat.completions.create(
+            model=MODEL,
+            messages=openai_messages,
+            tools=TOOLS,
+            tool_choice="auto",
+        )
+
+        # Process tool calls and get final response
+        response_content = await process_tool_calls(client, openai_messages, response.choices[0].message, messages)
 
         # Append assistant response and guard it
         messages.append({"role": "assistant", "content": response_content})
@@ -115,6 +133,7 @@ async def example_multiple_tools():
 
 async def example_pii_blocked():
     guardrails = Guardrails()
+    client = AsyncOpenAI()
     user_input = "What's the weather in London?"
 
     # Build messages incrementally
@@ -129,8 +148,17 @@ async def example_pii_blocked():
             print(f"Prompt blocked: {e}")
             return
 
-        # Process tool calls with LiteLLM
-        response_content = await process_tool_calls(messages.copy(), [TOOLS[0]])
+        # Call with tool (also updates messages with tool calls)
+        openai_messages = [{"role": "user", "content": user_input}]
+        response = await client.chat.completions.create(
+            model=MODEL,
+            messages=openai_messages,
+            tools=[TOOLS[0]],
+            tool_choice="auto",
+        )
+
+        # Process tool calls and get final response
+        response_content = await process_tool_calls(client, openai_messages, response.choices[0].message, messages)
 
         # Simulate PII leaking (e.g., from a database lookup)
         response_with_pii = response_content + TEST_PII
@@ -212,35 +240,36 @@ def execute_tool(name: str, args: dict) -> str:
 # -----------------------------------------------------------------------------
 
 
-async def process_tool_calls(messages: list, tools: list) -> str:
-    """Process tool calls in a loop until the model stops using tools."""
-    response = await litellm.acompletion(
-        model=MODEL,
-        messages=messages,
-        tools=tools,
-        tool_choice="auto",
-    )
-    assistant_message = response.choices[0].message
+async def process_tool_calls(client: AsyncOpenAI, openai_messages: list, assistant_message, messages: list) -> str:
+    """Process tool calls from the assistant and get the final response.
+    
+    Updates both `openai_messages` (OpenAI format) and `messages` (guardrails format).
+    """
+    if not assistant_message.tool_calls:
+        return assistant_message.content
 
-    while assistant_message.tool_calls:
-        messages.append(assistant_message.model_dump())
+    # Add assistant message with tool calls (OpenAI format)
+    openai_messages.append(assistant_message.model_dump())
 
-        # Execute each tool
-        for tc in assistant_message.tool_calls:
-            name = tc.function.name
-            args = json.loads(tc.function.arguments)
-            result = execute_tool(name, args)
+    # Execute each tool
+    for tool_call in assistant_message.tool_calls:
+        name = tool_call.function.name
+        args = json.loads(tool_call.function.arguments)
+        result = execute_tool(name, args)
 
-            messages.append({
-                "role": "tool",
-                "tool_call_id": tc.id,
-                "content": result,
-            })
+        # Update messages for guardrails (tool call and result)
+        messages.append({"role": "assistant", "content": f'[tool_call: {name}({args})]'})
+        messages.append({"role": "tool", "content": result})
 
-        response = await litellm.acompletion(model=MODEL, messages=messages)
-        assistant_message = response.choices[0].message
+        openai_messages.append({
+            "role": "tool",
+            "tool_call_id": tool_call.id,
+            "content": result,
+        })
 
-    return assistant_message.content
+    # Get final response
+    response = await client.chat.completions.create(model=MODEL, messages=openai_messages)
+    return response.choices[0].message.content
 
 
 # -----------------------------------------------------------------------------
@@ -255,6 +284,6 @@ async def main():
 
 
 if __name__ == "__main__":
-    setup_export_to_coralogix(service_name="litellm-tools-example")
-    LiteLLMInstrumentor().instrument()
+    setup_export_to_coralogix(service_name="openai-tools-example")
+    OpenAIInstrumentor().instrument()
     asyncio.run(main())

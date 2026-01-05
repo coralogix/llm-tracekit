@@ -14,7 +14,38 @@ Or via the meta-package:
 pip install llm-tracekit[guardrails]
 ```
 
-## Quick Start
+## Quick Start: Test Your Setup
+
+Before enabling production policies, verify that Guardrails are running correctly using the **Test Policy**:
+
+```python
+import asyncio
+from guardrails import Guardrails, TestPolicy
+
+async def test_guardrails():
+    guardrails = Guardrails(
+        api_key="your-api-key",
+        cx_endpoint="https://your-domain.coralogix.com",
+    )
+    
+    async with guardrails.guarded_session():
+        # Simple connectivity test
+        response = await guardrails.test_connection()
+        print("✓ Guardrails API is reachable!")
+        
+        # Or use TestPolicy directly for more control
+        result = await guardrails.guard_prompt(
+            prompt="Hello, testing guardrails!",
+            guardrails=[TestPolicy()],
+        )
+        print(f"✓ Test Policy response: {result}")
+
+asyncio.run(test_guardrails())
+```
+
+The `test_connection()` method provides a simple way to verify connectivity to the Guardrails API. If the endpoint is unreachable, it will raise `GuardrailsAPIConnectionError`.
+
+## Quick Start: Production Usage
 
 ```python
 import asyncio
@@ -90,6 +121,21 @@ await guardrails.guard(messages, [PII()], GuardrailsTarget.RESPONSE)
 See [`examples/direct_guard_example.py`](examples/direct_guard_example.py) for more details.
 
 ## Guardrail Types
+
+### Test Policy
+
+A simple policy to verify that Guardrails are running correctly in your application. Use this before enabling policies from the catalog.
+
+- **Category**: Test
+- **Type**: Guardrail
+- **Quality Issues**: Reports low/high labels based on threshold (high = issue detected)
+
+```python
+from guardrails import TestPolicy
+
+TestPolicy()  # Default threshold 0.7
+TestPolicy(threshold=0.5)  # Custom threshold
+```
 
 ### PII Detection
 

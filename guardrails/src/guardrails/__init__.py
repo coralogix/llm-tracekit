@@ -3,6 +3,7 @@ from .models._models import PIICategory, Role, GuardrailsTarget, GuardrailType
 from .models.request import (
     PII,
     PromptInjection,
+    TestPolicy,
     GuardrailRequest,
     Message,
 )
@@ -17,6 +18,7 @@ from .error import (
     GuardrailsAPIResponseError,
     GuardrailViolation,
     GuardrailsTriggered,
+    GuardrailsConnectionTestError,
 )
 
 __all__ = [
@@ -25,6 +27,7 @@ __all__ = [
     # Request models
     "PII",
     "PromptInjection",
+    "TestPolicy",
     "GuardrailRequest",
     "Message",
     # Response models
@@ -42,4 +45,5 @@ __all__ = [
     "GuardrailsAPIResponseError",
     "GuardrailsTriggered",
     "GuardrailViolation",
+    "GuardrailsConnectionTestError",
 ]

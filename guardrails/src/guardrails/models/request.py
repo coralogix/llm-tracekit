@@ -19,7 +19,10 @@ class PromptInjection(BaseGuardrailConfig):
     type: Literal["prompt_injection"] = "prompt_injection"
 
 
-GuardrailConfigType = Union[PII, PromptInjection]
+class TestPolicy(BaseGuardrailConfig):
+    type: Literal["test_policy"] = "test_policy"
+
+GuardrailConfigType = Union[PII, PromptInjection, TestPolicy]
 
 
 ROLE_MAP = {
