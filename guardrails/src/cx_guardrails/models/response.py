@@ -29,7 +29,11 @@ class PromptInjectionResult(GuardrailsResultBase):
     pass
 
 
+class TestPolicyResult(GuardrailsResultBase):
+    pass
 GuardrailsResponseType = PIIResult | PromptInjectionResult
+
+GuardrailsResponseType = Union[PIIResult, PromptInjectionResult, TestPolicyResult]
 
 
 class GuardrailsResponse(BaseModel):

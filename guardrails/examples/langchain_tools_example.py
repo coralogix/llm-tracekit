@@ -1,27 +1,26 @@
 """
-LiteLLM with Tool Calls - Guardrails Example
-=============================================
+LangChain with Tool Calls - Guardrails Example
+===============================================
 
-Demonstrates how to use Coralogix Guardrails with LiteLLM's
-unified API for multiple LLM providers.
+Demonstrates how to use Coralogix Guardrails with LangChain's
+tool binding and the @tool decorator.
 
 Features:
-    - OpenAI-compatible tool definitions
-    - Multi-turn tool call conversations
+    - LangChain @tool decorator for function definitions
+    - Tool binding with ChatOpenAI
     - Full conversation history scanning (prompts, tool calls, responses)
     - PII detection and prompt injection prevention
 
 Prerequisites:
-    - pip install litellm guardrails llm-tracekit-litellm
-    - Set OPENAI_API_KEY (or other provider keys)
+    - pip install langchain-openai guardrails llm-tracekit-langchain
+    - Set OPENAI_API_KEY environment variable
     - Set CX_TOKEN and CX_ENDPOINT for Coralogix tracing (optional)
 
 Usage:
-    python litellm_tools_example.py
+    python langchain_tools_example.py
 """
 
 import asyncio
-import json
 import os
 
 # Guardrails
@@ -34,15 +33,18 @@ from guardrails import (
     PromptInjection,
 )
 
-# LiteLLM
-import litellm
-from llm_tracekit_litellm import LiteLLMInstrumentor, setup_export_to_coralogix
+# LangChain
+from langchain_core.messages import HumanMessage, SystemMessage, ToolMessage
+from langchain_core.tools import tool
+from langchain_openai import ChatOpenAI
+from llm_tracekit_langchain import LangChainInstrumentor, setup_export_to_coralogix
 
 # -----------------------------------------------------------------------------
 # Configuration
 # -----------------------------------------------------------------------------
 
 MODEL = os.getenv("MODEL", "gpt-4o-mini")
+SYSTEM_PROMPT = "You are a helpful assistant."
 
 # Test PII data to simulate leakage (note: leading space is intentional for concatenation)
 TEST_PII = " Contact: john.smith@company.com, +1-555-123-4567"
@@ -59,6 +61,8 @@ RESPONSE_GUARDRAILS = [PII(categories=[PIICategory.EMAIL_ADDRESS, PIICategory.PH
 
 async def example_simple_tool_call():
     guardrails = Guardrails()
+    llm = ChatOpenAI(model=MODEL, temperature=0)
+    llm_with_tools = llm.bind_tools([get_weather])
     user_input = "What's the weather in Tel Aviv?"
 
     # Build messages incrementally
@@ -73,8 +77,9 @@ async def example_simple_tool_call():
             print(f"Prompt blocked: {e}")
             return
 
-        # Process tool calls with LiteLLM
-        response_content = await process_tool_calls(messages.copy(), [TOOLS[0]])
+        # Process tool calls with LangChain (also updates messages with tool calls)
+        langchain_history = [SystemMessage(content=SYSTEM_PROMPT), HumanMessage(content=user_input)]
+        response_content = await process_tool_calls(llm_with_tools, langchain_history, messages)
 
         # Append assistant response and guard it
         messages.append({"role": "assistant", "content": response_content})
@@ -87,6 +92,8 @@ async def example_simple_tool_call():
 
 async def example_multiple_tools():
     guardrails = Guardrails()
+    llm = ChatOpenAI(model=MODEL, temperature=0)
+    llm_with_tools = llm.bind_tools([get_weather, get_time])
     user_input = "What's the weather in Tokyo and what time is it there?"
 
     # Build messages incrementally
@@ -101,8 +108,9 @@ async def example_multiple_tools():
             print(f"Prompt blocked: {e}")
             return
 
-        # Process tool calls with LiteLLM
-        response_content = await process_tool_calls(messages.copy(), TOOLS)
+        # Process tool calls with LangChain (also updates messages with tool calls)
+        langchain_history = [SystemMessage(content=SYSTEM_PROMPT), HumanMessage(content=user_input)]
+        response_content = await process_tool_calls(llm_with_tools, langchain_history, messages)
 
         # Append assistant response and guard it
         messages.append({"role": "assistant", "content": response_content})
@@ -115,6 +123,8 @@ async def example_multiple_tools():
 
 async def example_pii_blocked():
     guardrails = Guardrails()
+    llm = ChatOpenAI(model=MODEL, temperature=0)
+    llm_with_tools = llm.bind_tools([get_weather])
     user_input = "What's the weather in London?"
 
     # Build messages incrementally
@@ -129,8 +139,9 @@ async def example_pii_blocked():
             print(f"Prompt blocked: {e}")
             return
 
-        # Process tool calls with LiteLLM
-        response_content = await process_tool_calls(messages.copy(), [TOOLS[0]])
+        # Process tool calls with LangChain (also updates messages with tool calls)
+        langchain_history = [SystemMessage(content=SYSTEM_PROMPT), HumanMessage(content=user_input)]
+        response_content = await process_tool_calls(llm_with_tools, langchain_history, messages)
 
         # Simulate PII leaking (e.g., from a database lookup)
         response_with_pii = response_content + TEST_PII
@@ -147,37 +158,6 @@ async def example_pii_blocked():
 # -----------------------------------------------------------------------------
 # Tool Definitions (supporting code)
 # -----------------------------------------------------------------------------
-
-TOOLS = [
-    {
-        "type": "function",
-        "function": {
-            "name": "get_weather",
-            "description": "Get the current weather for a city",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "city": {"type": "string", "description": "City name (e.g., Tokyo)"},
-                },
-                "required": ["city"],
-            },
-        },
-    },
-    {
-        "type": "function",
-        "function": {
-            "name": "get_time",
-            "description": "Get the current local time for a city",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "city": {"type": "string", "description": "City name (e.g., Tokyo)"},
-                },
-                "required": ["city"],
-            },
-        },
-    },
-]
 
 SIMULATED_WEATHER_DATA = {
     "Tel Aviv": "28°C and sunny",
@@ -196,15 +176,22 @@ SIMULATED_TIME_DATA = {
 }
 
 
-def execute_tool(name: str, args: dict) -> str:
-    """Execute a tool and return the result."""
-    if name == "get_weather":
-        city = args.get("city", "Unknown")
-        return SIMULATED_WEATHER_DATA.get(city, f"No weather data for {city}")
-    elif name == "get_time":
-        city = args.get("city", "Unknown")
-        return SIMULATED_TIME_DATA.get(city, f"No time data for {city}")
-    return f"Unknown tool: {name}"
+@tool
+def get_weather(city: str) -> str:
+    """Get the current weather for a city."""
+    return SIMULATED_WEATHER_DATA.get(city, f"No weather data for {city}")
+
+
+@tool
+def get_time(city: str) -> str:
+    """Get the current local time for a city."""
+    return SIMULATED_TIME_DATA.get(city, f"No time data for {city}")
+
+
+TOOL_MAP = {
+    "get_weather": get_weather,
+    "get_time": get_time,
+}
 
 
 # -----------------------------------------------------------------------------
@@ -212,35 +199,34 @@ def execute_tool(name: str, args: dict) -> str:
 # -----------------------------------------------------------------------------
 
 
-async def process_tool_calls(messages: list, tools: list) -> str:
-    """Process tool calls in a loop until the model stops using tools."""
-    response = await litellm.acompletion(
-        model=MODEL,
-        messages=messages,
-        tools=tools,
-        tool_choice="auto",
-    )
-    assistant_message = response.choices[0].message
+async def process_tool_calls(llm_with_tools, history: list, messages: list) -> str:
+    """Process tool calls in a loop until the model stops using tools.
+    
+    Updates both `history` (LangChain format) and `messages` (guardrails format).
+    """
+    response = await llm_with_tools.ainvoke(history)
 
-    while assistant_message.tool_calls:
-        messages.append(assistant_message.model_dump())
+    while response.tool_calls:
+        history.append(response)
 
         # Execute each tool
-        for tc in assistant_message.tool_calls:
-            name = tc.function.name
-            args = json.loads(tc.function.arguments)
-            result = execute_tool(name, args)
+        for tc in response.tool_calls:
+            name = tc["name"]
+            args = tc.get("args", {})
+            tool_id = tc.get("id", "tool_call")
 
-            messages.append({
-                "role": "tool",
-                "tool_call_id": tc.id,
-                "content": result,
-            })
+            tool_func = TOOL_MAP.get(name)
+            result = tool_func.invoke(args) if tool_func else f"Unknown tool: {name}"
 
-        response = await litellm.acompletion(model=MODEL, messages=messages)
-        assistant_message = response.choices[0].message
+            # Update messages for guardrails (tool call and result)
+            messages.append({"role": "assistant", "content": f'[tool_call: {name}({args})]'})
+            messages.append({"role": "tool", "content": result})
 
-    return assistant_message.content
+            history.append(ToolMessage(content=result, tool_call_id=tool_id))
+
+        response = await llm_with_tools.ainvoke(history)
+
+    return response.content
 
 
 # -----------------------------------------------------------------------------
@@ -255,6 +241,6 @@ async def main():
 
 
 if __name__ == "__main__":
-    setup_export_to_coralogix(service_name="litellm-tools-example")
-    LiteLLMInstrumentor().instrument()
+    setup_export_to_coralogix(service_name="langchain-tools-example")
+    LangChainInstrumentor().instrument()
     asyncio.run(main())

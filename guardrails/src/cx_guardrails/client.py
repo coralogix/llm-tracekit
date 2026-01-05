@@ -1,3 +1,4 @@
+from math import e
 import os
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
@@ -17,6 +18,7 @@ from .models.request import (
     GuardrailConfigType,
     GuardrailRequest,
     Message,
+    TestPolicy,
 )
 from .models._models import GuardrailsTarget, Role
 from .models.response import GuardrailsResponse
@@ -30,6 +32,7 @@ from .error import (
     GuardrailsAPITimeoutError,
     GuardrailViolation,
     GuardrailsTriggered,
+    GuardrailsConnectionTestError,
 )
 
 
@@ -178,6 +181,15 @@ class Guardrails:
 
     def _to_messages(self, msg: Message | dict[str, Any]) -> Message:
         return msg if isinstance(msg, Message) else Message(msg)
+
+    async def test_connection(self) -> GuardrailsResponse:
+        result = await self.guard_prompt(
+            prompt="test",
+            guardrails=[TestPolicy()],
+        )
+        if result is None:
+            raise GuardrailsConnectionTestError("Connection test to Guardrails API failed")
+        return result
 
 
 class GuardrailRequestSender:

@@ -3,6 +3,7 @@ from .models._models import PIICategory, Role, GuardrailsTarget, GuardrailType
 from .models.request import (
     PII,
     PromptInjection,
+    TestPolicy,
     GuardrailRequest,
     Message,
 )
@@ -17,6 +18,7 @@ from .error import (
     GuardrailsAPIResponseError,
     GuardrailViolation,
     GuardrailsTriggered,
+    GuardrailsConnectionTestError,
 )
 
 from llm_tracekit.core import (
@@ -27,6 +29,7 @@ __all__ = [
     "Guardrails",
     "PII",
     "PromptInjection",
+    "TestPolicy",
     "GuardrailRequest",
     "Message",
     "GuardrailsResultBase",

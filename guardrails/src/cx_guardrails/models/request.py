@@ -21,6 +21,7 @@ class PromptInjection(BaseGuardrailConfig):
 
 GuardrailConfigType = PII | PromptInjection
 
+GuardrailConfigType = Union[PII, PromptInjection, TestPolicy]
 
 class Message(BaseModel):
     role: Role

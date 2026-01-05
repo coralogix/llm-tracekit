@@ -1,27 +1,26 @@
 """
-LiteLLM with Tool Calls - Guardrails Example
-=============================================
+AWS Bedrock Converse API with Tool Calls - Guardrails Example
+==============================================================
 
-Demonstrates how to use Coralogix Guardrails with LiteLLM's
-unified API for multiple LLM providers.
+Demonstrates how to use Coralogix Guardrails with AWS Bedrock's Converse API
+and function tools.
 
 Features:
-    - OpenAI-compatible tool definitions
+    - Tool definitions in Bedrock's toolSpec format
     - Multi-turn tool call conversations
     - Full conversation history scanning (prompts, tool calls, responses)
     - PII detection and prompt injection prevention
 
 Prerequisites:
-    - pip install litellm guardrails llm-tracekit-litellm
-    - Set OPENAI_API_KEY (or other provider keys)
+    - pip install boto3 guardrails llm-tracekit-bedrock
+    - Configure AWS credentials (aws configure or environment variables)
     - Set CX_TOKEN and CX_ENDPOINT for Coralogix tracing (optional)
 
 Usage:
-    python litellm_tools_example.py
+    python bedrock_tools_example.py
 """
 
 import asyncio
-import json
 import os
 
 # Guardrails
@@ -34,15 +33,15 @@ from guardrails import (
     PromptInjection,
 )
 
-# LiteLLM
-import litellm
-from llm_tracekit_litellm import LiteLLMInstrumentor, setup_export_to_coralogix
+# AWS Bedrock
+import boto3
+from llm_tracekit_bedrock import BedrockInstrumentor, setup_export_to_coralogix
 
 # -----------------------------------------------------------------------------
 # Configuration
 # -----------------------------------------------------------------------------
 
-MODEL = os.getenv("MODEL", "gpt-4o-mini")
+MODEL_ID = os.getenv("MODEL", "anthropic.claude-3-sonnet-20240229-v1:0")
 
 # Test PII data to simulate leakage (note: leading space is intentional for concatenation)
 TEST_PII = " Contact: john.smith@company.com, +1-555-123-4567"
@@ -59,6 +58,7 @@ RESPONSE_GUARDRAILS = [PII(categories=[PIICategory.EMAIL_ADDRESS, PIICategory.PH
 
 async def example_simple_tool_call():
     guardrails = Guardrails()
+    bedrock = boto3.client("bedrock-runtime")
     user_input = "What's the weather in Tel Aviv?"
 
     # Build messages incrementally
@@ -73,8 +73,9 @@ async def example_simple_tool_call():
             print(f"Prompt blocked: {e}")
             return
 
-        # Process tool calls with LiteLLM
-        response_content = await process_tool_calls(messages.copy(), [TOOLS[0]])
+        # Process tool calls with Bedrock (also updates messages with tool calls)
+        bedrock_messages = [{"role": "user", "content": [{"text": user_input}]}]
+        response_content = process_tool_use(bedrock, bedrock_messages, [TOOLS[0]], messages)
 
         # Append assistant response and guard it
         messages.append({"role": "assistant", "content": response_content})
@@ -87,6 +88,7 @@ async def example_simple_tool_call():
 
 async def example_multiple_tools():
     guardrails = Guardrails()
+    bedrock = boto3.client("bedrock-runtime")
     user_input = "What's the weather in Tokyo and what time is it there?"
 
     # Build messages incrementally
@@ -101,8 +103,9 @@ async def example_multiple_tools():
             print(f"Prompt blocked: {e}")
             return
 
-        # Process tool calls with LiteLLM
-        response_content = await process_tool_calls(messages.copy(), TOOLS)
+        # Process tool calls with Bedrock (also updates messages with tool calls)
+        bedrock_messages = [{"role": "user", "content": [{"text": user_input}]}]
+        response_content = process_tool_use(bedrock, bedrock_messages, TOOLS, messages)
 
         # Append assistant response and guard it
         messages.append({"role": "assistant", "content": response_content})
@@ -115,6 +118,7 @@ async def example_multiple_tools():
 
 async def example_pii_blocked():
     guardrails = Guardrails()
+    bedrock = boto3.client("bedrock-runtime")
     user_input = "What's the weather in London?"
 
     # Build messages incrementally
@@ -129,8 +133,9 @@ async def example_pii_blocked():
             print(f"Prompt blocked: {e}")
             return
 
-        # Process tool calls with LiteLLM
-        response_content = await process_tool_calls(messages.copy(), [TOOLS[0]])
+        # Process tool calls with Bedrock (also updates messages with tool calls)
+        bedrock_messages = [{"role": "user", "content": [{"text": user_input}]}]
+        response_content = process_tool_use(bedrock, bedrock_messages, [TOOLS[0]], messages)
 
         # Simulate PII leaking (e.g., from a database lookup)
         response_with_pii = response_content + TEST_PII
@@ -150,30 +155,32 @@ async def example_pii_blocked():
 
 TOOLS = [
     {
-        "type": "function",
-        "function": {
+        "toolSpec": {
             "name": "get_weather",
             "description": "Get the current weather for a city",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "city": {"type": "string", "description": "City name (e.g., Tokyo)"},
+            "inputSchema": {
+                "json": {
+                    "type": "object",
+                    "properties": {
+                        "city": {"type": "string", "description": "City name (e.g., Tokyo)"},
+                    },
+                    "required": ["city"],
                 },
-                "required": ["city"],
             },
         },
     },
     {
-        "type": "function",
-        "function": {
+        "toolSpec": {
             "name": "get_time",
             "description": "Get the current local time for a city",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "city": {"type": "string", "description": "City name (e.g., Tokyo)"},
+            "inputSchema": {
+                "json": {
+                    "type": "object",
+                    "properties": {
+                        "city": {"type": "string", "description": "City name (e.g., Tokyo)"},
+                    },
+                    "required": ["city"],
                 },
-                "required": ["city"],
             },
         },
     },
@@ -212,35 +219,48 @@ def execute_tool(name: str, args: dict) -> str:
 # -----------------------------------------------------------------------------
 
 
-async def process_tool_calls(messages: list, tools: list) -> str:
-    """Process tool calls in a loop until the model stops using tools."""
-    response = await litellm.acompletion(
-        model=MODEL,
-        messages=messages,
-        tools=tools,
-        tool_choice="auto",
+def process_tool_use(bedrock, bedrock_messages: list, tools: list, messages: list) -> str:
+    """Process tool use responses in a loop until the model stops using tools.
+    
+    Updates both `bedrock_messages` (Bedrock format) and `messages` (guardrails format).
+    """
+    response = bedrock.converse(
+        modelId=MODEL_ID,
+        messages=bedrock_messages,
+        toolConfig={"tools": tools},
     )
-    assistant_message = response.choices[0].message
 
-    while assistant_message.tool_calls:
-        messages.append(assistant_message.model_dump())
+    while response["stopReason"] == "tool_use":
+        assistant_message = response["output"]["message"]
+        bedrock_messages.append(assistant_message)
 
-        # Execute each tool
-        for tc in assistant_message.tool_calls:
-            name = tc.function.name
-            args = json.loads(tc.function.arguments)
-            result = execute_tool(name, args)
+        # Process all tool calls
+        tool_results = []
+        for block in assistant_message["content"]:
+            if "toolUse" in block:
+                tool = block["toolUse"]
+                args = tool["input"]
+                result = execute_tool(tool["name"], args)
 
-            messages.append({
-                "role": "tool",
-                "tool_call_id": tc.id,
-                "content": result,
-            })
+                # Update messages for guardrails (tool call and result)
+                messages.append({"role": "assistant", "content": f'[tool_call: {tool["name"]}({args})]'})
+                messages.append({"role": "tool", "content": result})
 
-        response = await litellm.acompletion(model=MODEL, messages=messages)
-        assistant_message = response.choices[0].message
+                tool_results.append({
+                    "toolResult": {
+                        "toolUseId": tool["toolUseId"],
+                        "content": [{"text": result}],
+                    }
+                })
 
-    return assistant_message.content
+        bedrock_messages.append({"role": "user", "content": tool_results})
+        response = bedrock.converse(
+            modelId=MODEL_ID,
+            messages=bedrock_messages,
+            toolConfig={"tools": tools},
+        )
+
+    return response["output"]["message"]["content"][0]["text"]
 
 
 # -----------------------------------------------------------------------------
@@ -255,6 +275,6 @@ async def main():
 
 
 if __name__ == "__main__":
-    setup_export_to_coralogix(service_name="litellm-tools-example")
-    LiteLLMInstrumentor().instrument()
+    setup_export_to_coralogix(service_name="bedrock-tools-example")
+    BedrockInstrumentor().instrument()
     asyncio.run(main())
