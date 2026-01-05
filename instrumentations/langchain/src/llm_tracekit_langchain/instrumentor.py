@@ -27,7 +27,7 @@ from opentelemetry.trace import Tracer, get_tracer
 from wrapt import wrap_function_wrapper
 
 from llm_tracekit_core import is_content_enabled
-from llm_tracekit_core.instruments import Instruments
+from llm_tracekit_core._instruments import Instruments
 from llm_tracekit_langchain.callback import LangChainCallbackHandler
 from llm_tracekit_langchain.package import _instruments
 

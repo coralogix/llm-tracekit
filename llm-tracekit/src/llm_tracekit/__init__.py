@@ -14,29 +14,29 @@
 
 from contextlib import suppress
 
-from llm_tracekit.coralogix import (
+from llm_tracekit_core import (
     setup_export_to_coralogix as setup_export_to_coralogix,
 )
 
 with suppress(ImportError):
-    from llm_tracekit.openai.instrumentor import (
+    from llm_tracekit_openai import (
         OpenAIInstrumentor as OpenAIInstrumentor,
     )
 with suppress(ImportError):
-    from llm_tracekit.openai_agents.instrumentor import (
+    from llm_tracekit_openai_agents import (
         OpenAIAgentsInstrumentor as OpenAIAgentsInstrumentor,
     )
 with suppress(ImportError):
-    from llm_tracekit.bedrock.instrumentor import (
+    from llm_tracekit_bedrock import (
         BedrockInstrumentor as BedrockInstrumentor,
     )
 with suppress(ImportError):
-    from llm_tracekit.litellm.instrumentor import (
+    from llm_tracekit_litellm import (
         LiteLLMInstrumentor as LiteLLMInstrumentor,
     )
 with suppress(ImportError):
-    from llm_tracekit.gemini.instrumentor import (
-        GeminiInstrumentor as GeminiInstrumentor
+    from llm_tracekit_gemini import (
+        GeminiInstrumentor as GeminiInstrumentor,
     )
 with suppress(ImportError):
     from llm_tracekit_langchain import (

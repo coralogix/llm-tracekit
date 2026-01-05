@@ -12,19 +12,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Optional
 
 from opentelemetry.sdk.trace import ReadableSpan
 from opentelemetry.semconv._incubating.attributes import (
     gen_ai_attributes as GenAIAttributes,
 )
 
-import llm_tracekit_core.extended_gen_ai_attributes as ExtendedGenAIAttributes
+import llm_tracekit_core._extended_gen_ai_attributes as ExtendedGenAIAttributes
 
 def assert_attributes(
     span: ReadableSpan,
-    response_model: Optional[str] = None,
-    agent_name: Optional[str] = None,
+    response_model: str | None = None,
+    agent_name: str | None = None,
     operation_name = "chat"
 ):
     assert operation_name == span.attributes[GenAIAttributes.GEN_AI_OPERATION_NAME]

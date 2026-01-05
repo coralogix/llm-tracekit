@@ -5,20 +5,20 @@ from guardrails import (
     Guardrails,
     PII,
     PromptInjection,
-    PIICategorie,
+    PIICategory,
     GuardrailsTriggered,
+    GuardrailsTarget,
 )
-from guardrails.models.enums import GuardrailsTarget
 
 
 async def main():
     guardrails = Guardrails()
     messages = [{"role": "user", "content": "What is the capital of France?"}]
-    config = [PII(categories=[PIICategorie.email_address]), PromptInjection()]
+    config = [PII(categories=[PIICategory.EMAIL_ADDRESS]), PromptInjection()]
 
     async with guardrails.guarded_session():
         try:
-            await guardrails.guard(messages, config, GuardrailsTarget.prompt)
+            await guardrails.guard(messages, config, GuardrailsTarget.PROMPT)
         except GuardrailsTriggered as e:
             return print(f"Prompt blocked: {e}")
 
@@ -26,7 +26,7 @@ async def main():
         messages.append({"role": "assistant", "content": llm_response})
 
         try:
-            await guardrails.guard(messages, config, GuardrailsTarget.response)
+            await guardrails.guard(messages, config, GuardrailsTarget.RESPONSE)
             print(f"Assistant: {llm_response}")
         except GuardrailsTriggered as e:
             print(f"Response blocked: {e}")

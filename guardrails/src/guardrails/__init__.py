@@ -1,5 +1,5 @@
-from .guardrails import Guardrails
-from .models.enums import PIICategorie, Role
+from .client import Guardrails
+from .models._models import PIICategory, Role, GuardrailsTarget, GuardrailType
 from .models.request import (
     PII,
     PromptInjection,
@@ -31,8 +31,10 @@ __all__ = [
     "GuardrailsResultBase",
     "GuardrailsResponse",
     # Enums
-    "PIICategorie",
+    "PIICategory",
     "Role",
+    "GuardrailsTarget",
+    "GuardrailType",
     # Errors
     "GuardrailsError",
     "GuardrailsAPIConnectionError",

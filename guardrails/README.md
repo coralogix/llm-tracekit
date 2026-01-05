@@ -18,7 +18,7 @@ pip install llm-tracekit[guardrails]
 
 ```python
 import asyncio
-from guardrails import Guardrails, PII, PromptInjection, PIICategorie, GuardrailsTriggered
+from guardrails import Guardrails, PII, PromptInjection, PIICategory, GuardrailsTriggered
 
 guardrails = Guardrails(
     api_key="your-api-key",
@@ -31,7 +31,7 @@ async def main():
             # Guard user input
             await guardrails.guard_prompt(
                 prompt="User input here",
-                guardrails_config=[PII(), PromptInjection()],
+                guardrails=[PII(), PromptInjection()],
             )
             
             response = "..."  # Your LLM call here
@@ -39,7 +39,7 @@ async def main():
             # Guard LLM output
             await guardrails.guard_response(
                 response=response,
-                guardrails_config=[PII(), PromptInjection()],
+                guardrails=[PII(), PromptInjection()],
             )
         except GuardrailsTriggered as e:
             for v in e.triggered:
@@ -59,12 +59,24 @@ export CX_APPLICATION_NAME="my-app"      # Optional, default: "Unknown"
 export CX_SUBSYSTEM_NAME="my-subsystem"  # Optional, default: "Unknown"
 ```
 
+### Timeout Configuration
+
+The default timeout is 10 seconds. Configure it via the `timeout` parameter, in seconds:
+
+```python
+guardrails = Guardrails(
+    api_key="your-api-key",
+    cx_endpoint="https://your-domain.coralogix.com",
+    timeout=2,  # 2 seconds
+)
+```
+
 ## Guard API
 
 Use `guard()` for full control over messages. Accepts `Message` objects or simple dicts:
 
 ```python
-from guardrails.models.enums import GuardrailsTarget
+from guardrails import GuardrailsTarget
 
 # Using dicts
 messages = [
@@ -72,7 +84,7 @@ messages = [
     {"role": "assistant", "content": "Hi there!"},
 ]
 
-await guardrails.guard(messages, [PII()], GuardrailsTarget.response)
+await guardrails.guard(messages, [PII()], GuardrailsTarget.RESPONSE)
 ```
 
 See [`examples/direct_guard_example.py`](examples/direct_guard_example.py) for more details.
@@ -84,10 +96,10 @@ See [`examples/direct_guard_example.py`](examples/direct_guard_example.py) for m
 Detects personally identifiable information:
 
 ```python
-from guardrails import PII, PIICategorie
+from guardrails import PII, PIICategory
 
 PII()  # All categories
-PII(categories=[PIICategorie.email_address, PIICategorie.phone_number], threshold=0.8)
+PII(categories=[PIICategory.EMAIL_ADDRESS, PIICategory.PHONE_NUMBER], threshold=0.8)
 ```
 
 **Categories:** `email_address`, `phone_number`, `credit_card`, `iban_code`, `us_ssn`
@@ -114,7 +126,7 @@ from guardrails import (
 )
 
 try:
-    await guardrails.guard_prompt(prompt="test", guardrails_config=[PII()])
+    await guardrails.guard_prompt(prompt="test", guardrails=[PII()])
 except GuardrailsTriggered as e:
     for v in e.triggered:
         print(f"{v.guardrail_type}: {v.score}")
@@ -133,7 +145,7 @@ except GuardrailsAPIResponseError as e:
 | **Fail-Closed** | Security-critical | Block on API failure |
 | **Fail-Open** | High-availability | Allow on API failure |
 
-Set `DISABLE_GUARDRAIL_TRIGGERED_EXCEPTIONS=true` for fail-open on violations.
+Set `DISABLE_GUARDRAILS_TRIGGERED_EXCEPTION=true` for fail-open on violations.
 
 ## License
 

@@ -8,7 +8,7 @@ authors = [
 ]
 license = "Apache-2.0"
 license-files = ["LICENSE.md"]
-requires-python = ">3.9,<=3.13"
+requires-python = ">=3.10,<3.14"
 dependencies = [
     "llm-tracekit-core>=1.0.0",
     "pydantic>=2.10.0",
@@ -55,3 +55,6 @@ only-include = [
 
 [tool.uv.sources]
 llm-tracekit-core = { workspace = true }
+
+[tool.ty.environment]
+extra-paths = ["../core/src"]

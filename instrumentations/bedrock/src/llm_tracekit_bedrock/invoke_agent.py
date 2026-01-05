@@ -15,7 +15,7 @@
 import json
 from dataclasses import dataclass
 from timeit import default_timer
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable
 
 from botocore.eventstream import EventStream, EventStreamError
 from opentelemetry.semconv._incubating.attributes import (
@@ -24,7 +24,7 @@ from opentelemetry.semconv._incubating.attributes import (
 from opentelemetry.trace import Span
 from wrapt import ObjectProxy
 
-from llm_tracekit_core import extended_gen_ai_attributes as ExtendedGenAIAttributes
+from llm_tracekit_core import _extended_gen_ai_attributes as ExtendedGenAIAttributes
 from llm_tracekit_bedrock import parsing_utils
 from llm_tracekit_bedrock.utils import record_metrics
 from llm_tracekit_core import Instruments, attribute_generator
@@ -45,22 +45,22 @@ class AgentStreamResult:
     A data transfer object that also serves as the state container for the stream wrapper.
     """
 
-    content: Optional[str] = None
-    usage_input_tokens: Optional[int] = None
-    usage_output_tokens: Optional[int] = None
-    foundation_model: Optional[str] = None
-    inference_config_max_tokens: Optional[int] = None
-    inference_config_temperature: Optional[float] = None
-    inference_config_top_k: Optional[int] = None
-    inference_config_top_p: Optional[float] = None
-    prompt_history: Optional[List[Message]] = None
-    finish_reasons: Optional[List[str]] = None
+    content: str | None = None
+    usage_input_tokens: int | None = None
+    usage_output_tokens: int | None = None
+    foundation_model: str | None = None
+    inference_config_max_tokens: int | None = None
+    inference_config_temperature: float | None = None
+    inference_config_top_k: int | None = None
+    inference_config_top_p: float | None = None
+    prompt_history: list[Message] | None = None
+    finish_reasons: list[str] | None = None
 
 
 @attribute_generator
 def generate_attributes_from_invoke_agent_input(
-    kwargs: Dict[str, Any], capture_content: bool
-) -> Dict[str, Any]:
+    kwargs: dict[str, Any], capture_content: bool
+) -> dict[str, Any]:
     base_attributes = generate_base_attributes(
         system=GenAIAttributes.GenAiSystemValues.AWS_BEDROCK
     )
@@ -171,7 +171,7 @@ class InvokeAgentStreamWrapper(ObjectProxy):
             self._stream_error_callback(exc)
             raise
 
-    def _process_usage_data(self, usage: Dict[str, int]):
+    def _process_usage_data(self, usage: dict[str, int]):
         input_tokens = usage.get("inputTokens")
         if input_tokens is not None:
             if self._result.usage_input_tokens is None:
@@ -184,9 +184,9 @@ class InvokeAgentStreamWrapper(ObjectProxy):
                 self._result.usage_output_tokens = 0
             self._result.usage_output_tokens += output_tokens
 
-    def _process_chat_history(self, raw_messages: List[Dict[str, Any]]):
+    def _process_chat_history(self, raw_messages: list[dict[str, Any]]):
         try:
-            prompt_history: List[Message] = []
+            prompt_history: list[Message] = []
             for msg in raw_messages:
                 role = msg.get("role")
                 raw_content = msg.get("content", "")
@@ -229,7 +229,7 @@ class InvokeAgentStreamWrapper(ObjectProxy):
             self._result.prompt_history = None
 
 
-    def _extract_finish_reasons(self, raw_response_dict: Dict[str, Any]):
+    def _extract_finish_reasons(self, raw_response_dict: dict[str, Any]):
         try:
             content_string = raw_response_dict.get('content')
             if isinstance(content_string, str):
@@ -256,7 +256,7 @@ class InvokeAgentStreamWrapper(ObjectProxy):
         if "trace" in event and "trace" in event.get("trace", {}):
             self._process_trace_event(event["trace"]["trace"])
 
-    def _process_trace_event(self, trace_data: Dict[str, Any]):
+    def _process_trace_event(self, trace_data: dict[str, Any]):
         for key in [
             "preProcessingTrace",
             "postProcessingTrace",

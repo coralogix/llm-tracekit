@@ -1,9 +1,9 @@
-from typing import List, Literal, Optional, Union, Any, Dict
+from typing import Literal, Union, Any
 
 from pydantic import BaseModel, Field, field_validator
 
-from .constants import DEFAULT_THRESHOLD
-from .enums import GuardrailsTarget, PIICategorie, Role
+from ._constants import DEFAULT_THRESHOLD
+from ._models import GuardrailsTarget, PIICategory, Role
 
 
 class BaseGuardrailConfig(BaseModel):
@@ -12,7 +12,7 @@ class BaseGuardrailConfig(BaseModel):
 
 class PII(BaseGuardrailConfig):
     type: Literal["pii"] = "pii"
-    categories: List[PIICategorie] = Field(default_factory=lambda: list(PIICategorie))
+    categories: list[PIICategory] = Field(default_factory=lambda: list(PIICategory))
 
 
 class PromptInjection(BaseGuardrailConfig):
@@ -22,7 +22,6 @@ class PromptInjection(BaseGuardrailConfig):
 GuardrailConfigType = Union[PII, PromptInjection]
 
 
-# Role string to enum mapping
 ROLE_MAP = {
     "user": Role.USER,
     "assistant": Role.ASSISTANT,
@@ -35,7 +34,7 @@ class Message(BaseModel):
     role: Role
     content: Any
 
-    def __init__(self, data: Optional[Dict[str, Any]] = None, **kwargs: Any) -> None:
+    def __init__(self, data: dict[str, Any] | None = None, **kwargs: Any) -> None:
         if data is not None:
             super().__init__(**data)
         else:
@@ -58,7 +57,8 @@ class Message(BaseModel):
 class GuardrailRequest(BaseModel):
     application: str
     subsystem: str
-    messages: Optional[List[Message]] = None
-    guardrails_configs: List[GuardrailConfigType]
+    messages: list[Message] | None = None
+    guardrails: list[GuardrailConfigType]
     target: GuardrailsTarget
     timeout: int
+

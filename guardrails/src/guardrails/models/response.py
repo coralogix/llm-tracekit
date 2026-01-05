@@ -1,9 +1,9 @@
-from typing import Any, List, Optional, Union
+from typing import Any, Union
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-from .constants import DEFAULT_THRESHOLD
-from .enums import GuardrailType
+from ._constants import DEFAULT_THRESHOLD
+from ._models import GuardrailType
 
 
 class GuardrailsResultBase(BaseModel):
@@ -22,7 +22,7 @@ class GuardrailsResultBase(BaseModel):
 
 
 class PIIResult(GuardrailsResultBase):
-    detected_categories: Optional[Any] = None
+    detected_categories: Any | None = None
 
 
 class PromptInjectionResult(GuardrailsResultBase):
@@ -33,4 +33,5 @@ GuardrailsResponseType = Union[PIIResult, PromptInjectionResult]
 
 
 class GuardrailsResponse(BaseModel):
-    results: List[GuardrailsResponseType] = Field(default_factory=list)
+    results: list[GuardrailsResponseType] = Field(default_factory=list)
+

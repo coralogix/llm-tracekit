@@ -1,5 +1,4 @@
 from __future__ import annotations
-from typing import List, Optional
 
 
 class GuardrailsError(Exception):
@@ -20,8 +19,8 @@ class GuardrailsAPIResponseError(GuardrailsError):
     def __init__(
         self,
         status_code: int,
-        body: Optional[str] = None,
-        message: Optional[str] = None,
+        body: str | None = None,
+        message: str | None = None,
     ):
         self.status_code = status_code
         self.body = body
@@ -40,21 +39,14 @@ class GuardrailViolation(GuardrailsError):
     def __init__(
         self,
         guardrail_type: str,
-        name: Optional[str] = None,
-        score: Optional[float] = None,
-        detected_categories: Optional[List[str]] = None
+        name: str | None = None,
     ):
         self.guardrail_type = guardrail_type
         self.name = name
-        self.score = score
-        self.detected_categories = detected_categories
-        parts = [f"Guardrail triggered: {guardrail_type}"]
+
+        parts = [guardrail_type]
         if name:
             parts.append(f"{name=}")
-        if score is not None:
-            parts.append(f"score={score:.3f}")
-        if detected_categories:
-            parts.append(f"{detected_categories=}")
         error_message = " | ".join(parts)
 
         super().__init__(error_message)
@@ -63,7 +55,7 @@ class GuardrailViolation(GuardrailsError):
 class GuardrailsTriggered(GuardrailsError):
     """Multiple guardrails detected violations."""
 
-    def __init__(self, triggered: List[GuardrailViolation]):
+    def __init__(self, triggered: list[GuardrailViolation]):
         self.triggered = triggered
         messages = [str(t) for t in triggered]
         super().__init__(

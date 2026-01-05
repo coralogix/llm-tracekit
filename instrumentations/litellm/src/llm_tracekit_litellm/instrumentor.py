@@ -13,7 +13,7 @@
 # limitations under the License.
 
 
-from typing import Any, Collection, Optional, Union
+from typing import Any, Collection, Union
 
 from opentelemetry.instrumentation.instrumentor import (  # type: ignore[attr-defined]
     BaseInstrumentor,
@@ -29,11 +29,11 @@ from litellm.integrations.opentelemetry import OpenTelemetryConfig as LiteLLMCon
 class LiteLLMInstrumentor(BaseInstrumentor):
     def __init__(
         self,
-        coralogix_token: Optional[str] = None,
-        coralogix_endpoint: Optional[str] = None,
-        application_name: Optional[str] = None,
-        subsystem_name: Optional[str] = None,
-        tracer_provider: Optional[Any] = None,
+        coralogix_token: str | None = None,
+        coralogix_endpoint: str | None = None,
+        application_name: str | None = None,
+        subsystem_name: str | None = None,
+        tracer_provider: Any | None = None,
     ):
         otel_config = generate_exporter_config(
             coralogix_token=coralogix_token,

@@ -13,7 +13,7 @@
 # limitations under the License.
 
 import json
-from typing import Any, Dict, List, Mapping, Optional, Union
+from typing import Any, Mapping
 from urllib.parse import urlparse
 
 from httpx import URL
@@ -40,15 +40,13 @@ from llm_tracekit_core import (
     generate_choice_attributes,
     generate_request_attributes,
     generate_response_attributes,
-    extended_gen_ai_attributes as ExtendedGenAIAttributes,
+    _extended_gen_ai_attributes as ExtendedGenAIAttributes,
 )
 
 
 def parse_tool_calls(
-    tool_calls: Optional[
-        Union[List[Dict[str, Any]], List[ChatCompletionMessageToolCall]]
-    ],
-) -> Optional[List[ToolCall]]:
+    tool_calls: list[dict[str, Any] | ChatCompletionMessageToolCall] | None,
+) -> list[ToolCall] | None:
     if tool_calls is None:
         return None
 
@@ -76,14 +74,14 @@ def parse_tool_calls(
     return parsed_tool_calls
 
 
-def generate_server_address_and_port_attributes(client_instance) -> Dict[str, Any]:
+def generate_server_address_and_port_attributes(client_instance) -> dict[str, Any]:
     base_client = getattr(client_instance, "_client", None)
     base_url = getattr(base_client, "base_url", None)
     if not base_url:
         return {}
 
     host = None
-    port: Optional[int] = -1
+    port: int | None = -1
     if isinstance(base_url, URL):
         host = base_url.host
         port = base_url.port
@@ -92,7 +90,7 @@ def generate_server_address_and_port_attributes(client_instance) -> Dict[str, An
         host = url.hostname
         port = url.port
 
-    attributes: Dict[str, Any] = {ServerAttributes.SERVER_ADDRESS: host}
+    attributes: dict[str, Any] = {ServerAttributes.SERVER_ADDRESS: host}
     if port and port != 443 and port > 0:
         attributes[ServerAttributes.SERVER_PORT] = port
 
@@ -108,7 +106,7 @@ def get_property_value(obj, property_name):
 
 def messages_to_span_attributes(
     messages: list, capture_content: bool
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     parsed_messages = []
     for message in messages:
         content = get_property_value(message, "content")
@@ -132,8 +130,8 @@ def messages_to_span_attributes(
 
 
 def choices_to_span_attributes(
-    choices: List[OpenAIChoice], capture_content
-) -> Dict[str, Any]:
+    choices: list[OpenAIChoice], capture_content
+) -> dict[str, Any]:
     parsed_choices = []
     for choice in choices:
         role = None
@@ -172,7 +170,7 @@ def is_streaming(kwargs):
     return non_numerical_value_is_set(kwargs.get("stream"))
 
 
-def non_numerical_value_is_set(value: Optional[Union[bool, str]]):
+def non_numerical_value_is_set(value: bool | str | None):
     return bool(value) and value != NOT_GIVEN
 
 
@@ -251,7 +249,7 @@ def get_llm_request_attributes(kwargs, client_instance, capture_content: bool):
 @attribute_generator
 def get_llm_response_attributes(
     result: ChatCompletion, capture_content: bool
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     finish_reasons = None
     if result.choices is not None:
         finish_reasons = []

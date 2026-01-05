@@ -1,7 +1,10 @@
-from guardrails.models.enums import GuardrailType
-from guardrails.models.response import GuardrailsResponse
-from typing import Any, Dict, List, Optional
-from guardrails.guardrails_span_attributes import (
+from typing import Any
+
+from llm_tracekit_core import attribute_generator
+
+from .models._models import GuardrailType
+from .models.response import GuardrailsResponse
+from .span_attributes import (
     NAME,
     SCORE,
     DETECTION_THRESHOLD,
@@ -11,17 +14,16 @@ from guardrails.guardrails_span_attributes import (
     APPLICATION_NAME,
     SUBSYSTEM_NAME,
 )
-from llm_tracekit_core import attribute_generator
 
 
 @attribute_generator
 def generate_base_attributes(
     application_name: str,
     subsystem_name: str,
-    prompts: Optional[List[str]] = None,
-    responses: Optional[List[str]] = None,
+    prompts: list[str] | None = None,
+    responses: list[str] | None = None,
 ):
-    attributes: Dict[str, Any] = {
+    attributes: dict[str, Any] = {
         APPLICATION_NAME: application_name,
         SUBSYSTEM_NAME: subsystem_name,
     }
@@ -38,7 +40,7 @@ def generate_base_attributes(
 def generate_guardrail_response_attributes(
     guardrail_response: GuardrailsResponse,
     target: str,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     span_attributes: dict[str, Any] = {}
     for result in guardrail_response.results:
         guardrail_type = result.type.value

@@ -16,7 +16,7 @@ import json
 from contextlib import suppress
 from copy import deepcopy
 from timeit import default_timer
-from typing import Any, Callable, Dict, List, Optional, Union
+from typing import Any, Callable, Union
 
 from botocore.eventstream import EventStream, EventStreamError
 from opentelemetry.semconv._incubating.attributes import (
@@ -25,7 +25,7 @@ from opentelemetry.semconv._incubating.attributes import (
 from opentelemetry.trace import Span
 from wrapt import ObjectProxy
 
-from llm_tracekit_core import extended_gen_ai_attributes as ExtendedGenAIAttributes
+from llm_tracekit_core import _extended_gen_ai_attributes as ExtendedGenAIAttributes
 from llm_tracekit_bedrock.utils import decode_tool_use_in_stream, record_metrics
 from llm_tracekit_core import Instruments, attribute_generator
 from llm_tracekit_core import (
@@ -40,8 +40,8 @@ from llm_tracekit_core import (
     )
 
 def _combine_tool_call_content_blocks(
-    content_blocks: List[Dict[str, Any]],
-) -> Optional[str]:
+    content_blocks: list[dict[str, Any]],
+) -> str | None:
     text_blocks = []
     for content_block in content_blocks:
         if "text" in content_block:
@@ -57,8 +57,8 @@ def _combine_tool_call_content_blocks(
 
 
 def _parse_converse_message(
-    role: Optional[str], content_blocks: Optional[List[Dict[str, Any]]]
-) -> List[Message]:
+    role: str | None, content_blocks: list[dict[str, Any]] | None
+) -> list[Message]:
     """Attempts to combine the content blocks of a `converse` API message to a single message."""
     if content_blocks is None:
         return [Message(role=role)]
@@ -137,8 +137,8 @@ def _parse_converse_message(
 
 @attribute_generator
 def generate_attributes_from_converse_input(
-    kwargs: Dict[str, Any], capture_content: bool
-) -> Dict[str, Any]:
+    kwargs: dict[str, Any], capture_content: bool
+) -> dict[str, Any]:
     inference_config = kwargs.get("inferenceConfig", {})
     messages = []
     for system_message in kwargs.get("system", []):
@@ -195,12 +195,12 @@ def generate_attributes_from_converse_input(
 
 
 def record_converse_result_attributes(
-    result: Dict[str, Any],
+    result: dict[str, Any],
     span: Span,
     start_time: float,
     instruments: Instruments,
     capture_content: bool,
-    model: Optional[str],
+    model: str | None,
 ):
     finish_reason = result.get("stopReason")
     usage_data = result.get("usage", {})
@@ -252,7 +252,7 @@ class ConverseStreamWrapper(ObjectProxy):
     def __init__(
         self,
         stream: EventStream,
-        stream_done_callback: Callable[[Dict[str, Union[int, str]]], None],
+        stream_done_callback: Callable[[dict[str, Union[int, str]]], None],
         stream_error_callback: Callable[[Exception], None],
     ):
         super().__init__(stream)
@@ -261,9 +261,9 @@ class ConverseStreamWrapper(ObjectProxy):
         self._stream_error_callback = stream_error_callback
         # accumulating things in the same shape of non-streaming version
         # {"usage": {"inputTokens": 0, "outputTokens": 0}, "stopReason": "finish", "output": {"message": {"role": "", "content": [{"text": ""}]}
-        self._response: Dict[str, Any] = {}
+        self._response: dict[str, Any] = {}
         self._message = None
-        self._content_block: Dict[str, Any] = {}
+        self._content_block: dict[str, Any] = {}
         self._record_message = False
 
     def __iter__(self):

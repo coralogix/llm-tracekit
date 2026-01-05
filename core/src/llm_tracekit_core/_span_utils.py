@@ -13,18 +13,18 @@
 # limitations under the License.
 
 from functools import wraps
-from typing import Any, Callable, Dict
+from typing import Any, Callable
 
 
-def remove_attributes_with_null_values(attributes: Dict[str, Any]) -> Dict[str, Any]:
+def remove_attributes_with_null_values(attributes: dict[str, Any]) -> dict[str, Any]:
     return {attr: value for attr, value in attributes.items() if value is not None}
 
 
 def attribute_generator(
-    original_function: Callable[..., Dict[str, Any]],
-) -> Callable[..., Dict[str, Any]]:
+    original_function: Callable[..., dict[str, Any]],
+) -> Callable[..., dict[str, Any]]:
     @wraps(original_function)
-    def wrapper(*args, **kwargs) -> Dict[str, Any]:
+    def wrapper(*args, **kwargs) -> dict[str, Any]:
         attributes = original_function(*args, **kwargs)
 
         return remove_attributes_with_null_values(attributes)

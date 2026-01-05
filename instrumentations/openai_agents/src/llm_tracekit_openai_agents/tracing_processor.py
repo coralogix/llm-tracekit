@@ -15,7 +15,7 @@
 
 from dataclasses import dataclass, field
 from contextvars import Token
-from typing import Any, Optional, Dict, List, Tuple, Union, Callable, Type
+from typing import Any, Union, Callable
 
 from agents import (
     AgentSpanData,
@@ -58,17 +58,17 @@ from opentelemetry.semconv._incubating.attributes import (
 
 @dataclass
 class _TraceState:
-    parent_span: Optional[OTELSpan] = None
-    parent_context: Optional[Token] = None
-    open_spans: Dict[str, Tuple[OTELSpan, Token]] = field(default_factory=dict)
-    agents: Dict[str, Agent] = field(default_factory=dict)
-    last_agent: Optional[Agent] = None
+    parent_span: OTELSpan | None = None
+    parent_context: Token | None = None
+    open_spans: dict[str, tuple[OTELSpan, Token]] = field(default_factory=dict)
+    agents: dict[str, Agent] = field(default_factory=dict)
+    last_agent: Agent | None = None
 
 
 @dataclass
 class ChatHistoryResult:
-    prompt_history: List[Message] = field(default_factory=list)
-    completion_history: List[Choice] = field(default_factory=list)
+    prompt_history: list[Message] = field(default_factory=list)
+    completion_history: list[Choice] = field(default_factory=list)
 
 
 class OpenAIAgentsTracingProcessor(TracingProcessor):
@@ -76,27 +76,27 @@ class OpenAIAgentsTracingProcessor(TracingProcessor):
         self.disabled = False
         self.tracer = tracer
         self.capture_content = capture_content
-        self._span_processors: Dict[Type[Any], Callable[..., Dict[str, Any]]] = {
+        self._span_processors: dict[type[Any], Callable[..., dict[str, Any]]] = {
             AgentSpanData: self._process_agent_span,
             FunctionSpanData: self._process_function_span,
             ResponseSpanData: self._process_response_span,
             GuardrailSpanData: self._process_guardrail_span,
             HandoffSpanData: self._process_handoff_span
         }
-        self._trace_states: Dict[str, _TraceState] = {}
+        self._trace_states: dict[str, _TraceState] = {}
 
     def _get_or_create_state(self, trace_id: str) -> _TraceState:
         if trace_id not in self._trace_states:
             self._trace_states[trace_id] = _TraceState()
         return self._trace_states[trace_id]
         
-    def _pop_state(self, trace_id: str) -> Optional[_TraceState]:
+    def _pop_state(self, trace_id: str) -> _TraceState | None:
         return self._trace_states.pop(trace_id, None)
 
     def _process_chat_history(self, span_data: ResponseSpanData) -> ChatHistoryResult:
-        input_messages: Union[List[ResponseInputItemParam], str, None]  = span_data.input
-        history: List[Message] = []
-        choices: List[Choice] = []
+        input_messages: Union[list[ResponseInputItemParam], str, None]  = span_data.input
+        history: list[Message] = []
+        choices: list[Choice] = []
 
         if span_data.response is not None:
             if isinstance(span_data.response.instructions, str):
@@ -158,8 +158,8 @@ class OpenAIAgentsTracingProcessor(TracingProcessor):
 
         if span_data.response is not None:
             response = span_data.response
-            response_content: Optional[str] = None
-            response_tool_calls: Optional[List[ToolCall]] = None
+            response_content: str | None = None
+            response_tool_calls: list[ToolCall] | None = None
             response_role = 'assistant'
 
             if response.output is not None and isinstance(response.output, list) and len(response.output) > 0:
@@ -199,8 +199,8 @@ class OpenAIAgentsTracingProcessor(TracingProcessor):
             choices.append(choice)
         return ChatHistoryResult(prompt_history=history, completion_history=choices)
 
-    def _process_agent_span(self, span_data: AgentSpanData) -> Dict[str, Any]:
-        attributes: Dict[str, Any] = {
+    def _process_agent_span(self, span_data: AgentSpanData) -> dict[str, Any]:
+        attributes: dict[str, Any] = {
             "type": span_data.type,
             "agent_name": span_data.name,
             "handoffs": span_data.handoffs,
@@ -210,8 +210,8 @@ class OpenAIAgentsTracingProcessor(TracingProcessor):
             attributes["tools"] = span_data.tools
         return attributes
 
-    def _process_function_span(self, span_data: FunctionSpanData) -> Dict[str, Any]:
-        attributes: Dict[str, Any] = {
+    def _process_function_span(self, span_data: FunctionSpanData) -> dict[str, Any]:
+        attributes: dict[str, Any] = {
             "type": span_data.type,
             "name": span_data.name
         }
@@ -225,7 +225,7 @@ class OpenAIAgentsTracingProcessor(TracingProcessor):
 
     def _process_response_span(
             self, span_data: ResponseSpanData, state: _TraceState, parent_id: str
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         chat_result = self._process_chat_history(span_data)
         active_agent = state.agents.get(parent_id)
         if active_agent is None:
@@ -233,11 +233,11 @@ class OpenAIAgentsTracingProcessor(TracingProcessor):
         else:
             state.last_agent = active_agent
 
-        top_p: Optional[float] = None
-        temperature: Optional[float] = None
-        response_model: Optional[str] = None
-        usage_input_tokens: Optional[int] = None
-        usage_output_tokens: Optional[int] = None
+        top_p: float | None = None
+        temperature: float | None = None
+        response_model: str | None = None
+        usage_input_tokens: int | None = None
+        usage_output_tokens: int | None = None
 
         if span_data.response is not None:
             top_p = span_data.response.top_p
@@ -248,7 +248,7 @@ class OpenAIAgentsTracingProcessor(TracingProcessor):
                 usage_input_tokens = span_data.response.usage.input_tokens
                 usage_output_tokens = span_data.response.usage.output_tokens
         
-        attributes: Dict[str, Any] = {
+        attributes: dict[str, Any] = {
             **generate_base_attributes(
                 operation=GenAIAttributes.GenAiOperationNameValues.CHAT,
                 system=GenAIAttributes.GenAiSystemValues.OPENAI
@@ -276,16 +276,16 @@ class OpenAIAgentsTracingProcessor(TracingProcessor):
         }
         return attributes
     
-    def _process_guardrail_span(self, span_data: GuardrailSpanData) -> Dict[str, Any]:
-        attributes: Dict[str, Any] = {
+    def _process_guardrail_span(self, span_data: GuardrailSpanData) -> dict[str, Any]:
+        attributes: dict[str, Any] = {
             "type": span_data.type,
             "name": span_data.name,
             "triggered": span_data.triggered
         }
         return attributes
 
-    def _process_handoff_span(self, span_data: HandoffSpanData) -> Dict[str, Any]:
-        attributes: Dict[str, Any] = {
+    def _process_handoff_span(self, span_data: HandoffSpanData) -> dict[str, Any]:
+        attributes: dict[str, Any] = {
             "type": span_data.type,
             "from_agent": span_data.from_agent,
         }

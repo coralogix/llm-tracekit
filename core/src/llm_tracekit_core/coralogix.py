@@ -14,7 +14,7 @@
 
 import os
 import logging
-from typing import Optional, List, Dict, Any
+from typing import Any
 from dataclasses import dataclass
 
 from opentelemetry import trace
@@ -23,20 +23,20 @@ from opentelemetry.sdk.trace import TracerProvider, SpanLimits
 from opentelemetry.sdk.trace.export import BatchSpanProcessor, SimpleSpanProcessor, SpanProcessor
 from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
 
-from llm_tracekit_core.instrumentation_utils import enable_capture_content
+from llm_tracekit_core._instrumentation_utils import enable_capture_content
 
 logger = logging.getLogger(__name__)
 
 @dataclass
 class ExportConfig:
-    endpoint: Optional[str] = None
-    headers: Optional[Dict[str, Any]] = None
+    endpoint: str | None = None
+    headers: dict[str, Any] | None = None
 
 def generate_exporter_config(
-        coralogix_token: Optional[str],
-        coralogix_endpoint: Optional[str],
-        application_name: Optional[str],
-        subsystem_name: Optional[str],
+        coralogix_token: str | None,
+        coralogix_endpoint: str | None,
+        application_name: str | None,
+        subsystem_name: str | None,
     ) -> ExportConfig:
     if coralogix_token is None:
         coralogix_token = os.environ.get("CX_TOKEN")
@@ -60,13 +60,13 @@ def generate_exporter_config(
 
 def setup_export_to_coralogix(
     service_name: str,
-    coralogix_token: Optional[str] = None,
-    coralogix_endpoint: Optional[str] = None,
-    application_name: Optional[str] = None,
-    subsystem_name: Optional[str] = None,
+    coralogix_token: str | None = None,
+    coralogix_endpoint: str | None = None,
+    application_name: str | None = None,
+    subsystem_name: str | None = None,
     use_batch_processor: bool = True,
     capture_content: bool = True,
-    processors: Optional[List[SpanProcessor]] = None,
+    processors: list[SpanProcessor] | None = None,
     span_attribute_count_limit: int = 512,
 ):
     """

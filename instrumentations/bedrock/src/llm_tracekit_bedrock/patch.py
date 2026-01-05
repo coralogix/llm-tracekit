@@ -15,7 +15,7 @@
 from functools import partial, wraps
 from io import BytesIO
 from timeit import default_timer
-from typing import Callable, Optional
+from typing import Callable
 
 from botocore.eventstream import EventStream
 from botocore.response import StreamingBody
@@ -45,7 +45,7 @@ def _handle_error(
     span: Span,
     start_time: float,
     instruments: Instruments,
-    model: Optional[str] = None,
+    model: str | None = None,
 ):
     duration = max((default_timer() - start_time), 0)
     handle_span_exception(span, error)

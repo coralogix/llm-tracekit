@@ -1,7 +1,7 @@
 from enum import Enum
 
 
-class PIICategorie(str, Enum):
+class PIICategory(str, Enum):
     PHONE_NUMBER = "phone_number"
     EMAIL_ADDRESS = "email_address"
     CREDIT_CARD = "credit_card"
@@ -24,3 +24,4 @@ class Role(str, Enum):
     ASSISTANT = "assistant"
     SYSTEM = "system"
     TOOL = "tool"
+

@@ -6,10 +6,10 @@ from guardrails import (
     Guardrails,
     PII,
     PromptInjection,
-    PIICategorie,
+    PIICategory,
     GuardrailsTriggered,
+    GuardrailsTarget,
 )
-from guardrails.models.enums import GuardrailsTarget
 
 TEST_PII = "your email is example@example.com"
 
@@ -19,14 +19,14 @@ async def main():
     client = genai.Client()
     user_content = "What is the capital of France?"
     contents = [{"role": "user", "parts": [{"text": user_content}]}]
-    config = [PII(categories=[PIICategorie.email_address]), PromptInjection()]
+    config = [PII(categories=[PIICategory.EMAIL_ADDRESS]), PromptInjection()]
 
     async with guardrails.guarded_session():
         # Guard prompt
         messages = [{"role": "user", "content": user_content}]
         try:
             await guardrails.guard(
-                messages, [PromptInjection()], GuardrailsTarget.prompt
+                messages, [PromptInjection()], GuardrailsTarget.PROMPT
             )
         except GuardrailsTriggered as e:
             return print(f"Prompt blocked: {e}")
@@ -38,7 +38,7 @@ async def main():
         messages.append({"role": "assistant", "content": response_content})
 
         try:
-            await guardrails.guard(messages, config, GuardrailsTarget.response)
+            await guardrails.guard(messages, config, GuardrailsTarget.RESPONSE)
             print(f"Assistant: {response.text}")
         except GuardrailsTriggered as e:
             print(f"Response blocked: {e}")

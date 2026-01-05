@@ -22,7 +22,7 @@ from opentelemetry.semconv._incubating.attributes import (
     gen_ai_attributes as GenAIAttributes,
 )
 
-from typing import List, Dict, Any, Optional
+from typing import Any
 from opentelemetry.trace import Span
 
 from llm_tracekit_core import (
@@ -40,14 +40,14 @@ class LitellmCallback(OpenTelemetry):
     def __init__(
         self,
         capture_content: bool,
-        config: Optional[OpenTelemetryConfig],
-        tracer_provider: Optional[Any] = None,
+        config: OpenTelemetryConfig | None,
+        tracer_provider: Any | None = None,
     ):
         super().__init__(config=config, tracer_provider=tracer_provider)
         self.capture_content = capture_content
 
-    def parse_messages(self, raw_messages: List[Dict[str, Any]]) -> List[Message]:
-        messages: List[Message] = []
+    def parse_messages(self, raw_messages: list[dict[str, Any]]) -> list[Message]:
+        messages: list[Message] = []
         for prompt in raw_messages:
             content = prompt.get("content")
             if content is not None and not isinstance(content, str):
@@ -76,8 +76,8 @@ class LitellmCallback(OpenTelemetry):
             messages.append(message)
         return messages
     
-    def parse_choices(self, raw_choices: List[Dict[str, Any]]) -> List[Choice]:
-        choices: List[Choice] = []
+    def parse_choices(self, raw_choices: list[dict[str, Any]]) -> list[Choice]:
+        choices: list[Choice] = []
         for choice_dict in raw_choices:
             choice_message = choice_dict.get("message", {}) or {}
             tool_calls_list = None
@@ -109,21 +109,21 @@ class LitellmCallback(OpenTelemetry):
         return choices
 
     def set_attributes(  # noqa: PLR0915
-        self, span: Span, kwargs, response_obj: Optional[Any]
+        self, span: Span, kwargs, response_obj: Any | None
     ):
         try:
             optional_params = kwargs.get("optional_params", {})
             litellm_params = kwargs.get("litellm_params", {}) or {}
-            standard_logging_payload: Optional[StandardLoggingPayload] = kwargs.get(
+            standard_logging_payload: StandardLoggingPayload | None = kwargs.get(
                 "standard_logging_object"
             )
             if standard_logging_payload is None:
                 raise ValueError("standard_logging_object not found in kwargs")
 
-            messages: List[Message] = []
-            choices: List[Choice] = []
+            messages: list[Message] = []
+            choices: list[Choice] = []
 
-            response_attributes: Dict[str, Any] = {}
+            response_attributes: dict[str, Any] = {}
 
             if "messages" in kwargs:
                 messages = self.parse_messages(kwargs.get("messages"))

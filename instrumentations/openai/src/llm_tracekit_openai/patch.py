@@ -13,7 +13,7 @@
 # limitations under the License.
 
 from timeit import default_timer
-from typing import Any, Dict, Optional, Union
+from typing import Any, Union
 
 from openai import AsyncStream, Stream
 from opentelemetry.semconv._incubating.attributes import (
@@ -147,7 +147,7 @@ def _record_metrics(
     duration: float,
     result,
     span_attributes: dict,
-    error_type: Optional[str],
+    error_type: str | None,
 ):
     common_attributes = {
         GenAIAttributes.GEN_AI_OPERATION_NAME: GenAIAttributes.GenAiOperationNameValues.CHAT.value,
@@ -244,12 +244,12 @@ class ChoiceBuffer:
 
 class BaseStreamWrapper:
     span: Span
-    response_id: Optional[str] = None
-    response_model: Optional[str] = None
-    service_tier: Optional[str] = None
+    response_id: str | None = None
+    response_model: str | None = None
+    service_tier: str | None = None
     finish_reasons: list = []
-    prompt_tokens: Optional[int] = 0
-    completion_tokens: Optional[int] = 0
+    prompt_tokens: int | None = 0
+    completion_tokens: int | None = 0
 
     def __init__(
         self,
@@ -270,7 +270,7 @@ class BaseStreamWrapper:
             self._span_started = True
 
     @attribute_generator
-    def _generate_response_attributes(self) -> Dict[str, Any]:
+    def _generate_response_attributes(self) -> dict[str, Any]:
         parsed_choices = []
         for choice in self.choice_buffers:
             content = None

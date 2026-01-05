@@ -72,48 +72,29 @@ class TestGuardrailViolation:
         violation = GuardrailViolation(guardrail_type="pii")
         assert_that(violation.guardrail_type).is_equal_to("pii")
         assert_that(violation.name).is_none()
-        assert_that(violation.score).is_none()
-        assert_that(violation.detected_categories).is_none()
-        assert_that(str(violation)).contains("Guardrail triggered: pii")
+        assert_that(str(violation)).is_equal_to("pii")
 
-    def test_violation_with_all_fields(self):
+    def test_violation_with_name(self):
         violation = GuardrailViolation(
             guardrail_type="pii",
             name="PII Detection",
-            score=0.95,
-            detected_categories=["email", "phone"],
         )
         assert_that(violation.guardrail_type).is_equal_to("pii")
         assert_that(violation.name).is_equal_to("PII Detection")
-        assert_that(violation.score).is_equal_to(0.95)
-        assert_that(violation.detected_categories).is_equal_to(["email", "phone"])
 
     def test_violation_message_format(self):
         violation = GuardrailViolation(
             guardrail_type="pii",
             name="PII Detection",
-            score=0.95,
-            detected_categories=["email"],
         )
         message = str(violation)
-        assert_that(message).contains("Guardrail triggered: pii")
+        assert_that(message).contains("pii")
         assert_that(message).contains("name='PII Detection'")
-        assert_that(message).contains("score=0.950")
-        assert_that(message).contains("detected_categories=['email']")
-
-    def test_violation_minimal_message(self):
-        """Test violation with only guardrail_type produces minimal message."""
-        violation = GuardrailViolation(guardrail_type="pii")
-        assert_that(str(violation)).is_equal_to("Guardrail triggered: pii")
 
     def test_violation_prompt_injection(self):
-        violation = GuardrailViolation(
-            guardrail_type="prompt_injection",
-            score=0.88,
-        )
+        violation = GuardrailViolation(guardrail_type="prompt_injection")
         assert_that(violation.guardrail_type).is_equal_to("prompt_injection")
         assert_that(str(violation)).contains("prompt_injection")
-        assert_that(str(violation)).contains("0.880")
 
     def test_violation_is_guardrails_error(self):
         violation = GuardrailViolation(guardrail_type="pii")
@@ -122,21 +103,16 @@ class TestGuardrailViolation:
 
 class TestGuardrailsTriggered:
     def test_triggered_with_single_violation(self):
-        violation = GuardrailViolation(
-            guardrail_type="pii",
-            score=0.9,
-            detected_categories=["email"],
-        )
+        violation = GuardrailViolation(guardrail_type="pii")
         error = GuardrailsTriggered([violation])
         assert_that(error.triggered).is_length(1)
         assert_that(error.triggered[0].guardrail_type).is_equal_to("pii")
-        assert_that(error.triggered[0].score).is_equal_to(0.9)
         assert_that(str(error)).contains("1 guardrails triggered")
 
     def test_triggered_with_multiple_violations(self):
         violations = [
-            GuardrailViolation(guardrail_type="pii", score=0.95),
-            GuardrailViolation(guardrail_type="prompt_injection", score=0.88),
+            GuardrailViolation(guardrail_type="pii"),
+            GuardrailViolation(guardrail_type="prompt_injection"),
         ]
         error = GuardrailsTriggered(violations)
         assert_that(error.triggered).is_length(2)
@@ -149,21 +125,9 @@ class TestGuardrailsTriggered:
 
     def test_triggered_can_be_caught_as_exception(self):
         with pytest.raises(GuardrailsTriggered) as exc_info:
-            raise GuardrailsTriggered(
-                [
-                    GuardrailViolation(
-                        guardrail_type="pii",
-                        score=0.9,
-                        detected_categories=["email"],
-                    )
-                ]
-            )
+            raise GuardrailsTriggered([GuardrailViolation(guardrail_type="pii")])
         assert_that(exc_info.value.triggered).is_length(1)
         assert_that(exc_info.value.triggered[0].guardrail_type).is_equal_to("pii")
-        assert_that(exc_info.value.triggered[0].score).is_equal_to(0.9)
-        assert_that(exc_info.value.triggered[0].detected_categories).is_equal_to(
-            ["email"]
-        )
 
     def test_triggered_can_be_caught_as_guardrails_error(self):
         with pytest.raises(GuardrailsError):

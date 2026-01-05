@@ -17,7 +17,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from time import perf_counter_ns
-from typing import Any, AsyncIterator, Iterator, Optional
+from typing import Any, AsyncIterator, Iterator
 
 from opentelemetry.semconv._incubating.attributes import (
     gen_ai_attributes as GenAIAttributes,
@@ -471,7 +471,7 @@ def _record_metrics(operation_state: GeminiOperationState, instruments: Instrume
     operation_state.mark_metrics_recorded()
 
 
-def _get_argument(args, kwargs, name: str, position: Optional[int] = None):
+def _get_argument(args, kwargs, name: str, position: int | None = None):
     if name in kwargs:
         return kwargs[name]
     if position is not None and len(args) > position:

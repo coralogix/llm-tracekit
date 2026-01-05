@@ -16,15 +16,20 @@ import pytest
 from assertpy import assert_that
 from pydantic import ValidationError
 
-from guardrails.models.request import (
+from guardrails import (
     PII,
     PromptInjection,
     Message,
     GuardrailRequest,
+    PIICategory,
+    GuardrailType,
+    Role,
+    GuardrailsTarget,
+    GuardrailsResultBase,
+    GuardrailsResponse,
 )
-from guardrails.models.constants import DEFAULT_THRESHOLD
-from guardrails.models.enums import PIICategorie, GuardrailType, Role, GuardrailsTarget
-from guardrails.models.response import GuardrailsResultBase, GuardrailsResponse
+
+DEFAULT_THRESHOLD = 0.7  # Default threshold value used by the SDK
 
 
 class TestMessage:
@@ -82,7 +87,7 @@ class TestGuardrailRequest:
                 {"role": "user", "content": "Hello"},
                 {"role": "assistant", "content": "Hi"},
             ],
-            guardrails_configs=[PII()],
+            guardrails=[PII()],
             target=GuardrailsTarget.PROMPT, 
             timeout=10,
         )
@@ -99,7 +104,7 @@ class TestGuardrailRequest:
                 {"role": "user", "content": "Hello"},
                 Message(role=Role.ASSISTANT, content="Hi"),
             ],
-            guardrails_configs=[PII()],
+            guardrails=[PII()],
             target=GuardrailsTarget.PROMPT,
             timeout=10,
         )
@@ -112,7 +117,7 @@ class TestGuardrailRequest:
             application="test",
             subsystem="test",
             messages=[{"role": "user", "content": "Hello"}],
-            guardrails_configs=[PII()],
+            guardrails=[PII()],
             target=GuardrailsTarget.PROMPT,
             timeout=10,
         )
@@ -126,13 +131,13 @@ class TestPII:
         pii = PII()
         assert_that(pii.type).is_equal_to("pii")
         assert_that(pii.threshold).is_equal_to(DEFAULT_THRESHOLD)
-        assert_that(pii.categories).is_length(len(PIICategorie))
+        assert_that(pii.categories).is_length(len(PIICategory))
 
     def test_pii_custom_categories(self):
-        pii = PII(categories=[PIICategorie.EMAIL_ADDRESS, PIICategorie.PHONE_NUMBER])
+        pii = PII(categories=[PIICategory.EMAIL_ADDRESS, PIICategory.PHONE_NUMBER])
         assert_that(pii.categories).is_length(2)
-        assert_that(pii.categories).contains(PIICategorie.EMAIL_ADDRESS)
-        assert_that(pii.categories).contains(PIICategorie.PHONE_NUMBER)
+        assert_that(pii.categories).contains(PIICategory.EMAIL_ADDRESS)
+        assert_that(pii.categories).contains(PIICategory.PHONE_NUMBER)
 
     def test_pii_custom_threshold(self):
         pii = PII(threshold=0.9)
@@ -145,7 +150,7 @@ class TestPII:
             PII(threshold=-0.1)
 
     def test_pii_serialization(self):
-        pii = PII(categories=[PIICategorie.EMAIL_ADDRESS], threshold=0.8)
+        pii = PII(categories=[PIICategory.EMAIL_ADDRESS], threshold=0.8)
         data = pii.model_dump(mode="json")
         assert_that(data["type"]).is_equal_to("pii")
         assert_that(data["threshold"]).is_equal_to(0.8)
@@ -173,10 +178,10 @@ class TestPromptInjection:
         assert_that(data["threshold"]).is_equal_to(0.8)
 
 
-class TestPIICategories:
+class TestPIICategorys:
     def test_category_values(self):
-        assert_that(PIICategorie.EMAIL_ADDRESS.value).is_equal_to("email_address")
-        assert_that(PIICategorie.CREDIT_CARD.value).is_equal_to("credit_card")
+        assert_that(PIICategory.EMAIL_ADDRESS.value).is_equal_to("email_address")
+        assert_that(PIICategory.CREDIT_CARD.value).is_equal_to("credit_card")
 
 
 class TestGuardrailsResultBase:

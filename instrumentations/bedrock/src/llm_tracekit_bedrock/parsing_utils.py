@@ -1,6 +1,5 @@
 import json
 import re
-from typing import Optional
 
 from llm_tracekit_core import ToolCall
 
@@ -42,7 +41,7 @@ def extract_final_answer(content: str) -> str:
     return match.group(1).strip() if match is not None else content
 
 
-def parse_tool_use(raw_content: str) -> Optional[ToolCall]:
+def parse_tool_use(raw_content: str) -> ToolCall | None:
     """Attempts to parse a tool call from the raw content string."""
     match = _TOOL_USE_PATTERN.search(raw_content)
     if match is None:
@@ -68,7 +67,7 @@ def clean_tool_result_content(raw_tool_output: str) -> str:
     return raw_tool_output.strip()
 
 
-def parse_tool_result_id(raw_tool_output: str) -> Optional[str]:
+def parse_tool_result_id(raw_tool_output: str) -> str | None:
     """Extracts the tool result id from the raw tool output."""
     match = _TOOL_RESULT_ID_PATTERN.search(raw_tool_output)
     return match.group(1) if match is not None else None

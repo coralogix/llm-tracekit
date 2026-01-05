@@ -31,7 +31,7 @@ The threshold of the guardrail.
 
 CUSTOM_GUARDRAIL_NAME: Final = "guardrails.{target}.{guardrail_type}.name"
 """
-The custom guardrail spesific name.
+The custom guardrail specific name.
 """
 
 PROMPT: Final = "guardrails.prompt[{index}]"
