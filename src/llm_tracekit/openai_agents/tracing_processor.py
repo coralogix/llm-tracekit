@@ -15,7 +15,7 @@
 
 from dataclasses import dataclass, field
 from contextvars import Token
-from typing import Any, Optional, Dict, List, Tuple, Union, Callable, Type
+from typing import Any, Optional, Dict, List, Tuple, Union, Callable, Type, Sequence
 
 from agents import (
     AgentSpanData,
@@ -71,6 +71,42 @@ class ChatHistoryResult:
     completion_history: List[Choice] = field(default_factory=list)
 
 
+def _stringify_message_content(content: Any) -> Optional[str]:
+    """Normalize Agents SDK message content into a plain string."""
+    if content is None:
+        return None
+
+    if isinstance(content, str):
+        stripped = content.strip()
+        return stripped or None
+
+    text_attr = getattr(content, "text", None)
+    if isinstance(text_attr, str):
+        stripped = text_attr.strip()
+        if stripped:
+            return stripped
+
+    if isinstance(content, dict):
+        text_value = content.get("text")
+        if isinstance(text_value, str):
+            stripped = text_value.strip()
+            if stripped:
+                return stripped
+
+    if isinstance(content, Sequence) and not isinstance(content, (str, bytes)):
+        parts: List[str] = []
+        for part in content:
+            part_text = _stringify_message_content(part)
+            if part_text:
+                parts.append(part_text)
+        if parts:
+            joined = " ".join(parts).strip()
+            return joined or None
+
+    serialized = str(content).strip()
+    return serialized or None
+
+
 class OpenAIAgentsTracingProcessor(TracingProcessor):
     def __init__(self, tracer, capture_content: bool):
         self.disabled = False
@@ -107,16 +143,14 @@ class OpenAIAgentsTracingProcessor(TracingProcessor):
             while idx < len(input_messages):
                 msg = input_messages[idx]
                 if msg.get('role') == 'user':
-                    history.append(Message(role='user', content=str(msg.get('content'))))
+                    user_content = _stringify_message_content(msg.get('content'))
+                    history.append(Message(role='user', content=user_content))
                     idx += 1
                     continue
 
                 if msg.get('role') == 'assistant' and msg.get('type') == 'message':
-                    content: str = ""
-                    msg_content = msg.get('content')
-                    if msg_content is not None and isinstance(msg_content, list) and len(msg_content) > 0:
-                        content = msg_content[0].get('text', '')
-                    history.append(Message(role='assistant', content=content))
+                    assistant_content = _stringify_message_content(msg.get('content'))
+                    history.append(Message(role='assistant', content=assistant_content))
                     idx += 1
                     continue
                     
