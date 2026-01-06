@@ -70,6 +70,8 @@ All instrumentations in this repo must follow these semantic conventions:
 
 ### Prompt Messages (input to model)
 
+**Important**: For multi-turn conversations or agent sessions, `gen_ai.prompt.*` should capture the **FULL conversation history**, not just the latest message. Each message in the history gets an incrementing index (0, 1, 2, ...). See "Multi-Turn Conversation" example below.
+
 | Attribute | Required | Type | Description | Examples |
 | --------- | -------- | ---- | ----------- | -------- |
 | `gen_ai.prompt.<n>.role` | ✓ | string | Role of message author | `system`, `user`, `assistant`, `tool` |
@@ -130,10 +132,62 @@ Always propose these to the user before implementing, explaining what data they 
 ## Understanding Prompt vs Completion
 
 Each LLM call creates ONE span with:
-- **`gen_ai.prompt.*`** = Input messages sent TO the model (the conversation history)
+- **`gen_ai.prompt.*`** = Input messages sent TO the model (the **full** conversation history)
 - **`gen_ai.completion.*`** = Output choices FROM the model (the response)
 
-**Important**: `completion` refers to response choices (like OpenAI's `n` parameter), NOT conversation turns. Usually there's only `completion.0`.
+**Important Rules**:
+1. `completion` refers to response choices (like OpenAI's `n` parameter), NOT conversation turns. Usually there's only `completion.0`.
+2. **For multi-turn conversations, `gen_ai.prompt.*` MUST include the FULL conversation history**, not just the latest message. Each subsequent message is indexed incrementally (0, 1, 2, ...).
+3. For agent/session-based libraries (like Google ADK, LangChain agents), access the session history to capture all previous messages.
+
+### Example: Multi-Turn Conversation (3 turns, 3 spans)
+
+This example shows a math tutor conversation where the user asks follow-up questions.
+
+**Turn 1 Span: First question**
+```
+gen_ai.prompt.0.role = "user"
+gen_ai.prompt.0.content = "What is 5 + 3?"
+gen_ai.prompt.1.role = "assistant"
+gen_ai.prompt.1.content = "The answer is 8."
+gen_ai.completion.0.role = "assistant"
+gen_ai.completion.0.content = "The answer is 8."
+```
+Note: After the response, the span includes BOTH the user message AND the assistant response in `prompt.*` (captured from session history).
+
+**Turn 2 Span: Follow-up question (full history preserved)**
+```
+gen_ai.prompt.0.role = "user"
+gen_ai.prompt.0.content = "What is 5 + 3?"
+gen_ai.prompt.1.role = "assistant"
+gen_ai.prompt.1.content = "The answer is 8."
+gen_ai.prompt.2.role = "user"
+gen_ai.prompt.2.content = "Now multiply that by 2"
+gen_ai.prompt.3.role = "assistant"
+gen_ai.prompt.3.content = "8 × 2 = 16"
+gen_ai.completion.0.role = "assistant"
+gen_ai.completion.0.content = "8 × 2 = 16"
+```
+Note: The span now has 4 prompt messages (indices 0-3) showing the complete conversation.
+
+**Turn 3 Span: Recall question (complete 6-message history)**
+```
+gen_ai.prompt.0.role = "user"
+gen_ai.prompt.0.content = "What is 5 + 3?"
+gen_ai.prompt.1.role = "assistant"
+gen_ai.prompt.1.content = "The answer is 8."
+gen_ai.prompt.2.role = "user"
+gen_ai.prompt.2.content = "Now multiply that by 2"
+gen_ai.prompt.3.role = "assistant"
+gen_ai.prompt.3.content = "8 × 2 = 16"
+gen_ai.prompt.4.role = "user"
+gen_ai.prompt.4.content = "What was my first question?"
+gen_ai.prompt.5.role = "assistant"
+gen_ai.prompt.5.content = "Your first question was 'What is 5 + 3?'"
+gen_ai.completion.0.role = "assistant"
+gen_ai.completion.0.content = "Your first question was 'What is 5 + 3?'"
+```
+Note: The model correctly recalls the first question because the full history was provided.
 
 ### Example: Tool Call Flow (2 separate spans)
 
@@ -158,6 +212,20 @@ gen_ai.prompt.2.tool_call_id = "call_abc123"
 gen_ai.completion.0.role = "assistant"
 gen_ai.completion.0.content = "The weather in Tokyo is sunny and 25°C."
 ```
+
+### Implementation Notes for Multi-Turn
+
+When implementing instrumentation for libraries with session/conversation management:
+
+1. **Access session history** - If the library maintains session state (like Google ADK's `InMemorySessionService`), access the session's events/history to get all previous messages.
+
+2. **Capture after response** - The full conversation history (including the latest response) should be captured AFTER the LLM call completes, in the `_finalize` or response processing step.
+
+3. **Map roles correctly** - Map library-specific roles to standard roles:
+   - `model` → `assistant`
+   - `function` → `tool`
+   
+4. **Include tool interactions** - If the conversation includes tool calls and responses, they should be captured as separate prompt messages with appropriate roles.
 
 ## Debugging with Console Span Exporter
 For debugging OpenTelemetry spans and hierarchy issues, use the console exporter:
