@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Optional
 
 from openai.types.chat import ChatCompletion
 from opentelemetry.sdk.trace import ReadableSpan
@@ -46,10 +45,10 @@ def assert_completion_attributes(
 def assert_all_attributes(
     span: ReadableSpan,
     request_model: str,
-    response_id: str = None,
-    response_model: str = None,
-    input_tokens: Optional[int] = None,
-    output_tokens: Optional[int] = None,
+    response_id: str | None = None,
+    response_model: str | None = None,
+    input_tokens: int | None = None,
+    output_tokens: int | None = None,
     operation_name: str = "chat",
     server_address: str = "api.openai.com",
 ):

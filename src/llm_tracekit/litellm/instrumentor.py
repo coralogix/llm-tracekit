@@ -13,45 +13,47 @@
 # limitations under the License.
 
 
-from typing import Collection, Optional, Union
+from collections.abc import Collection
 
+import litellm
+from litellm.integrations.opentelemetry import OpenTelemetryConfig as LiteLLMConfig
 from opentelemetry.instrumentation.instrumentor import (  # type: ignore[attr-defined]
     BaseInstrumentor,
 )
 
 from llm_tracekit.coralogix import generate_exporter_config
 from llm_tracekit.instrumentation_utils import is_content_enabled
-from llm_tracekit.litellm.package import _instruments
 from llm_tracekit.litellm.callback import LitellmCallback
+from llm_tracekit.litellm.package import _instruments
 
-import litellm
-from litellm.integrations.opentelemetry import OpenTelemetryConfig as LiteLLMConfig
 
 class LiteLLMInstrumentor(BaseInstrumentor):
     def __init__(
         self,
-        coralogix_token: Optional[str] = None,
-        coralogix_endpoint: Optional[str] = None,
-        application_name: Optional[str] = None,
-        subsystem_name: Optional[str] = None,
+        coralogix_token: str | None = None,
+        coralogix_endpoint: str | None = None,
+        application_name: str | None = None,
+        subsystem_name: str | None = None,
     ):
         otel_config = generate_exporter_config(
             coralogix_token=coralogix_token,
             coralogix_endpoint=coralogix_endpoint,
             application_name=application_name,
-            subsystem_name=subsystem_name
+            subsystem_name=subsystem_name,
         )
-        
+
         if otel_config.headers is not None and otel_config.endpoint is not None:
-            config: Union[LiteLLMConfig, None] = LiteLLMConfig(
+            config: LiteLLMConfig | None = LiteLLMConfig(
                 exporter="grpc",
                 endpoint=otel_config.endpoint,
-                headers=otel_config.headers # type: ignore
+                headers=otel_config.headers,  # type: ignore
             )
         else:
             config = None
 
-        self._custom_handler = LitellmCallback(capture_content=is_content_enabled(), config=config)
+        self._custom_handler = LitellmCallback(
+            capture_content=is_content_enabled(), config=config
+        )
 
     def instrumentation_dependencies(self) -> Collection[str]:
         return _instruments

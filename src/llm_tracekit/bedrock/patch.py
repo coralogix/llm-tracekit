@@ -12,10 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from collections.abc import Callable
 from functools import partial, wraps
 from io import BytesIO
 from timeit import default_timer
-from typing import Callable, Optional
 
 from botocore.eventstream import EventStream
 from botocore.response import StreamingBody
@@ -46,7 +46,7 @@ def _handle_error(
     span: Span,
     start_time: float,
     instruments: Instruments,
-    model: Optional[str] = None,
+    model: str | None = None,
 ):
     duration = max((default_timer() - start_time), 0)
     handle_span_exception(span, error)

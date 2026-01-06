@@ -13,10 +13,8 @@
 # limitations under the License.
 
 import pytest
-
 from google import genai
 from google.genai import types
-
 from opentelemetry.semconv._incubating.attributes import (
     gen_ai_attributes as GenAIAttributes,
 )
@@ -157,7 +155,7 @@ async def test_gemini_async_completion(span_exporter, instrument):
 def test_gemini_tool_usage(span_exporter, instrument):
     def get_current_temperature(location: str) -> int:
         return "The current temperature in " + location + " is 22 degrees Celsius."
-    
+
     weather_function = {
         "name": "get_current_temperature",
         "description": "Gets the current temperature for a given location.",
@@ -180,11 +178,7 @@ def test_gemini_tool_usage(span_exporter, instrument):
     contents = [
         {
             "role": "user",
-            "parts": [
-                {
-                    "text": "What's the temperature in Tel Aviv?"
-                }
-            ],
+            "parts": [{"text": "What's the temperature in Tel Aviv?"}],
         }
     ]
 
@@ -195,7 +189,7 @@ def test_gemini_tool_usage(span_exporter, instrument):
             config=config,
         )
         function_call = response.candidates[0].content.parts[0].function_call
-        
+
         result = get_current_temperature(**function_call.args)
 
         function_response_part = types.Part.from_function_response(
@@ -219,12 +213,7 @@ def test_gemini_tool_usage(span_exporter, instrument):
     first_span = spans[0]
     second_span = spans[1]
 
-    messages = [
-        {
-            "role": "user", 
-            "content": "What's the temperature in Tel Aviv?"
-        }
-    ]
+    messages = [{"role": "user", "content": "What's the temperature in Tel Aviv?"}]
 
     assert_messages_in_span(
         span=first_span, expected_messages=messages, expect_content=True
@@ -248,4 +237,6 @@ def test_gemini_tool_usage(span_exporter, instrument):
             "content": final_response.candidates[0].content.parts[0].text,
         },
     }
-    assert_choices_in_span(span=second_span, expected_choices=[choice], expect_content=True)
+    assert_choices_in_span(
+        span=second_span, expected_choices=[choice], expect_content=True
+    )

@@ -8,7 +8,7 @@ authors = [
 ]
 license = "Apache-2.0"
 license-files = ["LICENSE.md"]
-requires-python = ">3.9,<=3.13"
+requires-python = ">=3.10,<=3.13"
 dependencies = [
     "opentelemetry-api>=1.32.1",
     "opentelemetry-exporter-otlp>=1.32.1",
@@ -22,8 +22,6 @@ classifiers = [
     "Intended Audience :: Developers",
     "License :: OSI Approved :: Apache Software License",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.8",
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
@@ -36,7 +34,7 @@ openai = [
 ]
 openai_agents = [
     "openai>=1.26.0",
-    "openai-agents>=0.1.0; python_version >= '3.10'",
+    "openai-agents>=0.1.0",
 ]
 bedrock = [
     "boto3>=1.36.0",
@@ -48,29 +46,29 @@ litellm = [
     "litellm[proxy]>=1.65.4", # LiteLLM callbacks require proxy-specific dependencies
 ]
 langchain = [
-    "langchain>=1.0.0; python_version >= '3.10'",
+    "langchain>=1.0.0",
 ]
 langchain-openai = [
-    "langchain>=1.0.0; python_version >= '3.10'",
-    "langchain-openai>=1.0.0; python_version >= '3.10'",
+    "langchain>=1.0.0",
+    "langchain-openai>=1.0.0",
 ]
 langchain-aws = [
-    "langchain>=1.0.0; python_version >= '3.10'",
-    "langchain-aws>=1.0.0; python_version >= '3.10'",
+    "langchain>=1.0.0",
+    "langchain-aws>=1.0.0",
 ]
 langchain-all = [
-    "langchain>=1.0.0; python_version >= '3.10'",
-    "langchain-openai>=1.0.0; python_version >= '3.10'",
-    "langchain-aws>=1.0.0; python_version >= '3.10'",
+    "langchain>=1.0.0",
+    "langchain-openai>=1.0.0",
+    "langchain-aws>=1.0.0",
 ]
 ci-core = [
     "openai>=1.26.0",
-    "openai-agents>=0.1.0; python_version >= '3.10'",
+    "openai-agents>=0.1.0",
     "boto3>=1.36.0",
     "google-genai>=1.0.0,<2",
-    "langchain>=1.0.0; python_version >= '3.10'",
-    "langchain-openai>=1.0.0; python_version >= '3.10'",
-    "langchain-aws>=1.0.0; python_version >= '3.10'",
+    "langchain>=1.0.0",
+    "langchain-openai>=1.0.0",
+    "langchain-aws>=1.0.0",
 ]
 
 
@@ -90,14 +88,14 @@ langchain = "llm_tracekit:LangChainInstrumentor"
 [dependency-groups]
 dev = [
     "botocore-stubs>=1.38.4",
-    "mypy>=1.14.1",
     "pytest>=8.3.4",
     "pytest-asyncio>=1.0.0",
     "pytest-vcr>=1.0.2",
     "pyyaml>=6.0.2",
-    "ruff>=0.9.7",
     "types-boto3>=1.38.4",
     "brotli>=1.0.0",
+    "ruff>=0.11.12",
+    "mypy>=1.16.0",
 ]
 
 [build-system]
@@ -117,4 +115,39 @@ only-include = [
 [tool.uv]
 override-dependencies = [
     "boto3>=1.40.19",
+]
+
+[tool.ruff]
+target-version = "py310"
+
+[tool.ruff.lint]
+# F and E are the default ruff rules
+# UP = pyupgrade rules
+# W = pycodestyle warnings (Like flake8)
+# FAST - FastAPI-specific rules
+# I - Isort rules
+# ASYNC - Flake8-Async usage rules
+# DTZ - datetime timezone rules
+# TRY201 - Avoid re-raising same exception (Use `raise` instead of `raise e`)
+# TID252 - Avoid relative imports
+# Q - Quotes conventions
+# RUF - Ruff-specific rules
+# T100 - Detect usage of breakpoint or pdb.
+select = ["F", "E4", "E7", "E9", "UP", "W", "FAST", "I", "ASYNC", "DTZ", "TRY201", "TID252", "Q", "RUF", "T100"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["llm-tracekit"]  # Update with your package names
+
+[tool.mypy]
+check_untyped_defs = true
+files = ["src"]
+plugins = "pydantic.mypy"
+python_version = "3.10"
+show_error_codes = true
+strict = false
+
+[[tool.mypy.overrides]]
+ignore_missing_imports = true
+module = [
+    # Add any modules that need import ignoring
 ]

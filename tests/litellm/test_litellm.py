@@ -12,15 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import pytest
 import asyncio
-import litellm
-from tests.utils import assert_choices_in_span, assert_messages_in_span
-from tests.litellm.utils import assert_attributes, find_last_response_span
-
-
-import time
 import sys
+import time
+
+import litellm
+import pytest
+
+from tests.litellm.utils import assert_attributes, find_last_response_span
+from tests.utils import assert_choices_in_span, assert_messages_in_span
+
 
 @pytest.mark.vcr()
 def test_litellm_completion(instrument):
@@ -31,12 +32,12 @@ def test_litellm_completion(instrument):
 
     response = litellm.completion(model=model, messages=messages)
 
-    time.sleep(0.1) # wait for export to finish
+    time.sleep(0.1)  # wait for export to finish
 
     spans = exporter.get_finished_spans()
     assert len(spans) > 0
-    span = find_last_response_span(spans) # find the response span
-    
+    span = find_last_response_span(spans)  # find the response span
+
     assert_attributes(
         span,
         "openai",
@@ -45,7 +46,7 @@ def test_litellm_completion(instrument):
         response.model,
         response.id,
         response.usage.prompt_tokens,
-        response.usage.completion_tokens
+        response.usage.completion_tokens,
     )
 
     user_message = {"role": "user", "content": messages[0]["content"]}
@@ -79,19 +80,14 @@ def test_litellm_streaming(instrument):
 
     spans = exporter.get_finished_spans()
     assert len(spans) > 0
-    span = find_last_response_span(spans) # find the response span
+    span = find_last_response_span(spans)  # find the response span
 
     actual_content = span.attributes.get("gen_ai.completion.0.content")
 
     assert actual_content is not None
     assert "test" in actual_content
 
-    assert_attributes(
-        span,
-        "openai",
-        "chat",
-        model
-    )
+    assert_attributes(span, "openai", "chat", model)
 
     user_message = {"role": "user", "content": messages[0]["content"]}
     assert_messages_in_span(
@@ -108,7 +104,9 @@ def test_litellm_streaming(instrument):
     assert_choices_in_span(span=span, expected_choices=[choice], expect_content=True)
 
 
-@pytest.mark.skipif(sys.version_info < (3, 10), reason="Undefined behaviour in Python <3.10")
+@pytest.mark.skipif(
+    sys.version_info < (3, 10), reason="Undefined behaviour in Python <3.10"
+)
 @pytest.mark.vcr()
 def test_litellm_multi_turn(instrument):
     exporter = litellm.callbacks[-1].OTEL_EXPORTER
@@ -131,7 +129,7 @@ def test_litellm_multi_turn(instrument):
     spans = exporter.get_finished_spans()
 
     assert len(spans) > 0
-    span = find_last_response_span(spans) # find the response span
+    span = find_last_response_span(spans)  # find the response span
 
     assert_attributes(
         span,
@@ -167,23 +165,35 @@ def test_litellm_tool_usage(instrument):
         return f"location: {location}, weather 15°C, sunny"
 
     weather_tool_description = {
-        "type": "function", "function": {
-            "name": "get_current_weather", "description": "Get current weather in a given location.",
+        "type": "function",
+        "function": {
+            "name": "get_current_weather",
+            "description": "Get current weather in a given location.",
             "parameters": {
                 "type": "object",
-                "properties": {"location": {"type": "string", "description": "Exact city to get weather for"}},
+                "properties": {
+                    "location": {
+                        "type": "string",
+                        "description": "Exact city to get weather for",
+                    }
+                },
                 "required": ["location"],
             },
-        }
+        },
     }
 
-    response = litellm.completion(model=model, messages=messages, tools=[weather_tool_description], tool_choice="auto")
+    response = litellm.completion(
+        model=model,
+        messages=messages,
+        tools=[weather_tool_description],
+        tool_choice="auto",
+    )
 
     time.sleep(0.1)
 
     spans = exporter.get_finished_spans()
     assert len(spans) > 0
-    span = find_last_response_span(spans) # find the response span
+    span = find_last_response_span(spans)  # find the response span
 
     assert_attributes(
         span,
@@ -227,12 +237,12 @@ async def test_litellm_async_completion(instrument):
     messages = [{"role": "user", "content": "Say this is a test"}]
 
     response = await litellm.acompletion(model=model, messages=messages)
-    
+
     await asyncio.sleep(0.1)
 
     spans = exporter.get_finished_spans()
     assert len(spans) > 0
-    span = find_last_response_span(spans) # find the response span
+    span = find_last_response_span(spans)  # find the response span
 
     assert_attributes(
         span,

@@ -14,7 +14,8 @@
 
 from __future__ import annotations
 
-from typing import Any, Callable, Collection
+from collections.abc import Callable, Collection
+from typing import Any
 
 from langchain_core.callbacks import BaseCallbackManager  # type: ignore
 from opentelemetry.instrumentation.instrumentor import (  # type: ignore[attr-defined]
@@ -77,7 +78,9 @@ class LangChainInstrumentor(BaseInstrumentor):
 
 
 class _BaseCallbackManagerInitWrapper:
-    def __init__(self, handler_factory: Callable[[], LangChainCallbackHandler | None]) -> None:
+    def __init__(
+        self, handler_factory: Callable[[], LangChainCallbackHandler | None]
+    ) -> None:
         self._handler_factory = handler_factory
 
     def __call__(

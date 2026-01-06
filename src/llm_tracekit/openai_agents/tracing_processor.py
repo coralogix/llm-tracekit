@@ -13,9 +13,10 @@
 # limitations under the License.
 
 
-from dataclasses import dataclass, field
+from collections.abc import Callable
 from contextvars import Token
-from typing import Any, Optional, Dict, List, Tuple, Union, Callable, Type
+from dataclasses import dataclass, field
+from typing import Any
 
 from agents import (
     AgentSpanData,
@@ -24,51 +25,48 @@ from agents import (
     HandoffSpanData,
     Span,
     Trace,
-    TracingProcessor
+    TracingProcessor,
 )
 from agents.tracing import ResponseSpanData
-
 from openai.types.responses import ResponseInputItemParam, ResponseOutputMessage
-
 from opentelemetry.context import attach, detach, set_value
+from opentelemetry.semconv._incubating.attributes import (
+    gen_ai_attributes as GenAIAttributes,
+)
 from opentelemetry.trace import Span as OTELSpan
 from opentelemetry.trace import (
+    SpanKind,
     Status,
     StatusCode,
-    SpanKind,
 )
 from opentelemetry.trace.propagation import _SPAN_KEY
 
 from llm_tracekit.span_builder import (
+    Agent,
     Choice,
     Message,
     ToolCall,
-    Agent,
     generate_base_attributes,
     generate_choice_attributes,
     generate_message_attributes,
     generate_request_attributes,
-    generate_response_attributes
-)
-
-from opentelemetry.semconv._incubating.attributes import (
-    gen_ai_attributes as GenAIAttributes,
+    generate_response_attributes,
 )
 
 
 @dataclass
 class _TraceState:
-    parent_span: Optional[OTELSpan] = None
-    parent_context: Optional[Token] = None
-    open_spans: Dict[str, Tuple[OTELSpan, Token]] = field(default_factory=dict)
-    agents: Dict[str, Agent] = field(default_factory=dict)
-    last_agent: Optional[Agent] = None
+    parent_span: OTELSpan | None = None
+    parent_context: Token | None = None
+    open_spans: dict[str, tuple[OTELSpan, Token]] = field(default_factory=dict)
+    agents: dict[str, Agent] = field(default_factory=dict)
+    last_agent: Agent | None = None
 
 
 @dataclass
 class ChatHistoryResult:
-    prompt_history: List[Message] = field(default_factory=list)
-    completion_history: List[Choice] = field(default_factory=list)
+    prompt_history: list[Message] = field(default_factory=list)
+    completion_history: list[Choice] = field(default_factory=list)
 
 
 class OpenAIAgentsTracingProcessor(TracingProcessor):
@@ -76,105 +74,136 @@ class OpenAIAgentsTracingProcessor(TracingProcessor):
         self.disabled = False
         self.tracer = tracer
         self.capture_content = capture_content
-        self._span_processors: Dict[Type[Any], Callable[..., Dict[str, Any]]] = {
+        self._span_processors: dict[type[Any], Callable[..., dict[str, Any]]] = {
             AgentSpanData: self._process_agent_span,
             FunctionSpanData: self._process_function_span,
             ResponseSpanData: self._process_response_span,
             GuardrailSpanData: self._process_guardrail_span,
-            HandoffSpanData: self._process_handoff_span
+            HandoffSpanData: self._process_handoff_span,
         }
-        self._trace_states: Dict[str, _TraceState] = {}
+        self._trace_states: dict[str, _TraceState] = {}
 
     def _get_or_create_state(self, trace_id: str) -> _TraceState:
         if trace_id not in self._trace_states:
             self._trace_states[trace_id] = _TraceState()
         return self._trace_states[trace_id]
-        
-    def _pop_state(self, trace_id: str) -> Optional[_TraceState]:
+
+    def _pop_state(self, trace_id: str) -> _TraceState | None:
         return self._trace_states.pop(trace_id, None)
 
     def _process_chat_history(self, span_data: ResponseSpanData) -> ChatHistoryResult:
-        input_messages: Union[List[ResponseInputItemParam], str, None]  = span_data.input
-        history: List[Message] = []
-        choices: List[Choice] = []
+        input_messages: list[ResponseInputItemParam] | str | None = span_data.input
+        history: list[Message] = []
+        choices: list[Choice] = []
 
         if span_data.response is not None:
             if isinstance(span_data.response.instructions, str):
-                    history.append(Message(role='system', content=span_data.response.instructions))
+                history.append(
+                    Message(role="system", content=span_data.response.instructions)
+                )
 
         if isinstance(input_messages, list):
             idx = 0
             while idx < len(input_messages):
                 msg = input_messages[idx]
-                if msg.get('role') == 'user':
-                    history.append(Message(role='user', content=str(msg.get('content'))))
+                if msg.get("role") == "user":
+                    history.append(
+                        Message(role="user", content=str(msg.get("content")))
+                    )
                     idx += 1
                     continue
 
-                if msg.get('role') == 'assistant' and msg.get('type') == 'message':
+                if msg.get("role") == "assistant" and msg.get("type") == "message":
                     content: str = ""
-                    msg_content = msg.get('content')
-                    if msg_content is not None and isinstance(msg_content, list) and len(msg_content) > 0:
-                        content = msg_content[0].get('text', '')
-                    history.append(Message(role='assistant', content=content))
+                    msg_content = msg.get("content")
+                    if (
+                        msg_content is not None
+                        and isinstance(msg_content, list)
+                        and len(msg_content) > 0
+                    ):
+                        content = msg_content[0].get("text", "")
+                    history.append(Message(role="assistant", content=content))
                     idx += 1
                     continue
-                    
-                if msg.get('type') == 'function_call':
+
+                if msg.get("type") == "function_call":
                     tool_call_buffer = []
-                    
+
                     # Agents SDK separates multiple tool calls into different messages
-                    # This nested loop is used to merge them back into a single message 
-                    while idx < len(input_messages) and input_messages[idx].get('type') == 'function_call':
+                    # This nested loop is used to merge them back into a single message
+                    while (
+                        idx < len(input_messages)
+                        and input_messages[idx].get("type") == "function_call"
+                    ):
                         tool_call_msg = input_messages[idx]
                         try:
-                            tool_call = ToolCall.model_validate({
-                            'id': tool_call_msg.get('call_id'),
-                            'type': tool_call_msg.get('type'),
-                            'function_name': tool_call_msg.get('name'),
-                            'function_arguments': tool_call_msg.get('arguments')
-                            })
+                            tool_call = ToolCall.model_validate(
+                                {
+                                    "id": tool_call_msg.get("call_id"),
+                                    "type": tool_call_msg.get("type"),
+                                    "function_name": tool_call_msg.get("name"),
+                                    "function_arguments": tool_call_msg.get(
+                                        "arguments"
+                                    ),
+                                }
+                            )
                         except Exception:
                             idx += 1
                             continue
                         tool_call_buffer.append(tool_call)
                         idx += 1
-                    assistant_tool_message = Message(role='assistant', content=None, tool_calls=tool_call_buffer)
+                    assistant_tool_message = Message(
+                        role="assistant", content=None, tool_calls=tool_call_buffer
+                    )
                     history.append(assistant_tool_message)
                     continue
 
-                if msg.get('type') == 'function_call_output':
-                    history.append(Message(
-                        role='tool',
-                        tool_call_id=str(msg.get('call_id')),
-                        content=str(msg.get('output'))
-                    ))
+                if msg.get("type") == "function_call_output":
+                    history.append(
+                        Message(
+                            role="tool",
+                            tool_call_id=str(msg.get("call_id")),
+                            content=str(msg.get("output")),
+                        )
+                    )
                     idx += 1
                     continue
                 idx += 1
 
         elif isinstance(input_messages, str):
-            history.append(Message(role='user', content=input_messages))
+            history.append(Message(role="user", content=input_messages))
 
         if span_data.response is not None:
             response = span_data.response
-            response_content: Optional[str] = None
-            response_tool_calls: Optional[List[ToolCall]] = None
-            response_role = 'assistant'
+            response_content: str | None = None
+            response_tool_calls: list[ToolCall] | None = None
+            response_role = "assistant"
 
-            if response.output is not None and isinstance(response.output, list) and len(response.output) > 0:
+            if (
+                response.output is not None
+                and isinstance(response.output, list)
+                and len(response.output) > 0
+            ):
                 for output_item in response.output:
                     if isinstance(output_item, ResponseOutputMessage):
-                        if hasattr(output_item, 'role'):
+                        if hasattr(output_item, "role"):
                             response_role = output_item.role
-                        if hasattr(output_item, 'content') and isinstance(output_item.content, list):
+                        if hasattr(output_item, "content") and isinstance(
+                            output_item.content, list
+                        ):
                             for content_part in output_item.content:
-                                if hasattr(content_part, 'text') and isinstance(content_part.text, str) and content_part.text:
+                                if (
+                                    hasattr(content_part, "text")
+                                    and isinstance(content_part.text, str)
+                                    and content_part.text
+                                ):
                                     text_part = content_part.text
                                     if response_content is None:
                                         response_content = text_part
                                     else:
-                                        response_content = f"{response_content} {text_part}"
+                                        response_content = (
+                                            f"{response_content} {text_part}"
+                                        )
 
                 current_tool_calls = []
                 for part in response.output:
@@ -183,10 +212,10 @@ class OpenAIAgentsTracingProcessor(TracingProcessor):
                             id=part.call_id,
                             type=part.type,
                             function_name=part.name,
-                            function_arguments=part.arguments
+                            function_arguments=part.arguments,
                         )
                         current_tool_calls.append(tool_call)
-                
+
                 if current_tool_calls:
                     response_tool_calls = current_tool_calls
 
@@ -194,38 +223,35 @@ class OpenAIAgentsTracingProcessor(TracingProcessor):
                 finish_reason="stop",
                 role=response_role,
                 content=response_content,
-                tool_calls=response_tool_calls
+                tool_calls=response_tool_calls,
             )
             choices.append(choice)
         return ChatHistoryResult(prompt_history=history, completion_history=choices)
 
-    def _process_agent_span(self, span_data: AgentSpanData) -> Dict[str, Any]:
-        attributes: Dict[str, Any] = {
+    def _process_agent_span(self, span_data: AgentSpanData) -> dict[str, Any]:
+        attributes: dict[str, Any] = {
             "type": span_data.type,
             "agent_name": span_data.name,
             "handoffs": span_data.handoffs,
-            "output_type": span_data.output_type
+            "output_type": span_data.output_type,
         }
         if span_data.tools is not None:
             attributes["tools"] = span_data.tools
         return attributes
 
-    def _process_function_span(self, span_data: FunctionSpanData) -> Dict[str, Any]:
-        attributes: Dict[str, Any] = {
-            "type": span_data.type,
-            "name": span_data.name
-        }
+    def _process_function_span(self, span_data: FunctionSpanData) -> dict[str, Any]:
+        attributes: dict[str, Any] = {"type": span_data.type, "name": span_data.name}
         if span_data.input is not None and self.capture_content:
             attributes["input"] = span_data.input
         if span_data.output is not None and self.capture_content:
             attributes["output"] = span_data.output
-        if span_data.mcp_data is not None and self.capture_content: 
+        if span_data.mcp_data is not None and self.capture_content:
             attributes["mcp_data"] = span_data.mcp_data
         return attributes
 
     def _process_response_span(
-            self, span_data: ResponseSpanData, state: _TraceState, parent_id: str
-    ) -> Dict[str, Any]:
+        self, span_data: ResponseSpanData, state: _TraceState, parent_id: str
+    ) -> dict[str, Any]:
         chat_result = self._process_chat_history(span_data)
         active_agent = state.agents.get(parent_id)
         if active_agent is None:
@@ -233,11 +259,11 @@ class OpenAIAgentsTracingProcessor(TracingProcessor):
         else:
             state.last_agent = active_agent
 
-        top_p: Optional[float] = None
-        temperature: Optional[float] = None
-        response_model: Optional[str] = None
-        usage_input_tokens: Optional[int] = None
-        usage_output_tokens: Optional[int] = None
+        top_p: float | None = None
+        temperature: float | None = None
+        response_model: str | None = None
+        usage_input_tokens: int | None = None
+        usage_output_tokens: int | None = None
 
         if span_data.response is not None:
             top_p = span_data.response.top_p
@@ -247,45 +273,43 @@ class OpenAIAgentsTracingProcessor(TracingProcessor):
             if span_data.response.usage is not None:
                 usage_input_tokens = span_data.response.usage.input_tokens
                 usage_output_tokens = span_data.response.usage.output_tokens
-        
-        attributes: Dict[str, Any] = {
+
+        attributes: dict[str, Any] = {
             **generate_base_attributes(
                 operation=GenAIAttributes.GenAiOperationNameValues.CHAT,
-                system=GenAIAttributes.GenAiSystemValues.OPENAI
+                system=GenAIAttributes.GenAiSystemValues.OPENAI,
             ),
             **generate_message_attributes(
                 messages=chat_result.prompt_history,
-                capture_content=self.capture_content
+                capture_content=self.capture_content,
             ),
             **generate_choice_attributes(
                 choices=chat_result.completion_history,
-                capture_content=self.capture_content
+                capture_content=self.capture_content,
             ),
             **generate_request_attributes(
-                model=response_model,
-                top_p=top_p,
-                temperature=temperature
+                model=response_model, top_p=top_p, temperature=temperature
             ),
             **generate_response_attributes(
                 usage_input_tokens=usage_input_tokens,
                 usage_output_tokens=usage_output_tokens,
                 id=response_id,
-                model=response_model
+                model=response_model,
             ),
-            **active_agent.generate_attributes()
-        }
-        return attributes
-    
-    def _process_guardrail_span(self, span_data: GuardrailSpanData) -> Dict[str, Any]:
-        attributes: Dict[str, Any] = {
-            "type": span_data.type,
-            "name": span_data.name,
-            "triggered": span_data.triggered
+            **active_agent.generate_attributes(),
         }
         return attributes
 
-    def _process_handoff_span(self, span_data: HandoffSpanData) -> Dict[str, Any]:
-        attributes: Dict[str, Any] = {
+    def _process_guardrail_span(self, span_data: GuardrailSpanData) -> dict[str, Any]:
+        attributes: dict[str, Any] = {
+            "type": span_data.type,
+            "name": span_data.name,
+            "triggered": span_data.triggered,
+        }
+        return attributes
+
+    def _process_handoff_span(self, span_data: HandoffSpanData) -> dict[str, Any]:
+        attributes: dict[str, Any] = {
             "type": span_data.type,
             "from_agent": span_data.from_agent,
         }
@@ -310,7 +334,7 @@ class OpenAIAgentsTracingProcessor(TracingProcessor):
         state = self._pop_state(trace.trace_id)
         if not state:
             return
-        
+
         if state.parent_context is not None:
             detach(state.parent_context)
         if state.parent_span is not None:
@@ -323,12 +347,12 @@ class OpenAIAgentsTracingProcessor(TracingProcessor):
     def on_span_start(self, span: Span[Any]) -> None:
         """Called when a span is started.
 
-         Args:
-             span: The span that started.
-         """
+        Args:
+            span: The span that started.
+        """
         if self.disabled:
             return
-        trace_id = span.trace_id 
+        trace_id = span.trace_id
         state = self._get_or_create_state(trace_id)
 
         initial_attributes = {}
@@ -337,7 +361,7 @@ class OpenAIAgentsTracingProcessor(TracingProcessor):
             if isinstance(span.span_data, ResponseSpanData):
                 initial_attributes = generate_base_attributes(
                     operation=GenAIAttributes.GenAiOperationNameValues.CHAT,
-                    system=GenAIAttributes.GenAiSystemValues.OPENAI
+                    system=GenAIAttributes.GenAiSystemValues.OPENAI,
                 )
             else:
                 initial_attributes = processor(span.span_data)
@@ -356,9 +380,7 @@ class OpenAIAgentsTracingProcessor(TracingProcessor):
             new_span_name = type(span.span_data).__name__
 
         new_span = self.tracer.start_span(
-            name=new_span_name,
-            kind=SpanKind.INTERNAL,
-            attributes=initial_attributes
+            name=new_span_name, kind=SpanKind.INTERNAL, attributes=initial_attributes
         )
         context_token = attach(set_value(_SPAN_KEY, new_span))
         state.open_spans[span.span_id] = (new_span, context_token)
@@ -401,7 +423,6 @@ class OpenAIAgentsTracingProcessor(TracingProcessor):
         finally:
             detach(context_token)
             open_span.end()
-
 
     def shutdown(self) -> None:
         """Called when the application stops."""

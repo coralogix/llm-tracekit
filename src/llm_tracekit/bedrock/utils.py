@@ -13,7 +13,6 @@
 # limitations under the License.
 
 import json
-from typing import Optional
 
 from opentelemetry.semconv._incubating.attributes import (
     gen_ai_attributes as GenAIAttributes,
@@ -26,11 +25,11 @@ from llm_tracekit.instruments import Instruments
 def record_metrics(
     instruments: Instruments,
     duration: float,
-    request_model: Optional[str] = None,
-    response_model: Optional[str] = None,
-    usage_input_tokens: Optional[int] = None,
-    usage_output_tokens: Optional[int] = None,
-    error_type: Optional[str] = None,
+    request_model: str | None = None,
+    response_model: str | None = None,
+    usage_input_tokens: int | None = None,
+    usage_output_tokens: int | None = None,
+    error_type: str | None = None,
 ):
     common_attributes = {
         GenAIAttributes.GEN_AI_OPERATION_NAME: GenAIAttributes.GenAiOperationNameValues.CHAT.value,
