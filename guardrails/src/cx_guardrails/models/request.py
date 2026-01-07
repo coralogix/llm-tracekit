@@ -22,14 +22,6 @@ class PromptInjection(BaseGuardrailConfig):
 GuardrailConfigType = PII | PromptInjection
 
 
-ROLE_MAP = {
-    "user": Role.USER,
-    "assistant": Role.ASSISTANT,
-    "system": Role.SYSTEM,
-    "tool": Role.TOOL,
-}
-
-
 class Message(BaseModel):
     role: Role
     content: Any

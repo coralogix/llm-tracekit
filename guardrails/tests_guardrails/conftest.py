@@ -32,7 +32,6 @@ def guardrails_env_vars():
 
     yield env_vars
 
-    # Restore original values
     for key, original_value in original_values.items():
         if original_value is None:
             os.environ.pop(key, None)
@@ -55,7 +54,6 @@ def clear_guardrails_env_vars():
 
     yield
 
-    # Restore original values
     for key, original_value in original_values.items():
         if original_value is not None:
             os.environ[key] = original_value

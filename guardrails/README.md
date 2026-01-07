@@ -34,16 +34,16 @@ async def main():
         try:
             # Guard user input
             await guardrails.guard_prompt(
-                prompt="User input here",
                 guardrails=[PII(), PromptInjection()],
+                prompt="User input here",
             )
             
             response = "..."  # Your LLM call here
             
             # Guard LLM output
             await guardrails.guard_response(
-                response=response,
                 guardrails=[PII(), PromptInjection()],
+                response=response,
             )
         except GuardrailsTriggered as e:
             for v in e.triggered:
@@ -88,7 +88,7 @@ messages = [
     {"role": "assistant", "content": "Hi there!"},
 ]
 
-await guardrails.guard(messages, [PII()], GuardrailsTarget.RESPONSE)
+await guardrails.guard([PII()], messages, GuardrailsTarget.RESPONSE)
 ```
 
 See [`examples/guard.py`](examples/guard.py) for more details.
@@ -134,7 +134,7 @@ from cx_guardrails import (
 )
 
 try:
-    await guardrails.guard_prompt(prompt="test", guardrails=[PII()])
+    await guardrails.guard_prompt(guardrails=[PII()], prompt="test")
 except GuardrailsTriggered as e:
     for v in e.triggered:
         print(f"{v.guardrail_type}: {v.score}")

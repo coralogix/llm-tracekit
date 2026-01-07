@@ -55,5 +55,3 @@ only-include = [
 [tool.uv.sources]
 llm-tracekit-core = { workspace = true }
 
-[tool.ty.environment]
-extra-paths = ["../core/src"]

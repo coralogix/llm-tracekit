@@ -18,18 +18,18 @@ OpenAIAgentsInstrumentor().instrument()
 TEST_PII = "your email is example@example.com"
 
 guardrails = Guardrails()
+agent = Agent(name="Assistant", instructions="You are a helpfull assistant")
 
 
 async def main():
-    agent = Agent(name="Assistant", instructions="Be helpful")
     user_input = "What is the capital of France?"
     config = [PII(categories=[PIICategory.EMAIL_ADDRESS]), PromptInjection()]
 
     async with guardrails.guarded_session():
         try:
             await guardrails.guard(
-                [{"role": "user", "content": user_input}],
                 [PromptInjection()],
+                [{"role": "user", "content": user_input}],
                 GuardrailsTarget.PROMPT,
             )
         except GuardrailsTriggered as e:
@@ -43,7 +43,7 @@ async def main():
         ]
 
         try:
-            await guardrails.guard(messages, config, GuardrailsTarget.RESPONSE)
+            await guardrails.guard(config, messages, GuardrailsTarget.RESPONSE)
             print(f"Assistant: {result.final_output}")
         except GuardrailsTriggered as e:
             print(f"Response blocked: {e}")

@@ -18,10 +18,10 @@ BedrockInstrumentor().instrument()
 TEST_PII = "your email is example@example.com"
 
 guardrails = Guardrails()
+bedrock = boto3.client("bedrock-runtime")
 
 
 async def main():
-    bedrock = boto3.client("bedrock-runtime")
     system = [{"text": "You are a helpful assistant."}]
     user_content = "What is the capital of France?"
     bedrock_messages = [{"role": "user", "content": [{"text": user_content}]}]
@@ -34,7 +34,7 @@ async def main():
         ]
         try:
             await guardrails.guard(
-                messages, [PromptInjection()], GuardrailsTarget.PROMPT
+                [PromptInjection()], messages, GuardrailsTarget.PROMPT
             )
         except GuardrailsTriggered as e:
             return print(f"Prompt blocked: {e}")
@@ -50,7 +50,7 @@ async def main():
         messages.append({"role": "assistant", "content": response_content})
 
         try:
-            await guardrails.guard(messages, config, GuardrailsTarget.RESPONSE)
+            await guardrails.guard(config, messages, GuardrailsTarget.RESPONSE)
             print(f"Assistant: {response_content}")
         except GuardrailsTriggered as e:
             print(f"Response blocked: {e}")

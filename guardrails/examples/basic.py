@@ -20,7 +20,7 @@ async def main():
 
     async with guardrails.guarded_session():
         try:
-            await guardrails.guard_prompt(user_input, config)
+            await guardrails.guard_prompt(config, user_input)
         except GuardrailsTriggered as e:
             return print(f"Prompt blocked: {e}")
 

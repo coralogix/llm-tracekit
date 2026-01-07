@@ -2,7 +2,7 @@
 name = "llm-tracekit-openai"
 version = "1.0.0"
 description = "OpenTelemetry instrumentation for OpenAI."
-readme = "../../README.md"
+readme = "README.md"
 authors = [
     { name="Coralogix Ltd.", email="info@coralogix.com" },
 ]

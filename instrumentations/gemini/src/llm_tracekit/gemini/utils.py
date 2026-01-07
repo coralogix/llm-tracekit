@@ -188,7 +188,7 @@ class GeminiStreamState:
             content = _safe_get(candidate, "content")
             if content is None:
                 continue
-            role = _safe_get(content, "role")
+            role = _normalize_role(_safe_get(content, "role"))
             if role is not None:
                 buffer.role = role
             for part_index, part in enumerate(_iter_parts(content)):
@@ -510,7 +510,7 @@ def _contents_to_messages(contents: Any) -> list[Message]:
 
         messages.append(
             Message(
-                role=role or "user",
+                role=_normalize_role(role) or "user",
                 content=content_value,
                 tool_call_id=message_tool_call_id,
                 tool_calls=tool_calls_list,
@@ -642,6 +642,12 @@ def _as_int(value: Any) -> int | None:
         return int(value)
     except (TypeError, ValueError):
         return None
+
+
+def _normalize_role(role: str | None) -> str | None:
+    if role == "model":
+        return "assistant"
+    return role
 
 
 def _coerce_model_name(candidate: Any) -> str | None:

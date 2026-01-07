@@ -8,7 +8,6 @@ from .span_attributes import (
     NAME,
     SCORE,
     DETECTION_THRESHOLD,
-    CUSTOM_GUARDRAIL_NAME,
     PROMPT,
     RESPONSE,
     APPLICATION_NAME,
@@ -54,12 +53,6 @@ def generate_guardrail_response_attributes(
         if name is not None:
             result_attributes[
                 NAME.format(target=target, guardrail_type=guardrail_type)
-            ] = name
-        if result.type.value == GuardrailType.CUSTOM.value and name:
-            result_attributes[
-                CUSTOM_GUARDRAIL_NAME.format(
-                    target=target, guardrail_type=guardrail_type
-                )
             ] = name
 
         span_attributes.update(result_attributes)

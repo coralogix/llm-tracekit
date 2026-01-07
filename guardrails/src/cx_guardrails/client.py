@@ -8,7 +8,11 @@ import httpx
 from opentelemetry import trace
 from opentelemetry.trace import SpanKind, Status, StatusCode, Span
 
-from .models._constants import DEFAULT_TIMEOUT, GUARDRAILS_ENDPOINT_URL, PARENT_SPAN_NAME
+from .models._constants import (
+    DEFAULT_TIMEOUT,
+    GUARDRAILS_ENDPOINT_URL,
+    PARENT_SPAN_NAME,
+)
 from .models.request import (
     GuardrailConfigType,
     GuardrailRequest,
@@ -30,20 +34,6 @@ from .error import (
 
 
 tracer = trace.get_tracer(__name__)
-
-
-def _get_env(value: str | None, env_var: str, default: str = "") -> str:
-    return value if value is not None else os.environ.get(env_var, default)
-
-
-def _normalize_endpoint(endpoint: str) -> str:
-    if not endpoint:
-        raise ValueError(
-            "Endpoint URL is required. "
-            "Set CX_ENDPOINT environment variable or pass cx_endpoint parameter."
-        )
-    parsed = urlparse(endpoint if "://" in endpoint else f"https://{endpoint}")
-    return urlunparse(parsed._replace(scheme="https"))
 
 
 @dataclass
@@ -86,7 +76,7 @@ class Guardrails:
 
         Example:
             async with guardrails.guarded_session():
-                await guardrails.guard_prompt(prompt, [PII()])
+                await guardrails.guard_prompt([PII()], prompt)
                 await guardrails.guard_response([PII()], response)
         """
         with tracer.start_as_current_span(PARENT_SPAN_NAME):
@@ -94,8 +84,8 @@ class Guardrails:
 
     async def guard(
         self,
-        messages: list[Message | dict[str, Any]],
         guardrails: list[GuardrailConfigType],
+        messages: list[Message | dict[str, Any]],
         target: GuardrailsTarget,
     ) -> GuardrailsResponse | None:
         """Check a conversation against configured guardrails.
@@ -128,13 +118,10 @@ class Guardrails:
             )
         return await self._sender.run(guardrails, target, history)
 
-    def _to_messages(self, msg: Message | dict[str, Any]) -> Message:
-        return msg if isinstance(msg, Message) else Message(msg)
-
     async def guard_prompt(
         self,
-        prompt: str,
         guardrails: list[GuardrailConfigType],
+        prompt: str,
     ) -> GuardrailsResponse | None:
         """Check a user prompt against configured guardrails.
 
@@ -154,8 +141,8 @@ class Guardrails:
         if not prompt:
             return None
         return await self.guard(
-            [Message(role=Role.USER, content=prompt)],
             guardrails,
+            [Message(role=Role.USER, content=prompt)],
             GuardrailsTarget.PROMPT,
         )
 
@@ -187,7 +174,10 @@ class Guardrails:
         if prompt:
             messages.append(Message(role=Role.USER, content=prompt))
         messages.append(Message(role=Role.ASSISTANT, content=response))
-        return await self.guard(messages, guardrails, GuardrailsTarget.RESPONSE)
+        return await self.guard(guardrails, messages, GuardrailsTarget.RESPONSE)
+
+    def _to_messages(self, msg: Message | dict[str, Any]) -> Message:
+        return msg if isinstance(msg, Message) else Message(msg)
 
 
 class GuardrailRequestSender:
@@ -197,33 +187,6 @@ class GuardrailRequestSender:
             base_url=self.config.cx_endpoint,
             timeout=httpx.Timeout(self.config.timeout, connect=2.0),
         )
-    def _get_headers(self) -> dict[str, str]:
-        return {
-            "X-Coralogix-Auth": self.config.api_key,
-            "cx-application-name": self.config.application_name,
-            "cx-subsystem-name": self.config.subsystem_name,
-        }
-
-    async def _send_request(
-        self, request: GuardrailRequest
-    ) -> httpx.Response:
-        try:
-            response = await self._client.post(
-                GUARDRAILS_ENDPOINT_URL,
-                json=request.model_dump(mode="json", exclude_none=True),
-                headers=self._get_headers(),
-            )
-        except httpx.TimeoutException as e:
-            raise GuardrailsAPITimeoutError(
-                f"Request timed out after {self.config.timeout}s"
-            ) from e
-        except httpx.ConnectError as e:
-            raise GuardrailsAPIConnectionError(
-                f"Failed to connect to {self.config.cx_endpoint}"
-            ) from e
-        except httpx.RequestError as e:
-            raise GuardrailsAPIConnectionError(f"Request error: {e}") from e
-        return response
 
     async def run(
         self,
@@ -248,7 +211,9 @@ class GuardrailRequestSender:
                     application_name=request.application,
                     subsystem_name=request.subsystem,
                     prompts=[msg.content for msg in messages if msg.role == Role.USER],
-                    responses=[msg.content for msg in messages if msg.role == Role.ASSISTANT],
+                    responses=[
+                        msg.content for msg in messages if msg.role == Role.ASSISTANT
+                    ],
                 )
             )
             try:
@@ -257,6 +222,32 @@ class GuardrailRequestSender:
             except Exception as e:
                 span.set_status(Status(StatusCode.ERROR, str(e)))
                 raise
+
+    def _get_headers(self) -> dict[str, str]:
+        return {
+            "X-Coralogix-Auth": self.config.api_key,
+            "cx-application-name": self.config.application_name,
+            "cx-subsystem-name": self.config.subsystem_name,
+        }
+
+    async def _send_request(self, request: GuardrailRequest) -> httpx.Response:
+        try:
+            response = await self._client.post(
+                GUARDRAILS_ENDPOINT_URL,
+                json=request.model_dump(mode="json", exclude_none=True),
+                headers=self._get_headers(),
+            )
+        except httpx.TimeoutException as e:
+            raise GuardrailsAPITimeoutError(
+                f"Request timed out after {self.config.timeout}s"
+            ) from e
+        except httpx.ConnectError as e:
+            raise GuardrailsAPIConnectionError(
+                f"Failed to connect to {self.config.cx_endpoint}"
+            ) from e
+        except httpx.RequestError as e:
+            raise GuardrailsAPIConnectionError(f"Request error: {e}") from e
+        return response
 
     def _handle_response(
         self, response: httpx.Response, span: Span, target: GuardrailsTarget
@@ -295,3 +286,17 @@ class GuardrailRequestSender:
                 raise GuardrailsTriggered(violations)
 
         return results
+
+
+def _get_env(value: str | None, env_var: str, default: str = "") -> str:
+    return value if value is not None else os.environ.get(env_var, default)
+
+
+def _normalize_endpoint(endpoint: str) -> str:
+    if not endpoint:
+        raise ValueError(
+            "Endpoint URL is required. "
+            "Set CX_ENDPOINT environment variable or pass cx_endpoint parameter."
+        )
+    parsed = urlparse(endpoint if "://" in endpoint else f"https://{endpoint}")
+    return urlunparse(parsed._replace(scheme="https"))

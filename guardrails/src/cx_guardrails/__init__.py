@@ -19,7 +19,6 @@ from .error import (
     GuardrailsTriggered,
 )
 
-# Re-export from llm_tracekit.core for convenience
 from llm_tracekit.core import (
     setup_export_to_coralogix as setup_export_to_coralogix,
 )

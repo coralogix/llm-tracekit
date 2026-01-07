@@ -11,7 +11,6 @@ class PIICategory(str, Enum):
 class GuardrailType(str, Enum):
     PII = "pii"
     PROMPT_INJECTION = "prompt_injection"
-    CUSTOM = "custom"
 
 
 class GuardrailsTarget(str, Enum):

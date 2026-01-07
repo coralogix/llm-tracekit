@@ -18,17 +18,17 @@ OpenAIInstrumentor().instrument()
 TEST_PII = "your email is example@example.com"
 
 guardrails = Guardrails()
+client = AsyncOpenAI()
 
 
 async def main():
-    client = AsyncOpenAI()
     messages = [{"role": "user", "content": "What is the capital of France?"}]
     config = [PII(categories=[PIICategory.EMAIL_ADDRESS]), PromptInjection()]
 
     async with guardrails.guarded_session():
         try:
             await guardrails.guard(
-                messages, [PromptInjection()], GuardrailsTarget.PROMPT
+                [PromptInjection()], messages, GuardrailsTarget.PROMPT
             )
         except GuardrailsTriggered as e:
             return print(f"Prompt blocked: {e}")
@@ -40,7 +40,7 @@ async def main():
         messages.append({"role": "assistant", "content": response_content})
 
         try:
-            await guardrails.guard(messages, config, GuardrailsTarget.RESPONSE)
+            await guardrails.guard(config, messages, GuardrailsTarget.RESPONSE)
         except GuardrailsTriggered as e:
             print(f"Response blocked: {e}")
 

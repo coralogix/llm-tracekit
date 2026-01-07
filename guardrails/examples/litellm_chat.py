@@ -27,7 +27,7 @@ async def main():
     async with guardrails.guarded_session():
         try:
             await guardrails.guard(
-                messages, [PromptInjection()], GuardrailsTarget.PROMPT
+                [PromptInjection()], messages, GuardrailsTarget.PROMPT
             )
         except GuardrailsTriggered as e:
             return print(f"Prompt blocked: {e}")
@@ -37,7 +37,7 @@ async def main():
         messages.append({"role": "assistant", "content": response_content})
 
         try:
-            await guardrails.guard(messages, config, GuardrailsTarget.RESPONSE)
+            await guardrails.guard(config, messages, GuardrailsTarget.RESPONSE)
             print(f"Assistant: {response_content}")
         except GuardrailsTriggered as e:
             print(f"Response blocked: {e}")

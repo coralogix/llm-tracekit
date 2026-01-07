@@ -18,10 +18,10 @@ GeminiInstrumentor().instrument()
 TEST_PII = "your email is example@example.com"
 
 guardrails = Guardrails()
+client = genai.Client() 
 
 
 async def main():
-    client = genai.Client()
     user_content = "What is the capital of France?"
     contents = [{"role": "user", "parts": [{"text": user_content}]}]
     config = [PII(categories=[PIICategory.EMAIL_ADDRESS]), PromptInjection()]
@@ -30,7 +30,7 @@ async def main():
         messages = [{"role": "user", "content": user_content}]
         try:
             await guardrails.guard(
-                messages, [PromptInjection()], GuardrailsTarget.PROMPT
+                [PromptInjection()], messages, GuardrailsTarget.PROMPT
             )
         except GuardrailsTriggered as e:
             return print(f"Prompt blocked: {e}")
@@ -42,7 +42,7 @@ async def main():
         messages.append({"role": "assistant", "content": response_content})
 
         try:
-            await guardrails.guard(messages, config, GuardrailsTarget.RESPONSE)
+            await guardrails.guard(config, messages, GuardrailsTarget.RESPONSE)
             print(f"Assistant: {response.text}")
         except GuardrailsTriggered as e:
             print(f"Response blocked: {e}")
