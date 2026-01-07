@@ -39,7 +39,7 @@ PROMPT: Final = "guardrails.prompt.{index}"
 The evaluated prompt at index.
 """
 
-RESPONSE: Final = "guardrails.response{index}"
+RESPONSE: Final = "guardrails.response.{index}"
 """
 The evaluated response at index.
 """
