@@ -25,8 +25,8 @@ from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import SimpleSpanProcessor
 from opentelemetry.sdk.trace.export.in_memory_span_exporter import InMemorySpanExporter
 
-from llm_tracekit_core import OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT
-from llm_tracekit_litellm.instrumentor import LiteLLMInstrumentor
+from llm_tracekit.core import OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT
+from llm_tracekit.litellm.instrumentor import LiteLLMInstrumentor
 
 
 @pytest.fixture(scope="function", name="span_exporter")

@@ -16,7 +16,7 @@ import pytest
 from assertpy import assert_that
 from pydantic import ValidationError
 
-from guardrails import (
+from cx_guardrails import (
     PII,
     PromptInjection,
     Message,

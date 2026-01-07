@@ -22,7 +22,7 @@ from opentelemetry.semconv._incubating.attributes import (
     server_attributes as ServerAttributes,
 )
 
-import llm_tracekit_core._extended_gen_ai_attributes as ExtendedGenAIAttributes
+import llm_tracekit.core._extended_gen_ai_attributes as ExtendedGenAIAttributes
 
 
 def assert_completion_attributes(
@@ -32,6 +32,7 @@ def assert_completion_attributes(
     operation_name: str = "chat",
     server_address: str = "api.openai.com",
 ):
+    assert response.usage is not None
     return assert_all_attributes(
         span,
         request_model,
@@ -54,6 +55,7 @@ def assert_all_attributes(
     operation_name: str = "chat",
     server_address: str = "api.openai.com",
 ):
+    assert span.attributes is not None
     assert span.name == f"{operation_name} {request_model}"
     assert operation_name == span.attributes[GenAIAttributes.GEN_AI_OPERATION_NAME]
     assert (

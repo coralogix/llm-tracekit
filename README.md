@@ -15,8 +15,10 @@ export CX_ENDPOINT="ingress.coralogix.com"  # or your regional endpoint
 
 ### Initialize the Exporter
 
+Import `setup_export_to_coralogix` from your chosen instrumentation package:
+
 ```python
-from llm_tracekit_core import setup_export_to_coralogix
+from llm_tracekit.openai import OpenAIInstrumentor, setup_export_to_coralogix
 
 setup_export_to_coralogix(
     service_name="my-ai-service",
@@ -24,21 +26,7 @@ setup_export_to_coralogix(
     subsystem_name="my-subsystem",
     capture_content=True,  # Enable to capture prompts and completions
 )
-```
-
-### Capturing Message Content
-
-By default, prompts and completions are **not captured** to protect sensitive data. To enable:
-
-```python
-# Option 1: Via setup function
-setup_export_to_coralogix(
-    service_name="my-service",
-    application_name="my-app",
-    subsystem_name="my-subsystem",
-    capture_content=True,
-)
-
+OpenAIInstrumentor().instrument()
 ```
 
 ### Environment Variables Reference
@@ -84,7 +72,7 @@ pip install llm-tracekit-openai-agents
 To use **Coralogix Guardrails**, install:
 
 ```bash
-pip install llm-tracekit-guardrails
+pip install cx-guardrails
 ```
 
 ## Usage Examples
@@ -92,7 +80,7 @@ pip install llm-tracekit-guardrails
 ### OpenAI
 
 ```python
-from llm_tracekit_openai import OpenAIInstrumentor, setup_export_to_coralogix
+from llm_tracekit.openai import OpenAIInstrumentor, setup_export_to_coralogix
 from openai import OpenAI
 
 setup_export_to_coralogix(
@@ -113,7 +101,7 @@ response = client.chat.completions.create(
 ### AWS Bedrock
 
 ```python
-from llm_tracekit_bedrock import BedrockInstrumentor, setup_export_to_coralogix
+from llm_tracekit.bedrock import BedrockInstrumentor, setup_export_to_coralogix
 import boto3
 
 setup_export_to_coralogix(
@@ -128,85 +116,22 @@ client = boto3.client("bedrock-runtime", region_name="us-east-1")
 response = client.converse(
     modelId="anthropic.claude-3-sonnet-20240229-v1:0",
     messages=[{"role": "user", "content": [{"text": "Hello!"}]}]
-)
-```
-
-### Google Gemini
-
-```python
-from llm_tracekit_gemini import GeminiInstrumentor, setup_export_to_coralogix
-from google import genai
-
-setup_export_to_coralogix(
-    service_name="gemini-service",
-    application_name="my-app",
-    subsystem_name="chat",
-    capture_content=True,
-)
-GeminiInstrumentor().instrument()
-
-client = genai.Client()
-response = client.models.generate_content(
-    model="gemini-2.0-flash",
-    contents="Hello!"
-)
-```
-
-### LiteLLM
-
-```python
-from llm_tracekit_litellm import LiteLLMInstrumentor, setup_export_to_coralogix
-import litellm
-
-setup_export_to_coralogix(
-    service_name="litellm-service",
-    application_name="my-app",
-    subsystem_name="chat",
-    capture_content=True,
-)
-LiteLLMInstrumentor().instrument()
-
-response = litellm.completion(
-    model="gpt-4o",
-    messages=[{"role": "user", "content": "Hello!"}]
-)
-```
-
-### OpenAI Agents SDK
-
-```python
-from llm_tracekit_openai_agents import OpenAIAgentsInstrumentor, setup_export_to_coralogix
-from agents import Agent, Runner
-
-setup_export_to_coralogix(
-    service_name="agents-service",
-    application_name="my-app",
-    subsystem_name="agents",
-    capture_content=True,
-)
-OpenAIAgentsInstrumentor().instrument()
-
-agent = Agent(name="Assistant", instructions="You are a helpful assistant.")
-result = Runner.run_sync(agent, "Hello!")
-```
 
 ## Package Structure
 
 | Package | Description |
 |---------|-------------|
-| [`llm-tracekit-core`](core/) | Core utilities, span builders, and Coralogix export helpers |
 | [`llm-tracekit-openai`](instrumentations/openai/) | OpenAI Chat Completions instrumentation |
 | [`llm-tracekit-bedrock`](instrumentations/bedrock/) | AWS Bedrock instrumentation |
 | [`llm-tracekit-gemini`](instrumentations/gemini/) | Google Gemini instrumentation |
 | [`llm-tracekit-litellm`](instrumentations/litellm/) | LiteLLM instrumentation |
 | [`llm-tracekit-openai-agents`](instrumentations/openai_agents/) | OpenAI Agents SDK instrumentation |
-| [`llm-tracekit-guardrails`](guardrails/) | Coralogix Guardrails SDK |
+| [`cx-guardrails`](guardrails/) | Coralogix Guardrails SDK |
 
 ## Documentation
 
 See individual package READMEs for detailed documentation:
 
-- **Core**: [core/README.md](core/README.md)
 - **OpenAI**: [instrumentations/openai/README.md](instrumentations/openai/README.md)
 - **Bedrock**: [instrumentations/bedrock/README.md](instrumentations/bedrock/README.md)
 - **Gemini**: [instrumentations/gemini/README.md](instrumentations/gemini/README.md)

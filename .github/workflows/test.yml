@@ -26,10 +26,6 @@ jobs:
 
       - name: Run tests
         run: |
-          uv run --group=dev --locked --extra ci-core pytest . --ignore=instrumentations/litellm/tests_litellm/ -sv
+          uv run --group=dev --locked --extra ci-core pytest
         shell: bash
       
-      - name: Run LiteLLM tests
-        run: |
-          uv run --group=dev --locked --extra litellm pytest instrumentations/litellm/tests_litellm/ -sv
-        shell: bash

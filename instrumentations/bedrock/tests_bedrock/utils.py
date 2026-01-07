@@ -21,8 +21,8 @@ from opentelemetry.semconv._incubating.attributes import (
 from opentelemetry.semconv._incubating.metrics import gen_ai_metrics
 from opentelemetry.semconv.attributes import error_attributes as ErrorAttributes
 
-from llm_tracekit_core import _extended_gen_ai_attributes as ExtendedGenAIAttributes
-from llm_tracekit_core import (
+from llm_tracekit.core import _extended_gen_ai_attributes as ExtendedGenAIAttributes
+from llm_tracekit.core import (
     GEN_AI_CLIENT_OPERATION_DURATION_BUCKETS,
     GEN_AI_CLIENT_TOKEN_USAGE_BUCKETS,
 )

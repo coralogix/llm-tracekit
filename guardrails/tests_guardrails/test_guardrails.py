@@ -17,7 +17,7 @@ from assertpy import assert_that
 from unittest.mock import AsyncMock, patch
 import httpx
 
-from guardrails import (
+from cx_guardrails import (
     Guardrails,
     PII,
     PromptInjection,

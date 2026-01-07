@@ -8,11 +8,6 @@ Core utilities for LLM Tracekit instrumentations and Coralogix integration.
 pip install llm-tracekit-core
 ```
 
-Or via the meta-package:
-
-```bash
-pip install llm-tracekit
-```
 
 ## Usage
 
@@ -21,7 +16,7 @@ pip install llm-tracekit
 Use `setup_export_to_coralogix` to configure tracing and export spans to Coralogix:
 
 ```python
-from llm_tracekit_core import setup_export_to_coralogix
+from llm_tracekit.core import setup_export_to_coralogix
 
 setup_export_to_coralogix(
     service_name="ai-service",

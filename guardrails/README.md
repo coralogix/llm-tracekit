@@ -5,20 +5,24 @@ Python SDK for interacting with the Coralogix Guardrails API.
 ## Installation
 
 ```bash
-pip install guardrails
+pip install cx-guardrails
 ```
 
-Or via the meta-package:
+## API Overview
 
-```bash
-pip install llm-tracekit[guardrails]
-```
+| Method | Use Case | Input |
+|--------|----------|-------|
+| `guard_prompt()` | Guard user input before LLM call | `prompt` |
+| `guard_response()` | Guard LLM output after generation | `response`, `prompt` (optional) |
+| `guard()` | Full control over message history | List of messages |
 
 ## Quick Start
 
 ```python
 import asyncio
-from guardrails import Guardrails, PII, PromptInjection, PIICategory, GuardrailsTriggered
+from cx_guardrails import Guardrails, PII, PromptInjection, PIICategory, GuardrailsTriggered, setup_export_to_coralogix
+
+setup_export_to_coralogix(service_name="my-service")
 
 guardrails = Guardrails(
     api_key="your-api-key",
@@ -48,7 +52,7 @@ async def main():
 asyncio.run(main())
 ```
 
-> **Note**: This SDK is async-only. See [`examples/basic_example.py`](examples/basic_example.py) for a complete example.
+> **Note**: This SDK is async-only. See [`examples/basic.py`](examples/basic.py) for a complete example.
 
 ### Environment Variables
 
@@ -76,7 +80,7 @@ guardrails = Guardrails(
 Use `guard()` for full control over messages. Accepts `Message` objects or simple dicts:
 
 ```python
-from guardrails import GuardrailsTarget
+from cx_guardrails import GuardrailsTarget
 
 # Using dicts
 messages = [
@@ -87,7 +91,7 @@ messages = [
 await guardrails.guard(messages, [PII()], GuardrailsTarget.RESPONSE)
 ```
 
-See [`examples/direct_guard_example.py`](examples/direct_guard_example.py) for more details.
+See [`examples/guard.py`](examples/guard.py) for more details.
 
 ## Guardrail Types
 
@@ -96,7 +100,7 @@ See [`examples/direct_guard_example.py`](examples/direct_guard_example.py) for m
 Detects personally identifiable information:
 
 ```python
-from guardrails import PII, PIICategory
+from cx_guardrails import PII, PIICategory
 
 PII()  # All categories
 PII(categories=[PIICategory.EMAIL_ADDRESS, PIICategory.PHONE_NUMBER], threshold=0.8)
@@ -109,16 +113,20 @@ PII(categories=[PIICategory.EMAIL_ADDRESS, PIICategory.PHONE_NUMBER], threshold=
 Detects attempts to manipulate LLM behavior:
 
 ```python
-from guardrails import PromptInjection
+from cx_guardrails import PromptInjection
 
 PromptInjection()  # Default threshold 0.7
 PromptInjection(threshold=0.8)  # Stricter
 ```
 
+
+
+
+
 ## Error Handling
 
 ```python
-from guardrails import (
+from cx_guardrails import (
     GuardrailsTriggered,
     GuardrailsAPITimeoutError,
     GuardrailsAPIConnectionError,

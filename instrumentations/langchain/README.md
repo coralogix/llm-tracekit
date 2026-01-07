@@ -8,17 +8,11 @@ OpenTelemetry instrumentation for [LangChain](https://www.langchain.com/).
 pip install llm-tracekit-langchain
 ```
 
-Or via the meta-package:
-
-```bash
-pip install llm-tracekit[langchain]
-```
 
 ## Usage
 
 ```python
-from llm_tracekit_core import setup_export_to_coralogix
-from llm_tracekit_langchain import LangChainInstrumentor
+from llm_tracekit.langchain import LangChainInstrumentor, setup_export_to_coralogix
 from langchain_openai import ChatOpenAI
 from langchain_core.messages import HumanMessage
 

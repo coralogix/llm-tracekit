@@ -10,18 +10,11 @@ OpenTelemetry instrumentation for the [OpenAI Agents SDK](https://openai.github.
 pip install llm-tracekit-openai-agents
 ```
 
-Or via the meta-package:
-
-```bash
-pip install llm-tracekit[openai-agents]
-```
-
 ## Usage
 
 ```python
 from agents import Agent, Runner
-from llm_tracekit_core import setup_export_to_coralogix
-from llm_tracekit_openai_agents import OpenAIAgentsInstrumentor
+from llm_tracekit.openai_agents import OpenAIAgentsInstrumentor, setup_export_to_coralogix
 
 # Configure tracing
 setup_export_to_coralogix(

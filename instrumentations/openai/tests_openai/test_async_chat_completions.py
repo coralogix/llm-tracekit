@@ -25,7 +25,7 @@ from opentelemetry.semconv._incubating.attributes import (
     server_attributes as ServerAttributes,
 )
 
-import llm_tracekit_core._extended_gen_ai_attributes as ExtendedGenAIAttributes
+import llm_tracekit.core._extended_gen_ai_attributes as ExtendedGenAIAttributes
 from .utils import (
     assert_all_attributes,
     assert_completion_attributes,

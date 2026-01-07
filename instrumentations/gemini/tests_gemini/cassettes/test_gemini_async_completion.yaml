@@ -20,7 +20,7 @@ interactions:
       - google-genai-sdk/1.41.0 gl-python/3.11.5
       x-goog-api-key:
       - redacted_x_goog_api_key
-    method: POST
+    method: post
     uri: https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent
   response:
     body:

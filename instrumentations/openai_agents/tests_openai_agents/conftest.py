@@ -25,11 +25,11 @@ from opentelemetry.sdk.trace.export import SimpleSpanProcessor
 from opentelemetry.sdk.trace.export.in_memory_span_exporter import InMemorySpanExporter
 
 try:
-    from llm_tracekit_openai_agents.instrumentor import OpenAIAgentsInstrumentor
+    from llm_tracekit.openai_agents.instrumentor import OpenAIAgentsInstrumentor
 except (ImportError, ModuleNotFoundError):
     pytest.skip("OpenAI agents not available (requires Python 3.10+)", allow_module_level=True)
     
-from llm_tracekit_core import OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT
+from llm_tracekit.core import OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT
 
 
 @pytest.fixture(scope="function", name="span_exporter")

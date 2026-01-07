@@ -15,7 +15,7 @@
 import pytest
 from assertpy import assert_that
 
-from guardrails.error import (
+from cx_guardrails.error import (
     GuardrailsError,
     GuardrailsAPIConnectionError,
     GuardrailsAPITimeoutError,
@@ -51,7 +51,7 @@ class TestGuardrailsAPIResponseError:
         error = GuardrailsAPIResponseError(status_code=500)
         assert_that(error.status_code).is_equal_to(500)
         assert_that(error.body).is_none()
-        assert_that(error.message).is_equal_to("HTTP 500")
+        assert_that(error.message).is_equal_to("Request failed with HTTP status_code=500")
         assert_that(error).is_instance_of(GuardrailsError)
 
     def test_response_error_with_body(self):

@@ -8,17 +8,10 @@ OpenTelemetry instrumentation for [OpenAI](https://openai.com/) Chat Completions
 pip install llm-tracekit-openai
 ```
 
-Or via the meta-package:
-
-```bash
-pip install llm-tracekit[openai]
-```
-
 ## Usage
 
 ```python
-from llm_tracekit_core import setup_export_to_coralogix
-from llm_tracekit_openai import OpenAIInstrumentor
+from llm_tracekit.openai import OpenAIInstrumentor, setup_export_to_coralogix
 from openai import OpenAI
 
 # Configure tracing

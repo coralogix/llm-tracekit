@@ -28,8 +28,8 @@ from opentelemetry.sdk.trace.export import SimpleSpanProcessor
 from opentelemetry.sdk.trace.export.in_memory_span_exporter import InMemorySpanExporter
 from opentelemetry.sdk.trace.sampling import ALWAYS_OFF
 
-from llm_tracekit_bedrock.instrumentor import BedrockInstrumentor
-from llm_tracekit_core import OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT
+from llm_tracekit.bedrock.instrumentor import BedrockInstrumentor
+from llm_tracekit.core import OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT
 
 EVENT_STREAM_CT = "application/vnd.amazon.eventstream"
 

@@ -30,15 +30,14 @@ bedrock = ["llm-tracekit-bedrock>=1.0.0"]
 gemini = ["llm-tracekit-gemini>=1.0.0"]
 litellm = ["llm-tracekit-litellm>=1.0.0"]
 openai-agents = ["llm-tracekit-openai-agents>=1.0.0"]
-guardrails = ["llm-tracekit-guardrails>=1.0.0"]
+guardrails = ["cx-guardrails>=1.0.0"]
 langchain = ["llm-tracekit-langchain>=1.0.0"]
-# CI extras for testing
 ci-core = [
     "llm-tracekit-openai>=1.0.0",
     "llm-tracekit-bedrock>=1.0.0",
     "llm-tracekit-gemini>=1.0.0",
     "llm-tracekit-openai-agents>=1.0.0",
-    "llm-tracekit-guardrails>=1.0.0",
+    "cx-guardrails>=1.0.0",
     "llm-tracekit-langchain>=1.0.0",
 ]
 
@@ -51,10 +50,8 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/llm_tracekit"]
 
 [tool.hatch.build.targets.sdist]
-only-include = ["src/llm_tracekit"]
 
 [tool.uv.sources]
 llm-tracekit-core = { workspace = true }
@@ -63,6 +60,6 @@ llm-tracekit-bedrock = { workspace = true }
 llm-tracekit-gemini = { workspace = true }
 llm-tracekit-litellm = { workspace = true }
 llm-tracekit-openai-agents = { workspace = true }
-llm-tracekit-guardrails = { workspace = true }
+cx-guardrails = { workspace = true }
 llm-tracekit-langchain = { workspace = true }
 

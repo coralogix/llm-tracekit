@@ -26,8 +26,8 @@ from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import SimpleSpanProcessor
 from opentelemetry.sdk.trace.export.in_memory_span_exporter import InMemorySpanExporter
 
-from llm_tracekit_core import OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT
-from llm_tracekit_langchain import LangChainInstrumentor
+from llm_tracekit.core import OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT
+from llm_tracekit.langchain import LangChainInstrumentor
 
 EVENT_STREAM_CT = "application/vnd.amazon.eventstream"
 

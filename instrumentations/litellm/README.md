@@ -8,18 +8,12 @@ OpenTelemetry instrumentation for [LiteLLM](https://www.litellm.ai/).
 pip install llm-tracekit-litellm
 ```
 
-Or via the meta-package:
-
-```bash
-pip install llm-tracekit[litellm]
-```
 
 ## Usage
 
 ```python
 import litellm
-from llm_tracekit_core import setup_export_to_coralogix
-from llm_tracekit_litellm import LiteLLMInstrumentor
+from llm_tracekit.litellm import LiteLLMInstrumentor, setup_export_to_coralogix
 
 # Configure tracing
 setup_export_to_coralogix(

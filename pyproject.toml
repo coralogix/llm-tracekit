@@ -10,10 +10,8 @@ ci-core = [
     "llm-tracekit-bedrock",
     "llm-tracekit-gemini",
     "llm-tracekit-openai-agents",
-    "llm-tracekit-guardrails",
+    "cx-guardrails",
     "llm-tracekit-langchain",
-]
-litellm = [
     "llm-tracekit-litellm",
 ]
 
@@ -53,9 +51,12 @@ llm-tracekit-bedrock = { workspace = true }
 llm-tracekit-gemini = { workspace = true }
 llm-tracekit-litellm = { workspace = true }
 llm-tracekit-openai-agents = { workspace = true }
-llm-tracekit-guardrails = { workspace = true }
+cx-guardrails = { workspace = true }
 llm-tracekit-langchain = { workspace = true }
 
 [tool.mypy]
 ignore_missing_imports = true
+namespace_packages = true
+explicit_package_bases = true
+mypy_path = "core/src:instrumentations/openai/src:instrumentations/bedrock/src:instrumentations/gemini/src:instrumentations/litellm/src:instrumentations/langchain/src:instrumentations/openai_agents/src:guardrails/src"
 

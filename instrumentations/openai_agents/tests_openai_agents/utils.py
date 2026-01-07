@@ -18,7 +18,7 @@ from opentelemetry.semconv._incubating.attributes import (
     gen_ai_attributes as GenAIAttributes,
 )
 
-import llm_tracekit_core._extended_gen_ai_attributes as ExtendedGenAIAttributes
+import llm_tracekit.core._extended_gen_ai_attributes as ExtendedGenAIAttributes
 
 def assert_attributes(
     span: ReadableSpan,
@@ -26,6 +26,7 @@ def assert_attributes(
     agent_name: str | None = None,
     operation_name = "chat"
 ):
+    assert span.attributes is not None
     assert operation_name == span.attributes[GenAIAttributes.GEN_AI_OPERATION_NAME]
 
     assert (

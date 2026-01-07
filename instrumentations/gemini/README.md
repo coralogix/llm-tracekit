@@ -8,18 +8,12 @@ OpenTelemetry instrumentation for [Google Gemini](https://ai.google.dev/) API.
 pip install llm-tracekit-gemini
 ```
 
-Or via the meta-package:
-
-```bash
-pip install llm-tracekit[gemini]
-```
 
 ## Usage
 
 ```python
 import google.generativeai as genai
-from llm_tracekit_core import setup_export_to_coralogix
-from llm_tracekit_gemini import GeminiInstrumentor
+from llm_tracekit.gemini import GeminiInstrumentor, setup_export_to_coralogix
 
 # Configure tracing
 setup_export_to_coralogix(

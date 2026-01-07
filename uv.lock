@@ -9,11 +9,11 @@ resolution-markers = [
 
 [manifest]
 members = [
+    "cx-guardrails",
     "llm-tracekit",
     "llm-tracekit-bedrock",
     "llm-tracekit-core",
     "llm-tracekit-gemini",
-    "llm-tracekit-guardrails",
     "llm-tracekit-langchain",
     "llm-tracekit-litellm",
     "llm-tracekit-openai",
@@ -583,6 +583,45 @@ wheels = [
 ]
 
 [[package]]
+name = "cx-guardrails"
+version = "1.0.0"
+source = { editable = "guardrails" }
+dependencies = [
+    { name = "httpx" },
+    { name = "llm-tracekit-core" },
+    { name = "pydantic" },
+    { name = "pydantic-settings" },
+    { name = "tenacity" },
+]
+
+[package.dev-dependencies]
+dev = [
+    { name = "assertpy" },
+    { name = "mypy" },
+    { name = "pytest" },
+    { name = "pytest-asyncio" },
+    { name = "ruff" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "httpx", specifier = ">=0.27.0" },
+    { name = "llm-tracekit-core", editable = "core" },
+    { name = "pydantic", specifier = ">=2.10.0" },
+    { name = "pydantic-settings", specifier = ">=2.0.0" },
+    { name = "tenacity", specifier = ">=8.0.0" },
+]
+
+[package.metadata.requires-dev]
+dev = [
+    { name = "assertpy", specifier = ">=1.1" },
+    { name = "mypy", specifier = ">=1.14.1" },
+    { name = "pytest", specifier = ">=8.3.4" },
+    { name = "pytest-asyncio", specifier = ">=1.0.0" },
+    { name = "ruff", specifier = ">=0.9.7" },
+]
+
+[[package]]
 name = "distro"
 version = "1.9.0"
 source = { registry = "https://pypi.org/simple" }
@@ -618,7 +657,7 @@ name = "exceptiongroup"
 version = "1.3.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "typing-extensions", marker = "python_full_version < '3.13'" },
+    { name = "typing-extensions", marker = "python_full_version < '3.12'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/50/79/66800aadf48771f6b62f7eb014e352e5d06856655206165d775e675a02c9/exceptiongroup-1.3.1.tar.gz", hash = "sha256:8b412432c6055b0b7d14c310000ae93352ed6754f70fa8f7c34141f91c4e3219", size = 30371, upload-time = "2025-11-21T23:01:54.787Z" }
 wheels = [
@@ -1475,9 +1514,9 @@ bedrock = [
     { name = "llm-tracekit-bedrock" },
 ]
 ci-core = [
+    { name = "cx-guardrails" },
     { name = "llm-tracekit-bedrock" },
     { name = "llm-tracekit-gemini" },
-    { name = "llm-tracekit-guardrails" },
     { name = "llm-tracekit-langchain" },
     { name = "llm-tracekit-openai" },
     { name = "llm-tracekit-openai-agents" },
@@ -1486,7 +1525,7 @@ gemini = [
     { name = "llm-tracekit-gemini" },
 ]
 guardrails = [
-    { name = "llm-tracekit-guardrails" },
+    { name = "cx-guardrails" },
 ]
 langchain = [
     { name = "llm-tracekit-langchain" },
@@ -1503,13 +1542,13 @@ openai-agents = [
 
 [package.metadata]
 requires-dist = [
+    { name = "cx-guardrails", marker = "extra == 'ci-core'", editable = "guardrails" },
+    { name = "cx-guardrails", marker = "extra == 'guardrails'", editable = "guardrails" },
     { name = "llm-tracekit-bedrock", marker = "extra == 'bedrock'", editable = "instrumentations/bedrock" },
     { name = "llm-tracekit-bedrock", marker = "extra == 'ci-core'", editable = "instrumentations/bedrock" },
     { name = "llm-tracekit-core", editable = "core" },
     { name = "llm-tracekit-gemini", marker = "extra == 'ci-core'", editable = "instrumentations/gemini" },
     { name = "llm-tracekit-gemini", marker = "extra == 'gemini'", editable = "instrumentations/gemini" },
-    { name = "llm-tracekit-guardrails", marker = "extra == 'ci-core'", editable = "guardrails" },
-    { name = "llm-tracekit-guardrails", marker = "extra == 'guardrails'", editable = "guardrails" },
     { name = "llm-tracekit-langchain", marker = "extra == 'ci-core'", editable = "instrumentations/langchain" },
     { name = "llm-tracekit-langchain", marker = "extra == 'langchain'", editable = "instrumentations/langchain" },
     { name = "llm-tracekit-litellm", marker = "extra == 'litellm'", editable = "instrumentations/litellm" },
@@ -1634,45 +1673,6 @@ dev = [
     { name = "pytest-asyncio", specifier = ">=1.0.0" },
     { name = "pytest-vcr", specifier = ">=1.0.2" },
     { name = "pyyaml", specifier = ">=6.0.2" },
-    { name = "ruff", specifier = ">=0.9.7" },
-]
-
-[[package]]
-name = "llm-tracekit-guardrails"
-version = "1.0.0"
-source = { editable = "guardrails" }
-dependencies = [
-    { name = "httpx" },
-    { name = "llm-tracekit-core" },
-    { name = "pydantic" },
-    { name = "pydantic-settings" },
-    { name = "tenacity" },
-]
-
-[package.dev-dependencies]
-dev = [
-    { name = "assertpy" },
-    { name = "mypy" },
-    { name = "pytest" },
-    { name = "pytest-asyncio" },
-    { name = "ruff" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "httpx", specifier = ">=0.27.0" },
-    { name = "llm-tracekit-core", editable = "core" },
-    { name = "pydantic", specifier = ">=2.10.0" },
-    { name = "pydantic-settings", specifier = ">=2.0.0" },
-    { name = "tenacity", specifier = ">=8.0.0" },
-]
-
-[package.metadata.requires-dev]
-dev = [
-    { name = "assertpy", specifier = ">=1.1" },
-    { name = "mypy", specifier = ">=1.14.1" },
-    { name = "pytest", specifier = ">=8.3.4" },
-    { name = "pytest-asyncio", specifier = ">=1.0.0" },
     { name = "ruff", specifier = ">=0.9.7" },
 ]
 
@@ -1851,15 +1851,13 @@ source = { virtual = "." }
 
 [package.optional-dependencies]
 ci-core = [
+    { name = "cx-guardrails" },
     { name = "llm-tracekit-bedrock" },
     { name = "llm-tracekit-gemini" },
-    { name = "llm-tracekit-guardrails" },
     { name = "llm-tracekit-langchain" },
+    { name = "llm-tracekit-litellm" },
     { name = "llm-tracekit-openai" },
     { name = "llm-tracekit-openai-agents" },
-]
-litellm = [
-    { name = "llm-tracekit-litellm" },
 ]
 
 [package.dev-dependencies]
@@ -1880,15 +1878,15 @@ dev = [
 
 [package.metadata]
 requires-dist = [
+    { name = "cx-guardrails", marker = "extra == 'ci-core'", editable = "guardrails" },
     { name = "llm-tracekit-bedrock", marker = "extra == 'ci-core'", editable = "instrumentations/bedrock" },
     { name = "llm-tracekit-gemini", marker = "extra == 'ci-core'", editable = "instrumentations/gemini" },
-    { name = "llm-tracekit-guardrails", marker = "extra == 'ci-core'", editable = "guardrails" },
     { name = "llm-tracekit-langchain", marker = "extra == 'ci-core'", editable = "instrumentations/langchain" },
-    { name = "llm-tracekit-litellm", marker = "extra == 'litellm'", editable = "instrumentations/litellm" },
+    { name = "llm-tracekit-litellm", marker = "extra == 'ci-core'", editable = "instrumentations/litellm" },
     { name = "llm-tracekit-openai", marker = "extra == 'ci-core'", editable = "instrumentations/openai" },
     { name = "llm-tracekit-openai-agents", marker = "extra == 'ci-core'", editable = "instrumentations/openai_agents" },
 ]
-provides-extras = ["ci-core", "litellm"]
+provides-extras = ["ci-core"]
 
 [package.metadata.requires-dev]
 dev = [

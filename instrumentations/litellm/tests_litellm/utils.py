@@ -19,7 +19,7 @@ from opentelemetry.semconv._incubating.attributes import (
     gen_ai_attributes as GenAIAttributes,
 )
 
-import llm_tracekit_core._extended_gen_ai_attributes as ExtendedGenAIAttributes
+import llm_tracekit.core._extended_gen_ai_attributes as ExtendedGenAIAttributes
 
 
 def assert_attributes(
@@ -32,6 +32,7 @@ def assert_attributes(
     input_tokens: int | None = None,
     output_tokens: int | None = None
 ):
+    assert span.attributes is not None
     assert system == span.attributes[GenAIAttributes.GEN_AI_SYSTEM]
 
     assert operation_name == span.attributes[GenAIAttributes.GEN_AI_OPERATION_NAME]
@@ -55,6 +56,7 @@ def find_last_response_span(spans: list[ReadableSpan]) -> ReadableSpan:
     for span in reversed(spans):
         if span.name == "litellm_request":
             return span
+    raise ValueError("No litellm_request span found")
 
 
 def assert_messages_in_span(

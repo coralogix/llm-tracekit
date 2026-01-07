@@ -17,6 +17,7 @@ jobs:
           - llm-tracekit-gemini
           - llm-tracekit-litellm
           - llm-tracekit-openai-agents
+          - llm-tracekit-langchain
           - llm-tracekit-guardrails
     steps:
       - uses: actions/checkout@v4

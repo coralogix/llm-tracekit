@@ -1,11 +1,11 @@
 import pytest
-from opentelemetry.semconv._incubating.attributes import (
+from opentelemetry.semconv._incubating.attributes import (  # type: ignore[attr-defined]
     gen_ai_attributes as GenAIAttributes,
 )
-from opentelemetry.semconv._incubating.attributes import (
+from opentelemetry.semconv._incubating.attributes import (  # type: ignore[attr-defined]
     server_attributes as ServerAttributes,
 )
-from opentelemetry.semconv._incubating.metrics import gen_ai_metrics
+from opentelemetry.semconv._incubating.metrics import gen_ai_metrics  # type: ignore[attr-defined]
 
 _DURATION_BUCKETS = (
     0.01,

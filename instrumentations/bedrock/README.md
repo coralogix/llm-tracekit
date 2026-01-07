@@ -8,18 +8,11 @@ OpenTelemetry instrumentation for [AWS Bedrock](https://aws.amazon.com/bedrock/)
 pip install llm-tracekit-bedrock
 ```
 
-Or via the meta-package:
-
-```bash
-pip install llm-tracekit[bedrock]
-```
-
 ## Usage
 
 ```python
 import boto3
-from llm_tracekit_core import setup_export_to_coralogix
-from llm_tracekit_bedrock import BedrockInstrumentor
+from llm_tracekit.bedrock import BedrockInstrumentor, setup_export_to_coralogix
 
 # Configure tracing
 setup_export_to_coralogix(
