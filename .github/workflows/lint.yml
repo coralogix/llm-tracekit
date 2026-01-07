@@ -22,7 +22,7 @@ jobs:
 
       - name: Run Ruff
         run: |
-          uv run --group=dev --locked --all-extras ruff check guardrails instrumentations core
+          uv run --group=dev --locked --all-extras ruff check .
         shell: bash
 
       - name: Run Mypy
