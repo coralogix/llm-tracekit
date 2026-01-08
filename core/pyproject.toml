@@ -1,0 +1,51 @@
+[project]
+name = "llm-tracekit-core"
+version = "1.0.0"
+description = "Core utilities for LLM Tracekit and Coralogix Guardrails SDK."
+readme = "../README.md"
+authors = [
+    { name="Coralogix Ltd.", email="info@coralogix.com" },
+]
+license = "Apache-2.0"
+license-files = ["../LICENSE"]
+requires-python = ">=3.10,<3.14"
+dependencies = [
+    "opentelemetry-api>=1.32.1",
+    "opentelemetry-exporter-otlp>=1.32.1",
+    "opentelemetry-sdk>=1.32.1",
+    "opentelemetry-semantic-conventions>=0.53b1",
+    "pydantic>=2.10.0",
+]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+]
+
+[project.urls]
+homepage = "https://coralogix.com"
+repository = "https://github.com/coralogix/llm-tracekit.git"
+
+[dependency-groups]
+dev = [
+    "mypy>=1.14.1",
+    "pytest>=8.3.4",
+    "ruff>=0.9.7",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/llm_tracekit"]
+
+[tool.hatch.build.targets.sdist]
+only-include = [
+    "src/llm_tracekit",
+]
