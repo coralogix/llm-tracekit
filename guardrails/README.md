@@ -1,6 +1,6 @@
 # Coralogix Guardrails
 
-Python SDK for protecting your LLM applications with content moderation, PII detection, and prompt injection detection.
+Python SDK for protecting your LLM applications with content evaluation.
 
 ## Installation
 

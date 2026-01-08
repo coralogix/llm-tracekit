@@ -29,7 +29,7 @@ def assert_attributes(
     response_model: str | None = None,
     response_id: str | None = None,
     input_tokens: int | None = None,
-    output_tokens: int | None = None
+    output_tokens: int | None = None,
 ):
     assert span.attributes is not None
     assert system == span.attributes[GenAIAttributes.GEN_AI_SYSTEM]
@@ -40,15 +40,19 @@ def assert_attributes(
 
     if response_model is not None:
         assert response_model == span.attributes[GenAIAttributes.GEN_AI_RESPONSE_MODEL]
-        
+
     if response_id is not None:
-        assert response_id == span.attributes[GenAIAttributes.GEN_AI_RESPONSE_ID]   
+        assert response_id == span.attributes[GenAIAttributes.GEN_AI_RESPONSE_ID]
 
     if input_tokens is not None:
-        assert input_tokens == span.attributes[GenAIAttributes.GEN_AI_USAGE_INPUT_TOKENS]   
+        assert (
+            input_tokens == span.attributes[GenAIAttributes.GEN_AI_USAGE_INPUT_TOKENS]
+        )
 
     if output_tokens is not None:
-        assert output_tokens == span.attributes[GenAIAttributes.GEN_AI_USAGE_OUTPUT_TOKENS]
+        assert (
+            output_tokens == span.attributes[GenAIAttributes.GEN_AI_USAGE_OUTPUT_TOKENS]
+        )
 
 
 def assert_messages_in_span(

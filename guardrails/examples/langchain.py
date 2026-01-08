@@ -18,7 +18,9 @@ LangChainInstrumentor().instrument()
 
 TEST_PII = "your email is example@example.com"
 
-guardrails = Guardrails()
+guardrails = Guardrails(
+    application_name="my_application", subsystem_name="my_subsystem"
+)
 llm = ChatOpenAI(model="gpt-4o-mini")
 
 

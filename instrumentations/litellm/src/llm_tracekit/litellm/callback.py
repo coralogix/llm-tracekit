@@ -33,8 +33,9 @@ from llm_tracekit.core import (
     generate_choice_attributes,
     generate_message_attributes,
     generate_request_attributes,
-    generate_response_attributes
+    generate_response_attributes,
 )
+
 
 class LitellmCallback(OpenTelemetry):
     def __init__(
@@ -55,14 +56,16 @@ class LitellmCallback(OpenTelemetry):
 
             tool_calls_data = prompt.get("tool_calls")
             tool_calls_list = None
-            
+
             if tool_calls_data:
                 tool_calls_list = [
                     ToolCall(
                         id=tool_call.get("id"),
                         type=tool_call.get("type"),
                         function_name=tool_call.get("function", {}).get("name"),
-                        function_arguments=tool_call.get("function", {}).get("arguments"),
+                        function_arguments=tool_call.get("function", {}).get(
+                            "arguments"
+                        ),
                     )
                     for tool_call in tool_calls_data
                 ]
@@ -75,7 +78,7 @@ class LitellmCallback(OpenTelemetry):
             )
             messages.append(message)
         return messages
-    
+
     def parse_choices(self, raw_choices: list[dict[str, Any]]) -> list[Choice]:
         choices: list[Choice] = []
         for choice_dict in raw_choices:
@@ -90,7 +93,9 @@ class LitellmCallback(OpenTelemetry):
                         id=tool_call.get("id"),
                         type=tool_call.get("type"),
                         function_name=tool_call.get("function", {}).get("name"),
-                        function_arguments=tool_call.get("function", {}).get("arguments"),
+                        function_arguments=tool_call.get("function", {}).get(
+                            "arguments"
+                        ),
                     )
                     for tool_call in tool_calls
                 ]
@@ -133,7 +138,9 @@ class LitellmCallback(OpenTelemetry):
                     model=response_obj.get("model"),
                     id=response_obj.get("id"),
                     usage_input_tokens=response_obj.get("usage").get("prompt_tokens"),
-                    usage_output_tokens=response_obj.get("usage").get("completion_tokens")
+                    usage_output_tokens=response_obj.get("usage").get(
+                        "completion_tokens"
+                    ),
                 )
                 if "choices" in response_obj:
                     raw_choices = response_obj.get("choices")
@@ -142,23 +149,21 @@ class LitellmCallback(OpenTelemetry):
             attributes = {
                 **generate_base_attributes(
                     system=litellm_params.get("custom_llm_provider", "Unknown"),
-                    operation=GenAIAttributes.GenAiOperationNameValues.CHAT
+                    operation=GenAIAttributes.GenAiOperationNameValues.CHAT,
                 ),
                 **generate_request_attributes(
                     model=kwargs.get("model"),
                     temperature=optional_params.get("temperature"),
                     top_p=optional_params.get("top_p"),
-                    max_tokens=optional_params.get("max_tokens")
+                    max_tokens=optional_params.get("max_tokens"),
                 ),
                 **generate_message_attributes(
-                    messages=messages,
-                    capture_content=self.capture_content
+                    messages=messages, capture_content=self.capture_content
                 ),
                 **generate_choice_attributes(
-                    choices=choices,
-                    capture_content=self.capture_content
+                    choices=choices, capture_content=self.capture_content
                 ),
-                **response_attributes
+                **response_attributes,
             }
 
             for key, value in attributes.items():
@@ -168,6 +173,6 @@ class LitellmCallback(OpenTelemetry):
                         key=key,
                         value=value,
                     )
-        
+
         except Exception:
             pass

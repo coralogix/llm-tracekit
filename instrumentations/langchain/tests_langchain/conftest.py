@@ -133,13 +133,13 @@ def handle_response(response):
     headers["openai-organization"] = "test_openai_org_id"
     headers["openai-project"] = "test_openai_project"
     headers["Set-Cookie"] = "redacted_set_cookie"
-    if 'Content-Encoding' in headers and 'br' in headers['Content-Encoding']:
-        body = response.get('body', {}).get('string')
+    if "Content-Encoding" in headers and "br" in headers["Content-Encoding"]:
+        body = response.get("body", {}).get("string")
         if body and isinstance(body, bytes):
             try:
                 decoded_body = brotli.decompress(body)
-                response['body']['string'] = decoded_body
-                del headers['Content-Encoding']
+                response["body"]["string"] = decoded_body
+                del headers["Content-Encoding"]
 
             except brotli.error:
                 pass
@@ -213,4 +213,3 @@ def instrument_langchain(tracer_provider, meter_provider):
     os.environ.pop("OTEL_EXPORTER_OTLP_PROTOCOL", None)
     os.environ.pop("OTEL_EXPORTER", None)
     instrumentor.uninstrument()
-

@@ -30,4 +30,3 @@ def attribute_generator(
         return remove_attributes_with_null_values(attributes)
 
     return wrapper
-

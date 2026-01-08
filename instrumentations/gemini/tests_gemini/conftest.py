@@ -122,10 +122,10 @@ def gemini_env_vars():
 
 
 def handle_request(request):
-    if 'cookie' in request.headers:
-        request.headers['cookie'] = 'redacted_cookie'
-    if 'x-goog-api-key' in request.headers:
-        request.headers['x-goog-api-key'] = 'redacted_x_goog_api_key'
+    if "cookie" in request.headers:
+        request.headers["cookie"] = "redacted_cookie"
+    if "x-goog-api-key" in request.headers:
+        request.headers["x-goog-api-key"] = "redacted_x_goog_api_key"
     return request
 
 
@@ -133,8 +133,8 @@ def handle_response(response):
     """
     Remove sensitive headers
     """
-    if 'Set-Cookie' in response['headers']:
-        response['headers']['Set-Cookie'] = ['redacted_set_cookie']
+    if "Set-Cookie" in response["headers"]:
+        response["headers"]["Set-Cookie"] = ["redacted_set_cookie"]
     return response
 
 
@@ -150,10 +150,10 @@ def vcr_config():
             "x-stainless-async",
             "x-stainless-raw-response",
             "x-stainless-read-timeout",
-            'x-stainless-arch',
-            'x-stainless-os',
-            'x-stainless-package-version',
-            'x-stainless-runtime-version',
+            "x-stainless-arch",
+            "x-stainless-os",
+            "x-stainless-package-version",
+            "x-stainless-runtime-version",
             "Set-Cookie",
         ],
         "decode_compressed_response": True,
@@ -161,12 +161,12 @@ def vcr_config():
         "before_record_response": handle_response,
     }
 
+
 @pytest.fixture(scope="function")
 def instrument(tracer_provider, meter_provider):
     os.environ.update({OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT: "True"})
     os.environ.update({"OTEL_EXPORTER_OTLP_PROTOCOL": "in_memory"})
     os.environ.update({"OTEL_EXPORTER": "in_memory"})
-    
 
     instrumentor = GeminiInstrumentor()
     instrumentor.instrument(

@@ -19,4 +19,3 @@ from llm_tracekit.core import (
     enable_capture_content as enable_capture_content,
     OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT as OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT,
 )
-

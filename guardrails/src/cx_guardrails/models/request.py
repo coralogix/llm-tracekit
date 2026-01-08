@@ -49,4 +49,3 @@ class GuardrailRequest(BaseModel):
     guardrails: list[GuardrailConfigType]
     target: GuardrailsTarget
     timeout: int
-

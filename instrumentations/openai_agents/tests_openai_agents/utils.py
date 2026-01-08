@@ -20,11 +20,12 @@ from opentelemetry.semconv._incubating.attributes import (
 
 import llm_tracekit.core._extended_gen_ai_attributes as ExtendedGenAIAttributes
 
+
 def assert_attributes(
     span: ReadableSpan,
     response_model: str | None = None,
     agent_name: str | None = None,
-    operation_name = "chat"
+    operation_name="chat",
 ):
     assert span.attributes is not None
     assert operation_name == span.attributes[GenAIAttributes.GEN_AI_OPERATION_NAME]

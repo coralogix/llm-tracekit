@@ -25,9 +25,7 @@ from opentelemetry.trace import get_tracer
 
 from llm_tracekit.core import is_content_enabled
 from llm_tracekit.openai_agents.package import _instruments
-from llm_tracekit.openai_agents.tracing_processor import (
-    OpenAIAgentsTracingProcessor
-)
+from llm_tracekit.openai_agents.tracing_processor import OpenAIAgentsTracingProcessor
 
 
 class OpenAIAgentsInstrumentor(BaseInstrumentor):
@@ -48,13 +46,11 @@ class OpenAIAgentsInstrumentor(BaseInstrumentor):
             schema_url=Schemas.V1_28_0.value,
         )
         self._agent_tracer = OpenAIAgentsTracingProcessor(
-            tracer=tracer,
-            capture_content=is_content_enabled()
+            tracer=tracer, capture_content=is_content_enabled()
         )
         if not self._processor_added:
             add_trace_processor(self._agent_tracer)
             self._processor_added = True
-        
+
     def _uninstrument(self, **kwargs):
         self._agent_tracer.disabled = True
-

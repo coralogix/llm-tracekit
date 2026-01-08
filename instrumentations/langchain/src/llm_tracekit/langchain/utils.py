@@ -121,7 +121,9 @@ def _parse_tool_calls(message: BaseMessage) -> list[ToolCall] | None:
             )
         else:
             function = getattr(tool_call, "function", None)
-            function_name = _safe_getattr(function, "name") or getattr(tool_call, "name", None)
+            function_name = _safe_getattr(function, "name") or getattr(
+                tool_call, "name", None
+            )
             function_arguments = _safe_getattr(function, "arguments")
             if function_arguments is None:
                 function_arguments = getattr(tool_call, "args", None)
@@ -232,4 +234,3 @@ def _get_message_role(message: BaseMessage) -> str | None:
 
 def _safe_getattr(obj: Any, name: str) -> Any:
     return getattr(obj, name, None)
-

@@ -148,9 +148,7 @@ class TestGuardrailsGuardPrompt:
             with pytest.raises(GuardrailsTriggered) as exc_info:
                 async with guardrails_client.guarded_session():
                     await guardrails_client.guard_prompt(
-                        guardrails=[
-                            PII(categories=[PIICategory.EMAIL_ADDRESS])
-                        ],
+                        guardrails=[PII(categories=[PIICategory.EMAIL_ADDRESS])],
                         prompt="My email is test@example.com",
                     )
 

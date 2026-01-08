@@ -12,7 +12,9 @@ from cx_guardrails import (
 )
 
 setup_export_to_coralogix(service_name="guardrails-guard-example")
-guardrails = Guardrails()
+guardrails = Guardrails(
+    application_name="my_application", subsystem_name="my_subsystem"
+)
 
 
 async def main():

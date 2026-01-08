@@ -19,8 +19,8 @@ from llm_tracekit.core import (
     generate_choice_attributes,
     generate_message_attributes,
     generate_request_attributes,
-    generate_response_attributes
-    )
+    generate_response_attributes,
+)
 
 import json
 from collections import defaultdict
@@ -70,10 +70,9 @@ def _parse_claude_message(
         for block in content:
             content_blocks_by_type[block.get("type")].append(block)
 
-
         # We follow the same logic the OTEL implementation uses:
         #  * For assistant messages (text/tool calls) - return a single message
-        #  * for user messages (text / tool call results) - return a message for each tool 
+        #  * for user messages (text / tool call results) - return a message for each tool
         #    call result, and another message for text
         messages = []
         if role == "assistant":
@@ -94,7 +93,7 @@ def _parse_claude_message(
                             function_arguments=arguments,
                         )
                     )
-            
+
             if "text" in content_blocks_by_type:
                 text_parts = [
                     block["text"]

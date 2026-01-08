@@ -51,7 +51,9 @@ def generate_content_wrapper(
     instruments: Instruments,
     capture_content: bool,
 ):
-    config = _WrapperConfig(tracer=tracer, instruments=instruments, capture_content=capture_content)
+    config = _WrapperConfig(
+        tracer=tracer, instruments=instruments, capture_content=capture_content
+    )
 
     def traced_method(wrapped, instance, args, kwargs):
         model = _get_argument(args, kwargs, name="model", position=0)
@@ -66,7 +68,7 @@ def generate_content_wrapper(
             config=config_payload,
             capture_content=config.capture_content,
         )
-    
+
         span_attributes = dict(request_details.span_attributes)
         with config.tracer.start_as_current_span(
             name=request_details.span_name,
@@ -74,7 +76,9 @@ def generate_content_wrapper(
             attributes=span_attributes,
             end_on_exit=False,
         ) as span:
-            operation_state = _prepare_operation_state(span, request_details, config.capture_content)
+            operation_state = _prepare_operation_state(
+                span, request_details, config.capture_content
+            )
 
             try:
                 result = wrapped(*args, **kwargs)
@@ -82,10 +86,14 @@ def generate_content_wrapper(
                     response=result,
                     capture_content=config.capture_content,
                 )
-                operation_state.finish_reasons = operation_state.response_details.finish_reasons
+                operation_state.finish_reasons = (
+                    operation_state.response_details.finish_reasons
+                )
 
                 if span.is_recording():
-                    span.set_attributes(operation_state.response_details.span_attributes)
+                    span.set_attributes(
+                        operation_state.response_details.span_attributes
+                    )
 
                 span.end()
                 operation_state.mark_span_finished()
@@ -104,7 +112,9 @@ def generate_content_stream_wrapper(
     instruments: Instruments,
     capture_content: bool,
 ):
-    config = _WrapperConfig(tracer=tracer, instruments=instruments, capture_content=capture_content)
+    config = _WrapperConfig(
+        tracer=tracer, instruments=instruments, capture_content=capture_content
+    )
 
     def traced_method(wrapped, instance, args, kwargs):
         model = _get_argument(args, kwargs, name="model", position=0)
@@ -119,7 +129,7 @@ def generate_content_stream_wrapper(
             config=config_payload,
             capture_content=config.capture_content,
         )
-        
+
         span_attributes = dict(request_details.span_attributes)
 
         span = config.tracer.start_span(
@@ -127,7 +137,9 @@ def generate_content_stream_wrapper(
             kind=SpanKind.CLIENT,
             attributes=span_attributes,
         )
-        operation_state = _prepare_operation_state(span, request_details, config.capture_content)
+        operation_state = _prepare_operation_state(
+            span, request_details, config.capture_content
+        )
 
         try:
             stream = wrapped(*args, **kwargs)
@@ -149,10 +161,11 @@ def async_generate_content_wrapper(
     instruments: Instruments,
     capture_content: bool,
 ):
-    config = _WrapperConfig(tracer=tracer, instruments=instruments, capture_content=capture_content)
+    config = _WrapperConfig(
+        tracer=tracer, instruments=instruments, capture_content=capture_content
+    )
 
     async def traced_method(wrapped, instance, args, kwargs):
-        
         model = _get_argument(args, kwargs, name="model", position=0)
         contents = _get_argument(args, kwargs, name="contents", position=1)
         system_instruction = _get_argument(args, kwargs, name="system_instruction")
@@ -165,7 +178,7 @@ def async_generate_content_wrapper(
             config=config_payload,
             capture_content=config.capture_content,
         )
-        
+
         span_attributes = dict(request_details.span_attributes)
 
         span = config.tracer.start_span(
@@ -173,7 +186,9 @@ def async_generate_content_wrapper(
             kind=SpanKind.CLIENT,
             attributes=span_attributes,
         )
-        operation_state = _prepare_operation_state(span, request_details, config.capture_content)
+        operation_state = _prepare_operation_state(
+            span, request_details, config.capture_content
+        )
 
         try:
             result = await wrapped(*args, **kwargs)
@@ -181,7 +196,9 @@ def async_generate_content_wrapper(
                 response=result,
                 capture_content=config.capture_content,
             )
-            operation_state.finish_reasons = operation_state.response_details.finish_reasons
+            operation_state.finish_reasons = (
+                operation_state.response_details.finish_reasons
+            )
 
             if span.is_recording():
                 span.set_attributes(operation_state.response_details.span_attributes)
@@ -203,7 +220,9 @@ def async_generate_content_stream_wrapper(
     instruments: Instruments,
     capture_content: bool,
 ):
-    config = _WrapperConfig(tracer=tracer, instruments=instruments, capture_content=capture_content)
+    config = _WrapperConfig(
+        tracer=tracer, instruments=instruments, capture_content=capture_content
+    )
 
     async def traced_method(wrapped, instance, args, kwargs):
         model = _get_argument(args, kwargs, name="model", position=0)
@@ -218,7 +237,7 @@ def async_generate_content_stream_wrapper(
             config=config_payload,
             capture_content=config.capture_content,
         )
-        
+
         span_attributes = dict(request_details.span_attributes)
 
         span = config.tracer.start_span(
@@ -226,7 +245,9 @@ def async_generate_content_stream_wrapper(
             kind=SpanKind.CLIENT,
             attributes=span_attributes,
         )
-        operation_state = _prepare_operation_state(span, request_details, config.capture_content)
+        operation_state = _prepare_operation_state(
+            span, request_details, config.capture_content
+        )
 
         try:
             stream = await wrapped(*args, **kwargs)
@@ -414,7 +435,9 @@ def _handle_exception(operation_state: GeminiOperationState, error: Exception) -
     operation_state.mark_span_finished()
 
 
-def _record_metrics(operation_state: GeminiOperationState, instruments: Instruments) -> None:
+def _record_metrics(
+    operation_state: GeminiOperationState, instruments: Instruments
+) -> None:
     if operation_state.metrics_recorded:
         return
 
@@ -436,7 +459,9 @@ def _record_metrics(operation_state: GeminiOperationState, instruments: Instrume
 
     response_details = operation_state.response_details
     if response_details is not None and response_details.model is not None:
-        common_attributes[GenAIAttributes.GEN_AI_RESPONSE_MODEL] = response_details.model
+        common_attributes[GenAIAttributes.GEN_AI_RESPONSE_MODEL] = (
+            response_details.model
+        )
 
     if operation_state.error_type is not None:
         common_attributes["error.type"] = operation_state.error_type
@@ -450,9 +475,9 @@ def _record_metrics(operation_state: GeminiOperationState, instruments: Instrume
         usage = response_details.usage
         if usage.prompt_tokens is not None:
             input_attributes = dict(common_attributes)
-            input_attributes[
-                GenAIAttributes.GEN_AI_TOKEN_TYPE
-            ] = GenAIAttributes.GenAiTokenTypeValues.INPUT.value
+            input_attributes[GenAIAttributes.GEN_AI_TOKEN_TYPE] = (
+                GenAIAttributes.GenAiTokenTypeValues.INPUT.value
+            )
             instruments.token_usage_histogram.record(
                 usage.prompt_tokens,
                 attributes=input_attributes,
@@ -460,9 +485,9 @@ def _record_metrics(operation_state: GeminiOperationState, instruments: Instrume
 
         if usage.candidates_tokens is not None:
             completion_attributes = dict(common_attributes)
-            completion_attributes[
-                GenAIAttributes.GEN_AI_TOKEN_TYPE
-            ] = GenAIAttributes.GenAiTokenTypeValues.COMPLETION.value
+            completion_attributes[GenAIAttributes.GEN_AI_TOKEN_TYPE] = (
+                GenAIAttributes.GenAiTokenTypeValues.COMPLETION.value
+            )
             instruments.token_usage_histogram.record(
                 usage.candidates_tokens,
                 attributes=completion_attributes,

@@ -77,7 +77,9 @@ class LangChainInstrumentor(BaseInstrumentor):
 
 
 class _BaseCallbackManagerInitWrapper:
-    def __init__(self, handler_factory: Callable[[], LangChainCallbackHandler | None]) -> None:
+    def __init__(
+        self, handler_factory: Callable[[], LangChainCallbackHandler | None]
+    ) -> None:
         self._handler_factory = handler_factory
 
     def __call__(
@@ -98,4 +100,3 @@ class _BaseCallbackManagerInitWrapper:
                 return
 
         instance.add_handler(handler, inherit=True)  # type: ignore[attr-defined]
-

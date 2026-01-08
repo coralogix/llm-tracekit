@@ -2,7 +2,6 @@ from typing import Any
 
 from llm_tracekit.core import attribute_generator
 
-from .models._models import GuardrailType
 from .models.response import GuardrailsResponse
 from .span_attributes import (
     NAME,

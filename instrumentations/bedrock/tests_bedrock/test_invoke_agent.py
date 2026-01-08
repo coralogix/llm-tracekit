@@ -72,9 +72,8 @@ def _run_and_check_invoke_agent(
                 sub_trace = trace_data[key]
                 model_invocation_output = sub_trace.get("modelInvocationOutput", {})
 
-                usage_data = (
-                    model_invocation_output.get("metadata", {})
-                    .get("usage", {})
+                usage_data = model_invocation_output.get("metadata", {}).get(
+                    "usage", {}
                 )
                 usage_input_tokens += usage_data.get("inputTokens", 0)
                 usage_output_tokens += usage_data.get("outputTokens", 0)
@@ -95,19 +94,18 @@ def _run_and_check_invoke_agent(
                 if max_tokens is None:
                     max_tokens = inference_config.get("maximumLength")
 
-                raw_response_dict = model_invocation_output.get('rawResponse', {})
+                raw_response_dict = model_invocation_output.get("rawResponse", {})
                 if raw_response_dict:
                     try:
-                        content_string = raw_response_dict.get('content')
+                        content_string = raw_response_dict.get("content")
                         if isinstance(content_string, str):
                             content_json = json.loads(content_string)
-                            stop_reason = content_json.get('stop_reason')
+                            stop_reason = content_json.get("stop_reason")
                             if stop_reason is not None:
                                 if stop_reason not in expected_finish_reasons:
                                     expected_finish_reasons.append(stop_reason)
                     except (json.JSONDecodeError, TypeError, AttributeError):
                         pass
-
 
     spans = span_exporter.get_finished_spans()
     assert len(spans) == 1
@@ -134,7 +132,9 @@ def _run_and_check_invoke_agent(
     )
 
     expected_prompts = [{"role": "user", "content": input_text}]
-    expected_completions = [{"message": {"role": "assistant", "content": response_text}}]
+    expected_completions = [
+        {"message": {"role": "assistant", "content": response_text}}
+    ]
 
     assert_messages_in_span(
         span=span,

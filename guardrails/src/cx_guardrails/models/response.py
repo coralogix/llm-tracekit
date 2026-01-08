@@ -34,4 +34,3 @@ GuardrailsResponseType = PIIResult | PromptInjectionResult
 
 class GuardrailsResponse(BaseModel):
     results: list[GuardrailsResponseType] = Field(default_factory=list)
-

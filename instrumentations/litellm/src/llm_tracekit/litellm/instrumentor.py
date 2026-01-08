@@ -26,6 +26,7 @@ from llm_tracekit.litellm.callback import LitellmCallback
 import litellm
 from litellm.integrations.opentelemetry import OpenTelemetryConfig as LiteLLMConfig
 
+
 class LiteLLMInstrumentor(BaseInstrumentor):
     def __init__(
         self,
@@ -39,14 +40,14 @@ class LiteLLMInstrumentor(BaseInstrumentor):
             coralogix_token=coralogix_token,
             coralogix_endpoint=coralogix_endpoint,
             application_name=application_name,
-            subsystem_name=subsystem_name
+            subsystem_name=subsystem_name,
         )
-        
+
         if otel_config.headers is not None and otel_config.endpoint is not None:
             config: LiteLLMConfig | None = LiteLLMConfig(
                 exporter="grpc",
                 endpoint=otel_config.endpoint,
-                headers=otel_config.headers # type: ignore
+                headers=otel_config.headers,  # type: ignore
             )
         else:
             config = None

@@ -87,18 +87,24 @@ class LangChainCallbackHandler(BaseCallbackHandler):  # type: ignore[misc]
         if request_model is None:
             return None
 
-        prompt_history = build_prompt_history(
-            flatten_message_batches(messages)
-        )
+        prompt_history = build_prompt_history(flatten_message_batches(messages))
 
         request_attributes = generate_request_attributes(
             model=request_model,
-            temperature=_get_value(invocation_params, metadata, "temperature", "ls_temperature"),
+            temperature=_get_value(
+                invocation_params, metadata, "temperature", "ls_temperature"
+            ),
             top_p=_get_value(invocation_params, metadata, "top_p"),
             top_k=_get_value(invocation_params, metadata, "top_k"),
-            max_tokens=_get_value(invocation_params, metadata, "max_tokens", "ls_max_tokens"),
-            presence_penalty=_get_value(invocation_params, metadata, "presence_penalty"),
-            frequency_penalty=_get_value(invocation_params, metadata, "frequency_penalty"),
+            max_tokens=_get_value(
+                invocation_params, metadata, "max_tokens", "ls_max_tokens"
+            ),
+            presence_penalty=_get_value(
+                invocation_params, metadata, "presence_penalty"
+            ),
+            frequency_penalty=_get_value(
+                invocation_params, metadata, "frequency_penalty"
+            ),
         )
 
         span_attributes: dict[str, Any] = {
@@ -109,13 +115,17 @@ class LangChainCallbackHandler(BaseCallbackHandler):  # type: ignore[misc]
             ),
         }
 
-        available_tool_attributes = _generate_available_tools_attributes(invocation_params)
+        available_tool_attributes = _generate_available_tools_attributes(
+            invocation_params
+        )
         if available_tool_attributes:
             span_attributes.update(available_tool_attributes)
 
         stop_sequences = _get_value(invocation_params, metadata, "stop")
         if stop_sequences is not None:
-            span_attributes[GenAIAttributes.GEN_AI_REQUEST_STOP_SEQUENCES] = stop_sequences
+            span_attributes[GenAIAttributes.GEN_AI_REQUEST_STOP_SEQUENCES] = (
+                stop_sequences
+            )
 
         seed = _get_value(invocation_params, metadata, "seed")
         if seed is not None:
@@ -125,7 +135,9 @@ class LangChainCallbackHandler(BaseCallbackHandler):  # type: ignore[misc]
         if provider_attr:
             span_attributes[_PROVIDER_ATTRIBUTE] = provider_attr
 
-        span_name = f"{GenAIAttributes.GenAiOperationNameValues.CHAT.value} {request_model}"
+        span_name = (
+            f"{GenAIAttributes.GenAiOperationNameValues.CHAT.value} {request_model}"
+        )
         self._span_manager.create_chat_span(
             run_id=run_id,
             parent_run_id=parent_run_id,
@@ -240,7 +252,9 @@ class LangChainCallbackHandler(BaseCallbackHandler):  # type: ignore[misc]
         if system_value is not None:
             common_attributes[GenAIAttributes.GEN_AI_SYSTEM] = system_value
         if state.request_model:
-            common_attributes[GenAIAttributes.GEN_AI_REQUEST_MODEL] = state.request_model
+            common_attributes[GenAIAttributes.GEN_AI_REQUEST_MODEL] = (
+                state.request_model
+            )
         if response_model:
             common_attributes[GenAIAttributes.GEN_AI_RESPONSE_MODEL] = response_model
         if error_type:
@@ -327,7 +341,9 @@ def _get_value(
     return None
 
 
-def _generate_available_tools_attributes(invocation_params: dict[str, Any]) -> dict[str, Any]:
+def _generate_available_tools_attributes(
+    invocation_params: dict[str, Any],
+) -> dict[str, Any]:
     tools = invocation_params.get("tools")
     if not isinstance(tools, list):
         return {}
@@ -389,4 +405,3 @@ def _generate_available_tools_attributes(invocation_params: dict[str, Any]) -> d
         ] = serialized_parameters
 
     return attributes
-

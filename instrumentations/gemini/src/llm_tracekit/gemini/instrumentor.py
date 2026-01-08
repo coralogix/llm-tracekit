@@ -71,7 +71,9 @@ class GeminiInstrumentor(BaseInstrumentor):
         wrap_function_wrapper(
             module="google.genai.models",
             name="Models.generate_content_stream",
-            wrapper=generate_content_stream_wrapper(tracer, instruments, capture_content),
+            wrapper=generate_content_stream_wrapper(
+                tracer, instruments, capture_content
+            ),
         )
 
         wrap_function_wrapper(

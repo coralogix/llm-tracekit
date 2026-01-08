@@ -178,7 +178,9 @@ class GeminiStreamState:
         if usage.candidates_tokens is not None:
             self.usage.candidates_tokens = usage.candidates_tokens
 
-        for index, candidate in enumerate(_iter_sequence(_safe_get(chunk, "candidates"))):
+        for index, candidate in enumerate(
+            _iter_sequence(_safe_get(chunk, "candidates"))
+        ):
             buffer = self._get_candidate_buffer(candidate_index=index)
             finish_reason_candidate = _normalize_finish_reason(
                 _safe_get(candidate, "finish_reason")
@@ -225,7 +227,9 @@ class GeminiStreamState:
                 usage_input_tokens=self.usage.prompt_tokens,
                 usage_output_tokens=self.usage.candidates_tokens,
             ),
-            **generate_choice_attributes(choices=choices, capture_content=self.capture_content),
+            **generate_choice_attributes(
+                choices=choices, capture_content=self.capture_content
+            ),
         }
 
         return GeminiResponseDetails(
@@ -356,7 +360,11 @@ def extract_tool_response_from_part(
     if result_value is None and isinstance(response_payload, str):
         result_value = response_payload
 
-    if raw_content_value is None and response_payload is not None and not isinstance(response_payload, str):
+    if (
+        raw_content_value is None
+        and response_payload is not None
+        and not isinstance(response_payload, str)
+    ):
         raw_content_value = _stringify_value(response_payload)
 
     return GeminiToolResponsePart(
@@ -394,18 +402,28 @@ def _config_to_request_attributes(config: Any) -> dict[str, Any]:
     attributes: dict[str, Any] = {}
 
     candidate_count = _safe_get(config, "candidate_count")
-    if candidate_count is not None and hasattr(GenAIAttributes, "GEN_AI_REQUEST_CANDIDATE_COUNT"):
-        attributes[getattr(GenAIAttributes, "GEN_AI_REQUEST_CANDIDATE_COUNT")] = candidate_count
+    if candidate_count is not None and hasattr(
+        GenAIAttributes, "GEN_AI_REQUEST_CANDIDATE_COUNT"
+    ):
+        attributes[getattr(GenAIAttributes, "GEN_AI_REQUEST_CANDIDATE_COUNT")] = (
+            candidate_count
+        )
 
     stop_sequences = _safe_get(config, "stop_sequences")
-    if stop_sequences is not None and hasattr(GenAIAttributes, "GEN_AI_REQUEST_STOP_SEQUENCES"):
+    if stop_sequences is not None and hasattr(
+        GenAIAttributes, "GEN_AI_REQUEST_STOP_SEQUENCES"
+    ):
         attributes[getattr(GenAIAttributes, "GEN_AI_REQUEST_STOP_SEQUENCES")] = list(
             _iter_sequence(stop_sequences)
         )
 
     response_mime_type = _safe_get(config, "response_mime_type")
-    if response_mime_type is not None and hasattr(GenAIAttributes, "GEN_AI_RESPONSE_CONTENT_TYPE"):
-        attributes[getattr(GenAIAttributes, "GEN_AI_RESPONSE_CONTENT_TYPE")] = response_mime_type
+    if response_mime_type is not None and hasattr(
+        GenAIAttributes, "GEN_AI_RESPONSE_CONTENT_TYPE"
+    ):
+        attributes[getattr(GenAIAttributes, "GEN_AI_RESPONSE_CONTENT_TYPE")] = (
+            response_mime_type
+        )
 
     return attributes
 
@@ -442,7 +460,9 @@ def _contents_to_messages(contents: Any) -> list[Message]:
 
             if tool_responses:
                 for response_part in tool_responses:
-                    tool_content_value = response_part.result or response_part.raw_content
+                    tool_content_value = (
+                        response_part.result or response_part.raw_content
+                    )
                     if tool_content_value is None:
                         continue
                     messages.append(
@@ -503,7 +523,9 @@ def _contents_to_messages(contents: Any) -> list[Message]:
                     id=buffer.tool_call_id,
                     type="function",
                     function_name=buffer.function_name,
-                    function_arguments="".join(buffer.arguments) if buffer.arguments else None,
+                    function_arguments="".join(buffer.arguments)
+                    if buffer.arguments
+                    else None,
                 )
                 for buffer in sorted_buffers
             ]
@@ -684,7 +706,9 @@ def _extract_model_name(value: Any) -> str | None:
         model_candidate = _coerce_model_name(response_metadata)
         if model_candidate:
             return model_candidate
-        model_candidate = _coerce_model_name(_safe_get(response_metadata, "model_version"))
+        model_candidate = _coerce_model_name(
+            _safe_get(response_metadata, "model_version")
+        )
         if model_candidate:
             return model_candidate
 
@@ -694,7 +718,9 @@ def _extract_model_name(value: Any) -> str | None:
         if model_candidate:
             return model_candidate
         candidate_metadata = _safe_get(candidate, "metadata")
-        model_candidate = _coerce_model_name(_safe_get(candidate_metadata, "model_version"))
+        model_candidate = _coerce_model_name(
+            _safe_get(candidate_metadata, "model_version")
+        )
         if model_candidate:
             return model_candidate
 

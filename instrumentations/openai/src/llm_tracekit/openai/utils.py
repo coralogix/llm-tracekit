@@ -140,7 +140,7 @@ def choices_to_span_attributes(
         if choice.message:
             role = choice.message.role
             content = choice.message.content
-            tool_calls = parse_tool_calls(choice.message.tool_calls) # type: ignore
+            tool_calls = parse_tool_calls(choice.message.tool_calls)  # type: ignore
 
         parsed_choices.append(
             Choice(
@@ -151,7 +151,9 @@ def choices_to_span_attributes(
             )
         )
 
-    return generate_choice_attributes(choices=parsed_choices, capture_content=capture_content)
+    return generate_choice_attributes(
+        choices=parsed_choices, capture_content=capture_content
+    )
 
 
 def set_span_attributes(span, attributes: dict):
@@ -273,4 +275,3 @@ def get_llm_response_attributes(
         ),
         **choices_to_span_attributes(result.choices, capture_content),
     }
-

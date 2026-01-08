@@ -14,4 +14,3 @@
 
 
 _instruments = ("openai >= 1.26.0", "openai-agents>=0.1.0")
-

@@ -88,7 +88,7 @@ class TestGuardrailRequest:
                 {"role": "assistant", "content": "Hi"},
             ],
             guardrails=[PII()],
-            target=GuardrailsTarget.PROMPT, 
+            target=GuardrailsTarget.PROMPT,
             timeout=10,
         )
 

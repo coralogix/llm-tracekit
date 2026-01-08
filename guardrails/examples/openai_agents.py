@@ -10,14 +10,19 @@ from cx_guardrails import (
     GuardrailsTriggered,
     GuardrailsTarget,
 )
-from llm_tracekit.openai_agents import OpenAIAgentsInstrumentor, setup_export_to_coralogix
+from llm_tracekit.openai_agents import (
+    OpenAIAgentsInstrumentor,
+    setup_export_to_coralogix,
+)
 
 setup_export_to_coralogix(service_name="guardrails-openai-agents-example")
 OpenAIAgentsInstrumentor().instrument()
 
 TEST_PII = "your email is example@example.com"
 
-guardrails = Guardrails()
+guardrails = Guardrails(
+    application_name="my_application", subsystem_name="my_subsystem"
+)
 agent = Agent(name="Assistant", instructions="You are a helpfull assistant")
 
 

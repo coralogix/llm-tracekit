@@ -30,6 +30,7 @@ class ToolCall(BaseModel):
     function_name: str | None = None
     function_arguments: str | None = None
 
+
 @dataclass
 class Message:
     role: str | None = None
@@ -44,6 +45,7 @@ class Choice:
     role: str | None = None
     content: str | None = None
     tool_calls: list[ToolCall] | None = None
+
 
 @attribute_generator
 def generate_base_attributes(

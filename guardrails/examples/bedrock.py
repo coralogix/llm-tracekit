@@ -17,7 +17,9 @@ BedrockInstrumentor().instrument()
 
 TEST_PII = "your email is example@example.com"
 
-guardrails = Guardrails()
+guardrails = Guardrails(
+    application_name="my_application", subsystem_name="my_subsystem"
+)
 bedrock = boto3.client("bedrock-runtime")
 
 

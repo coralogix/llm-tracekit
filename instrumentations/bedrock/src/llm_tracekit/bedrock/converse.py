@@ -36,8 +36,9 @@ from llm_tracekit.core import (
     generate_choice_attributes,
     generate_message_attributes,
     generate_request_attributes,
-    generate_response_attributes
-    )
+    generate_response_attributes,
+)
+
 
 def _combine_tool_call_content_blocks(
     content_blocks: list[dict[str, Any]],
@@ -80,14 +81,14 @@ def _parse_converse_message(
 
     # We follow the same logic the OTEL implementation uses:
     #  * For assistant messages (text/tool calls) - return a single message
-    #  * for user messages (text / tool call results) - return a message for each tool 
+    #  * for user messages (text / tool call results) - return a message for each tool
     #    call result, and another message for text
     messages = []
     if role == "assistant":
         tool_calls = None
         content = None
         if len(text_blocks) > 0:
-            content="".join(text_blocks)
+            content = "".join(text_blocks)
         if len(tool_call_blocks) > 0:
             tool_calls = []
             for tool_call in tool_call_blocks:
@@ -104,19 +105,15 @@ def _parse_converse_message(
                     )
                 )
 
-        messages.append(
-            Message(
-                role=role,
-                tool_calls=tool_calls,
-                content=content
-            )
-        )
+        messages.append(Message(role=role, tool_calls=tool_calls, content=content))
     elif role == "user":
         if len(tool_call_result_blocks) > 0:
             for tool_call_result in tool_call_result_blocks:
                 content = None
                 if "content" in tool_call_result:
-                    content = _combine_tool_call_content_blocks(tool_call_result["content"])
+                    content = _combine_tool_call_content_blocks(
+                        tool_call_result["content"]
+                    )
 
                 messages.append(
                     Message(

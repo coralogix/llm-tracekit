@@ -77,7 +77,6 @@ def assert_attributes_in_span(
     agent_id: str | None = None,
     agent_alias_id: str | None = None,
     foundation_model: str | None = None,
-
 ):
     assert span.name == span_name
     assert span.attributes is not None

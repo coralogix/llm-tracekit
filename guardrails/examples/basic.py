@@ -7,11 +7,13 @@ from cx_guardrails import (
     PromptInjection,
     PIICategory,
     GuardrailsTriggered,
-    setup_export_to_coralogix
+    setup_export_to_coralogix,
 )
 
 setup_export_to_coralogix(service_name="guardrails-basic-example")
-guardrails = Guardrails()
+guardrails = Guardrails(
+    application_name="my_application", subsystem_name="my_subsystem"
+)
 
 
 async def main():

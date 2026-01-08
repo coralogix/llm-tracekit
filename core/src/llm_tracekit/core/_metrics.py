@@ -64,4 +64,3 @@ class Instruments:
             unit="{token}",
             explicit_bucket_boundaries_advisory=GEN_AI_CLIENT_TOKEN_USAGE_BUCKETS,
         )
-

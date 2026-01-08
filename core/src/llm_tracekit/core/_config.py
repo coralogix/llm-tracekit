@@ -43,4 +43,3 @@ def handle_span_exception(span, error):
     if span.is_recording():
         span.set_attribute(ErrorAttributes.ERROR_TYPE, type(error).__qualname__)
     span.end()
-

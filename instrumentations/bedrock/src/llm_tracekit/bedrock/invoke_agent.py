@@ -35,8 +35,8 @@ from llm_tracekit.core import (
     generate_choice_attributes,
     generate_message_attributes,
     generate_request_attributes,
-    generate_response_attributes
-    )
+    generate_response_attributes,
+)
 
 
 @dataclass
@@ -89,18 +89,14 @@ def record_invoke_agent_result_attributes(
     capture_content: bool,
 ):
     try:
-        current_choice = Choice(
-            role="assistant",
-            content=result.content
-        )
+        current_choice = Choice(role="assistant", content=result.content)
 
         final_attributes = {}
 
         if result.prompt_history is not None:
-             final_attributes.update(
+            final_attributes.update(
                 generate_message_attributes(
-                    messages=result.prompt_history,
-                    capture_content=capture_content
+                    messages=result.prompt_history, capture_content=capture_content
                 )
             )
 
@@ -193,13 +189,15 @@ class InvokeAgentStreamWrapper(ObjectProxy):
 
                 if role is None:
                     continue
-                
+
                 content = parsing_utils.parse_content(raw_content)
 
                 if "type=tool_use" in raw_content:
                     tool_call = parsing_utils.parse_tool_use(raw_content)
                     if tool_call is not None:
-                        prompt_history.append(Message(role=role, tool_calls=[tool_call]))
+                        prompt_history.append(
+                            Message(role=role, tool_calls=[tool_call])
+                        )
                         continue
 
                 if "type=tool_result" in raw_content:
@@ -208,7 +206,9 @@ class InvokeAgentStreamWrapper(ObjectProxy):
                         Message(
                             role=role,
                             content=clean_content,
-                            tool_call_id=parsing_utils.parse_tool_result_id(raw_content),
+                            tool_call_id=parsing_utils.parse_tool_result_id(
+                                raw_content
+                            ),
                         )
                     )
                     continue
@@ -228,19 +228,18 @@ class InvokeAgentStreamWrapper(ObjectProxy):
         except Exception:
             self._result.prompt_history = None
 
-
     def _extract_finish_reasons(self, raw_response_dict: dict[str, Any]):
         try:
-            content_string = raw_response_dict.get('content')
+            content_string = raw_response_dict.get("content")
             if isinstance(content_string, str):
                 content_json = json.loads(content_string)
-                stop_reason = content_json.get('stop_reason')
+                stop_reason = content_json.get("stop_reason")
                 if stop_reason is not None:
                     if self._result.finish_reasons is None:
                         self._result.finish_reasons = []
                     if stop_reason not in self._result.finish_reasons:
                         self._result.finish_reasons.append(stop_reason)
-                    
+
         except (json.JSONDecodeError, TypeError, AttributeError):
             pass
 
@@ -248,7 +247,7 @@ class InvokeAgentStreamWrapper(ObjectProxy):
         if "chunk" in event:
             if self._result.content is None:
                 self._result.content = ""
-            
+
             encoded_content = event["chunk"].get("bytes")
             if encoded_content is not None:
                 self._result.content += encoded_content.decode()
@@ -270,28 +269,34 @@ class InvokeAgentStreamWrapper(ObjectProxy):
             model_invocation_input = sub_trace.get("modelInvocationInput", {})
             model_invocation_output = sub_trace.get("modelInvocationOutput", {})
 
-            raw_response_dict = model_invocation_output.get('rawResponse', {})
+            raw_response_dict = model_invocation_output.get("rawResponse", {})
             if raw_response_dict:
                 self._extract_finish_reasons(raw_response_dict)
-                    
+
             usage_data = model_invocation_output.get("metadata", {}).get("usage")
             if usage_data is not None:
                 self._process_usage_data(usage_data)
 
             if self._result.foundation_model is None:
-                self._result.foundation_model = model_invocation_input.get("foundationModel")
+                self._result.foundation_model = model_invocation_input.get(
+                    "foundationModel"
+                )
 
             inference_config = model_invocation_input.get("inferenceConfiguration", {})
-            
+
             if self._result.inference_config_max_tokens is None:
-                self._result.inference_config_max_tokens = inference_config.get("maximumLength")
+                self._result.inference_config_max_tokens = inference_config.get(
+                    "maximumLength"
+                )
 
             if self._result.inference_config_temperature is None:
-                self._result.inference_config_temperature = inference_config.get("temperature")
+                self._result.inference_config_temperature = inference_config.get(
+                    "temperature"
+                )
 
             if self._result.inference_config_top_k is None:
                 self._result.inference_config_top_k = inference_config.get("topK")
-                
+
             if self._result.inference_config_top_p is None:
                 self._result.inference_config_top_p = inference_config.get("topP")
 

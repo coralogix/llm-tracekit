@@ -179,15 +179,15 @@ def handle_recording_filter_agent_uri(request):
     """
     try:
         parsed_uri = urlparse(request.uri)
-        path_components = parsed_uri.path.split('/')
+        path_components = parsed_uri.path.split("/")
 
-        idx_agents = path_components.index('agents')
-        idx_aliases = path_components.index('agentAliases')
+        idx_agents = path_components.index("agents")
+        idx_aliases = path_components.index("agentAliases")
 
         path_components[idx_agents + 1] = "test_agent_id"
         path_components[idx_aliases + 1] = "test_agent_alias_id"
 
-        new_path = '/'.join(path_components)
+        new_path = "/".join(path_components)
 
         new_uri = parsed_uri._replace(path=new_path)
         request.uri = urlunparse(new_uri)

@@ -19,9 +19,7 @@ GEN_AI_OPENAI_REQUEST_USER: Final = "gen_ai.openai.request.user"
 The user of the request.
 """
 
-GEN_AI_REQUEST_TOOLS_TYPE: Final = (
-    "gen_ai.request.tools.{tool_index}.type"
-)
+GEN_AI_REQUEST_TOOLS_TYPE: Final = "gen_ai.request.tools.{tool_index}.type"
 """
 The type of the tool. Expected to be `function`.
 """
