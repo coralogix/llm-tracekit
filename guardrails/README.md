@@ -1,6 +1,6 @@
-# Coralogix Guardrails SDK
+# Coralogix Guardrails
 
-Python SDK for interacting with the Coralogix Guardrails API.
+Python SDK for protecting your LLM applications with content moderation, PII detection, and prompt injection detection.
 
 ## Installation
 
@@ -8,7 +8,7 @@ Python SDK for interacting with the Coralogix Guardrails API.
 pip install cx-guardrails
 ```
 
-## API Overview
+## 🚀 Getting Started
 
 | Method | Use Case | Input |
 |--------|----------|-------|
@@ -16,23 +16,25 @@ pip install cx-guardrails
 | `guard_response()` | Guard LLM output after generation | `response`, `prompt` (optional) |
 | `guard()` | Full control over message history | List of messages |
 
-## Quick Start
+## 🛡️ Available Guardrails
+
+| Guardrail | Description | Usage |
+|-----------|-------------|-------|
+| **PII Detection** | Detects personally identifiable information | `PII()` |
+| **Prompt Injection** | Detects attempts to manipulate LLM behavior | `PromptInjection()` |
+
 
 ```python
 import asyncio
-from cx_guardrails import Guardrails, PII, PromptInjection, PIICategory, GuardrailsTriggered, setup_export_to_coralogix
+from cx_guardrails import Guardrails, PII, PromptInjection, GuardrailsTriggered, setup_export_to_coralogix
 
 setup_export_to_coralogix(service_name="my-service")
 
-guardrails = Guardrails(
-    api_key="your-api-key",
-    cx_endpoint="https://your-domain.coralogix.com",
-)
+guardrails = Guardrails()
 
 async def main():
     async with guardrails.guarded_session():
         try:
-            # Guard user input
             await guardrails.guard_prompt(
                 guardrails=[PII(), PromptInjection()],
                 prompt="User input here",
@@ -40,7 +42,6 @@ async def main():
             
             response = "..."  # Your LLM call here
             
-            # Guard LLM output
             await guardrails.guard_response(
                 guardrails=[PII(), PromptInjection()],
                 response=response,
@@ -52,37 +53,32 @@ async def main():
 asyncio.run(main())
 ```
 
-> **Note**: This SDK is async-only. See [`examples/basic.py`](examples/basic.py) for a complete example.
 
-### Environment Variables
-
-```bash
-export CX_GUARDRAILS_TOKEN="your-api-key"
-export CX_ENDPOINT="https://your-domain.coralogix.com"
-export CX_APPLICATION_NAME="my-app"      # Optional, default: "Unknown"
-export CX_SUBSYSTEM_NAME="my-subsystem"  # Optional, default: "Unknown"
-```
-
-### Timeout Configuration
-
-The default timeout is 10 seconds. Configure it via the `timeout` parameter, in seconds:
+### PII Detection
 
 ```python
-guardrails = Guardrails(
-    api_key="your-api-key",
-    cx_endpoint="https://your-domain.coralogix.com",
-    timeout=2,  # 2 seconds
-)
+from cx_guardrails import PII, PIICategory
+
+PII()  # All categories, Default threshold 0.7
+PII(categories=[PIICategory.EMAIL_ADDRESS, PIICategory.PHONE_NUMBER], threshold=0.8)
 ```
 
-## Guard API
+**Categories:** `email_address`, `phone_number`, `credit_card`, `iban_code`, `us_ssn`
 
-Use `guard()` for full control over messages. Accepts `Message` objects or simple dicts:
+### Prompt Injection Detection
+
+```python
+from cx_guardrails import PromptInjection
+
+PromptInjection()  # Default threshold 0.7
+PromptInjection(threshold=0.8)
+```
+
+## 📖 Using `guard()` for full control
 
 ```python
 from cx_guardrails import GuardrailsTarget
 
-# Using dicts
 messages = [
     {"role": "user", "content": "Hello"},
     {"role": "assistant", "content": "Hi there!"},
@@ -91,39 +87,58 @@ messages = [
 await guardrails.guard([PII()], messages, GuardrailsTarget.RESPONSE)
 ```
 
-See [`examples/guard.py`](examples/guard.py) for more details.
-
-## Guardrail Types
-
-### PII Detection
-
-Detects personally identifiable information:
+### With tool calls
 
 ```python
-from cx_guardrails import PII, PIICategory
+messages = [
+    {"role": "user", "content": "What's the weather in Paris?"},
+    {
+        "role": "assistant",
+        "content": {"tool_calls": [
+            {
+                "id": "call_123",
+                "type": "function",
+                "function": {
+                    "name": "get_weather",
+                    "arguments": '{"location": "Paris"}'
+                }
+            }
+        ],
+        
+    }},
+    {
+        "role": "tool",
+        "tool_call_id": "call_123",
+        "content": "The weather in Paris is 22°C and sunny."
+    },
+    {"role": "assistant", "content": "The weather in Paris is 22°C and sunny."},
+]
 
-PII()  # All categories
-PII(categories=[PIICategory.EMAIL_ADDRESS, PIICategory.PHONE_NUMBER], threshold=0.8)
+await guardrails.guard([PII()], messages, GuardrailsTarget.RESPONSE)
 ```
 
-**Categories:** `email_address`, `phone_number`, `credit_card`, `iban_code`, `us_ssn`
+## ⚙️ Configuration
 
-### Prompt Injection Detection
+### Environment Variables
 
-Detects attempts to manipulate LLM behavior:
+```bash
+export CX_GUARDRAILS_TOKEN="your-api-key"
+export CX_ENDPOINT="https://your-domain.coralogix.com"
+export CX_APPLICATION_NAME="my-app"      # Optional
+export CX_SUBSYSTEM_NAME="my-subsystem"  # Optional
+```
+
+### Client Configuration
 
 ```python
-from cx_guardrails import PromptInjection
-
-PromptInjection()  # Default threshold 0.7
-PromptInjection(threshold=0.8)  # Stricter
+guardrails = Guardrails(
+    api_key="your-api-key",
+    cx_endpoint="https://your-domain.coralogix.com",
+    timeout=2,  # Timeout in seconds (default: 10)
+)
 ```
 
-
-
-
-
-## Error Handling
+## 🚨 Error Handling
 
 ```python
 from cx_guardrails import (
@@ -146,15 +161,19 @@ except GuardrailsAPIResponseError as e:
     print(f"HTTP {e.status_code}")
 ```
 
-## Failure Modes
+## 📚 Examples
 
-| Pattern | Use When | Behavior |
-|---------|----------|----------|
-| **Fail-Closed** | Security-critical | Block on API failure |
-| **Fail-Open** | High-availability | Allow on API failure |
+See the [examples](./examples/) directory for complete working examples:
 
-Set `DISABLE_GUARDRAILS_TRIGGERED_EXCEPTION=true` for fail-open on violations.
+- [Basic usage](./examples/basic.py)
+- [Guard API](./examples/guard.py)
+- [OpenAI integration](./examples/openai_chat.py)
+- [Bedrock integration](./examples/bedrock.py)
+- [Gemini integration](./examples/gemini.py)
+- [LangChain integration](./examples/langchain.py)
+- [LiteLLM integration](./examples/litellm_chat.py)
+- [OpenAI Agents integration](./examples/openai_agents.py)
 
-## License
+## 📜 License
 
-Apache License 2.0
+Apache 2.0 - See [LICENSE](./LICENSE.md) for details.

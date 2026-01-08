@@ -1,22 +1,77 @@
-# LLM Tracekit LangChain
-
-OpenTelemetry instrumentation for [LangChain](https://www.langchain.com/).
+# LLM Tracekit - LangChain
+OpenTelemetry instrumentation for [LangChain](https://www.langchain.com/), designed to simplify LLM application development and production tracing and debugging.
 
 ## Installation
-
 ```bash
-pip install llm-tracekit-langchain
+pip install "llm-tracekit-langchain"
 ```
 
 
 ## Usage
+This section describes how to set up instrumentation for LangChain.
 
+### Setting up tracing
+You can use the `setup_export_to_coralogix` function to setup tracing and export traces to Coralogix
+```python
+from llm_tracekit.langchain import setup_export_to_coralogix
+
+setup_export_to_coralogix(
+    service_name="ai-service",
+    application_name="ai-application",
+    subsystem_name="ai-subsystem",
+    capture_content=True,
+)
+```
+
+Alternatively, you can set up tracing manually:
+```python
+from opentelemetry import trace
+from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
+from opentelemetry.sdk.resources import SERVICE_NAME, Resource
+from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.sdk.trace.export import SimpleSpanProcessor
+
+tracer_provider = TracerProvider(
+    resource=Resource.create({SERVICE_NAME: "ai-service"}),
+)
+exporter = OTLPSpanExporter()
+span_processor = SimpleSpanProcessor(exporter)
+tracer_provider.add_span_processor(span_processor)
+trace.set_tracer_provider(tracer_provider)
+```
+
+### Activation
+To instrument all clients, call the `instrument` method
+```python
+from llm_tracekit.langchain import LangChainInstrumentor
+
+LangChainInstrumentor().instrument()
+```
+
+### Enabling message content
+Message content such as the contents of the prompt, completion, function arguments and return values are not captured by default.
+To capture message content as span attributes, do one of the following:
+* Pass `capture_content=True` when calling `setup_export_to_coralogix`
+* Set the environment variable `OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT` to `true`
+
+Most Coralogix AI evaluations will not work without message contents, so it is highly recommended to enable capturing.
+
+### Uninstrument
+To uninstrument clients, call the `uninstrument` method:
+```python
+LangChainInstrumentor().uninstrument()
+```
+
+### Full Example
 ```python
 from llm_tracekit.langchain import LangChainInstrumentor, setup_export_to_coralogix
 from langchain_openai import ChatOpenAI
 from langchain_core.messages import HumanMessage
 
-# Configure tracing
+# Optional: Configure sending spans to Coralogix
+# Reads Coralogix connection details from the following environment variables:
+# - CX_TOKEN
+# - CX_ENDPOINT
 setup_export_to_coralogix(
     service_name="ai-service",
     application_name="ai-application",
@@ -27,100 +82,31 @@ setup_export_to_coralogix(
 # Activate instrumentation
 LangChainInstrumentor().instrument()
 
-# Use LangChain as normal
+# Example LangChain Usage
 llm = ChatOpenAI(model="gpt-4o-mini")
-response = llm.invoke([HumanMessage(content="Write a short poem.")])
+messages = [HumanMessage(content="Write a short poem on open telemetry.")]
+response = llm.invoke(messages)
 ```
 
-### Supported Providers
+## Semantic Conventions
+| Attribute | Type | Description | Examples
+| --------- | ---- | ----------- | --------
+| `gen_ai.prompt.<message_number>.role` | string | Role of message author for user message <message_number> | `system`, `user`, `assistant`, `tool`
+| `gen_ai.prompt.<message_number>.content` | string | Contents of user message <message_number> | `What's the weather in Paris?`
+| `gen_ai.prompt.<message_number>.tool_calls.<tool_call_number>.id` | string | ID of tool call in user message <message_number> | `call_O8NOz8VlxosSASEsOY7LDUcP`
+| `gen_ai.prompt.<message_number>.tool_calls.<tool_call_number>.type` | string | Type of tool call in user message <message_number> | `function`
+| `gen_ai.prompt.<message_number>.tool_calls.<tool_call_number>.function.name` | string | The name of the function used in tool call within user message  <message_number> | `get_current_weather`
+| `gen_ai.prompt.<message_number>.tool_calls.<tool_call_number>.function.arguments` | string | Arguments passed to the function used in tool call within user message <message_number> | `{"location": "Seattle, WA"}`
+| `gen_ai.prompt.<message_number>.tool_call_id` | string | Tool call ID in user message <message_number> | `call_mszuSIzqtI65i1wAUOE8w5H4`
+| `gen_ai.completion.<choice_number>.role` | string | Role of message author for choice <choice_number>  in model response | `assistant`
+| `gen_ai.completion.<choice_number>.finish_reason` | string | Finish reason for choice <choice_number>  in model response | `stop`, `tool_calls`, `error`
+| `gen_ai.completion.<choice_number>.content` | string | Contents of choice <choice_number>  in model response | `The weather in Paris is rainy and overcast, with temperatures around 57°F`
+| `gen_ai.completion.<choice_number>.tool_calls.<tool_call_number >.id` | string | ID of tool call in choice <choice_number>  | `call_O8NOz8VlxosSASEsOY7LDUcP`
+| `gen_ai.completion.<choice_number>.tool_calls.<tool_call_number >.type` | string | Type of tool call in choice <choice_number>  | `function`
+| `gen_ai.completion.<choice_number>.tool_calls.<tool_call_number >.function.name` | string | The name of the function used in tool call  within choice <choice_number> | `get_current_weather`
+| `gen_ai.completion.<choice_number>.tool_calls.<tool_call_number >.function.arguments` | string | Arguments passed to the function used in tool call within choice <choice_number> | `{"location": "Seattle, WA"}`
 
-The instrumentation automatically traces calls through LangChain to these providers:
-
-- **OpenAI** via `langchain-openai`
-- **AWS Bedrock** via `langchain-aws`
-
-### Multi-turn Conversations
-
-```python
-from langchain_core.messages import HumanMessage, SystemMessage
-
-conversation = [
-    SystemMessage(content="You're a helpful assistant."),
-    HumanMessage(content="Hello!"),
-]
-
-response = llm.invoke(conversation)
-conversation.append(response)
-conversation.append(HumanMessage(content="Tell me more"))
-
-final_response = llm.invoke(conversation)
-```
-
-### Streaming Support
-
-Streaming completions are fully supported:
-
-```python
-stream = llm.stream([HumanMessage(content="Count to 10")])
-for chunk in stream:
-    print(chunk.content, end="")
-```
-
-### Tool Calls
-
-Function/tool calls are automatically traced:
-
-```python
-from langchain_core.tools import tool
-
-@tool
-def get_weather(location: str) -> str:
-    """Get weather for a location."""
-    return f"Weather in {location}: Sunny, 72°F"
-
-tool_llm = llm.bind_tools([get_weather])
-response = tool_llm.invoke([HumanMessage(content="What's the weather in Paris?")])
-```
-
-### Uninstrument
-
-To disable instrumentation:
-
-```python
-LangChainInstrumentor().uninstrument()
-```
-
-## Span Attributes
-
-### Standard GenAI Attributes
-
-| Attribute | Type | Description |
-|-----------|------|-------------|
-| `gen_ai.prompt.<n>.role` | string | Message role (`system`, `user`, `assistant`, `tool`) |
-| `gen_ai.prompt.<n>.content` | string | Message content |
-| `gen_ai.completion.<c>.role` | string | Response role |
-| `gen_ai.completion.<c>.content` | string | Response content |
-| `gen_ai.completion.<c>.finish_reason` | string | Completion finish reason |
-
-### Request Attributes
-
-| Attribute | Type | Description |
-|-----------|------|-------------|
-| `gen_ai.request.model` | string | Requested model name |
-| `gen_ai.request.temperature` | float | Temperature setting |
-| `gen_ai.request.top_p` | float | Top-p (nucleus sampling) |
-| `gen_ai.request.max_tokens` | int | Max tokens limit |
-
-### Response Attributes
-
-| Attribute | Type | Description |
-|-----------|------|-------------|
-| `gen_ai.response.model` | string | Model used for response |
-| `gen_ai.response.id` | string | Response ID |
-| `gen_ai.usage.input_tokens` | int | Input token count |
-| `gen_ai.usage.output_tokens` | int | Output token count |
-
-## License
-
-Apache License 2.0
-
+### LangChain specific attributes
+| Attribute | Type | Description | Examples
+| --------- | ---- | ----------- | --------
+| `gen_ai.provider.name` | string | The provider name from LangChain metadata | `openai`, `anthropic`

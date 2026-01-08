@@ -1,144 +1,95 @@
 # LLM Tracekit
 
-OpenTelemetry instrumentations for LLM providers including [OpenAI](https://openai.com/), [AWS Bedrock](https://aws.amazon.com/bedrock/), [Google Gemini](https://ai.google.dev/), [LiteLLM](https://www.litellm.ai/), and the [OpenAI Agents SDK](https://openai.github.io/openai-agents-python/).
+Open-source observability for your LLM application, based on OpenTelemetry.
 
-## Exporting Traces to Coralogix
+LLM Tracekit is a set of OpenTelemetry instrumentations that gives you complete observability over your LLM application. Because it uses OpenTelemetry under the hood, it can be connected to your existing observability solutions - Coralogix, Datadog, Honeycomb, and others.
 
-### Setup
+## 🚀 Getting Started
 
-Set the following environment variables:
+Install the instrumentation for your LLM provider:
 
 ```bash
-export CX_TOKEN="your-coralogix-api-key"
-export CX_ENDPOINT="ingress.coralogix.com"  # or your regional endpoint
+pip install llm-tracekit-openai       # For OpenAI
+pip install llm-tracekit-bedrock      # For AWS Bedrock
+pip install llm-tracekit-gemini       # For Google Gemini
+pip install llm-tracekit-litellm      # For LiteLLM
+pip install llm-tracekit-langchain    # For LangChain
+pip install llm-tracekit-openai_agents # For OpenAI Agents SDK
 ```
 
-### Initialize the Exporter
-
-Import `setup_export_to_coralogix` from your chosen instrumentation package:
+Then instrument your code:
 
 ```python
 from llm_tracekit.openai import OpenAIInstrumentor, setup_export_to_coralogix
 
 setup_export_to_coralogix(
     service_name="my-ai-service",
-    application_name="my-application",
-    subsystem_name="my-subsystem",
-    capture_content=True,  # Enable to capture prompts and completions
-)
-OpenAIInstrumentor().instrument()
-```
-
-### Environment Variables Reference
-
-| Variable | Description | Required |
-|----------|-------------|----------|
-| `CX_TOKEN` | Coralogix API key | Yes |
-| `CX_ENDPOINT` | Coralogix ingress endpoint | Yes |
-| `OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT` | Set to `true` to capture prompts/completions | No |
-
-## Installing Instrumentations
-
-To instrument **OpenAI**, install:
-
-```bash
-pip install llm-tracekit-openai
-```
-
-To instrument **AWS Bedrock**, install:
-
-```bash
-pip install llm-tracekit-bedrock
-```
-
-To instrument **Google Gemini**, install:
-
-```bash
-pip install llm-tracekit-gemini
-```
-
-To instrument **LiteLLM**, install:
-
-```bash
-pip install llm-tracekit-litellm
-```
-
-To instrument **OpenAI Agents SDK** (Python 3.10+), install:
-
-```bash
-pip install llm-tracekit-openai-agents
-```
-
-To use **Coralogix Guardrails**, install:
-
-```bash
-pip install cx-guardrails
-```
-
-## Usage Examples
-
-### OpenAI
-
-```python
-from llm_tracekit.openai import OpenAIInstrumentor, setup_export_to_coralogix
-from openai import OpenAI
-
-setup_export_to_coralogix(
-    service_name="openai-service",
-    application_name="my-app",
-    subsystem_name="chat",
     capture_content=True,
 )
+
 OpenAIInstrumentor().instrument()
 
+from openai import OpenAI
 client = OpenAI()
 response = client.chat.completions.create(
-    model="gpt-4o",
-    messages=[{"role": "user", "content": "Hello!"}]
+    model="gpt-4o-mini",
+    messages=[{"role": "user", "content": "Hello!"}],
 )
 ```
 
-### AWS Bedrock
+## 🪗 What do we instrument?    
+
+### LLM Providers
+
+| Provider | Package | Instrumentor |
+|----------|---------|--------------|
+| [OpenAI](https://openai.com/) | `llm-tracekit-openai` | `OpenAIInstrumentor` |
+| [AWS Bedrock](https://aws.amazon.com/bedrock/) | `llm-tracekit-bedrock` | `BedrockInstrumentor` |
+| [Google Gemini](https://ai.google.dev/) | `llm-tracekit-gemini` | `GeminiInstrumentor` |
+
+### Frameworks
+
+| Framework | Package | Instrumentor |
+|-----------|---------|--------------|
+| [LiteLLM](https://github.com/BerriAI/litellm) | `llm-tracekit-litellm` | `LiteLLMInstrumentor` |
+| [LangChain](https://www.langchain.com/) | `llm-tracekit-langchain` | `LangChainInstrumentor` |
+| [OpenAI Agents SDK](https://openai.github.io/openai-agents-python/) | `llm-tracekit-openai_agents` | `OpenAIAgentsInstrumentor` |
+
+
+## 📖 Usage
+
+### Setting up tracing
+
+#### Export to Coralogix
 
 ```python
-from llm_tracekit.bedrock import BedrockInstrumentor, setup_export_to_coralogix
-import boto3
+from llm_tracekit.openai import setup_export_to_coralogix
 
 setup_export_to_coralogix(
-    service_name="bedrock-service",
-    application_name="my-app",
-    subsystem_name="chat",
+    service_name="ai-service",
+    application_name="ai-application",
+    subsystem_name="ai-subsystem",
     capture_content=True,
 )
-BedrockInstrumentor().instrument()
+```
 
-client = boto3.client("bedrock-runtime", region_name="us-east-1")
-response = client.converse(
-    modelId="anthropic.claude-3-sonnet-20240229-v1:0",
-    messages=[{"role": "user", "content": [{"text": "Hello!"}]}]
+## 🛡️ Guardrails
 
-## Package Structure
+LLM Tracekit also includes **Coralogix Guardrails** - a client for protecting your LLM applications with content moderation, PII detection, prompt injection detection, and more.
 
-| Package | Description |
-|---------|-------------|
-| [`llm-tracekit-openai`](instrumentations/openai/) | OpenAI Chat Completions instrumentation |
-| [`llm-tracekit-bedrock`](instrumentations/bedrock/) | AWS Bedrock instrumentation |
-| [`llm-tracekit-gemini`](instrumentations/gemini/) | Google Gemini instrumentation |
-| [`llm-tracekit-litellm`](instrumentations/litellm/) | LiteLLM instrumentation |
-| [`llm-tracekit-openai-agents`](instrumentations/openai_agents/) | OpenAI Agents SDK instrumentation |
-| [`cx-guardrails`](guardrails/) | Coralogix Guardrails SDK |
+See the [Guardrails documentation](./guardrails/README.md) for details.
 
-## Documentation
+## 📚 Documentation
 
-See individual package READMEs for detailed documentation:
+For detailed documentation on each instrumentation, see the individual READMEs:
 
-- **OpenAI**: [instrumentations/openai/README.md](instrumentations/openai/README.md)
-- **Bedrock**: [instrumentations/bedrock/README.md](instrumentations/bedrock/README.md)
-- **Gemini**: [instrumentations/gemini/README.md](instrumentations/gemini/README.md)
-- **LiteLLM**: [instrumentations/litellm/README.md](instrumentations/litellm/README.md)
-- **OpenAI Agents**: [instrumentations/openai_agents/README.md](instrumentations/openai_agents/README.md)
-- **Guardrails**: [guardrails/README.md](guardrails/README.md)
+- [OpenAI](./instrumentations/openai/README.md)
+- [AWS Bedrock](./instrumentations/bedrock/README.md)
+- [Google Gemini](./instrumentations/gemini/README.md)
+- [LiteLLM](./instrumentations/litellm/README.md)
+- [LangChain](./instrumentations/langchain/README.md)
+- [OpenAI Agents SDK](./instrumentations/openai_agents/README.md)
 
-## License
+## 📜 License
 
-Apache License 2.0
+Apache 2.0 - See [LICENSE](./LICENSE) for details.
