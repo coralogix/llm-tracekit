@@ -95,7 +95,6 @@ response = client.chat.completions.create(
 ### Changes from OpenTelemetry
 #### General
 * The `user` parameter in the OpenAI Chat Completions API is now recorded in the span as the `gen_ai.openai.request.user` attribute
-* The `tools` parameter in the OpenAI Chat Completions API is now recorded in the span as the `gen_ai.openai.request.tools` attributes.
 * User prompts and model responses are captured as span attributes instead of log events (see [Semantic Conventions](#semantic-conventions) below)
 #### For OpenAI Agents SDK
 * Agent & Tool Spans: Creates dedicated spans for each agent execution and for each tool call, providing clear visibility into the agent's inner workings.
@@ -118,15 +117,15 @@ response = client.chat.completions.create(
 | `gen_ai.completion.<choice_number>.tool_calls.<tool_call_number >.type` | string | Type of tool call in choice <choice_number>  | `function`
 | `gen_ai.completion.<choice_number>.tool_calls.<tool_call_number >.function.name` | string | The name of the function used in tool call  within choice <choice_number> | `get_current_weather`
 | `gen_ai.completion.<choice_number>.tool_calls.<tool_call_number >.function.arguments` | string | Arguments passed to the function used in tool call within choice <choice_number> | `{"location": "Seattle, WA"}`
+| `gen_ai.request.tools.<tool_number>.type` | string | Type of tool entry in tools list | `function`
+| `gen_ai.request.tools.<tool_number>.function.name` | string | The name of the function to use in tool calls | `get_current_weather`
+| `gen_ai.request.tools.<tool_number>.function.description` | string | Description of the function | `Get the current weather in a given location`
+| `gen_ai.request.tools.<tool_number>.function.parameters` | string | JSON describing the schema of the function parameters | `{"type": "object", "properties": {"location": {"type": "string", "description": "The city and state, e.g. San Francisco, CA"}, "unit": {"type": "string", "enum": ["celsius", "fahrenheit"]}}, "required": ["location"]}`
 
 ### OpenAI specific attributes
 | Attribute | Type | Description | Examples
 | --------- | ---- | ----------- | --------
 | `gen_ai.openai.request.user` | string | A unique identifier representing the end-user | `user@company.com`
-| `gen_ai.openai.request.tools.<tool_number>.type` | string | Type of tool entry in tools list | `function`
-| `gen_ai.openai.request.tools.<tool_number>.function.name` | string | The name of the function to use in tool calls | `get_current_weather`
-| `gen_ai.openai.request.tools.<tool_number>.function.description` | string | Description of the function | `Get the current weather in a given location`
-| `gen_ai.openai.request.tools.<tool_number>.function.parameters` | string | JSON describing the schema of the function parameters | `{"type": "object", "properties": {"location": {"type": "string", "description": "The city and state, e.g. San Francisco, CA"}, "unit": {"type": "string", "enum": ["celsius", "fahrenheit"]}}, "required": ["location"]}`
 
 #### Function spans
 These spans represent the execution of a tool (a Python function).
