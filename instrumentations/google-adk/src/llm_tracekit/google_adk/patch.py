@@ -21,14 +21,14 @@ from typing import Any
 
 from opentelemetry import trace
 
-from llm_tracekit.span_builder import (
+from llm_tracekit.core import (
     Choice,
     Message,
     ToolCall,
     generate_choice_attributes,
     generate_message_attributes,
-    generate_tools_attributes,
 )
+from llm_tracekit.core import _extended_gen_ai_attributes as ExtendedGenAIAttributes
 
 
 def create_wrapped_trace_call_llm(original_func, capture_content: bool):
@@ -246,7 +246,8 @@ def _parse_content_to_choice(content, finish_reason) -> Choice | None:
 
 def _process_tools(tools) -> dict[str, Any]:
     """Process tools definition to extract tool attributes."""
-    tool_definitions = []
+    attributes: dict[str, Any] = {}
+    tool_index = 0
 
     for tool in tools:
         # Google ADK tools are typically function declarations
@@ -255,34 +256,47 @@ def _process_tools(tools) -> dict[str, Any]:
             for func in function_declarations:
                 params = getattr(func, "parameters", None)
                 # Convert Schema objects to dict safely
-                params_dict = None
+                params_str = None
                 if params is not None:
                     try:
                         if hasattr(params, "model_dump"):
-                            params_dict = params.model_dump(exclude_none=True)
+                            params_str = json.dumps(
+                                params.model_dump(exclude_none=True)
+                            )
                         elif hasattr(params, "to_dict"):
-                            params_dict = params.to_dict()
+                            params_str = json.dumps(params.to_dict())
                         elif isinstance(params, dict):
-                            params_dict = params
+                            params_str = json.dumps(params)
                         else:
-                            # Try to convert to string representation
-                            params_dict = str(params)
+                            params_str = str(params)
                     except Exception:
-                        params_dict = None
+                        params_str = None
 
-                tool_def = {
-                    "type": "function",
-                    "function": {
-                        "name": getattr(func, "name", None),
-                        "description": getattr(func, "description", None),
-                        "parameters": params_dict,
-                    },
-                }
-                tool_definitions.append(tool_def)
+                attributes[
+                    ExtendedGenAIAttributes.GEN_AI_REQUEST_TOOLS_TYPE.format(
+                        tool_index=tool_index
+                    )
+                ] = "function"
+                attributes[
+                    ExtendedGenAIAttributes.GEN_AI_REQUEST_TOOLS_FUNCTION_NAME.format(
+                        tool_index=tool_index
+                    )
+                ] = getattr(func, "name", None)
+                attributes[
+                    ExtendedGenAIAttributes.GEN_AI_REQUEST_TOOLS_FUNCTION_DESCRIPTION.format(
+                        tool_index=tool_index
+                    )
+                ] = getattr(func, "description", None)
+                if params_str:
+                    attributes[
+                        ExtendedGenAIAttributes.GEN_AI_REQUEST_TOOLS_FUNCTION_PARAMETERS.format(
+                            tool_index=tool_index
+                        )
+                    ] = params_str
 
-    if tool_definitions:
-        return generate_tools_attributes(tool_definitions)
-    return {}
+                tool_index += 1
+
+    return attributes
 
 
 def _map_role(role: str) -> str:

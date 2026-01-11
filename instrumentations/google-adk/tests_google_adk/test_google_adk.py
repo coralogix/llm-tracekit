@@ -17,7 +17,7 @@ from google.adk import Agent, Runner
 from google.adk.sessions import InMemorySessionService
 from google.genai import types
 
-from tests.google_adk.utils import assert_base_attributes, get_call_llm_spans
+from tests_google_adk.utils import assert_base_attributes, get_call_llm_spans
 
 
 @pytest.mark.vcr()
@@ -62,7 +62,6 @@ async def test_google_adk_simple_completion(span_exporter, instrument):
     assert_base_attributes(
         span,
         system="gcp.vertex.agent",
-        operation="chat",
         request_model="gemini-2.0-flash",
     )
 
@@ -248,4 +247,3 @@ async def test_google_adk_multi_turn(span_exporter, instrument):
     assert second_span.attributes.get("gen_ai.prompt.2.role") == "assistant"
     assert second_span.attributes.get("gen_ai.prompt.3.role") == "user"
     assert second_span.attributes.get("gen_ai.prompt.3.content") == "What is my name?"
-

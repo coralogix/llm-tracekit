@@ -21,7 +21,6 @@ from opentelemetry.semconv._incubating.attributes import (
 def assert_base_attributes(
     span: ReadableSpan,
     system: str,
-    operation: str,
     request_model: str,
     input_tokens: int | None = None,
     output_tokens: int | None = None,
@@ -33,7 +32,9 @@ def assert_base_attributes(
     assert span.attributes[GenAIAttributes.GEN_AI_REQUEST_MODEL] == request_model
 
     if input_tokens is not None:
-        assert span.attributes[GenAIAttributes.GEN_AI_USAGE_INPUT_TOKENS] == input_tokens
+        assert (
+            span.attributes[GenAIAttributes.GEN_AI_USAGE_INPUT_TOKENS] == input_tokens
+        )
 
     if output_tokens is not None:
         assert (
@@ -44,4 +45,3 @@ def assert_base_attributes(
 def get_call_llm_spans(spans: list[ReadableSpan]) -> list[ReadableSpan]:
     """Filter spans to get only call_llm spans."""
     return [span for span in spans if span.name == "call_llm"]
-

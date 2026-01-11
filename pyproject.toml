@@ -42,6 +42,7 @@ members = [
     "instrumentations/gemini",
     "instrumentations/litellm",
     "instrumentations/langchain",
+    "instrumentations/google-adk",
 ]
 
 [tool.uv.sources]
@@ -51,6 +52,7 @@ llm-tracekit-bedrock = { workspace = true }
 llm-tracekit-gemini = { workspace = true }
 llm-tracekit-litellm = { workspace = true }
 llm-tracekit-openai-agents = { workspace = true }
+llm-tracekit-google-adk = { workspace = true }
 cx-guardrails = { workspace = true }
 llm-tracekit-langchain = { workspace = true }
 
@@ -58,5 +60,5 @@ llm-tracekit-langchain = { workspace = true }
 ignore_missing_imports = true
 namespace_packages = true
 explicit_package_bases = true
-mypy_path = "core/src:instrumentations/openai/src:instrumentations/bedrock/src:instrumentations/gemini/src:instrumentations/litellm/src:instrumentations/langchain/src:instrumentations/openai_agents/src:guardrails/src"
+mypy_path = "core/src:instrumentations/openai/src:instrumentations/bedrock/src:instrumentations/gemini/src:instrumentations/litellm/src:instrumentations/langchain/src:instrumentations/openai_agents/src:instrumentations/google-adk/src:guardrails/src"
 

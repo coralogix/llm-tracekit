@@ -20,9 +20,9 @@ from opentelemetry.instrumentation.instrumentor import (  # type: ignore[attr-de
     BaseInstrumentor,
 )
 
+from llm_tracekit.core import is_content_enabled
 from llm_tracekit.google_adk.package import _instruments
 from llm_tracekit.google_adk.patch import create_wrapped_trace_call_llm
-from llm_tracekit.instrumentation_utils import is_content_enabled
 
 
 class GoogleADKInstrumentor(BaseInstrumentor):

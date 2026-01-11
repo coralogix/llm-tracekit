@@ -20,10 +20,8 @@ from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import SimpleSpanProcessor
 from opentelemetry.sdk.trace.export.in_memory_span_exporter import InMemorySpanExporter
 
+from llm_tracekit.core import OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT
 from llm_tracekit.google_adk.instrumentor import GoogleADKInstrumentor
-from llm_tracekit.instrumentation_utils import (
-    OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT,
-)
 
 # Set up tracer provider BEFORE any google.adk imports happen
 # This is important because google.adk.telemetry creates its tracer at import time
