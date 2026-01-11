@@ -1,0 +1,222 @@
+interactions:
+- request:
+    body: |-
+      {
+        "contents": [
+          {
+            "parts": [
+              {
+                "text": "My name is Alice."
+              }
+            ],
+            "role": "user"
+          }
+        ],
+        "systemInstruction": {
+          "parts": [
+            {
+              "text": "You are a helpful assistant. Be concise.\n\nYou are an agent. Your internal name is \"test_agent\"."
+            }
+          ],
+          "role": "user"
+        },
+        "generationConfig": {}
+      }
+    headers:
+      accept:
+      - '*/*'
+      connection:
+      - keep-alive
+      content-type:
+      - application/json
+      host:
+      - generativelanguage.googleapis.com
+      x-goog-api-client:
+      - google-genai-sdk/1.45.0 gl-python/3.12.10 google-adk/1.14.1 gl-python/3.12.10
+    method: POST
+    uri: https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent
+  response:
+    body:
+      string: |-
+        {
+          "candidates": [
+            {
+              "content": {
+                "parts": [
+                  {
+                    "text": "Okay, Alice. I am test_agent.\n"
+                  }
+                ],
+                "role": "model"
+              },
+              "finishReason": "STOP",
+              "avgLogprobs": -0.2933322082866322
+            }
+          ],
+          "usageMetadata": {
+            "promptTokenCount": 29,
+            "candidatesTokenCount": 11,
+            "totalTokenCount": 40,
+            "promptTokensDetails": [
+              {
+                "modality": "TEXT",
+                "tokenCount": 29
+              }
+            ],
+            "candidatesTokensDetails": [
+              {
+                "modality": "TEXT",
+                "tokenCount": 11
+              }
+            ]
+          },
+          "modelVersion": "gemini-2.0-flash",
+          "responseId": "15RfaZOXEL7qkdUP4IeBKQ"
+        }
+    headers:
+      Alt-Svc:
+      - h3=":443"; ma=2592000,h3-29=":443"; ma=2592000
+      Content-Type:
+      - application/json; charset=UTF-8
+      Date:
+      - Thu, 08 Jan 2026 11:28:23 GMT
+      Server:
+      - scaffolding on HTTPServer2
+      Server-Timing:
+      - gfet4t7; dur=563
+      Transfer-Encoding:
+      - chunked
+      Vary:
+      - Origin
+      - X-Origin
+      - Referer
+      X-Content-Type-Options:
+      - nosniff
+      X-Frame-Options:
+      - SAMEORIGIN
+      X-XSS-Protection:
+      - '0'
+      content-length:
+      - '675'
+    status:
+      code: 200
+      message: OK
+- request:
+    body: |-
+      {
+        "contents": [
+          {
+            "parts": [
+              {
+                "text": "My name is Alice."
+              }
+            ],
+            "role": "user"
+          },
+          {
+            "parts": [
+              {
+                "text": "Okay, Alice. I am test_agent.\n"
+              }
+            ],
+            "role": "model"
+          },
+          {
+            "parts": [
+              {
+                "text": "What is my name?"
+              }
+            ],
+            "role": "user"
+          }
+        ],
+        "systemInstruction": {
+          "parts": [
+            {
+              "text": "You are a helpful assistant. Be concise.\n\nYou are an agent. Your internal name is \"test_agent\"."
+            }
+          ],
+          "role": "user"
+        },
+        "generationConfig": {}
+      }
+    headers:
+      accept:
+      - '*/*'
+      connection:
+      - keep-alive
+      content-type:
+      - application/json
+      host:
+      - generativelanguage.googleapis.com
+      x-goog-api-client:
+      - google-genai-sdk/1.45.0 gl-python/3.12.10 google-adk/1.14.1 gl-python/3.12.10
+    method: POST
+    uri: https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent
+  response:
+    body:
+      string: |-
+        {
+          "candidates": [
+            {
+              "content": {
+                "parts": [
+                  {
+                    "text": "Your name is Alice.\n"
+                  }
+                ],
+                "role": "model"
+              },
+              "finishReason": "STOP",
+              "avgLogprobs": 6.501892736802498e-07
+            }
+          ],
+          "usageMetadata": {
+            "promptTokenCount": 45,
+            "candidatesTokenCount": 6,
+            "totalTokenCount": 51,
+            "promptTokensDetails": [
+              {
+                "modality": "TEXT",
+                "tokenCount": 45
+              }
+            ],
+            "candidatesTokensDetails": [
+              {
+                "modality": "TEXT",
+                "tokenCount": 6
+              }
+            ]
+          },
+          "modelVersion": "gemini-2.0-flash",
+          "responseId": "2JRfaeayA-WMvdIPvvXn-A4"
+        }
+    headers:
+      Alt-Svc:
+      - h3=":443"; ma=2592000,h3-29=":443"; ma=2592000
+      Content-Type:
+      - application/json; charset=UTF-8
+      Date:
+      - Thu, 08 Jan 2026 11:28:24 GMT
+      Server:
+      - scaffolding on HTTPServer2
+      Server-Timing:
+      - gfet4t7; dur=504
+      Transfer-Encoding:
+      - chunked
+      Vary:
+      - Origin
+      - X-Origin
+      - Referer
+      X-Content-Type-Options:
+      - nosniff
+      X-Frame-Options:
+      - SAMEORIGIN
+      X-XSS-Protection:
+      - '0'
+      content-length:
+      - '667'
+    status:
+      code: 200
+      message: OK
+version: 1

@@ -216,6 +216,55 @@ def generate_choice_attributes(
     return attributes
 
 
+@attribute_generator
+def generate_tools_attributes(tools: list[dict[str, Any]]) -> dict[str, Any]:
+    """Generate attributes for tool definitions.
+
+    Args:
+        tools: List of tool definitions, each containing 'type' and 'function' with
+               'name', 'description', and optionally 'parameters'.
+
+    Returns:
+        Dictionary of tool attributes following semantic conventions.
+    """
+    import json
+
+    attributes = {}
+    for index, tool in enumerate(tools):
+        tool_type = tool.get("type", "function")
+        function = tool.get("function", {})
+
+        attributes[
+            ExtendedGenAIAttributes.GEN_AI_REQUEST_TOOLS_TYPE.format(tool_index=index)
+        ] = tool_type
+
+        if function.get("name"):
+            attributes[
+                ExtendedGenAIAttributes.GEN_AI_REQUEST_TOOLS_FUNCTION_NAME.format(
+                    tool_index=index
+                )
+            ] = function["name"]
+
+        if function.get("description"):
+            attributes[
+                ExtendedGenAIAttributes.GEN_AI_REQUEST_TOOLS_FUNCTION_DESCRIPTION.format(
+                    tool_index=index
+                )
+            ] = function["description"]
+
+        if function.get("parameters"):
+            params = function["parameters"]
+            if isinstance(params, dict):
+                params = json.dumps(params)
+            attributes[
+                ExtendedGenAIAttributes.GEN_AI_REQUEST_TOOLS_FUNCTION_PARAMETERS.format(
+                    tool_index=index
+                )
+            ] = params
+
+    return attributes
+
+
 @dataclass
 class Agent:
     id: str | None = None

@@ -42,3 +42,7 @@ with suppress(ImportError):
     from llm_tracekit.langchain.instrumentor import (
         LangChainInstrumentor as LangChainInstrumentor,
     )
+with suppress(ImportError):
+    from llm_tracekit.google_adk.instrumentor import (
+        GoogleADKInstrumentor as GoogleADKInstrumentor,
+    )

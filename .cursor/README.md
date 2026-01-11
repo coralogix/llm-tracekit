@@ -22,10 +22,15 @@ Follow this workflow when creating new instrumentation:
    - `instrumentor.py` - Main instrumentor class extending `BaseInstrumentor`
    - `package.py` - Defines `_instruments` tuple with library version requirements
    - Create more files if needed
+   
+   **If the library already writes OpenTelemetry spans:**
+   - Do NOT use `SpanProcessor.on_end()` - spans are immutable at that point
+   - Use **patching approach**: Wrap the library's tracing function to add attributes while the span is still active
+   - Example: For Google ADK, wrap `trace_call_llm` in `google.adk.telemetry` to add semantic convention attributes to the current span via `trace.get_current_span().set_attributes()`
+   - See `src/llm_tracekit/google_adk/patch.py` for reference implementation
 
 4. **Implement instrumentation** - For each interface, create a wrapper that:
    - Extracts request attributes before calling the original method
-   - Starts a span with the appropriate name: `{operation_name} {model}`
    - Handles streaming by wrapping the response iterator
    - Extracts response attributes after the call completes
    - Records metrics (duration, token usage)
@@ -34,15 +39,16 @@ Follow this workflow when creating new instrumentation:
 5. **Propose library-specific attributes** - If the library has unique data not covered by standard conventions, propose custom attributes with prefix `gen_ai.<library_name>.*` (e.g., `gen_ai.bedrock.agent_alias_id`)
 
 6. **Create Examples** - Create usage scripts under `examples/<library>/` directory:
-   - Name format: `<library>_<interface>.py` (e.g., `openai_chat_completions.py`)
+   - Ask for API Key to call the LLM, and set it inside the code
+   - Name format: `<library>_<interface>.py` (e.g., `openai_chat_completions.py`) if there are multiple interface where will be multiple examples
    - Add docstring with usage instructions and required env vars
-   - Use `setup_tracing()` with `ConsoleSpanExporter` to validate spans
-   - Demonstrate complex use cases with tools, sub-agents and multi-turn conversations
-   - Cover different input formats (strings, dicts, content arrays, multi-part) for text only (not video, not pictures, not voice) if possible
+   - For each interface create a complex use case, with sub-agents, tools and multi-turn conversation
+   - Cover different text input formats (strings, dicts, content arrays, multi-part), we DON'T support videos, pictures, and voice
+   - Use `setup_tracing()` with `ConsoleSpanExporter` to validate spans, run the examples
 
-7. **Debug examples with ConsoleSpanExporter** - Validate spans are correct (see Debugging section below) for every example. If not, update the instrumentation.
+7. **Debug examples with ConsoleSpanExporter** - Validate spans are correct (see Debugging section below) for every example. If not, update the instrumentation and run again.
 
-8. **Check Semantic Convention** - For each mandatory and optional key in the semantic convention, check is should exist in the span and missing. If should exist and missing, fix the instrumentation and run everything again.
+8. **Check Semantic Convention** - For each mandatory and optional key in the semantic convention, verify whether it should exist in the span. IIf it should exist and is missing, fix the instrumentation and rerun everything
 
 9. **Create tests** - Tests should validate:
    - Span names and attributes match the semantic conventions
@@ -70,7 +76,9 @@ All instrumentations in this repo must follow these semantic conventions:
 
 ### Prompt Messages (input to model)
 
-**Important**: For multi-turn conversations or agent sessions, `gen_ai.prompt.*` should capture the **FULL conversation history**, not just the latest message. Each message in the history gets an incrementing index (0, 1, 2, ...). See "Multi-Turn Conversation" example below.
+**Important**: For multi-turn conversations or agent sessions, `gen_ai.prompt.*` should capture the **FULL conversation history** without the last response (which will be in the completion part), not just the latest message. Each message in the history gets an incrementing index (0, 1, 2, ...). See "Multi-Turn Conversation" example below.
+
+**System Instruction**: If the library provides a system instruction/prompt (e.g., Google ADK's `instruction` field, OpenAI's `system` message), it should be captured as `gen_ai.prompt.0` with `role = "system"`. All other messages follow with incrementing indices.
 
 | Attribute | Required | Type | Description | Examples |
 | --------- | -------- | ---- | ----------- | -------- |
@@ -84,15 +92,17 @@ All instrumentations in this repo must follow these semantic conventions:
 
 ### Completion Choices (output from model)
 
+**Important**: The assistant (LLM) response
+
 | Attribute | Required | Type | Description | Examples |
 | --------- | -------- | ---- | ----------- | -------- |
-| `gen_ai.completion.<n>.role` | ✓ | string | Role of responder | `assistant` |
-| `gen_ai.completion.<n>.finish_reason` | ✓ | string | Why generation stopped | `stop`, `tool_calls`, `error` |
-| `gen_ai.completion.<n>.content` | content* | string | Response content | `The weather in Paris is 57°F` |
-| `gen_ai.completion.<n>.tool_calls.<i>.id` | if has tool_calls | string | ID of tool call | `call_O8NOz8VlxosSASEsOY7LDUcP` |
-| `gen_ai.completion.<n>.tool_calls.<i>.type` | if has tool_calls | string | Type of tool call | `function` |
-| `gen_ai.completion.<n>.tool_calls.<i>.function.name` | if has tool_calls | string | Function name | `get_current_weather` |
-| `gen_ai.completion.<n>.tool_calls.<i>.function.arguments` | content* | string | Function arguments JSON | `{"location": "Seattle, WA"}` |
+| `gen_ai.completion.0.role` | ✓ | string | Role of responder | `assistant` |
+| `gen_ai.completion.0.finish_reason` | ✓ | string | Why generation stopped | `stop`, `tool_calls`, `error` |
+| `gen_ai.completion.0.content` | content* | string | Response content | `The weather in Paris is 57°F` |
+| `gen_ai.completion.0.tool_calls.<i>.id` | if has tool_calls | string | ID of tool call | `call_O8NOz8VlxosSASEsOY7LDUcP` |
+| `gen_ai.completion.0.tool_calls.<i>.type` | if has tool_calls | string | Type of tool call | `function` |
+| `gen_ai.completion.0.tool_calls.<i>.function.name` | if has tool_calls | string | Function name | `get_current_weather` |
+| `gen_ai.completion.0.tool_calls.<i>.function.arguments` | content* | string | Function arguments JSON | `{"location": "Seattle, WA"}` |
 
 ### Custom tools definition keys (if tools available to the model)
 
@@ -231,16 +241,16 @@ When implementing instrumentation for libraries with session/conversation manage
 For debugging OpenTelemetry spans and hierarchy issues, use the console exporter:
 
 ```python
-from opentelemetry.sdk.trace.export import ConsoleSpanExporter
-from llm_tracekit import setup_export_to_coralogix
+from opentelemetry import trace
+from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.sdk.trace.export import ConsoleSpanExporter, SimpleSpanProcessor
+from opentelemetry.sdk.resources import SERVICE_NAME, Resource
 
-setup_export_to_coralogix(
-    service_name="cursor-agent",
-    application_name="cursor",
-    subsystem_name="agent",
-    capture_content=True,
-    processors=[ConsoleSpanExporter]
+tracer_provider = TracerProvider(
+    resource=Resource.create({SERVICE_NAME: "debug-service"})
 )
+tracer_provider.add_span_processor(SimpleSpanProcessor(ConsoleSpanExporter()))
+trace.set_tracer_provider(tracer_provider)
 ```
 
 This outputs all spans to console in JSON format, showing:
@@ -266,16 +276,15 @@ Tests should be placed in `tests/<library_name>/` with this structure:
 - `metric_reader` - `InMemoryMetricReader` for asserting on metrics
 
 ### VCR Cassettes
-Tests use VCR to record and replay API calls:
+Tests use VCR to record and replay API calls. VCR automatically records if the cassette file doesn't exist:
+
 ```bash
-# Run tests with existing cassettes (CI mode)
+# Run tests (uses existing cassettes, records new ones if missing)
 uv run pytest tests/<library>/ -v
 
-# Record new cassettes (requires valid API keys)
-uv run pytest tests/<library>/ --record-mode=once
-
-# Re-record all cassettes
-uv run pytest tests/<library>/ --record-mode=all
+# Delete cassettes to re-record them
+rm -rf tests/<library>/cassettes/*.yaml
+uv run pytest tests/<library>/ -v  # Will record fresh cassettes
 ```
 
 **Important**: Always filter sensitive data in cassettes using `vcr_config` fixture:

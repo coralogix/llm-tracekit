@@ -1,0 +1,104 @@
+interactions:
+- request:
+    body: |-
+      {
+        "contents": [
+          {
+            "parts": [
+              {
+                "text": "Say hello in exactly 3 words."
+              }
+            ],
+            "role": "user"
+          }
+        ],
+        "systemInstruction": {
+          "parts": [
+            {
+              "text": "You are a helpful assistant. Be concise.\n\nYou are an agent. Your internal name is \"test_agent\"."
+            }
+          ],
+          "role": "user"
+        },
+        "generationConfig": {}
+      }
+    headers:
+      accept:
+      - '*/*'
+      connection:
+      - keep-alive
+      content-type:
+      - application/json
+      host:
+      - generativelanguage.googleapis.com
+      x-goog-api-client:
+      - google-genai-sdk/1.45.0 gl-python/3.12.10 google-adk/1.14.1 gl-python/3.12.10
+    method: POST
+    uri: https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent
+  response:
+    body:
+      string: |-
+        {
+          "candidates": [
+            {
+              "content": {
+                "parts": [
+                  {
+                    "text": "Hello, I'm test_agent.\n"
+                  }
+                ],
+                "role": "model"
+              },
+              "finishReason": "STOP",
+              "avgLogprobs": -0.1979730248451233
+            }
+          ],
+          "usageMetadata": {
+            "promptTokenCount": 32,
+            "candidatesTokenCount": 10,
+            "totalTokenCount": 42,
+            "promptTokensDetails": [
+              {
+                "modality": "TEXT",
+                "tokenCount": 32
+              }
+            ],
+            "candidatesTokensDetails": [
+              {
+                "modality": "TEXT",
+                "tokenCount": 10
+              }
+            ]
+          },
+          "modelVersion": "gemini-2.0-flash",
+          "responseId": "1JRfadO2Mf2EkdUPsMLbKQ"
+        }
+    headers:
+      Alt-Svc:
+      - h3=":443"; ma=2592000,h3-29=":443"; ma=2592000
+      Content-Type:
+      - application/json; charset=UTF-8
+      Date:
+      - Thu, 08 Jan 2026 11:28:21 GMT
+      Server:
+      - scaffolding on HTTPServer2
+      Server-Timing:
+      - gfet4t7; dur=397
+      Transfer-Encoding:
+      - chunked
+      Vary:
+      - Origin
+      - X-Origin
+      - Referer
+      X-Content-Type-Options:
+      - nosniff
+      X-Frame-Options:
+      - SAMEORIGIN
+      X-XSS-Protection:
+      - '0'
+      content-length:
+      - '668'
+    status:
+      code: 200
+      message: OK
+version: 1
