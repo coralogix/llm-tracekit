@@ -1,0 +1,281 @@
+interactions:
+- request:
+    body: |-
+      {
+        "contents": [
+          {
+            "parts": [
+              {
+                "text": "What's the weather in Tokyo?"
+              }
+            ],
+            "role": "user"
+          }
+        ],
+        "systemInstruction": {
+          "parts": [
+            {
+              "text": "Use the get_weather tool when asked about weather.\n\nYou are an agent. Your internal name is \"weather_agent\"."
+            }
+          ],
+          "role": "user"
+        },
+        "tools": [
+          {
+            "functionDeclarations": [
+              {
+                "description": "Get the weather for a city.\n\n        Args:\n            city: The city name\n\n        Returns:\n            Weather data\n        ",
+                "name": "get_weather",
+                "parameters": {
+                  "properties": {
+                    "city": {
+                      "type": "STRING"
+                    }
+                  },
+                  "required": [
+                    "city"
+                  ],
+                  "type": "OBJECT"
+                }
+              }
+            ]
+          }
+        ],
+        "generationConfig": {}
+      }
+    headers:
+      accept:
+      - '*/*'
+      connection:
+      - keep-alive
+      content-type:
+      - application/json
+      host:
+      - generativelanguage.googleapis.com
+      x-goog-api-client:
+      - google-genai-sdk/1.45.0 gl-python/3.12.10 google-adk/1.14.1 gl-python/3.12.10
+    method: POST
+    uri: https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent
+  response:
+    body:
+      string: |-
+        {
+          "candidates": [
+            {
+              "content": {
+                "parts": [
+                  {
+                    "functionCall": {
+                      "name": "get_weather",
+                      "args": {
+                        "city": "Tokyo"
+                      }
+                    }
+                  }
+                ],
+                "role": "model"
+              },
+              "finishReason": "STOP",
+              "avgLogprobs": -0.004431607946753502
+            }
+          ],
+          "usageMetadata": {
+            "promptTokenCount": 69,
+            "candidatesTokenCount": 5,
+            "totalTokenCount": 74,
+            "promptTokensDetails": [
+              {
+                "modality": "TEXT",
+                "tokenCount": 69
+              }
+            ],
+            "candidatesTokensDetails": [
+              {
+                "modality": "TEXT",
+                "tokenCount": 5
+              }
+            ]
+          },
+          "modelVersion": "gemini-2.0-flash",
+          "responseId": "1ZRfafe8HJOE7M8Pjt-qgAM"
+        }
+    headers:
+      Alt-Svc:
+      - h3=":443"; ma=2592000,h3-29=":443"; ma=2592000
+      Content-Type:
+      - application/json; charset=UTF-8
+      Date:
+      - Thu, 08 Jan 2026 11:28:22 GMT
+      Server:
+      - scaffolding on HTTPServer2
+      Server-Timing:
+      - gfet4t7; dur=662
+      Transfer-Encoding:
+      - chunked
+      Vary:
+      - Origin
+      - X-Origin
+      - Referer
+      X-Content-Type-Options:
+      - nosniff
+      X-Frame-Options:
+      - SAMEORIGIN
+      X-XSS-Protection:
+      - '0'
+      content-length:
+      - '776'
+    status:
+      code: 200
+      message: OK
+- request:
+    body: |-
+      {
+        "contents": [
+          {
+            "parts": [
+              {
+                "text": "What's the weather in Tokyo?"
+              }
+            ],
+            "role": "user"
+          },
+          {
+            "parts": [
+              {
+                "functionCall": {
+                  "args": {
+                    "city": "Tokyo"
+                  },
+                  "name": "get_weather"
+                }
+              }
+            ],
+            "role": "model"
+          },
+          {
+            "parts": [
+              {
+                "functionResponse": {
+                  "name": "get_weather",
+                  "response": {
+                    "city": "Tokyo",
+                    "temperature": 22,
+                    "condition": "Sunny"
+                  }
+                }
+              }
+            ],
+            "role": "user"
+          }
+        ],
+        "systemInstruction": {
+          "parts": [
+            {
+              "text": "Use the get_weather tool when asked about weather.\n\nYou are an agent. Your internal name is \"weather_agent\"."
+            }
+          ],
+          "role": "user"
+        },
+        "tools": [
+          {
+            "functionDeclarations": [
+              {
+                "description": "Get the weather for a city.\n\n        Args:\n            city: The city name\n\n        Returns:\n            Weather data\n        ",
+                "name": "get_weather",
+                "parameters": {
+                  "properties": {
+                    "city": {
+                      "type": "STRING"
+                    }
+                  },
+                  "required": [
+                    "city"
+                  ],
+                  "type": "OBJECT"
+                }
+              }
+            ]
+          }
+        ],
+        "generationConfig": {}
+      }
+    headers:
+      accept:
+      - '*/*'
+      connection:
+      - keep-alive
+      content-type:
+      - application/json
+      host:
+      - generativelanguage.googleapis.com
+      x-goog-api-client:
+      - google-genai-sdk/1.45.0 gl-python/3.12.10 google-adk/1.14.1 gl-python/3.12.10
+    method: POST
+    uri: https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent
+  response:
+    body:
+      string: |-
+        {
+          "candidates": [
+            {
+              "content": {
+                "parts": [
+                  {
+                    "text": "The weather in Tokyo is Sunny with a temperature of 22 degrees."
+                  }
+                ],
+                "role": "model"
+              },
+              "finishReason": "STOP",
+              "avgLogprobs": -0.00028755040839314463
+            }
+          ],
+          "usageMetadata": {
+            "promptTokenCount": 83,
+            "candidatesTokenCount": 15,
+            "totalTokenCount": 98,
+            "promptTokensDetails": [
+              {
+                "modality": "TEXT",
+                "tokenCount": 83
+              }
+            ],
+            "candidatesTokensDetails": [
+              {
+                "modality": "TEXT",
+                "tokenCount": 15
+              }
+            ]
+          },
+          "modelVersion": "gemini-2.0-flash",
+          "responseId": "1pRfaZW6FO6bkdUPlLnuIQ"
+        }
+    headers:
+      Alt-Svc:
+      - h3=":443"; ma=2592000,h3-29=":443"; ma=2592000
+      Content-Type:
+      - application/json; charset=UTF-8
+      Date:
+      - Thu, 08 Jan 2026 11:28:22 GMT
+      Server:
+      - scaffolding on HTTPServer2
+      Server-Timing:
+      - gfet4t7; dur=579
+      Transfer-Encoding:
+      - chunked
+      Vary:
+      - Origin
+      - X-Origin
+      - Referer
+      X-Content-Type-Options:
+      - nosniff
+      X-Frame-Options:
+      - SAMEORIGIN
+      X-XSS-Protection:
+      - '0'
+      content-length:
+      - '711'
+    status:
+      code: 200
+      message: OK
+version: 1
