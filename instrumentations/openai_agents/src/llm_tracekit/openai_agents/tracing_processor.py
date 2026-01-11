@@ -17,7 +17,7 @@ import re
 import json
 from dataclasses import dataclass, field
 from contextvars import Token
-from typing import Any, Callable
+from typing import Any, Callable, Sequence
 
 from agents import (
     AgentSpanData,
