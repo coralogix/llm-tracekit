@@ -22,6 +22,7 @@ from opentelemetry.semconv._incubating.attributes import (
     gen_ai_attributes as GenAIAttributes,
 )
 
+import json
 from typing import Any
 from opentelemetry.trace import Span
 
@@ -35,7 +36,7 @@ from llm_tracekit.core import (
     generate_request_attributes,
     generate_response_attributes,
 )
-
+from llm_tracekit.core import _extended_gen_ai_attributes as ExtendedGenAIAttributes
 
 class LitellmCallback(OpenTelemetry):
     def __init__(
@@ -166,6 +167,13 @@ class LitellmCallback(OpenTelemetry):
                 **response_attributes,
             }
 
+            tool_attributes = _generate_available_tools_attributes(
+                tools=kwargs.get("tools"),
+                optional_params=optional_params,
+            )
+            if tool_attributes:
+                attributes.update(tool_attributes)
+
             for key, value in attributes.items():
                 if value is not None:
                     self.safe_set_attribute(
@@ -176,3 +184,70 @@ class LitellmCallback(OpenTelemetry):
 
         except Exception:
             pass
+
+
+def _generate_available_tools_attributes(
+    tools: Any | None,
+    optional_params: dict[str, Any],
+) -> dict[str, Any]:
+    candidates = tools
+    if not candidates:
+        candidates = optional_params.get("tools")
+    if not isinstance(candidates, list):
+        return {}
+
+    attributes: dict[str, Any] = {}
+    for tool_index, tool in enumerate(candidates):
+        if not isinstance(tool, dict):
+            continue
+
+        tool_type = tool.get("type") or "function"
+        attributes[
+            ExtendedGenAIAttributes.GEN_AI_REQUEST_TOOLS_TYPE.format(
+                tool_index=tool_index
+            )
+        ] = tool_type
+
+        function = tool.get("function")
+        if isinstance(function, dict):
+            name = function.get("name")
+            description = function.get("description")
+            parameters = function.get("parameters")
+        else:
+            name = tool.get("name")
+            description = tool.get("description")
+            parameters = (
+                tool.get("parameters")
+                or tool.get("input_schema")
+                or tool.get("inputSchema")
+            )
+            definition = tool.get("definition")
+            if parameters is None and isinstance(definition, dict):
+                parameters = definition.get("parameters")
+
+        if name is not None:
+            attributes[
+                ExtendedGenAIAttributes.GEN_AI_REQUEST_TOOLS_FUNCTION_NAME.format(
+                    tool_index=tool_index
+                )
+            ] = name
+
+        if description is not None:
+            attributes[
+                ExtendedGenAIAttributes.GEN_AI_REQUEST_TOOLS_FUNCTION_DESCRIPTION.format(
+                    tool_index=tool_index
+                )
+            ] = description
+
+        if parameters is not None:
+            try:
+                serialized_parameters = json.dumps(parameters)
+            except (TypeError, ValueError):
+                serialized_parameters = str(parameters)
+            attributes[
+                ExtendedGenAIAttributes.GEN_AI_REQUEST_TOOLS_FUNCTION_PARAMETERS.format(
+                    tool_index=tool_index
+                )
+            ] = serialized_parameters
+
+    return attributes
