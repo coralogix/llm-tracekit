@@ -66,11 +66,9 @@ def _build_semantic_attributes(
     """Build semantic convention attributes from LLM request and response."""
     attributes: dict[str, Any] = {}
 
-    # Process request
     if llm_request is not None:
         attributes.update(_process_request(llm_request, capture_content))
 
-    # Process response
     if llm_response is not None:
         attributes.update(_process_response(llm_response, capture_content))
 
