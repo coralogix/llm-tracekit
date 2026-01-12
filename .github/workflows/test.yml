@@ -26,6 +26,6 @@ jobs:
 
       - name: Run tests
         run: |
-          uv run --group=dev --locked --extra ci-core pytest
+          uv run --group=dev --locked pytest
         shell: bash
       

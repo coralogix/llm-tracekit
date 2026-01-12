@@ -19,7 +19,6 @@ members = [
     "llm-tracekit-langchain",
     "llm-tracekit-openai",
     "llm-tracekit-openai-agents",
-    "llm-tracekit-workspace",
 ]
 
 [[package]]
@@ -486,7 +485,7 @@ name = "exceptiongroup"
 version = "1.3.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "typing-extensions", marker = "python_full_version < '3.13'" },
+    { name = "typing-extensions", marker = "python_full_version < '3.11'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/50/79/66800aadf48771f6b62f7eb014e352e5d06856655206165d775e675a02c9/exceptiongroup-1.3.1.tar.gz", hash = "sha256:8b412432c6055b0b7d14c310000ae93352ed6754f70fa8f7c34141f91c4e3219", size = 30371, upload-time = "2025-11-21T23:01:54.787Z" }
 wheels = [
@@ -1519,7 +1518,7 @@ wheels = [
 [[package]]
 name = "llm-tracekit"
 version = "2.0.0"
-source = { editable = "llm-tracekit" }
+source = { editable = "." }
 dependencies = [
     { name = "llm-tracekit-core" },
 ]
@@ -1544,6 +1543,22 @@ openai-agents = [
     { name = "llm-tracekit-openai-agents" },
 ]
 
+[package.dev-dependencies]
+dev = [
+    { name = "assertpy" },
+    { name = "brotli" },
+    { name = "langchain-aws" },
+    { name = "langchain-openai" },
+    { name = "mypy" },
+    { name = "pytest" },
+    { name = "pytest-asyncio" },
+    { name = "pytest-vcr" },
+    { name = "pyyaml" },
+    { name = "respx" },
+    { name = "ruff" },
+    { name = "types-pyyaml" },
+]
+
 [package.metadata]
 requires-dist = [
     { name = "cx-guardrails", marker = "extra == 'guardrails'", editable = "guardrails" },
@@ -1555,6 +1570,22 @@ requires-dist = [
     { name = "llm-tracekit-openai-agents", marker = "extra == 'openai-agents'", editable = "instrumentations/openai_agents" },
 ]
 provides-extras = ["openai", "bedrock", "gemini", "openai-agents", "guardrails", "langchain"]
+
+[package.metadata.requires-dev]
+dev = [
+    { name = "assertpy", specifier = ">=1.1" },
+    { name = "brotli", specifier = ">=1.1.0" },
+    { name = "langchain-aws", specifier = ">=0.2.0" },
+    { name = "langchain-openai", specifier = ">=0.3.0" },
+    { name = "mypy", specifier = ">=1.0.0" },
+    { name = "pytest", specifier = ">=7.0.0" },
+    { name = "pytest-asyncio", specifier = ">=0.21.0" },
+    { name = "pytest-vcr", specifier = ">=1.0.2" },
+    { name = "pyyaml", specifier = ">=6.0" },
+    { name = "respx", specifier = ">=0.21.0" },
+    { name = "ruff", specifier = ">=0.4.0" },
+    { name = "types-pyyaml", specifier = ">=6.0.0" },
+]
 
 [[package]]
 name = "llm-tracekit-bedrock"
@@ -1837,64 +1868,6 @@ dev = [
     { name = "pytest-vcr", specifier = ">=1.0.2" },
     { name = "pyyaml", specifier = ">=6.0.2" },
     { name = "ruff", specifier = ">=0.9.7" },
-]
-
-[[package]]
-name = "llm-tracekit-workspace"
-version = "0.0.0"
-source = { virtual = "." }
-
-[package.optional-dependencies]
-ci-core = [
-    { name = "cx-guardrails" },
-    { name = "llm-tracekit-bedrock" },
-    { name = "llm-tracekit-gemini" },
-    { name = "llm-tracekit-langchain" },
-    { name = "llm-tracekit-openai" },
-    { name = "llm-tracekit-openai-agents" },
-]
-
-[package.dev-dependencies]
-dev = [
-    { name = "assertpy" },
-    { name = "brotli" },
-    { name = "langchain-aws" },
-    { name = "langchain-openai" },
-    { name = "mypy" },
-    { name = "pytest" },
-    { name = "pytest-asyncio" },
-    { name = "pytest-vcr" },
-    { name = "pyyaml" },
-    { name = "respx" },
-    { name = "ruff" },
-    { name = "types-pyyaml" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "cx-guardrails", marker = "extra == 'ci-core'", editable = "guardrails" },
-    { name = "llm-tracekit-bedrock", marker = "extra == 'ci-core'", editable = "instrumentations/bedrock" },
-    { name = "llm-tracekit-gemini", marker = "extra == 'ci-core'", editable = "instrumentations/gemini" },
-    { name = "llm-tracekit-langchain", marker = "extra == 'ci-core'", editable = "instrumentations/langchain" },
-    { name = "llm-tracekit-openai", marker = "extra == 'ci-core'", editable = "instrumentations/openai" },
-    { name = "llm-tracekit-openai-agents", marker = "extra == 'ci-core'", editable = "instrumentations/openai_agents" },
-]
-provides-extras = ["ci-core"]
-
-[package.metadata.requires-dev]
-dev = [
-    { name = "assertpy", specifier = ">=1.1" },
-    { name = "brotli", specifier = ">=1.1.0" },
-    { name = "langchain-aws", specifier = ">=0.2.0" },
-    { name = "langchain-openai", specifier = ">=0.3.0" },
-    { name = "mypy", specifier = ">=1.0.0" },
-    { name = "pytest", specifier = ">=7.0.0" },
-    { name = "pytest-asyncio", specifier = ">=0.21.0" },
-    { name = "pytest-vcr", specifier = ">=1.0.2" },
-    { name = "pyyaml", specifier = ">=6.0" },
-    { name = "respx", specifier = ">=0.21.0" },
-    { name = "ruff", specifier = ">=0.4.0" },
-    { name = "types-pyyaml", specifier = ">=6.0.0" },
 ]
 
 [[package]]
