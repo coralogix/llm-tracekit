@@ -528,7 +528,9 @@ class TestGuardrailsTestConnection:
             call_kwargs = mock_post.call_args
             request_body = call_kwargs.kwargs["json"]
             assert_that(request_body["guardrails"]).is_length(1)
-            assert_that(request_body["guardrails"][0]["type"]).is_equal_to("test_policy")
+            assert_that(request_body["guardrails"][0]["type"]).is_equal_to(
+                "test_policy"
+            )
 
     @pytest.mark.asyncio
     async def test_test_connection_connection_error(self, guardrails_client):

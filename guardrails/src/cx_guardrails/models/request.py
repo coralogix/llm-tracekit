@@ -16,6 +16,7 @@ class GuardrailRequest(BaseModel):
     target: GuardrailsTarget
     timeout: int
 
+
 class BaseGuardrailConfig(BaseModel):
     threshold: float = Field(default=DEFAULT_THRESHOLD, ge=0.0, le=1.0)
 
@@ -28,11 +29,13 @@ class PII(BaseGuardrailConfig):
 class PromptInjection(BaseGuardrailConfig):
     type: Literal["prompt_injection"] = "prompt_injection"
 
+
 class TestPolicy(BaseGuardrailConfig):
     type: Literal["test_policy"] = "test_policy"
 
 
 GuardrailConfigType = PII | PromptInjection | TestPolicy
+
 
 class Message(BaseModel):
     model_config = ConfigDict(extra="ignore")
@@ -68,6 +71,7 @@ class Message(BaseModel):
             role = Role(v.lower())
             return role
 
+
 def _format_tool_calls(tool_calls: list[Any]) -> str:
     """Convert OpenAI tool_calls to a readable string for guardrails."""
     parts = []
@@ -78,6 +82,7 @@ def _format_tool_calls(tool_calls: list[Any]) -> str:
         elif isinstance(tc, dict) and "function" in tc:
             # Dict format
             func = tc["function"]
-            parts.append(f"[tool_call: {func.get('name', 'unknown')}({func.get('arguments', '{}')})]")
+            parts.append(
+                f"[tool_call: {func.get('name', 'unknown')}({func.get('arguments', '{}')})]"
+            )
     return " ".join(parts) if parts else ""
-

@@ -11,8 +11,8 @@ from cx_guardrails import (
     PIICategory,
     GuardrailsTriggered,
     GuardrailsTarget,
+    setup_export_to_coralogix,
 )
-from llm_tracekit.langchain import LangChainInstrumentor, setup_export_to_coralogix
 
 setup_export_to_coralogix(
     service_name="guardrails-langchain-tools-example",
@@ -20,7 +20,6 @@ setup_export_to_coralogix(
     subsystem_name="my_subsystem",
     capture_content=True,
 )
-LangChainInstrumentor().instrument()
 
 TEST_PII = "your email is example@example.com"
 
@@ -32,9 +31,7 @@ llm = ChatOpenAI(model="gpt-4o-mini")
 
 async def main():
     user_content = "What's the weather in Paris?"
-    # LangChain format for API
     history = [HumanMessage(content=user_content)]
-    # Guardrails format
     messages = [{"role": "user", "content": user_content}]
     config = [PII(categories=[PIICategory.EMAIL_ADDRESS]), PromptInjection()]
 
@@ -52,17 +49,18 @@ async def main():
 
         response = await llm_with_tools.ainvoke(history)
 
-        # Handle tool calls
         while response.tool_calls:
             history.append(response)
             for tc in response.tool_calls:
                 tool_func = _get_tool_map().get(tc["name"])
                 args = tc.get("args", {})
                 result = tool_func.invoke(args) if tool_func else "Unknown"
-                messages.append({
-                    "role": "assistant",
-                    "content": f"[tool_call: {tc['name']}({args})]",
-                })
+                messages.append(
+                    {
+                        "role": "assistant",
+                        "content": f"[tool_call: {tc['name']}({args})]",
+                    }
+                )
                 messages.append({"role": "tool", "content": result})
                 history.append(ToolMessage(content=result, tool_call_id=tc.get("id")))
             response = await llm_with_tools.ainvoke(history)

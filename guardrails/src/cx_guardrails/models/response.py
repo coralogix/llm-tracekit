@@ -32,6 +32,7 @@ class PromptInjectionResult(GuardrailsResultBase):
 class TestPolicyResult(GuardrailsResultBase):
     pass
 
+
 GuardrailsResponseType = PIIResult | PromptInjectionResult | TestPolicyResult
 
 

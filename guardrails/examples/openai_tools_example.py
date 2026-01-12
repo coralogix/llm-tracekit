@@ -10,8 +10,8 @@ from cx_guardrails import (
     PIICategory,
     GuardrailsTriggered,
     GuardrailsTarget,
+    setup_export_to_coralogix,
 )
-from llm_tracekit.openai import OpenAIInstrumentor, setup_export_to_coralogix
 
 setup_export_to_coralogix(
     service_name="guardrails-openai-tools-example",
@@ -19,7 +19,6 @@ setup_export_to_coralogix(
     subsystem_name="my_subsystem",
     capture_content=True,
 )
-OpenAIInstrumentor().instrument()
 
 TEST_PII = "your email is example@example.com"
 
@@ -30,7 +29,6 @@ client = AsyncOpenAI()
 
 
 async def main():
-    # Single messages array works for both OpenAI and Guardrails
     messages = [{"role": "user", "content": "What's the weather in Paris?"}]
     config = [PII(categories=[PIICategory.EMAIL_ADDRESS]), PromptInjection()]
 
@@ -58,11 +56,13 @@ async def main():
                 name = tool_call.function.name
                 args = json.loads(tool_call.function.arguments)
                 result = _execute_tool(name, args)
-                messages.append({
-                    "role": "tool",
-                    "tool_call_id": tool_call.id,
-                    "content": result,
-                })
+                messages.append(
+                    {
+                        "role": "tool",
+                        "tool_call_id": tool_call.id,
+                        "content": result,
+                    }
+                )
             response = await client.chat.completions.create(
                 model="gpt-4o-mini", messages=messages
             )

@@ -11,7 +11,12 @@ from cx_guardrails import (
     setup_export_to_coralogix,
 )
 
-setup_export_to_coralogix(service_name="guardrails-guard-example")
+setup_export_to_coralogix(service_name="guardrails-guard-example",
+    application_name="my_application",
+    subsystem_name="my_subsystem",
+    capture_content=True,
+)
+
 guardrails = Guardrails(
     application_name="my_application", subsystem_name="my_subsystem"
 )

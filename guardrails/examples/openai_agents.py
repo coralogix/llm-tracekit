@@ -9,14 +9,15 @@ from cx_guardrails import (
     PIICategory,
     GuardrailsTriggered,
     GuardrailsTarget,
-)
-from llm_tracekit.openai_agents import (
-    OpenAIAgentsInstrumentor,
     setup_export_to_coralogix,
 )
 
-setup_export_to_coralogix(service_name="guardrails-openai-agents-example")
-OpenAIAgentsInstrumentor().instrument()
+setup_export_to_coralogix(
+    service_name="guardrails-openai-agents-example",
+    application_name="my_application",
+    subsystem_name="my_subsystem",
+    capture_content=True,
+)
 
 TEST_PII = "your email is example@example.com"
 

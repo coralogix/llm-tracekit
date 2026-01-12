@@ -9,11 +9,15 @@ from cx_guardrails import (
     PIICategory,
     GuardrailsTriggered,
     GuardrailsTarget,
+    setup_export_to_coralogix,
 )
-from llm_tracekit.gemini import GeminiInstrumentor, setup_export_to_coralogix
 
-setup_export_to_coralogix(service_name="guardrails-gemini-example")
-GeminiInstrumentor().instrument()
+setup_export_to_coralogix(
+    service_name="guardrails-gemini-example",
+    application_name="my_application",
+    subsystem_name="my_subsystem",
+    capture_content=True,
+)
 
 TEST_PII = "your email is example@example.com"
 

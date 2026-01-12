@@ -10,8 +10,8 @@ from cx_guardrails import (
     PIICategory,
     GuardrailsTriggered,
     GuardrailsTarget,
+    setup_export_to_coralogix,
 )
-from llm_tracekit.litellm import LiteLLMInstrumentor, setup_export_to_coralogix
 
 setup_export_to_coralogix(
     service_name="guardrails-litellm-tools-example",
@@ -19,7 +19,6 @@ setup_export_to_coralogix(
     subsystem_name="my_subsystem",
     capture_content=True,
 )
-LiteLLMInstrumentor().instrument()
 
 TEST_PII = "your email is example@example.com"
 
@@ -29,7 +28,6 @@ guardrails = Guardrails(
 
 
 async def main():
-    # Single messages array works for both LiteLLM and Guardrails
     messages = [{"role": "user", "content": "What's the weather in Paris?"}]
     config = [PII(categories=[PIICategory.EMAIL_ADDRESS]), PromptInjection()]
 
@@ -51,18 +49,19 @@ async def main():
         )
         assistant_message = response.choices[0].message
 
-        # Handle tool calls
         if assistant_message.tool_calls:
             messages.append(assistant_message.model_dump())
             for tc in assistant_message.tool_calls:
                 name = tc.function.name
                 args = json.loads(tc.function.arguments)
                 result = _execute_tool(name, args)
-                messages.append({
-                    "role": "tool",
-                    "tool_call_id": tc.id,
-                    "content": result,
-                })
+                messages.append(
+                    {
+                        "role": "tool",
+                        "tool_call_id": tc.id,
+                        "content": result,
+                    }
+                )
             response = await litellm.acompletion(model="gpt-4o-mini", messages=messages)
             assistant_message = response.choices[0].message
 

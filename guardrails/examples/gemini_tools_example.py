@@ -10,8 +10,8 @@ from cx_guardrails import (
     PIICategory,
     GuardrailsTriggered,
     GuardrailsTarget,
+    setup_export_to_coralogix,
 )
-from llm_tracekit.gemini import GeminiInstrumentor, setup_export_to_coralogix
 
 setup_export_to_coralogix(
     service_name="guardrails-gemini-tools-example",
@@ -19,7 +19,6 @@ setup_export_to_coralogix(
     subsystem_name="my_subsystem",
     capture_content=True,
 )
-GeminiInstrumentor().instrument()
 
 TEST_PII = "your email is example@example.com"
 
@@ -52,7 +51,6 @@ async def main():
         )
         candidate = response.candidates[0]
 
-        # Handle function calls
         while (
             candidate.content.parts
             and hasattr(candidate.content.parts[0], "function_call")
@@ -61,10 +59,12 @@ async def main():
             func_call = candidate.content.parts[0].function_call
             args = dict(func_call.args)
             result = _execute_tool(func_call.name, args)
-            messages.append({
-                "role": "assistant",
-                "content": f"[tool_call: {func_call.name}({args})]",
-            })
+            messages.append(
+                {
+                    "role": "assistant",
+                    "content": f"[tool_call: {func_call.name}({args})]",
+                }
+            )
             messages.append({"role": "tool", "content": result})
             function_response = types.Part.from_function_response(
                 name=func_call.name, response={"result": result}

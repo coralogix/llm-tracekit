@@ -188,7 +188,9 @@ class Guardrails:
             guardrails=[TestPolicy()],
         )
         if result is None:
-            raise GuardrailsConnectionTestError("Connection test to Guardrails API failed")
+            raise GuardrailsConnectionTestError(
+                "Connection test to Guardrails API failed"
+            )
         return result
 
 
@@ -244,7 +246,6 @@ class GuardrailRequestSender:
 
     async def _send_request(self, request: GuardrailRequest) -> httpx.Response:
         try:
-            print(request.model_dump(mode="json", exclude_none=True))
             response = await self._client.post(
                 GUARDRAILS_ENDPOINT_URL,
                 json=request.model_dump(mode="json", exclude_none=True),
