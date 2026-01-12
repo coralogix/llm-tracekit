@@ -17,7 +17,7 @@ from google.adk import Agent, Runner
 from google.adk.sessions import InMemorySessionService
 from google.genai import types
 
-from tests_google_adk.utils import assert_base_attributes, get_call_llm_spans
+from .utils import assert_base_attributes, get_call_llm_spans
 
 
 @pytest.mark.vcr()

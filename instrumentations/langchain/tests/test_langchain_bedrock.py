@@ -21,7 +21,7 @@ from langchain_core.tools import tool
 
 from langchain_aws import ChatBedrock
 
-from tests_langchain.utils import (
+from .utils import (
     assert_span_attributes,
     assert_choices_in_span,
     assert_messages_in_span,
