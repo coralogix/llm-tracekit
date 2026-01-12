@@ -1834,6 +1834,9 @@ dev = [
 name = "llm-tracekit-workspace"
 version = "0.0.0"
 source = { virtual = "." }
+dependencies = [
+    { name = "openai-agents" },
+]
 
 [package.optional-dependencies]
 ci-core = [
@@ -1871,6 +1874,7 @@ requires-dist = [
     { name = "llm-tracekit-litellm", marker = "extra == 'ci-core'", editable = "instrumentations/litellm" },
     { name = "llm-tracekit-openai", marker = "extra == 'ci-core'", editable = "instrumentations/openai" },
     { name = "llm-tracekit-openai-agents", marker = "extra == 'ci-core'", editable = "instrumentations/openai_agents" },
+    { name = "openai-agents", specifier = ">=0.6.4" },
 ]
 provides-extras = ["ci-core"]
 

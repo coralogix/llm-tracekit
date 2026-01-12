@@ -1,33 +1,14 @@
-"""
-OpenAI Agents SDK - Guardrails Example
-======================================
-
-Shows how to use Coralogix Guardrails with the OpenAI Agents SDK.
-
-Features:
-    - OpenAI Agents with guardrails
-    - PII detection
-    - Prompt injection prevention
-    - OpenTelemetry tracing to Coralogix
-
-Prerequisites:
-    - pip install openai-agents guardrails llm-tracekit-openai-agents
-    - Set OPENAI_API_KEY environment variable
-    - Set CX_TOKEN and CX_ENDPOINT for Coralogix tracing (optional)
-
-Usage:
-    python openai_agents_example.py
-"""
+"""Using Guardrails with OpenAI Agents SDK."""
 
 import asyncio
 from agents import Agent, Runner
 from cx_guardrails import (
     Guardrails,
-    GuardrailsTarget,
-    GuardrailsTriggered,
     PII,
-    PIICategory,
     PromptInjection,
+    PIICategory,
+    GuardrailsTriggered,
+    GuardrailsTarget,
 )
 from llm_tracekit.openai_agents import (
     OpenAIAgentsInstrumentor,
@@ -47,91 +28,35 @@ agent = Agent(name="Assistant", instructions="You are a helpfull assistant")
 
 async def main():
     user_input = "What is the capital of France?"
-
-    # Build messages incrementally
-    messages = []
+    config = [PII(categories=[PIICategory.EMAIL_ADDRESS]), PromptInjection()]
 
     async with guardrails.guarded_session():
-        # Append user input and guard the prompt
-        messages.append({"role": "user", "content": user_input})
         try:
             await guardrails.guard(
-                [PromptInjection()],
-                [{"role": "user", "content": user_input}],
-                GuardrailsTarget.PROMPT,
+                guardrails=[PromptInjection()],
+                messages=[{"role": "user", "content": user_input}],
+                target=GuardrailsTarget.PROMPT,
             )
         except GuardrailsTriggered as e:
-            print(f"Prompt blocked: {e}")
-            return
+            return print(f"Prompt blocked: {e}")
 
-        # Run agent
-        result = await Runner.run(agent, user_input)
+        result = await Runner.run(agent, input=user_input)
+        response_content = result.final_output + TEST_PII
+        messages = [
+            {"role": "user", "content": user_input},
+            {"role": "assistant", "content": response_content},
+        ]
 
-        # Append assistant response and guard it
-        messages.append({"role": "assistant", "content": result.final_output})
         try:
-            await guardrails.guard(config, messages, GuardrailsTarget.RESPONSE)
+            await guardrails.guard(
+                guardrails=config,
+                messages=messages,
+                target=GuardrailsTarget.RESPONSE,
+            )
             print(f"Assistant: {result.final_output}")
         except GuardrailsTriggered as e:
             print(f"Response blocked: {e}")
 
 
-async def example_pii_blocked():
-    guardrails = Guardrails()
-    agent = make_agent()
-    user_input = "What is the capital of France?"
-
-    # Build messages incrementally
-    messages = []
-
-    async with guardrails.guarded_session():
-        # Append user input and guard the prompt
-        messages.append({"role": "user", "content": user_input})
-        try:
-            await guardrails.guard(messages, PROMPT_GUARDRAILS, GuardrailsTarget.PROMPT)
-        except GuardrailsTriggered as e:
-            print(f"Prompt blocked: {e}")
-            return
-
-        # Run agent
-        result = await Runner.run(agent, user_input)
-
-        # Simulate PII leaking (e.g., from a database/tool)
-        response_with_pii = result.final_output + TEST_PII
-
-        # Append assistant response (with PII) and guard it
-        messages.append({"role": "assistant", "content": response_with_pii})
-        try:
-            await guardrails.guard(messages, RESPONSE_GUARDRAILS, GuardrailsTarget.RESPONSE)
-            print(f"Response: {response_with_pii}")
-        except GuardrailsTriggered as e:
-            print(f"Response blocked (PII detected): {e}")
-
-
-# -----------------------------------------------------------------------------
-# Agent Factory (supporting code)
-# -----------------------------------------------------------------------------
-
-
-def make_agent() -> Agent:
-    return Agent(
-        name="Assistant",
-        model=MODEL,
-        instructions="You are a helpful assistant.",
-    )
-
-
-# -----------------------------------------------------------------------------
-# Main
-# -----------------------------------------------------------------------------
-
-
-async def main():
-    await example_basic()
-    await example_pii_blocked()
-
-
 if __name__ == "__main__":
-    setup_export_to_coralogix(service_name="openai-agents-example")
-    OpenAIAgentsInstrumentor().instrument()
     asyncio.run(main())
