@@ -138,6 +138,11 @@ def handle_response(response):
     return response
 
 
+def case_insensitive_method_matcher(r1, r2):
+    """Custom matcher that compares HTTP methods case-insensitively."""
+    return r1.method.upper() == r2.method.upper()
+
+
 @pytest.fixture(scope="module")
 def vcr_config():
     return {
@@ -159,6 +164,7 @@ def vcr_config():
         "decode_compressed_response": True,
         "before_record_request": handle_request,
         "before_record_response": handle_response,
+        "match_on": ["scheme", "host", "port", "path", "query", "body"],
     }
 
 
