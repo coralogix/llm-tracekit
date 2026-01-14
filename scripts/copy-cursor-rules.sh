@@ -1,13 +1,10 @@
 #!/bin/bash
 
-# Script to sync files from coralogix/ai-coding-rules repository's llm-tracekit folder
+# Script to copy cursor rules from coralogix/ai-coding-rules repository's llm-tracekit folder
 # to the local root directory using SSH
 #
 # Usage:
-#   ./sync-ai-coding-rules.sh
-#
-# Environment Variables:
-#   AI_CODING_RULES_BRANCH - Branch to sync from (default: master)
+#   ./copy-cursor-rules.sh
 #
 # Prerequisites:
 #   - SSH key configured for GitHub access
@@ -25,7 +22,7 @@ NC='\033[0m' # No Color
 # Configuration
 REPO_SSH="git@github.com:coralogix/ai-coding-rules.git"
 SOURCE_FOLDER="llm-tracekit"
-BRANCH="${AI_CODING_RULES_BRANCH:-master}"
+BRANCH="master"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(dirname "$SCRIPT_DIR")"
 TEMP_DIR=$(mktemp -d)
