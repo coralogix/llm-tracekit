@@ -1,16 +1,18 @@
 [project]
-name = "llm-tracekit"
-version = "2.0.0"
-description = "Meta-package for LLM Tracekit - OpenTelemetry instrumentations for LLM providers."
-readme = "../README.md"
+name = "llm-tracekit-google-adk"
+version = "1.0.0"
+description = "OpenTelemetry instrumentation for Google ADK (Agent Development Kit)."
+readme = "README.md"
 authors = [
     { name="Coralogix Ltd.", email="info@coralogix.com" },
 ]
 license = "Apache-2.0"
-license-files = ["../LICENSE"]
+license-files = ["../../LICENSE"]
 requires-python = ">=3.10,<3.14"
 dependencies = [
     "llm-tracekit-core>=1.0.0",
+    "opentelemetry-instrumentation>=0.53b1",
+    "google-adk>=1.0.0",
 ]
 classifiers = [
     "Development Status :: 5 - Production/Stable",
@@ -24,34 +26,39 @@ classifiers = [
     "Programming Language :: Python :: 3.13",
 ]
 
-[project.optional-dependencies]
-openai = ["llm-tracekit-openai>=1.0.0"]
-bedrock = ["llm-tracekit-bedrock>=1.0.0"]
-gemini = ["llm-tracekit-gemini>=1.0.0"]
-litellm = ["llm-tracekit-litellm>=1.0.0"]
-openai-agents = ["llm-tracekit-openai-agents>=1.0.0"]
-guardrails = ["cx-guardrails>=1.0.0"]
-langchain = ["llm-tracekit-langchain>=1.0.0"]
-
 [project.urls]
 homepage = "https://coralogix.com"
 repository = "https://github.com/coralogix/llm-tracekit.git"
+
+[project.entry-points.opentelemetry_instrumentor]
+google_adk = "llm_tracekit.google_adk:GoogleADKInstrumentor"
+
+[dependency-groups]
+dev = [
+    "assertpy>=1.1",
+    "mypy>=1.14.1",
+    "pytest>=8.3.4",
+    "pytest-asyncio>=1.0.0",
+    "pytest-vcr>=1.0.2",
+    "pyyaml>=6.0.2",
+    "ruff>=0.9.7",
+]
 
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
+packages = ["src/llm_tracekit"]
 
 [tool.hatch.build.targets.sdist]
+only-include = [
+    "src/llm_tracekit",
+]
 
 [tool.uv.sources]
 llm-tracekit-core = { workspace = true }
-llm-tracekit-openai = { workspace = true }
-llm-tracekit-bedrock = { workspace = true }
-llm-tracekit-gemini = { workspace = true }
-llm-tracekit-litellm = { workspace = true }
-llm-tracekit-openai-agents = { workspace = true }
-cx-guardrails = { workspace = true }
-llm-tracekit-langchain = { workspace = true }
 
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"

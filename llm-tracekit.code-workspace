@@ -1,0 +1,44 @@
+{
+  "folders": [
+    {
+      "name": "root",
+      "path": "."
+    },
+    {
+      "name": "core",
+      "path": "core"
+    },
+    {
+      "name": "guardrails",
+      "path": "guardrails"
+    },
+    {
+      "name": "openai",
+      "path": "instrumentations/openai"
+    },
+    {
+      "name": "openai-agents",
+      "path": "instrumentations/openai_agents"
+    },
+    {
+      "name": "bedrock",
+      "path": "instrumentations/bedrock"
+    },
+    {
+      "name": "gemini",
+      "path": "instrumentations/gemini"
+    },
+    {
+      "name": "google-adk",
+      "path": "instrumentations/google-adk"
+    },
+    {
+      "name": "langchain",
+      "path": "instrumentations/langchain"
+    },
+    {
+      "name": "litellm",
+      "path": "instrumentations/litellm"
+    }
+  ]
+}
