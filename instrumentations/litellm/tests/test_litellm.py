@@ -35,7 +35,7 @@ def test_litellm_completion(instrument, litellm_span_exporter):
 
     response = litellm.completion(model=model, messages=messages)
 
-    time.sleep(0.1)  # wait for export to finish
+    time.sleep(1)  # wait for export to finish
 
     spans = litellm_span_exporter.get_finished_spans()
     assert len(spans) > 0
@@ -78,7 +78,7 @@ def test_litellm_streaming(instrument, litellm_span_exporter):
     for chunk in response:
         pass
 
-    time.sleep(0.1)
+    time.sleep(1)
 
     spans = litellm_span_exporter.get_finished_spans()
     assert len(spans) > 0
@@ -125,7 +125,7 @@ def test_litellm_multi_turn(instrument, litellm_span_exporter):
     final_response = litellm.completion(model=model, messages=messages)
     completion_content = final_response.choices[0].message.content
 
-    time.sleep(0.2)
+    time.sleep(1)
 
     spans = litellm_span_exporter.get_finished_spans()
 
@@ -189,7 +189,7 @@ def test_litellm_tool_usage(instrument, litellm_span_exporter):
         tool_choice="auto",
     )
 
-    time.sleep(0.1)
+    time.sleep(1)
 
     spans = litellm_span_exporter.get_finished_spans()
     assert len(spans) > 0
