@@ -5,27 +5,84 @@ on:
   pull_request:
 
 jobs:
+  detect-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      packages: ${{ steps.set-packages.outputs.packages }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Detect file changes
+        uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            core:
+              - 'core/**'
+              - 'pyproject.toml'
+              - 'uv.lock'
+            guardrails:
+              - 'guardrails/**'
+            openai:
+              - 'instrumentations/openai/**'
+            openai_agents:
+              - 'instrumentations/openai_agents/**'
+            bedrock:
+              - 'instrumentations/bedrock/**'
+            gemini:
+              - 'instrumentations/gemini/**'
+            langchain:
+              - 'instrumentations/langchain/**'
+            google-adk:
+              - 'instrumentations/google-adk/**'
+            litellm:
+              - 'instrumentations/litellm/**'
+
+      - name: Determine packages to test
+        id: set-packages
+        run: |
+          # If core changed, test everything
+          if [[ "${{ steps.filter.outputs.core }}" == "true" ]]; then
+            echo 'packages=["core", "guardrails", "instrumentations/openai", "instrumentations/openai_agents", "instrumentations/bedrock", "instrumentations/gemini", "instrumentations/langchain", "instrumentations/google-adk", "instrumentations/litellm"]' >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          # Otherwise, build list of changed packages
+          packages=()
+          
+          [[ "${{ steps.filter.outputs.guardrails }}" == "true" ]] && packages+=("guardrails")
+          [[ "${{ steps.filter.outputs.openai }}" == "true" ]] && packages+=("instrumentations/openai")
+          [[ "${{ steps.filter.outputs.openai_agents }}" == "true" ]] && packages+=("instrumentations/openai_agents")
+          [[ "${{ steps.filter.outputs.bedrock }}" == "true" ]] && packages+=("instrumentations/bedrock")
+          [[ "${{ steps.filter.outputs.gemini }}" == "true" ]] && packages+=("instrumentations/gemini")
+          [[ "${{ steps.filter.outputs.langchain }}" == "true" ]] && packages+=("instrumentations/langchain")
+          [[ "${{ steps.filter.outputs.google-adk }}" == "true" ]] && packages+=("instrumentations/google-adk")
+          [[ "${{ steps.filter.outputs.litellm }}" == "true" ]] && packages+=("instrumentations/litellm")
+
+          # Convert bash array to JSON array
+          if [[ ${#packages[@]} -eq 0 ]]; then
+            echo 'packages=[]' >> $GITHUB_OUTPUT
+          else
+            json_packages=$(printf '%s\n' "${packages[@]}" | jq -R . | jq -sc .)
+            echo "packages=$json_packages" >> $GITHUB_OUTPUT
+          fi
+
   tests:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.packages != '[]'
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
         python-version: ["3.10", "3.11", "3.12", "3.13"]
-        package:
-          - core
-          - guardrails
-          - instrumentations/openai
-          - instrumentations/openai_agents
-          - instrumentations/bedrock
-          - instrumentations/gemini
-          - instrumentations/langchain
-          - instrumentations/google-adk
+        package: ${{ fromJson(needs.detect-changes.outputs.packages) }}
     name: ${{ matrix.package }} - Python ${{ matrix.python-version }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup python ${{ matrix.python-version}}
+      - name: Setup python ${{ matrix.python-version }}
         uses: actions/setup-python@v5.0.0
         with:
           python-version: ${{ matrix.python-version }}
@@ -36,30 +93,5 @@ jobs:
       - name: Run tests
         run: |
           cd ${{ matrix.package }}
-          uv run --group=dev --locked pytest
-        shell: bash
-
-  tests-litellm:
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        python-version: ["3.10", "3.11", "3.12", "3.13"]
-    name: instrumentations/litellm - Python ${{ matrix.python-version }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup python ${{ matrix.python-version}}
-        uses: actions/setup-python@v5.0.0
-        with:
-          python-version: ${{ matrix.python-version }}
-
-      - name: Install uv
-        uses: astral-sh/setup-uv@v5
-
-      - name: Run LiteLLM tests
-        run: |
-          cd instrumentations/litellm
           uv run --group=dev --locked pytest
         shell: bash
