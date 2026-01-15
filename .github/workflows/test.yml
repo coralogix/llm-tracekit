@@ -10,6 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       core: ${{ steps.filter.outputs.core }}
+      core_tests: ${{ steps.filter.outputs.core_tests }}
       guardrails: ${{ steps.filter.outputs.guardrails }}
       openai: ${{ steps.filter.outputs.openai }}
       openai_agents: ${{ steps.filter.outputs.openai_agents }}
@@ -28,8 +29,11 @@ jobs:
         with:
           filters: |
             core:
-              - 'core/**'
+              - 'core/src/**'
+              - 'core/pyproject.toml'
               - 'pyproject.toml'
+            core_tests:
+              - 'core/tests/**'
             guardrails:
               - 'guardrails/**'
             openai:
@@ -50,7 +54,7 @@ jobs:
   # Core tests
   test-core:
     needs: detect-changes
-    if: needs.detect-changes.outputs.core == 'true'
+    if: needs.detect-changes.outputs.core == 'true' || needs.detect-changes.outputs.core_tests == 'true'
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
