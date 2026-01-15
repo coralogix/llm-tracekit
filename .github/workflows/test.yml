@@ -30,7 +30,6 @@ jobs:
             core:
               - 'core/**'
               - 'pyproject.toml'
-              - 'uv.lock'
             guardrails:
               - 'guardrails/**'
             openai:
