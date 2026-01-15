@@ -63,5 +63,5 @@ target
 *-benchmark.json
 
 # Local-only cursor rules
-.cursor/
+.cursor
 CLAUDE.md
