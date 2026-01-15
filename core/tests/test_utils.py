@@ -27,7 +27,7 @@ def test_remove_attributes_with_null_values():
         "key4": None,
     }
     result = remove_attributes_with_null_values(attributes)
-    
+
     assert result == {"key1": "value1", "key3": "value3"}
 
 
@@ -58,28 +58,30 @@ def test_remove_attributes_preserves_falsy_values():
         "none": None,
     }
     result = remove_attributes_with_null_values(attributes)
-    
+
     assert result == {"zero": 0, "empty_string": "", "false": False}
 
 
 def test_attribute_generator_removes_none():
     """Test that attribute_generator decorator removes None values."""
+
     @attribute_generator
     def generate_attrs():
         return {"key1": "value1", "key2": None, "key3": "value3"}
-    
+
     result = generate_attrs()
     assert result == {"key1": "value1", "key3": "value3"}
 
 
 def test_attribute_generator_with_args():
     """Test attribute_generator with function arguments."""
+
     @attribute_generator
     def generate_attrs(value1, value2=None):
         return {"key1": value1, "key2": value2}
-    
+
     result = generate_attrs("test")
     assert result == {"key1": "test"}
-    
+
     result = generate_attrs("test", value2="value2")
     assert result == {"key1": "test", "key2": "value2"}

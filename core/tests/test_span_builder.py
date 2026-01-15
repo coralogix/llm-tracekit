@@ -33,7 +33,7 @@ class TestGenerateBaseAttributes:
     def test_with_string_system(self):
         """Test generate_base_attributes with string system."""
         result = generate_base_attributes(system="openai")
-        
+
         assert result[GenAIAttributes.GEN_AI_SYSTEM] == "openai"
         assert result[GenAIAttributes.GEN_AI_OPERATION_NAME] == "chat"
 
@@ -42,7 +42,7 @@ class TestGenerateBaseAttributes:
         result = generate_base_attributes(
             system=GenAIAttributes.GenAiSystemValues.OPENAI
         )
-        
+
         assert result[GenAIAttributes.GEN_AI_SYSTEM] == "openai"
 
     def test_with_custom_operation(self):
@@ -51,7 +51,7 @@ class TestGenerateBaseAttributes:
             system="openai",
             operation=GenAIAttributes.GenAiOperationNameValues.TEXT_COMPLETION,
         )
-        
+
         assert result[GenAIAttributes.GEN_AI_OPERATION_NAME] == "text_completion"
 
 
@@ -67,7 +67,7 @@ class TestGenerateRequestAttributes:
             presence_penalty=0.5,
             frequency_penalty=0.3,
         )
-        
+
         assert result[GenAIAttributes.GEN_AI_REQUEST_MODEL] == "gpt-4o"
         assert result[GenAIAttributes.GEN_AI_REQUEST_TEMPERATURE] == 0.7
         assert result[GenAIAttributes.GEN_AI_REQUEST_TOP_P] == 0.9
@@ -79,7 +79,7 @@ class TestGenerateRequestAttributes:
     def test_with_minimal_params(self):
         """Test generate_request_attributes with only model."""
         result = generate_request_attributes(model="gpt-4o")
-        
+
         assert result[GenAIAttributes.GEN_AI_REQUEST_MODEL] == "gpt-4o"
         # None values should be removed
         assert GenAIAttributes.GEN_AI_REQUEST_TEMPERATURE not in result
@@ -88,7 +88,7 @@ class TestGenerateRequestAttributes:
     def test_with_no_params(self):
         """Test generate_request_attributes with no parameters."""
         result = generate_request_attributes()
-        
+
         assert result == {}
 
 
@@ -97,7 +97,7 @@ class TestGenerateMessageAttributes:
         """Test generate_message_attributes with a simple message."""
         messages = [Message(role="user", content="Hello")]
         result = generate_message_attributes(messages=messages, capture_content=True)
-        
+
         assert result["gen_ai.prompt.0.role"] == "user"
         assert result["gen_ai.prompt.0.content"] == "Hello"
 
@@ -105,7 +105,7 @@ class TestGenerateMessageAttributes:
         """Test that content is not captured when capture_content is False."""
         messages = [Message(role="user", content="Hello")]
         result = generate_message_attributes(messages=messages, capture_content=False)
-        
+
         assert result["gen_ai.prompt.0.role"] == "user"
         assert "gen_ai.prompt.0.content" not in result
 
@@ -117,7 +117,7 @@ class TestGenerateMessageAttributes:
             Message(role="user", content="How are you?"),
         ]
         result = generate_message_attributes(messages=messages, capture_content=True)
-        
+
         assert result["gen_ai.prompt.0.role"] == "user"
         assert result["gen_ai.prompt.0.content"] == "Hello"
         assert result["gen_ai.prompt.1.role"] == "assistant"
@@ -135,12 +135,15 @@ class TestGenerateMessageAttributes:
         )
         messages = [Message(role="assistant", tool_calls=[tool_call])]
         result = generate_message_attributes(messages=messages, capture_content=True)
-        
+
         assert result["gen_ai.prompt.0.role"] == "assistant"
         assert result["gen_ai.prompt.0.tool_calls.0.id"] == "call_123"
         assert result["gen_ai.prompt.0.tool_calls.0.type"] == "function"
         assert result["gen_ai.prompt.0.tool_calls.0.function.name"] == "get_weather"
-        assert result["gen_ai.prompt.0.tool_calls.0.function.arguments"] == '{"location": "London"}'
+        assert (
+            result["gen_ai.prompt.0.tool_calls.0.function.arguments"]
+            == '{"location": "London"}'
+        )
 
 
 class TestGenerateResponseAttributes:
@@ -153,7 +156,7 @@ class TestGenerateResponseAttributes:
             usage_input_tokens=100,
             usage_output_tokens=50,
         )
-        
+
         assert result[GenAIAttributes.GEN_AI_RESPONSE_MODEL] == "gpt-4o-2024-01-01"
         assert result[GenAIAttributes.GEN_AI_RESPONSE_FINISH_REASONS] == ["stop"]
         assert result[GenAIAttributes.GEN_AI_RESPONSE_ID] == "chatcmpl-123"
@@ -163,7 +166,7 @@ class TestGenerateResponseAttributes:
     def test_with_minimal_params(self):
         """Test generate_response_attributes with minimal parameters."""
         result = generate_response_attributes(model="gpt-4o")
-        
+
         assert result[GenAIAttributes.GEN_AI_RESPONSE_MODEL] == "gpt-4o"
         assert GenAIAttributes.GEN_AI_RESPONSE_ID not in result
 
@@ -173,7 +176,7 @@ class TestGenerateChoiceAttributes:
         """Test generate_choice_attributes with a simple choice."""
         choices = [Choice(finish_reason="stop", role="assistant", content="Hello!")]
         result = generate_choice_attributes(choices=choices, capture_content=True)
-        
+
         assert result["gen_ai.completion.0.finish_reason"] == "stop"
         assert result["gen_ai.completion.0.role"] == "assistant"
         assert result["gen_ai.completion.0.content"] == "Hello!"
@@ -182,7 +185,7 @@ class TestGenerateChoiceAttributes:
         """Test that content is not captured when capture_content is False."""
         choices = [Choice(finish_reason="stop", role="assistant", content="Hello!")]
         result = generate_choice_attributes(choices=choices, capture_content=False)
-        
+
         assert result["gen_ai.completion.0.finish_reason"] == "stop"
         assert result["gen_ai.completion.0.role"] == "assistant"
         assert "gen_ai.completion.0.content" not in result
@@ -195,14 +198,19 @@ class TestGenerateChoiceAttributes:
             function_name="search",
             function_arguments='{"query": "weather"}',
         )
-        choices = [Choice(finish_reason="tool_calls", role="assistant", tool_calls=[tool_call])]
+        choices = [
+            Choice(finish_reason="tool_calls", role="assistant", tool_calls=[tool_call])
+        ]
         result = generate_choice_attributes(choices=choices, capture_content=True)
-        
+
         assert result["gen_ai.completion.0.finish_reason"] == "tool_calls"
         assert result["gen_ai.completion.0.tool_calls.0.id"] == "call_456"
         assert result["gen_ai.completion.0.tool_calls.0.type"] == "function"
         assert result["gen_ai.completion.0.tool_calls.0.function.name"] == "search"
-        assert result["gen_ai.completion.0.tool_calls.0.function.arguments"] == '{"query": "weather"}'
+        assert (
+            result["gen_ai.completion.0.tool_calls.0.function.arguments"]
+            == '{"query": "weather"}'
+        )
 
 
 class TestAgent:
@@ -210,7 +218,7 @@ class TestAgent:
         """Test Agent.generate_attributes method."""
         agent = Agent(id="agent-1", name="Assistant", description="A helpful assistant")
         result = agent.generate_attributes()
-        
+
         assert result[GenAIAttributes.GEN_AI_AGENT_ID] == "agent-1"
         assert result[GenAIAttributes.GEN_AI_AGENT_NAME] == "Assistant"
         assert result[GenAIAttributes.GEN_AI_AGENT_DESCRIPTION] == "A helpful assistant"
@@ -219,7 +227,7 @@ class TestAgent:
         """Test Agent with minimal parameters."""
         agent = Agent(name="Assistant")
         result = agent.generate_attributes()
-        
+
         assert result[GenAIAttributes.GEN_AI_AGENT_NAME] == "Assistant"
         assert GenAIAttributes.GEN_AI_AGENT_ID not in result
         assert GenAIAttributes.GEN_AI_AGENT_DESCRIPTION not in result
