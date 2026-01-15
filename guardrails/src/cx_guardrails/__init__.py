@@ -3,6 +3,8 @@ from .models._models import PIICategory, Role, GuardrailsTarget, GuardrailType
 from .models.request import (
     PII,
     PromptInjection,
+    Custom,
+    CustomEvaluationExample,
     GuardrailRequest,
     Message,
 )
@@ -27,6 +29,8 @@ __all__ = [
     "Guardrails",
     "PII",
     "PromptInjection",
+    "Custom",
+    "CustomEvaluationExample",
     "GuardrailRequest",
     "Message",
     "GuardrailsResultBase",
