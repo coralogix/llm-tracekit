@@ -1,13 +1,23 @@
 repos:
-  # Ruff - fast Python linter and formatter
+  # Ruff - fast Python linter and formatter (auto-fix without blocking)
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.8.6
     hooks:
       - id: ruff
-        args: [--fix, --exit-non-zero-on-fix]
+        args: [--fix]
       - id: ruff-format
 
-  # Mypy - static type checker
+  # Auto-stage any files that were modified by the above hooks
+  - repo: local
+    hooks:
+      - id: stage-fixed-files
+        name: stage fixed files
+        entry: git add -u
+        language: system
+        pass_filenames: false
+        always_run: true
+
+  # Mypy - static type checker (this one blocks on errors)
   - repo: local
     hooks:
       - id: mypy
