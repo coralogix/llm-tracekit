@@ -5,67 +5,71 @@ on:
   pull_request:
 
 jobs:
-  # First, detect which packages have changes
   detect-changes:
     runs-on: ubuntu-latest
     outputs:
-      core: ${{ steps.filter.outputs.core }}
-      core_tests: ${{ steps.filter.outputs.core_tests }}
-      guardrails: ${{ steps.filter.outputs.guardrails }}
-      openai: ${{ steps.filter.outputs.openai }}
-      openai_agents: ${{ steps.filter.outputs.openai_agents }}
-      bedrock: ${{ steps.filter.outputs.bedrock }}
-      gemini: ${{ steps.filter.outputs.gemini }}
-      langchain: ${{ steps.filter.outputs.langchain }}
-      google-adk: ${{ steps.filter.outputs.google-adk }}
-      litellm: ${{ steps.filter.outputs.litellm }}
+      packages: ${{ steps.filter.outputs.changes }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Detect file changes
+      - name: Detect changes
         uses: dorny/paths-filter@v3
         id: filter
         with:
+          # Each filter includes core/** so core changes trigger all packages
           filters: |
             core:
-              - 'core/src/**'
-              - 'core/pyproject.toml'
+              - 'core/**'
               - 'pyproject.toml'
-            core_tests:
-              - 'core/tests/**'
             guardrails:
               - 'guardrails/**'
+              - 'core/**'
+              - 'pyproject.toml'
             openai:
               - 'instrumentations/openai/**'
+              - 'core/**'
+              - 'pyproject.toml'
             openai_agents:
               - 'instrumentations/openai_agents/**'
+              - 'core/**'
+              - 'pyproject.toml'
             bedrock:
               - 'instrumentations/bedrock/**'
+              - 'core/**'
+              - 'pyproject.toml'
             gemini:
               - 'instrumentations/gemini/**'
+              - 'core/**'
+              - 'pyproject.toml'
             langchain:
               - 'instrumentations/langchain/**'
+              - 'core/**'
+              - 'pyproject.toml'
             google-adk:
               - 'instrumentations/google-adk/**'
+              - 'core/**'
+              - 'pyproject.toml'
             litellm:
               - 'instrumentations/litellm/**'
+              - 'core/**'
+              - 'pyproject.toml'
 
-  # Core tests
-  test-core:
+  test:
     needs: detect-changes
-    if: needs.detect-changes.outputs.core == 'true' || needs.detect-changes.outputs.core_tests == 'true'
+    if: needs.detect-changes.outputs.packages != '[]'
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
         python-version: ["3.10", "3.11", "3.12", "3.13"]
-    name: core - Python ${{ matrix.python-version }}
+        package: ${{ fromJson(needs.detect-changes.outputs.packages) }}
+    name: ${{ matrix.package }} - Python ${{ matrix.python-version }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup python ${{ matrix.python-version}}
+      - name: Setup Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5.0.0
         with:
           python-version: ${{ matrix.python-version }}
@@ -75,230 +79,10 @@ jobs:
 
       - name: Run tests
         run: |
-          cd core
-          uv run --group=dev --locked pytest
-        shell: bash
-
-  # Guardrails tests
-  test-guardrails:
-    needs: detect-changes
-    if: needs.detect-changes.outputs.core == 'true' || needs.detect-changes.outputs.guardrails == 'true'
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        python-version: ["3.10", "3.11", "3.12", "3.13"]
-    name: guardrails - Python ${{ matrix.python-version }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup python ${{ matrix.python-version}}
-        uses: actions/setup-python@v5.0.0
-        with:
-          python-version: ${{ matrix.python-version }}
-
-      - name: Install uv
-        uses: astral-sh/setup-uv@v5
-
-      - name: Run tests
-        run: |
-          cd guardrails
-          uv run --group=dev --locked pytest
-        shell: bash
-
-  # OpenAI instrumentation tests
-  test-openai:
-    needs: detect-changes
-    if: needs.detect-changes.outputs.core == 'true' || needs.detect-changes.outputs.openai == 'true'
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        python-version: ["3.10", "3.11", "3.12", "3.13"]
-    name: instrumentations/openai - Python ${{ matrix.python-version }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup python ${{ matrix.python-version}}
-        uses: actions/setup-python@v5.0.0
-        with:
-          python-version: ${{ matrix.python-version }}
-
-      - name: Install uv
-        uses: astral-sh/setup-uv@v5
-
-      - name: Run tests
-        run: |
-          cd instrumentations/openai
-          uv run --group=dev --locked pytest
-        shell: bash
-
-  # OpenAI Agents instrumentation tests
-  test-openai-agents:
-    needs: detect-changes
-    if: needs.detect-changes.outputs.core == 'true' || needs.detect-changes.outputs.openai_agents == 'true'
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        python-version: ["3.10", "3.11", "3.12", "3.13"]
-    name: instrumentations/openai_agents - Python ${{ matrix.python-version }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup python ${{ matrix.python-version}}
-        uses: actions/setup-python@v5.0.0
-        with:
-          python-version: ${{ matrix.python-version }}
-
-      - name: Install uv
-        uses: astral-sh/setup-uv@v5
-
-      - name: Run tests
-        run: |
-          cd instrumentations/openai_agents
-          uv run --group=dev --locked pytest
-        shell: bash
-
-  # Bedrock instrumentation tests
-  test-bedrock:
-    needs: detect-changes
-    if: needs.detect-changes.outputs.core == 'true' || needs.detect-changes.outputs.bedrock == 'true'
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        python-version: ["3.10", "3.11", "3.12", "3.13"]
-    name: instrumentations/bedrock - Python ${{ matrix.python-version }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup python ${{ matrix.python-version}}
-        uses: actions/setup-python@v5.0.0
-        with:
-          python-version: ${{ matrix.python-version }}
-
-      - name: Install uv
-        uses: astral-sh/setup-uv@v5
-
-      - name: Run tests
-        run: |
-          cd instrumentations/bedrock
-          uv run --group=dev --locked pytest
-        shell: bash
-
-  # Gemini instrumentation tests
-  test-gemini:
-    needs: detect-changes
-    if: needs.detect-changes.outputs.core == 'true' || needs.detect-changes.outputs.gemini == 'true'
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        python-version: ["3.10", "3.11", "3.12", "3.13"]
-    name: instrumentations/gemini - Python ${{ matrix.python-version }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup python ${{ matrix.python-version}}
-        uses: actions/setup-python@v5.0.0
-        with:
-          python-version: ${{ matrix.python-version }}
-
-      - name: Install uv
-        uses: astral-sh/setup-uv@v5
-
-      - name: Run tests
-        run: |
-          cd instrumentations/gemini
-          uv run --group=dev --locked pytest
-        shell: bash
-
-  # LangChain instrumentation tests
-  test-langchain:
-    needs: detect-changes
-    if: needs.detect-changes.outputs.core == 'true' || needs.detect-changes.outputs.langchain == 'true'
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        python-version: ["3.10", "3.11", "3.12", "3.13"]
-    name: instrumentations/langchain - Python ${{ matrix.python-version }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup python ${{ matrix.python-version}}
-        uses: actions/setup-python@v5.0.0
-        with:
-          python-version: ${{ matrix.python-version }}
-
-      - name: Install uv
-        uses: astral-sh/setup-uv@v5
-
-      - name: Run tests
-        run: |
-          cd instrumentations/langchain
-          uv run --group=dev --locked pytest
-        shell: bash
-
-  # Google ADK instrumentation tests
-  test-google-adk:
-    needs: detect-changes
-    if: needs.detect-changes.outputs.core == 'true' || needs.detect-changes.outputs.google-adk == 'true'
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        python-version: ["3.10", "3.11", "3.12", "3.13"]
-    name: instrumentations/google-adk - Python ${{ matrix.python-version }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup python ${{ matrix.python-version}}
-        uses: actions/setup-python@v5.0.0
-        with:
-          python-version: ${{ matrix.python-version }}
-
-      - name: Install uv
-        uses: astral-sh/setup-uv@v5
-
-      - name: Run tests
-        run: |
-          cd instrumentations/google-adk
-          uv run --group=dev --locked pytest
-        shell: bash
-
-  # LiteLLM instrumentation tests (separate job due to different setup)
-  test-litellm:
-    needs: detect-changes
-    if: needs.detect-changes.outputs.core == 'true' || needs.detect-changes.outputs.litellm == 'true'
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        python-version: ["3.10", "3.11", "3.12", "3.13"]
-    name: instrumentations/litellm - Python ${{ matrix.python-version }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup python ${{ matrix.python-version}}
-        uses: actions/setup-python@v5.0.0
-        with:
-          python-version: ${{ matrix.python-version }}
-
-      - name: Install uv
-        uses: astral-sh/setup-uv@v5
-
-      - name: Run LiteLLM tests
-        run: |
-          cd instrumentations/litellm
+          case "${{ matrix.package }}" in
+            core) cd core ;;
+            guardrails) cd guardrails ;;
+            *) cd instrumentations/${{ matrix.package }} ;;
+          esac
           uv run --group=dev --locked pytest
         shell: bash
