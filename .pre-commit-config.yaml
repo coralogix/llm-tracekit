@@ -1,0 +1,18 @@
+repos:
+  # Ruff - fast Python linter and formatter
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.8.6
+    hooks:
+      - id: ruff
+        args: [--fix, --exit-non-zero-on-fix]
+      - id: ruff-format
+
+  # Mypy - static type checker
+  - repo: local
+    hooks:
+      - id: mypy
+        name: mypy
+        entry: uv run --all-extras mypy .
+        language: system
+        types: [python]
+        pass_filenames: false
