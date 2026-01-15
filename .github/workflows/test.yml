@@ -5,27 +5,71 @@ on:
   pull_request:
 
 jobs:
-  tests:
+  detect-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      packages: ${{ steps.filter.outputs.changes }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Detect changes
+        uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          # Each filter includes core/** so core changes trigger all packages
+          filters: |
+            core:
+              - 'core/**'
+              - 'pyproject.toml'
+            guardrails:
+              - 'guardrails/**'
+              - 'core/**'
+              - 'pyproject.toml'
+            openai:
+              - 'instrumentations/openai/**'
+              - 'core/**'
+              - 'pyproject.toml'
+            openai_agents:
+              - 'instrumentations/openai_agents/**'
+              - 'core/**'
+              - 'pyproject.toml'
+            bedrock:
+              - 'instrumentations/bedrock/**'
+              - 'core/**'
+              - 'pyproject.toml'
+            gemini:
+              - 'instrumentations/gemini/**'
+              - 'core/**'
+              - 'pyproject.toml'
+            langchain:
+              - 'instrumentations/langchain/**'
+              - 'core/**'
+              - 'pyproject.toml'
+            google-adk:
+              - 'instrumentations/google-adk/**'
+              - 'core/**'
+              - 'pyproject.toml'
+            litellm:
+              - 'instrumentations/litellm/**'
+              - 'core/**'
+              - 'pyproject.toml'
+
+  test:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.packages != '[]'
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
         python-version: ["3.10", "3.11", "3.12", "3.13"]
-        package:
-          - core
-          - guardrails
-          - instrumentations/openai
-          - instrumentations/openai_agents
-          - instrumentations/bedrock
-          - instrumentations/gemini
-          - instrumentations/langchain
-          - instrumentations/google-adk
+        package: ${{ fromJson(needs.detect-changes.outputs.packages) }}
     name: ${{ matrix.package }} - Python ${{ matrix.python-version }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup python ${{ matrix.python-version}}
+      - name: Setup Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5.0.0
         with:
           python-version: ${{ matrix.python-version }}
@@ -35,31 +79,10 @@ jobs:
 
       - name: Run tests
         run: |
-          cd ${{ matrix.package }}
-          uv run --group=dev --locked pytest
-        shell: bash
-
-  tests-litellm:
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        python-version: ["3.10", "3.11", "3.12", "3.13"]
-    name: instrumentations/litellm - Python ${{ matrix.python-version }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup python ${{ matrix.python-version}}
-        uses: actions/setup-python@v5.0.0
-        with:
-          python-version: ${{ matrix.python-version }}
-
-      - name: Install uv
-        uses: astral-sh/setup-uv@v5
-
-      - name: Run LiteLLM tests
-        run: |
-          cd instrumentations/litellm
+          case "${{ matrix.package }}" in
+            core) cd core ;;
+            guardrails) cd guardrails ;;
+            *) cd instrumentations/${{ matrix.package }} ;;
+          esac
           uv run --group=dev --locked pytest
         shell: bash

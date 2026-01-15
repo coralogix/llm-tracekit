@@ -1,0 +1,28 @@
+repos:
+  # Ruff
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.8.6
+    hooks:
+      - id: ruff
+        args: [--fix]
+      - id: ruff-format
+
+  # Auto-stage linted files
+  - repo: local
+    hooks:
+      - id: stage-fixed-files
+        name: stage fixed files
+        entry: git add -u
+        language: system
+        pass_filenames: false
+        always_run: true
+
+  # Mypy
+  - repo: local
+    hooks:
+      - id: mypy
+        name: mypy
+        entry: uv run --all-extras mypy .
+        language: system
+        types: [python]
+        pass_filenames: false
