@@ -64,6 +64,7 @@ GoogleADKInstrumentor().uninstrument()
 
 ### Full Example
 ```python
+import asyncio
 from google.adk import Agent, Runner
 from google.adk.sessions import InMemorySessionService
 from google.genai import types
@@ -83,19 +84,33 @@ setup_export_to_coralogix(
 # Activate instrumentation
 GoogleADKInstrumentor().instrument()
 
-# Example Google ADK Usage
-agent = Agent(
-    name="MyAgent",
-    model="gemini-2.0-flash",
-    instruction="You are a helpful assistant.",
-)
 
-session_service = InMemorySessionService()
-runner = Runner(
-    agent=agent,
-    app_name="my_app",
-    session_service=session_service,
-)
+async def main():
+    agent = Agent(
+        name="MyAgent",
+        model="gemini-2.0-flash",
+        instruction="You are a helpful assistant.",
+    )
+
+    session_service = InMemorySessionService()
+    runner = Runner(agent=agent, app_name="my_app", session_service=session_service)
+
+    session = await session_service.create_session(app_name="my_app", user_id="user_1")
+
+    async for event in runner.run_async(
+        user_id="user_1",
+        session_id=session.id,
+        new_message=types.Content(role="user", parts=[types.Part(text="Hello!")]),
+    ):
+        # print any streamed text chunks
+        if event.content and event.content.parts:
+            for part in event.content.parts:
+                if part.text:
+                    print(part.text, end="")
+
+
+if __name__ == "__main__":
+    asyncio.run(main())
 ```
 
 ## Semantic Conventions
