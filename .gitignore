@@ -62,6 +62,5 @@ target
 # Benchmark result files
 *-benchmark.json
 
-# Local-only cursor rules
 .cursor
 CLAUDE.md

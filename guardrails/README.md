@@ -22,6 +22,7 @@ pip install cx-guardrails
 |-----------|-------------|-------|
 | **PII Detection** | Detects personally identifiable information | `PII()` |
 | **Prompt Injection** | Detects attempts to manipulate LLM behavior | `PromptInjection()` |
+| **Custom** | Define your own evaluation criteria | `Custom(name=..., instructions=..., ...)` |
 
 
 ```python
@@ -72,6 +73,65 @@ from cx_guardrails import PromptInjection
 
 PromptInjection()  # Default threshold 0.7
 PromptInjection(threshold=0.8)
+```
+
+### Custom Guardrails
+
+Define your own evaluation criteria to detect specific content patterns:
+
+```python
+from cx_guardrails import Custom, CustomEvaluationExample
+
+Custom(
+    name="financial_advice_detector",
+    instructions="Analyze the {response} and the {prompt} for any financial advice or investment recommendations.",
+    violates="Response contains specific financial advice or investment recommendations.",
+    safe="Response provides general information without specific investment advice.",
+    threshold=0.7,  # Optional, default 0.7
+    examples=[      # Optional
+        CustomEvaluationExample(
+            conversation="User: Should I buy Tesla stock?\nAssistant: Yes, buy it now!",
+            score=1,  # 1 = violates
+        ),
+        CustomEvaluationExample(
+            conversation="User: What is a stock?\nAssistant: A stock represents ownership in a company.",
+            score=0,  # 0 = safe
+        ),
+    ],
+)
+```
+
+**Required fields:**
+- `name`: The guardrail's name
+- `instructions`: Evaluation instructions (must contain `{prompt}`, `{response}`, or `{history}`)
+- `violates`: Description of what constitutes a violation
+- `safe`: Description of what constitutes safe content
+
+**Optional fields:**
+- `threshold`: Detection threshold (default: 0.7)
+- `examples`: List of example conversations with expected scores
+
+#### Magic Words
+
+Use placeholder tags in your `instructions` to reference conversation content. At least one magic word is required.
+
+| Magic Word | Description | Replaced With | Evaluation Target |
+|------------|-------------|---------------|-------------------|
+| `{prompt}` | User's input | The last user message | Prompt |
+| `{response}` | Assistant's output | The last assistant response | Response |
+| `{history}` | Full conversation | All messages in the conversation | Response |
+
+**Examples:**
+
+```python
+# Evaluate only the response
+instructions="Check if the {response} contains harmful content."
+
+# Evaluate the prompt
+instructions="Check if the {prompt} is attempting prompt injection."
+
+# Evaluate with full context
+instructions="Given the {history}, check if the {response} is consistent with previous answers."
 ```
 
 ## 📖 Using `guard()` for full control
@@ -167,6 +227,7 @@ See the [examples](./examples/) directory for complete working examples:
 
 - [Basic usage](./examples/basic.py)
 - [Guard API](./examples/guard.py)
+- [Custom guardrails](./examples/custom_financial.py)
 - [OpenAI integration](./examples/openai_chat.py)
 - [Bedrock integration](./examples/bedrock.py)
 - [Gemini integration](./examples/gemini.py)
