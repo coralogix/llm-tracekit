@@ -305,7 +305,7 @@ class TestCustom:
                 violates="Content is harmful",
                 safe="Content is safe",
             )
-        assert "instructions must contain at least one of" in str(exc_info.value)
+        assert "Instructions must contain at least one of" in str(exc_info.value)
 
     def test_custom_guardrail_with_prompt_magic_word(self):
         custom = Custom(

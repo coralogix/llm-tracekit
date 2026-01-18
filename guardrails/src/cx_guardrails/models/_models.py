@@ -5,12 +5,14 @@ class PIICategory(str, Enum):
     PHONE_NUMBER = "phone_number"
     EMAIL_ADDRESS = "email_address"
     CREDIT_CARD = "credit_card"
+    IBAN_CODE = "iban_code"
     US_SSN = "us_ssn"
 
 
 class GuardrailType(str, Enum):
     PII = "pii"
     PROMPT_INJECTION = "prompt_injection"
+    CUSTOM = "custom"
 
 
 class GuardrailsTarget(str, Enum):
