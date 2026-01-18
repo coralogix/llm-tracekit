@@ -13,10 +13,7 @@ from cx_guardrails import (
 setup_export_to_coralogix(service_name="Custom-financial-test")
 
 guardrails = Guardrails(
-    application_name="my_application",
-    subsystem_name="my_subsystem",
-    cx_endpoint="http://localhost:8880"
-    
+    application_name="my_application", subsystem_name="my_subsystem"
 )
 
 
