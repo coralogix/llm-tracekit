@@ -170,6 +170,7 @@ See the [examples](./examples/) directory for complete working examples:
 - [OpenAI integration](./examples/openai_chat.py)
 - [Bedrock integration](./examples/bedrock.py)
 - [Gemini integration](./examples/gemini.py)
+- [Google ADK integration](./examples/google_adk.py)
 - [LangChain integration](./examples/langchain.py)
 - [LiteLLM integration](./examples/litellm_chat.py)
 - [OpenAI Agents integration](./examples/openai_agents.py)
