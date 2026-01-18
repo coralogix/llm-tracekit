@@ -3,7 +3,7 @@ OpenTelemetry instrumentation for the [OpenAI Agents SDK](https://openai.github.
 
 ## Installation
 ```bash
-pip install "llm-tracekit-openai_agents"
+pip install "llm-tracekit-openai-agents"
 ```
 
 
