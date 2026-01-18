@@ -84,7 +84,7 @@ from cx_guardrails import Custom, CustomEvaluationExample
 
 Custom(
     name="financial_advice_detector",
-    instructions="Analyze the {response} for any financial advice or investment recommendations.",
+    instructions="Analyze the {response} and the {prompt} for any financial advice or investment recommendations.",
     violates="Response contains specific financial advice or investment recommendations.",
     safe="Response provides general information without specific investment advice.",
     threshold=0.7,  # Optional, default 0.7
