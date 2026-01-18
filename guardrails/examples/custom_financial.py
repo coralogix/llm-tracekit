@@ -6,14 +6,17 @@ from cx_guardrails import (
     Custom,
     CustomEvaluationExample,
     GuardrailsTriggered,
+    GuardrailsTarget,
     setup_export_to_coralogix,
 )
 
-setup_export_to_coralogix(service_name="ingress.eu2.coralogix.com:443")
+setup_export_to_coralogix(service_name="Custom-financial-test")
 
 guardrails = Guardrails(
     application_name="my_application",
     subsystem_name="my_subsystem",
+    cx_endpoint="http://localhost:8880"
+    
 )
 
 
@@ -21,26 +24,34 @@ async def main():
     safe_response = "A 401(k) is a retirement savings plan sponsored by an employer. It allows employees to save and invest a portion of their paycheck before taxes are taken out."
 
     risky_response = "Based on current market trends, you should definitely invest 50% of your savings in Bitcoin and 30% in tech stocks like NVIDIA. This will maximize your returns."
-
     async with guardrails.guarded_session():
         try:
-            await guardrails.guard_response(
-                [financial_advice_guardrail], safe_response, "What is a 401k?"
+            await guardrails.guard(
+                [financial_advice_guardrail],
+                [
+                    {"role": "user", "content": "What is a 401k?"},
+                    {"role": "assistant", "content": safe_response},
+                ],
+                GuardrailsTarget.RESPONSE,
             )
-            print(f"✓ Response allowed: {safe_response[:80]}...")
+            print(f"✓ Response allowed: {safe_response}...")
         except GuardrailsTriggered as e:
             print(f"✗ Response blocked: {e}")
 
         print("\nTest 2: Specific investment recommendation")
         try:
-            await guardrails.guard_response(
+            await guardrails.guard(
                 [financial_advice_guardrail],
-                risky_response,
-                "How should I invest my money?",
+                [
+                    {"role": "user", "content": "How should I invest my money?"},
+                    {"role": "assistant", "content": risky_response},
+                ],
+                GuardrailsTarget.RESPONSE,
             )
-            print(f"✓ Response allowed: {risky_response[:80]}...")
+            print(f"✓ Response allowed: {risky_response}...")
         except GuardrailsTriggered as e:
             print(f"✗ Response blocked: {e}")
+
 
 
 financial_advice_guardrail = Custom(

@@ -43,6 +43,7 @@ class Custom(BaseGuardrailConfig):
     violates: str
     safe: str
     examples: Optional[list[CustomEvaluationExample]] = None
+    should_include_system_prompt: bool = False 
 
     @field_validator("instructions", mode="after")
     @classmethod

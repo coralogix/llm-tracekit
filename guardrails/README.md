@@ -102,7 +102,7 @@ Custom(
 ```
 
 **Required fields:**
-- `name`: Identifier for the guardrail
+- `name`: The guardrail's name
 - `instructions`: Evaluation instructions (must contain `{prompt}`, `{response}`, or `{history}`)
 - `violates`: Description of what constitutes a violation
 - `safe`: Description of what constitutes safe content
@@ -110,6 +110,29 @@ Custom(
 **Optional fields:**
 - `threshold`: Detection threshold (default: 0.7)
 - `examples`: List of example conversations with expected scores
+
+#### Magic Words
+
+Use placeholder tags in your `instructions` to reference conversation content. At least one magic word is required.
+
+| Magic Word | Description | Replaced With | Evaluation Target |
+|------------|-------------|---------------|-------------------|
+| `{prompt}` | User's input | The last user message | Prompt |
+| `{response}` | Assistant's output | The last assistant response | Response |
+| `{history}` | Full conversation | All messages in the conversation | Response |
+
+**Examples:**
+
+```python
+# Evaluate only the response
+instructions="Check if the {response} contains harmful content."
+
+# Evaluate the prompt
+instructions="Check if the {prompt} is attempting prompt injection."
+
+# Evaluate with full context
+instructions="Given the {history}, check if the {response} is consistent with previous answers."
+```
 
 ## 📖 Using `guard()` for full control
 
