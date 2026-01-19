@@ -146,7 +146,7 @@ def test_chat_completion_bad_endpoint(
     spans = span_exporter.get_finished_spans()
     assert_all_attributes(spans[0], llm_model_value, server_address="localhost")
     assert 4242 == spans[0].attributes[ServerAttributes.SERVER_PORT]
-    assert "APIConnectionError" == spans[0].attributes[ErrorAttributes.ERROR_TYPE]
+    assert "APITimeoutError" == spans[0].attributes[ErrorAttributes.ERROR_TYPE]
 
     metrics = metric_reader.get_metrics_data().resource_metrics
     assert len(metrics) == 1
@@ -164,7 +164,7 @@ def test_chat_completion_bad_endpoint(
     assert duration_metric.data.data_points[0].sum > 0
     assert (
         duration_metric.data.data_points[0].attributes[ErrorAttributes.ERROR_TYPE]
-        == "APIConnectionError"
+        == "APITimeoutError"
     )
 
 
