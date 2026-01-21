@@ -22,12 +22,13 @@ pip install cx-guardrails
 |-----------|-------------|-------|
 | **PII Detection** | Detects personally identifiable information | `PII()` |
 | **Prompt Injection** | Detects attempts to manipulate LLM behavior | `PromptInjection()` |
+| **Toxicity** | Detects toxic, harmful, or offensive content | `Toxicity()` |
 | **Custom** | Define your own evaluation criteria | `Custom(name=..., instructions=..., ...)` |
 
 
 ```python
 import asyncio
-from cx_guardrails import Guardrails, PII, PromptInjection, GuardrailsTriggered, setup_export_to_coralogix
+from cx_guardrails import Guardrails, PII, PromptInjection, Toxicity, GuardrailsTriggered, setup_export_to_coralogix
 
 setup_export_to_coralogix(service_name="my-service")
 
@@ -73,6 +74,17 @@ from cx_guardrails import PromptInjection
 
 PromptInjection()  # Default threshold 0.7
 PromptInjection(threshold=0.8)
+```
+
+### Toxicity Detection
+
+Detects toxic, harmful, or offensive content in messages.
+
+```python
+from cx_guardrails import Toxicity
+
+Toxicity()  # Default threshold 0.7
+Toxicity(threshold=0.8)
 ```
 
 ### Custom Guardrails
