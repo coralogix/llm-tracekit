@@ -23,6 +23,7 @@ from opentelemetry.semconv._incubating.attributes import (
     server_attributes as ServerAttributes,
 )
 from opentelemetry.trace import Span, SpanKind, Tracer
+from opentelemetry.util.types import AttributeValue
 
 from llm_tracekit.core import (
     handle_span_exception,
@@ -161,7 +162,8 @@ def embeddings_create(
         )
 
         request_model = span_attributes.get(GenAIAttributes.GEN_AI_REQUEST_MODEL)
-        span_name = f"{span_attributes[GenAIAttributes.GEN_AI_OPERATION_NAME]} {request_model}"
+        op_name = span_attributes[GenAIAttributes.GEN_AI_OPERATION_NAME]
+        span_name = f"{op_name} {request_model}" if request_model else op_name
         with tracer.start_as_current_span(
             name=span_name,
             kind=SpanKind.CLIENT,
@@ -209,7 +211,8 @@ def async_embeddings_create(
         )
 
         request_model = span_attributes.get(GenAIAttributes.GEN_AI_REQUEST_MODEL)
-        span_name = f"{span_attributes[GenAIAttributes.GEN_AI_OPERATION_NAME]} {request_model}"
+        op_name = span_attributes[GenAIAttributes.GEN_AI_OPERATION_NAME]
+        span_name = f"{op_name} {request_model}" if request_model else op_name
         with tracer.start_as_current_span(
             name=span_name,
             kind=SpanKind.CLIENT,
@@ -315,13 +318,14 @@ def _record_embedding_metrics(
     span_attributes: dict,
     error_type: str | None,
 ):
-    common_attributes = {
+    common_attributes: dict[str, AttributeValue] = {
         GenAIAttributes.GEN_AI_OPERATION_NAME: "embedding",
         GenAIAttributes.GEN_AI_SYSTEM: GenAIAttributes.GenAiSystemValues.OPENAI.value,
-        GenAIAttributes.GEN_AI_REQUEST_MODEL: span_attributes.get(
-            GenAIAttributes.GEN_AI_REQUEST_MODEL
-        ),
     }
+
+    request_model = span_attributes.get(GenAIAttributes.GEN_AI_REQUEST_MODEL)
+    if isinstance(request_model, str) and request_model:
+        common_attributes[GenAIAttributes.GEN_AI_REQUEST_MODEL] = request_model
 
     if error_type:
         common_attributes["error.type"] = error_type
@@ -330,14 +334,14 @@ def _record_embedding_metrics(
         common_attributes[GenAIAttributes.GEN_AI_RESPONSE_MODEL] = result.model
 
     if ServerAttributes.SERVER_ADDRESS in span_attributes:
-        common_attributes[ServerAttributes.SERVER_ADDRESS] = span_attributes[
-            ServerAttributes.SERVER_ADDRESS
-        ]
+        server_address = span_attributes[ServerAttributes.SERVER_ADDRESS]
+        if isinstance(server_address, str) and server_address:
+            common_attributes[ServerAttributes.SERVER_ADDRESS] = server_address
 
     if ServerAttributes.SERVER_PORT in span_attributes:
-        common_attributes[ServerAttributes.SERVER_PORT] = span_attributes[
-            ServerAttributes.SERVER_PORT
-        ]
+        server_port = span_attributes[ServerAttributes.SERVER_PORT]
+        if isinstance(server_port, int):
+            common_attributes[ServerAttributes.SERVER_PORT] = server_port
 
     instruments.operation_duration_histogram.record(
         duration,
@@ -350,7 +354,7 @@ def _record_embedding_metrics(
             usage, "total_tokens", None
         )
         if prompt_tokens is not None:
-            input_attributes = {
+            input_attributes: dict[str, AttributeValue] = {
                 **common_attributes,
                 GenAIAttributes.GEN_AI_TOKEN_TYPE: GenAIAttributes.GenAiTokenTypeValues.INPUT.value,
             }

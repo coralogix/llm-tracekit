@@ -15,7 +15,6 @@
 import os
 
 import openai
-import pytest
 
 from llm_tracekit.core import OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT
 from llm_tracekit.openai.instrumentor import OpenAIInstrumentor
