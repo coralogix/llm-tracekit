@@ -1609,7 +1609,7 @@ requires-dist = [
     { name = "llm-tracekit-google-adk", marker = "extra == 'google-adk'", editable = "instrumentations/google-adk" },
     { name = "llm-tracekit-langchain", marker = "extra == 'langchain'", editable = "instrumentations/langchain" },
     { name = "llm-tracekit-openai", marker = "extra == 'openai'", editable = "instrumentations/openai" },
-    { name = "llm-tracekit-openai-agents", marker = "extra == 'openai-agents'", editable = "instrumentations/openai_agents" },
+    { name = "llm-tracekit-openai-agents", marker = "extra == 'openai-agents'", editable = "instrumentations/openai-agents" },
 ]
 provides-extras = ["openai", "bedrock", "gemini", "openai-agents", "guardrails", "langchain", "google-adk"]
 
@@ -1875,7 +1875,7 @@ dev = [
 [[package]]
 name = "llm-tracekit-openai-agents"
 version = "1.0.0"
-source = { editable = "instrumentations/openai_agents" }
+source = { editable = "instrumentations/openai-agents" }
 dependencies = [
     { name = "llm-tracekit-core" },
     { name = "openai" },

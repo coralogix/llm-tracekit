@@ -14,7 +14,6 @@
 
 import json
 import os
-import sys
 from typing import Generator
 
 import pytest
@@ -27,12 +26,6 @@ from opentelemetry.sdk.trace.export.in_memory_span_exporter import InMemorySpanE
 
 from llm_tracekit.core import OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT
 from llm_tracekit.gemini.instrumentor import GeminiInstrumentor
-
-collect_ignore: list[str] = []
-
-if sys.version_info < (3, 10):
-    collect_ignore.append("openai_agents")
-    collect_ignore.append("langchain")
 
 
 @pytest.fixture(scope="function", name="span_exporter")
