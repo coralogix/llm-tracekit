@@ -16,7 +16,8 @@
 from __future__ import annotations
 
 import json
-from dataclasses import dataclass, field
+from dataclasses import asdict, dataclass, field, is_dataclass
+from enum import Enum
 from typing import Any, Iterable, Sequence
 
 from opentelemetry.semconv._incubating.attributes import (
@@ -33,6 +34,7 @@ from llm_tracekit.core import (
     generate_request_attributes,
     generate_response_attributes,
 )
+from llm_tracekit.core import _extended_gen_ai_attributes as ExtendedGenAIAttributes
 
 _GOOGLE_GENAI_SYSTEM = GenAIAttributes.GenAiSystemValues.GEMINI.value
 _OPERATION_NAME_VALUE = GenAIAttributes.GenAiOperationNameValues.CHAT.value
@@ -290,6 +292,10 @@ def build_request_details(
     if config_attributes:
         attributes.update(config_attributes)
 
+    tool_attributes = _config_to_tool_attributes(config)
+    if tool_attributes:
+        attributes.update(tool_attributes)
+
     span_name = f"{_OPERATION_NAME_VALUE}"
 
     return GeminiRequestDetails(
@@ -424,6 +430,57 @@ def _config_to_request_attributes(config: Any) -> dict[str, Any]:
         attributes[getattr(GenAIAttributes, "GEN_AI_RESPONSE_CONTENT_TYPE")] = (
             response_mime_type
         )
+
+    return attributes
+
+
+def _config_to_tool_attributes(config: Any) -> Dict[str, Any]:
+    if config is None:
+        return {}
+
+    tools_value = _safe_get(config, "tools")
+    tool_definitions: List[Any] = []
+    for tool in _iter_sequence(tools_value):
+        function_declarations = (
+            _safe_get(tool, "function_declarations")
+            or _safe_get(tool, "functionDeclarations")
+        )
+        for declaration in _iter_sequence(function_declarations):
+            tool_definitions.append(declaration)
+
+    attributes: Dict[str, Any] = {}
+    for tool_index, declaration in enumerate(tool_definitions):
+        name = _safe_get(declaration, "name")
+        description = _safe_get(declaration, "description")
+        parameters = _safe_get(declaration, "parameters")
+        serialized_parameters = _serialize_tool_parameters(parameters)
+
+        attributes[
+            ExtendedGenAIAttributes.GEN_AI_REQUEST_TOOLS_TYPE.format(
+                tool_index=tool_index
+            )
+        ] = "function"
+
+        if name is not None:
+            attributes[
+                ExtendedGenAIAttributes.GEN_AI_REQUEST_TOOLS_FUNCTION_NAME.format(
+                    tool_index=tool_index
+                )
+            ] = name
+
+        if description is not None:
+            attributes[
+                ExtendedGenAIAttributes.GEN_AI_REQUEST_TOOLS_FUNCTION_DESCRIPTION.format(
+                    tool_index=tool_index
+                )
+            ] = description
+
+        if serialized_parameters is not None:
+            attributes[
+                ExtendedGenAIAttributes.GEN_AI_REQUEST_TOOLS_FUNCTION_PARAMETERS.format(
+                    tool_index=tool_index
+                )
+            ] = serialized_parameters
 
     return attributes
 
@@ -587,6 +644,95 @@ def _normalize_arguments(value: Any) -> str | None:
         return json.dumps(value)
     except (TypeError, ValueError):
         return str(value)
+
+
+def _serialize_tool_parameters(value: Any) -> str | None:
+    normalized = _to_jsonable(value)
+    cleaned = _prune_null_values(normalized)
+    if cleaned is None:
+        return None
+    try:
+        return json.dumps(cleaned)
+    except (TypeError, ValueError):
+        return str(cleaned)
+
+
+def _to_jsonable(value: Any) -> Any:
+    if value is None:
+        return None
+    if isinstance(value, (str, int, float, bool)):
+        return value
+    if isinstance(value, Enum):
+        return _to_jsonable(value.value)
+    if isinstance(value, dict):
+        return {str(key): _to_jsonable(child) for key, child in value.items()}
+    if isinstance(value, (list, tuple, set)):
+        return [_to_jsonable(item) for item in value]
+    if is_dataclass(value):
+        return _to_jsonable(asdict(value))
+
+    model_dump = getattr(value, "model_dump", None)
+    if callable(model_dump):
+        try:
+            return _to_jsonable(model_dump())
+        except (TypeError, ValueError):
+            pass
+
+    model_dump_json = getattr(value, "model_dump_json", None)
+    if callable(model_dump_json):
+        try:
+            return json.loads(model_dump_json())
+        except (TypeError, ValueError):
+            pass
+
+    to_dict = getattr(value, "to_dict", None)
+    if callable(to_dict):
+        try:
+            return _to_jsonable(to_dict())
+        except (TypeError, ValueError):
+            pass
+
+    to_json = getattr(value, "to_json", None)
+    if callable(to_json):
+        try:
+            return json.loads(to_json())
+        except (TypeError, ValueError):
+            pass
+
+    value_dict = getattr(value, "__dict__", None)
+    if isinstance(value_dict, dict):
+        public_items = {k: v for k, v in value_dict.items() if not k.startswith("_")}
+        if public_items:
+            return _to_jsonable(public_items)
+
+    return str(value)
+
+
+def _prune_null_values(value: Any) -> Any:
+    if value is None:
+        return None
+
+    if isinstance(value, dict):
+        cleaned_dict: dict[Any, Any] = {}
+        for key, child in value.items():
+            cleaned_child = _prune_null_values(child)
+            if cleaned_child is None:
+                continue
+            if isinstance(cleaned_child, (dict, list)) and not cleaned_child:
+                continue
+            cleaned_dict[key] = cleaned_child
+        return cleaned_dict or None
+
+    if isinstance(value, list):
+        cleaned_list: list[Any] = []
+        for child in value:
+            cleaned_child = _prune_null_values(child)
+            if cleaned_child is None:
+                continue
+            cleaned_list.append(cleaned_child)
+        return cleaned_list or None
+
+    return value
 
 
 def _normalize_finish_reason(value: Any) -> str | None:

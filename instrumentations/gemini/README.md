@@ -106,3 +106,7 @@ response = client.models.generate_content(
 | `gen_ai.completion.<choice_number>.tool_calls.<tool_call_number >.type` | string | Type of tool call in choice <choice_number>  | `function`
 | `gen_ai.completion.<choice_number>.tool_calls.<tool_call_number >.function.name` | string | The name of the function used in tool call  within choice <choice_number> | `get_current_weather`
 | `gen_ai.completion.<choice_number>.tool_calls.<tool_call_number >.function.arguments` | string | Arguments passed to the function used in tool call within choice <choice_number> | `{"location": "Seattle, WA"}`
+| `gen_ai.request.tools.<tool_number>.type` | string | Type of tool definition advertised to the model | `function`
+| `gen_ai.request.tools.<tool_number>.function.name` | string | Name of the tool/function exposed to the model | `get_current_weather`
+| `gen_ai.request.tools.<tool_number>.function.description` | string | Description of the tool/function | `Get the current weather in a given location`
+| `gen_ai.request.tools.<tool_number>.function.parameters` | string | JSON schema describing the tool/function parameters passed with the request | `{"type": "object", "properties": {"city": {"type": "string"}}}`
