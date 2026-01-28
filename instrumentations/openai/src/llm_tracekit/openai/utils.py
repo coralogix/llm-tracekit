@@ -275,3 +275,85 @@ def get_llm_response_attributes(
         ),
         **choices_to_span_attributes(result.choices, capture_content),
     }
+
+
+def _embedding_input_to_prompt_messages(
+    embedding_input: Any,
+) -> list[Message]:
+    """
+    Convert an OpenAI embeddings `input` payload into `gen_ai.prompt.*` messages.
+
+    The embeddings API accepts strings or an array of strings (and other types).
+    We only emit prompt content when it is a string (or list of strings).
+    """
+
+    def to_message(content: str | None) -> Message:
+        return Message(role="user", content=content)
+
+    if isinstance(embedding_input, str):
+        return [to_message(embedding_input)]
+
+    if isinstance(embedding_input, list):
+        messages: list[Message] = []
+        for item in embedding_input:
+            if isinstance(item, str):
+                messages.append(to_message(item))
+            else:
+                # Keep ordering stable; omit non-string content.
+                messages.append(to_message(None))
+        return messages
+
+    return [to_message(None)]
+
+
+@attribute_generator
+def get_embedding_request_attributes(
+    kwargs: dict[str, Any],
+    client_instance,
+    capture_content: bool,
+) -> dict[str, Any]:
+    """
+    Build span attributes for `client.embeddings.create(...)`.
+
+    We intentionally reuse the `gen_ai.prompt.*` attributes to represent the
+    embeddings input, because the OpenTelemetry GenAI semantic conventions
+    represent prompt content consistently across GenAI operations.
+    """
+
+    # NOTE: `generate_base_attributes` can't be reused here safely because it
+    # requires an enum for operation; we want to be resilient to semconv changes.
+    attributes: dict[str, Any] = {
+        GenAIAttributes.GEN_AI_OPERATION_NAME: "embedding",
+        GenAIAttributes.GEN_AI_SYSTEM: GenAIAttributes.GenAiSystemValues.OPENAI.value,
+        GenAIAttributes.GEN_AI_REQUEST_MODEL: kwargs.get("model"),
+        ExtendedGenAIAttributes.GEN_AI_OPENAI_REQUEST_USER: kwargs.get("user"),
+    }
+
+    embedding_input = kwargs.get("input")
+    prompt_messages = _embedding_input_to_prompt_messages(embedding_input)
+    attributes.update(
+        generate_message_attributes(messages=prompt_messages, capture_content=capture_content)
+    )
+
+    attributes.update(generate_server_address_and_port_attributes(client_instance))
+    return attributes
+
+
+@attribute_generator
+def get_embedding_response_attributes(result: Any) -> dict[str, Any]:
+    usage = getattr(result, "usage", None)
+    usage_input_tokens = None
+    if usage is not None:
+        usage_input_tokens = getattr(usage, "prompt_tokens", None) or getattr(
+            usage, "total_tokens", None
+        )
+
+    return {
+        **generate_response_attributes(
+            model=getattr(result, "model", None),
+            id=getattr(result, "id", None),
+            usage_input_tokens=usage_input_tokens,
+            usage_output_tokens=None,
+            finish_reasons=None,
+        ),
+    }
