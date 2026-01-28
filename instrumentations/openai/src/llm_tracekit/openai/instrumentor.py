@@ -56,7 +56,9 @@ from llm_tracekit.core import is_content_enabled, Instruments
 from llm_tracekit.openai.package import _instruments
 from llm_tracekit.openai.patch import (
     async_chat_completions_create,
+    async_embeddings_create,
     chat_completions_create,
+    embeddings_create,
 )
 
 
@@ -101,6 +103,20 @@ class OpenAIInstrumentor(BaseInstrumentor):
             ),
         )
 
+        wrap_function_wrapper(
+            module="openai.resources.embeddings",
+            name="Embeddings.create",
+            wrapper=embeddings_create(tracer, instruments, is_content_enabled()),
+        )
+
+        wrap_function_wrapper(
+            module="openai.resources.embeddings",
+            name="AsyncEmbeddings.create",
+            wrapper=async_embeddings_create(tracer, instruments, is_content_enabled()),
+        )
+
     def _uninstrument(self, **kwargs):
         unwrap(openai.resources.chat.completions.Completions, "create")
         unwrap(openai.resources.chat.completions.AsyncCompletions, "create")
+        unwrap(openai.resources.embeddings.Embeddings, "create")
+        unwrap(openai.resources.embeddings.AsyncEmbeddings, "create")

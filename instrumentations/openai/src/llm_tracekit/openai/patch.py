@@ -34,6 +34,8 @@ from llm_tracekit.core import (
     generate_response_attributes,
 )
 from llm_tracekit.openai.utils import (
+    get_embedding_request_attributes,
+    get_embedding_response_attributes,
     get_llm_request_attributes,
     get_llm_response_attributes,
     is_streaming,
@@ -144,6 +146,102 @@ def async_chat_completions_create(
     return traced_method
 
 
+def embeddings_create(
+    tracer: Tracer,
+    instruments: Instruments,
+    capture_content: bool,
+):
+    """Wrap the `create` method of the `Embeddings` class to trace it."""
+
+    def traced_method(wrapped, instance, args, kwargs):
+        span_attributes = get_embedding_request_attributes(
+            kwargs=kwargs,
+            client_instance=instance,
+            capture_content=capture_content,
+        )
+
+        request_model = span_attributes.get(GenAIAttributes.GEN_AI_REQUEST_MODEL)
+        span_name = f"{span_attributes[GenAIAttributes.GEN_AI_OPERATION_NAME]} {request_model}"
+        with tracer.start_as_current_span(
+            name=span_name,
+            kind=SpanKind.CLIENT,
+            attributes=span_attributes,
+            end_on_exit=False,
+        ) as span:
+            start = default_timer()
+            result = None
+            error_type = None
+            try:
+                result = wrapped(*args, **kwargs)
+                if span.is_recording():
+                    span.set_attributes(get_embedding_response_attributes(result))
+                span.end()
+                return result
+            except Exception as error:
+                error_type = type(error).__qualname__
+                handle_span_exception(span, error)
+                raise
+            finally:
+                duration = max((default_timer() - start), 0)
+                _record_embedding_metrics(
+                    instruments=instruments,
+                    duration=duration,
+                    result=result,
+                    span_attributes=span_attributes,
+                    error_type=error_type,
+                )
+
+    return traced_method
+
+
+def async_embeddings_create(
+    tracer: Tracer,
+    instruments: Instruments,
+    capture_content: bool,
+):
+    """Wrap the `create` method of the `AsyncEmbeddings` class to trace it."""
+
+    async def traced_method(wrapped, instance, args, kwargs):
+        span_attributes = get_embedding_request_attributes(
+            kwargs=kwargs,
+            client_instance=instance,
+            capture_content=capture_content,
+        )
+
+        request_model = span_attributes.get(GenAIAttributes.GEN_AI_REQUEST_MODEL)
+        span_name = f"{span_attributes[GenAIAttributes.GEN_AI_OPERATION_NAME]} {request_model}"
+        with tracer.start_as_current_span(
+            name=span_name,
+            kind=SpanKind.CLIENT,
+            attributes=span_attributes,
+            end_on_exit=False,
+        ) as span:
+            start = default_timer()
+            result = None
+            error_type = None
+            try:
+                result = await wrapped(*args, **kwargs)
+                if span.is_recording():
+                    span.set_attributes(get_embedding_response_attributes(result))
+                span.end()
+                return result
+            except Exception as error:
+                error_type = type(error).__qualname__
+                handle_span_exception(span, error)
+                raise
+            finally:
+                duration = max((default_timer() - start), 0)
+                _record_embedding_metrics(
+                    instruments=instruments,
+                    duration=duration,
+                    result=result,
+                    span_attributes=span_attributes,
+                    error_type=error_type,
+                )
+
+    return traced_method
+
+
 def _record_metrics(
     instruments: Instruments,
     duration: float,
@@ -208,6 +306,58 @@ def _record_metrics(
             result.usage.completion_tokens,
             attributes=completion_attributes,
         )
+
+
+def _record_embedding_metrics(
+    instruments: Instruments,
+    duration: float,
+    result,
+    span_attributes: dict,
+    error_type: str | None,
+):
+    common_attributes = {
+        GenAIAttributes.GEN_AI_OPERATION_NAME: "embedding",
+        GenAIAttributes.GEN_AI_SYSTEM: GenAIAttributes.GenAiSystemValues.OPENAI.value,
+        GenAIAttributes.GEN_AI_REQUEST_MODEL: span_attributes.get(
+            GenAIAttributes.GEN_AI_REQUEST_MODEL
+        ),
+    }
+
+    if error_type:
+        common_attributes["error.type"] = error_type
+
+    if result and getattr(result, "model", None):
+        common_attributes[GenAIAttributes.GEN_AI_RESPONSE_MODEL] = result.model
+
+    if ServerAttributes.SERVER_ADDRESS in span_attributes:
+        common_attributes[ServerAttributes.SERVER_ADDRESS] = span_attributes[
+            ServerAttributes.SERVER_ADDRESS
+        ]
+
+    if ServerAttributes.SERVER_PORT in span_attributes:
+        common_attributes[ServerAttributes.SERVER_PORT] = span_attributes[
+            ServerAttributes.SERVER_PORT
+        ]
+
+    instruments.operation_duration_histogram.record(
+        duration,
+        attributes=common_attributes,
+    )
+
+    usage = getattr(result, "usage", None) if result else None
+    if usage:
+        prompt_tokens = getattr(usage, "prompt_tokens", None) or getattr(
+            usage, "total_tokens", None
+        )
+        if prompt_tokens is not None:
+            input_attributes = {
+                **common_attributes,
+                GenAIAttributes.GEN_AI_TOKEN_TYPE: GenAIAttributes.GenAiTokenTypeValues.INPUT.value,
+            }
+            instruments.token_usage_histogram.record(
+                prompt_tokens,
+                attributes=input_attributes,
+            )
 
 
 class ToolCallBuffer:
