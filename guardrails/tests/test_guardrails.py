@@ -36,13 +36,13 @@ class TestGuardrailsInit:
             api_key="test-key",
             application_name="test-app",
             subsystem_name="test-subsystem",
-            cx_endpoint="https://test.example.com",
+            cx_guardrails_endpoint="https://api.staging.coralogix.net",
         )
         assert_that(guardrails.config.api_key).is_equal_to("test-key")
         assert_that(guardrails.config.application_name).is_equal_to("test-app")
         assert_that(guardrails.config.subsystem_name).is_equal_to("test-subsystem")
-        assert_that(guardrails.config.cx_endpoint).is_equal_to(
-            "https://test.example.com"
+        assert_that(guardrails.config.cx_guardrails_endpoint).is_equal_to(
+            "https://api.staging.coralogix.net"
         )
         assert_that(guardrails.config.timeout).is_equal_to(10)  # default
 
@@ -51,7 +51,7 @@ class TestGuardrailsInit:
             api_key="test-key",
             application_name="test-app",
             subsystem_name="test-subsystem",
-            cx_endpoint="https://test.example.com",
+            cx_guardrails_endpoint="https://api.staging.coralogix.net",
             timeout=30,
         )
         assert_that(guardrails.config.timeout).is_equal_to(30)
@@ -61,25 +61,25 @@ class TestGuardrailsInit:
         assert_that(guardrails.config.api_key).is_equal_to("test-api-key")
         assert_that(guardrails.config.application_name).is_equal_to("test-app")
         assert_that(guardrails.config.subsystem_name).is_equal_to("test-subsystem")
-        assert_that(guardrails.config.cx_endpoint).is_equal_to(
-            "https://test.coralogix.com"
+        assert_that(guardrails.config.cx_guardrails_endpoint).is_equal_to(
+            "https://api.eu2.coralogix.net:443"
         )
 
     def test_init_raises_when_endpoint_missing(self, clear_guardrails_env_vars):
-        """When CX_ENDPOINT env var is missing and no cx_endpoint param, raise ValueError."""
+        """When CX_GUARDRAILS_ENDPOINT env var is missing and no cx_guardrails_endpoint param, raise ValueError."""
         with pytest.raises(ValueError) as exc_info:
             Guardrails()
         assert_that(str(exc_info.value)).contains("Endpoint URL is required")
-        assert_that(str(exc_info.value)).contains("CX_ENDPOINT")
+        assert_that(str(exc_info.value)).contains("CX_GUARDRAILS_ENDPOINT")
 
     def test_init_explicit_params_override_env_vars(self, guardrails_env_vars):
         """Explicit params should take precedence over env vars."""
         guardrails = Guardrails(
             api_key="explicit-key",
-            cx_endpoint="https://explicit.example.com",
+            cx_guardrails_endpoint="https://explicit.example.com",
         )
         assert_that(guardrails.config.api_key).is_equal_to("explicit-key")
-        assert_that(guardrails.config.cx_endpoint).is_equal_to(
+        assert_that(guardrails.config.cx_guardrails_endpoint).is_equal_to(
             "https://explicit.example.com"
         )
         # These should still come from env vars
@@ -94,7 +94,7 @@ class TestGuardrailsGuardPrompt:
             api_key="test-key",
             application_name="test-app",
             subsystem_name="test-subsystem",
-            cx_endpoint="https://test.example.com",
+            cx_guardrails_endpoint="https://api.staging.coralogix.net",
         )
 
     @pytest.mark.asyncio
@@ -260,7 +260,7 @@ class TestGuardrailsGuardResponse:
             api_key="test-key",
             application_name="test-app",
             subsystem_name="test-subsystem",
-            cx_endpoint="https://test.example.com",
+            cx_guardrails_endpoint="https://api.staging.coralogix.net",
         )
 
     @pytest.mark.asyncio
@@ -306,7 +306,7 @@ class TestGuardrailsErrorHandling:
             api_key="test-key",
             application_name="test-app",
             subsystem_name="test-subsystem",
-            cx_endpoint="https://test.example.com",
+            cx_guardrails_endpoint="https://api.staging.coralogix.net",
             timeout=5,
         )
 
@@ -406,7 +406,7 @@ class TestGuardrailsRequestFormat:
             api_key="test-key",
             application_name="test-app",
             subsystem_name="test-subsystem",
-            cx_endpoint="https://test.example.com",
+            cx_guardrails_endpoint="https://api.staging.coralogix.net",
         )
 
     @pytest.mark.asyncio
