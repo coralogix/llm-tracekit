@@ -41,7 +41,7 @@ class GuardrailsClientConfig:
     api_key: str
     application_name: str
     subsystem_name: str
-    cx_endpoint: str
+    cx_guardrails_endpoint: str
     timeout: int
     suppress_exceptions: bool
 
@@ -50,14 +50,14 @@ class Guardrails:
     def __init__(
         self,
         api_key: str | None = None,
-        cx_endpoint: str | None = None,
+        cx_guardrails_endpoint: str | None = None,
         application_name: str | None = None,
         subsystem_name: str | None = None,
         timeout: int | None = None,
     ) -> None:
         self.config = GuardrailsClientConfig(
             api_key=_get_env(api_key, "CX_GUARDRAILS_TOKEN"),
-            cx_endpoint=_normalize_endpoint(_get_env(cx_endpoint, "CX_ENDPOINT")),
+            cx_guardrails_endpoint=_normalize_endpoint(_get_env(cx_guardrails_endpoint, "CX_GUARDRAILS_ENDPOINT")),
             application_name=_get_env(
                 application_name, "CX_APPLICATION_NAME", "Unknown"
             ),
@@ -184,7 +184,7 @@ class GuardrailRequestSender:
     def __init__(self, config: GuardrailsClientConfig) -> None:
         self.config = config
         self._client = httpx.AsyncClient(
-            base_url=self.config.cx_endpoint,
+            base_url=self.config.cx_guardrails_endpoint,
             timeout=httpx.Timeout(self.config.timeout, connect=2.0),
         )
 
@@ -243,7 +243,7 @@ class GuardrailRequestSender:
             ) from e
         except httpx.ConnectError as e:
             raise GuardrailsAPIConnectionError(
-                f"Failed to connect to {self.config.cx_endpoint}"
+                f"Failed to connect to {self.config.cx_guardrails_endpoint}"
             ) from e
         except httpx.RequestError as e:
             raise GuardrailsAPIConnectionError(f"Request error: {e}") from e
@@ -296,7 +296,7 @@ def _normalize_endpoint(endpoint: str) -> str:
     if not endpoint:
         raise ValueError(
             "Endpoint URL is required. "
-            "Set CX_ENDPOINT environment variable or pass cx_endpoint parameter."
+            "Set CX_GUARDRAILS_ENDPOINT environment variable or pass cx_guardrails_endpoint parameter."
         )
     parsed = urlparse(endpoint if "://" in endpoint else f"https://{endpoint}")
     return urlunparse(parsed._replace(scheme="https"))

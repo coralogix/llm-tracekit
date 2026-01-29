@@ -195,7 +195,8 @@ await guardrails.guard([PII()], messages, GuardrailsTarget.RESPONSE)
 
 ```bash
 export CX_GUARDRAILS_TOKEN="your-api-key"
-export CX_ENDPOINT="https://your-domain.coralogix.com"
+export CX_GUARDRAILS_ENDPOINT="https://api.staging.coralogix.net:443"
+export CX_ENDPOINT="https://ingress.staging.coralogix.net:443"
 export CX_APPLICATION_NAME="my-app"      # Optional
 export CX_SUBSYSTEM_NAME="my-subsystem"  # Optional
 ```
@@ -205,7 +206,7 @@ export CX_SUBSYSTEM_NAME="my-subsystem"  # Optional
 ```python
 guardrails = Guardrails(
     api_key="your-api-key",
-    cx_endpoint="https://your-domain.coralogix.com",
+    cx_guardrails_endpoint="https://api.eu2.coralogix.net:443",
     timeout=2,  # Timeout in seconds (default: 10)
 )
 ```
