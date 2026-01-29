@@ -299,7 +299,6 @@ def _embedding_input_to_prompt_messages(
             if isinstance(item, str):
                 messages.append(to_message(item))
             else:
-                # Keep ordering stable; omit non-string content.
                 messages.append(to_message(None))
         return messages
 
@@ -314,14 +313,8 @@ def get_embedding_request_attributes(
 ) -> dict[str, Any]:
     """
     Build span attributes for `client.embeddings.create(...)`.
-
-    We intentionally reuse the `gen_ai.prompt.*` attributes to represent the
-    embeddings input, because the OpenTelemetry GenAI semantic conventions
-    represent prompt content consistently across GenAI operations.
     """
 
-    # NOTE: `generate_base_attributes` can't be reused here safely because it
-    # requires an enum for operation; we want to be resilient to semconv changes.
     attributes: dict[str, Any] = {
         GenAIAttributes.GEN_AI_OPERATION_NAME: "embedding",
         GenAIAttributes.GEN_AI_SYSTEM: GenAIAttributes.GenAiSystemValues.OPENAI.value,

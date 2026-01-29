@@ -161,9 +161,7 @@ def embeddings_create(
             capture_content=capture_content,
         )
 
-        request_model = span_attributes.get(GenAIAttributes.GEN_AI_REQUEST_MODEL)
-        op_name = span_attributes[GenAIAttributes.GEN_AI_OPERATION_NAME]
-        span_name = f"{op_name} {request_model}" if request_model else op_name
+        span_name = f"{span_attributes[GenAIAttributes.GEN_AI_OPERATION_NAME]} {span_attributes[GenAIAttributes.GEN_AI_REQUEST_MODEL]}"
         with tracer.start_as_current_span(
             name=span_name,
             kind=SpanKind.CLIENT,
@@ -210,9 +208,8 @@ def async_embeddings_create(
             capture_content=capture_content,
         )
 
-        request_model = span_attributes.get(GenAIAttributes.GEN_AI_REQUEST_MODEL)
-        op_name = span_attributes[GenAIAttributes.GEN_AI_OPERATION_NAME]
-        span_name = f"{op_name} {request_model}" if request_model else op_name
+        span_name = f"{span_attributes[GenAIAttributes.GEN_AI_OPERATION_NAME]} {span_attributes[GenAIAttributes.GEN_AI_REQUEST_MODEL]}"
+
         with tracer.start_as_current_span(
             name=span_name,
             kind=SpanKind.CLIENT,
@@ -319,7 +316,7 @@ def _record_embedding_metrics(
     error_type: str | None,
 ):
     common_attributes: dict[str, AttributeValue] = {
-        GenAIAttributes.GEN_AI_OPERATION_NAME: "embedding",
+        GenAIAttributes.GEN_AI_OPERATION_NAME: GenAIAttributes.GenAiOperationNameValues.EMBEDDINGS.value,
         GenAIAttributes.GEN_AI_SYSTEM: GenAIAttributes.GenAiSystemValues.OPENAI.value,
     }
 
