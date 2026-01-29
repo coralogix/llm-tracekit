@@ -36,13 +36,13 @@ class TestGuardrailsInit:
             api_key="test-key",
             application_name="test-app",
             subsystem_name="test-subsystem",
-            cx_guardrails_endpoint="https://api.staging.coralogix.net",
+            cx_guardrails_endpoint="https://api.staging.coralogix.com",
         )
         assert_that(guardrails.config.api_key).is_equal_to("test-key")
         assert_that(guardrails.config.application_name).is_equal_to("test-app")
         assert_that(guardrails.config.subsystem_name).is_equal_to("test-subsystem")
         assert_that(guardrails.config.cx_guardrails_endpoint).is_equal_to(
-            "https://api.staging.coralogix.net"
+            "https://api.staging.coralogix.com"
         )
         assert_that(guardrails.config.timeout).is_equal_to(10)  # default
 
@@ -51,7 +51,7 @@ class TestGuardrailsInit:
             api_key="test-key",
             application_name="test-app",
             subsystem_name="test-subsystem",
-            cx_guardrails_endpoint="https://api.staging.coralogix.net",
+            cx_guardrails_endpoint="https://api.staging.coralogix.com",
             timeout=30,
         )
         assert_that(guardrails.config.timeout).is_equal_to(30)
@@ -62,7 +62,7 @@ class TestGuardrailsInit:
         assert_that(guardrails.config.application_name).is_equal_to("test-app")
         assert_that(guardrails.config.subsystem_name).is_equal_to("test-subsystem")
         assert_that(guardrails.config.cx_guardrails_endpoint).is_equal_to(
-            "https://api.eu2.coralogix.net:443"
+            "https://api.eu2.coralogix.com"
         )
 
     def test_init_raises_when_endpoint_missing(self, clear_guardrails_env_vars):
@@ -94,7 +94,7 @@ class TestGuardrailsGuardPrompt:
             api_key="test-key",
             application_name="test-app",
             subsystem_name="test-subsystem",
-            cx_guardrails_endpoint="https://api.staging.coralogix.net",
+            cx_guardrails_endpoint="https://api.staging.coralogix.com",
         )
 
     @pytest.mark.asyncio
@@ -260,7 +260,7 @@ class TestGuardrailsGuardResponse:
             api_key="test-key",
             application_name="test-app",
             subsystem_name="test-subsystem",
-            cx_guardrails_endpoint="https://api.staging.coralogix.net",
+            cx_guardrails_endpoint="https://api.staging.coralogix.com",
         )
 
     @pytest.mark.asyncio
@@ -306,7 +306,7 @@ class TestGuardrailsErrorHandling:
             api_key="test-key",
             application_name="test-app",
             subsystem_name="test-subsystem",
-            cx_guardrails_endpoint="https://api.staging.coralogix.net",
+            cx_guardrails_endpoint="https://api.staging.coralogix.com",
             timeout=5,
         )
 
@@ -406,7 +406,7 @@ class TestGuardrailsRequestFormat:
             api_key="test-key",
             application_name="test-app",
             subsystem_name="test-subsystem",
-            cx_guardrails_endpoint="https://api.staging.coralogix.net",
+            cx_guardrails_endpoint="https://api.staging.coralogix.com",
         )
 
     @pytest.mark.asyncio
