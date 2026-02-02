@@ -23,7 +23,7 @@ def guardrails_env_vars():
         "CX_GUARDRAILS_TOKEN": "test-api-key",
         "CX_APPLICATION_NAME": "test-app",
         "CX_SUBSYSTEM_NAME": "test-subsystem",
-        "CX_GUARDRAILS_ENDPOINT": "https://api.eu2.coralogix.com",
+        "CX_GUARDRAILS_ENDPOINT": "https://test.example.com",
     }
     original_values = {}
     for key, value in env_vars.items():
