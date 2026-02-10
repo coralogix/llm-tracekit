@@ -17,6 +17,7 @@ from .models.request import (
     GuardrailConfigType,
     GuardrailRequest,
     Message,
+    TestPolicy,
 )
 from .models._models import GuardrailsTarget, Role
 from .models.response import GuardrailsResponse
@@ -30,6 +31,7 @@ from .error import (
     GuardrailsAPITimeoutError,
     GuardrailViolation,
     GuardrailsTriggered,
+    GuardrailsConnectionTestError,
 )
 
 
@@ -178,6 +180,30 @@ class Guardrails:
 
     def _to_messages(self, msg: Message | dict[str, Any]) -> Message:
         return msg if isinstance(msg, Message) else Message(msg)
+
+    async def test_connection(self) -> GuardrailsResponse:
+        """Test connection to Guardrails API.
+
+        This method sends a simple test request to verify that the Guardrails API
+        is reachable and functioning correctly. It uses a TestPolicy guardrail with
+        a test prompt.
+
+        Returns:
+            GuardrailsResponse: The response from the test request.
+
+        Raises:
+            GuardrailsConnectionTestError: If the connection test fails.
+            GuardrailsAPIConnectionError: If the API is unreachable.
+            GuardrailsAPITimeoutError: If the request times out.
+        """
+        result = await self.guard(
+            messages=[Message(role=Role.USER, content="test")],
+            target=GuardrailsTarget.PROMPT,
+            guardrails=[TestPolicy()],
+        )
+        if result is None:
+            raise GuardrailsConnectionTestError("Connection test to Guardrails API failed")
+        return result
 
 
 class GuardrailRequestSender:
