@@ -31,7 +31,6 @@ from .error import (
     GuardrailsAPITimeoutError,
     GuardrailViolation,
     GuardrailsTriggered,
-    GuardrailsConnectionTestError,
 )
 
 
@@ -192,19 +191,10 @@ class Guardrails:
             GuardrailsResponse: The response from the test request.
 
         Raises:
-            GuardrailsConnectionTestError: If the connection test fails.
             GuardrailsAPIConnectionError: If the API is unreachable.
             GuardrailsAPITimeoutError: If the request times out.
         """
-        result = await self.guard(
-            messages=[Message(role=Role.USER, content="test")],
-            target=GuardrailsTarget.PROMPT,
-            guardrails=[TestPolicy()],
-        )
-        if result is None:
-            raise GuardrailsConnectionTestError("Connection test to Guardrails API failed")
-        return result
-
+        return await self._sender.test_connection()
 
 class GuardrailRequestSender:
     def __init__(self, config: GuardrailsClientConfig) -> None:
@@ -214,6 +204,26 @@ class GuardrailRequestSender:
             timeout=httpx.Timeout(self.config.timeout, connect=2.0),
         )
 
+
+    async def test_connection(self) -> GuardrailsResponse:
+        with tracer.start_as_current_span(
+            "guardrails.test", kind=SpanKind.CLIENT
+        ) as span:
+            span.set_attributes(
+                generate_base_attributes(
+                    application_name=self.config.application_name,
+                    subsystem_name=self.config.subsystem_name,
+                )
+            )
+            response = await self._send_request(GuardrailRequest(
+                application=self.config.application_name,
+                subsystem=self.config.subsystem_name,
+                guardrails=[TestPolicy()],
+                target=GuardrailsTarget.PROMPT,
+                timeout=self.config.timeout,
+            ))
+            return self._handle_response(response, span, GuardrailsTarget.PROMPT)
+    
     async def run(
         self,
         guardrails: list[GuardrailConfigType],

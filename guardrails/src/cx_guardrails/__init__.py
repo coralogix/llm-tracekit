@@ -21,7 +21,6 @@ from .error import (
     GuardrailsAPIResponseError,
     GuardrailViolation,
     GuardrailsTriggered,
-    GuardrailsConnectionTestError,
 )
 
 from llm_tracekit.core import (
@@ -50,6 +49,5 @@ __all__ = [
     "GuardrailsAPIResponseError",
     "GuardrailsTriggered",
     "GuardrailViolation",
-    "GuardrailsConnectionTestError",
     "setup_export_to_coralogix",
 ]

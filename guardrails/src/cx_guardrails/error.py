@@ -60,6 +60,3 @@ class GuardrailsTriggered(GuardrailsError):
             f"{len(triggered)} guardrails triggered: " + "\n".join(messages)
         )
 
-
-class GuardrailsConnectionTestError(GuardrailsError):
-    """Connection test to Guardrails API failed."""
