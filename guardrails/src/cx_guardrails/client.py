@@ -11,6 +11,7 @@ from opentelemetry.trace import SpanKind, Status, StatusCode, Span
 from .models._constants import (
     DEFAULT_TIMEOUT,
     PARENT_SPAN_NAME,
+    TEST_SPAN_NAME,
 )
 from .models.request import (
     GuardrailConfigType,
@@ -205,7 +206,7 @@ class GuardrailRequestSender:
 
     async def test_connection(self) -> GuardrailsResponse:
         with tracer.start_as_current_span(
-            "guardrails.test", kind=SpanKind.CLIENT
+            TEST_SPAN_NAME, kind=SpanKind.CLIENT
         ) as span:
             span.set_attributes(
                 generate_base_attributes(
