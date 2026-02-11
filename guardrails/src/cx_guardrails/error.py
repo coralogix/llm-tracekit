@@ -59,3 +59,4 @@ class GuardrailsTriggered(GuardrailsError):
         super().__init__(
             f"{len(triggered)} guardrails triggered: " + "\n".join(messages)
         )
+

@@ -21,6 +21,7 @@ from cx_guardrails import (
     Guardrails,
     PII,
     PromptInjection,
+    TestPolicy,
     PIICategory,
     GuardrailsTriggered,
     GuardrailsAPITimeoutError,
@@ -470,3 +471,107 @@ class TestGuardrailsRequestFormat:
 
             call_args = mock_post.call_args
             assert_that(call_args.args[0]).is_equal_to("/api/v1/guardrails/guard")
+
+
+class TestGuardrailsTestConnection:
+    @pytest.fixture
+    def guardrails_client(self, clear_guardrails_env_vars):
+        return Guardrails(
+            api_key="test-key",
+            application_name="test-app",
+            subsystem_name="test-subsystem",
+            cx_guardrails_endpoint="https://test.example.com",
+        )
+
+    @pytest.mark.asyncio
+    async def test_test_connection_success(self, guardrails_client):
+        """Test that test_connection() successfully connects and returns a response."""
+        mock_response = httpx.Response(
+            200,
+            json={
+                "results": [
+                    {
+                        "type": "test_policy",
+                        "detected": False,
+                        "score": 0.1,
+                        "threshold": 0.7,
+                    }
+                ]
+            },
+        )
+
+        with patch.object(
+            httpx.AsyncClient, "post", new_callable=AsyncMock
+        ) as mock_post:
+            mock_post.return_value = mock_response
+
+            async with guardrails_client.guarded_session():
+                result = await guardrails_client.test_connection()
+
+            assert_that(result).is_not_none()
+            assert_that(result.results).is_length(1)
+
+    @pytest.mark.asyncio
+    async def test_test_connection_sends_test_policy(self, guardrails_client):
+        """Test that test_connection() uses TestPolicy."""
+        mock_response = httpx.Response(200, json={"results": []})
+
+        with patch.object(
+            httpx.AsyncClient, "post", new_callable=AsyncMock
+        ) as mock_post:
+            mock_post.return_value = mock_response
+
+            async with guardrails_client.guarded_session():
+                await guardrails_client.test_connection()
+
+            # Verify the request includes test_policy
+            call_kwargs = mock_post.call_args
+            request_body = call_kwargs.kwargs["json"]
+            assert_that(request_body["guardrails"]).is_length(1)
+            assert_that(request_body["guardrails"][0]["type"]).is_equal_to("test_policy")
+
+    @pytest.mark.asyncio
+    async def test_test_connection_connection_error(self, guardrails_client):
+        """Test that test_connection() raises GuardrailsAPIConnectionError when unreachable."""
+        with patch.object(
+            httpx.AsyncClient,
+            "post",
+            new_callable=AsyncMock,
+            side_effect=httpx.ConnectError("Failed to connect"),
+        ):
+            with pytest.raises(GuardrailsAPIConnectionError):
+                async with guardrails_client.guarded_session():
+                    await guardrails_client.test_connection()
+
+    @pytest.mark.asyncio
+    async def test_test_connection_timeout_error(self, guardrails_client):
+        """Test that test_connection() raises GuardrailsAPITimeoutError on timeout."""
+        with patch.object(
+            httpx.AsyncClient,
+            "post",
+            new_callable=AsyncMock,
+            side_effect=httpx.TimeoutException("Request timed out"),
+        ):
+            with pytest.raises(GuardrailsAPITimeoutError):
+                async with guardrails_client.guarded_session():
+                    await guardrails_client.test_connection()
+
+
+class TestTestPolicy:
+    def test_test_policy_default_values(self):
+        """Test TestPolicy with default values."""
+        policy = TestPolicy()
+        assert_that(policy.type).is_equal_to("test_policy")
+        assert_that(policy.threshold).is_equal_to(0.7)
+
+    def test_test_policy_custom_threshold(self):
+        """Test TestPolicy with custom threshold."""
+        policy = TestPolicy(threshold=0.5)
+        assert_that(policy.threshold).is_equal_to(0.5)
+
+    def test_test_policy_serialization(self):
+        """Test TestPolicy serializes correctly."""
+        policy = TestPolicy(threshold=0.8)
+        data = policy.model_dump()
+        assert_that(data).contains_entry({"type": "test_policy"})
+        assert_that(data).contains_entry({"threshold": 0.8})

@@ -12,7 +12,7 @@ from ._models import GuardrailsTarget, PIICategory, Role
 class GuardrailRequest(BaseModel):
     application: str
     subsystem: str
-    messages: list[Message] | None = None
+    messages: list[Message] = []
     guardrails: list[GuardrailConfigType]
     target: GuardrailsTarget
     timeout: int
@@ -30,6 +30,8 @@ class PII(BaseGuardrailConfig):
 class PromptInjection(BaseGuardrailConfig):
     type: Literal["prompt_injection"] = "prompt_injection"
 
+class TestPolicy(BaseGuardrailConfig):
+    type: Literal["test_policy"] = "test_policy"
 
 class CustomEvaluationExample(BaseModel):
     conversation: str
@@ -60,7 +62,7 @@ class Toxicity(BaseGuardrailConfig):
     type: Literal["toxicity"] = "toxicity"
 
 
-GuardrailConfigType = PII | PromptInjection | Custom | Toxicity
+GuardrailConfigType = PII | PromptInjection | Custom | Toxicity | TestPolicy
 
 
 class Message(BaseModel):

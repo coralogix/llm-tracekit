@@ -14,12 +14,13 @@ class GuardrailType(str, Enum):
     PROMPT_INJECTION = "prompt_injection"
     CUSTOM = "custom"
     TOXICITY = "toxicity"
+    TEST_POLICY = "test_policy"
 
 
 class GuardrailsTarget(str, Enum):
     PROMPT = "prompt"
     RESPONSE = "response"
-
+    
 
 class Role(str, Enum):
     USER = "user"
