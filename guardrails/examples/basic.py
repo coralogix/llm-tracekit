@@ -21,6 +21,7 @@ async def main():
     config = [PII(categories=[PIICategory.EMAIL_ADDRESS]), PromptInjection()]
 
     async with guardrails.guarded_session():
+        await guardrails.test_connection()
         try:
             await guardrails.guard_prompt(config, user_input)
         except GuardrailsTriggered as e:
