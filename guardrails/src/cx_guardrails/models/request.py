@@ -13,7 +13,7 @@ from ._models import GuardrailCategory
 class GuardrailRequest(BaseModel):
     application: str
     subsystem: str
-    messages: list[Message] | None = None
+    messages: list[Message] = []
     guardrails: list[GuardrailConfigType]
     target: GuardrailsTarget
     timeout: int
