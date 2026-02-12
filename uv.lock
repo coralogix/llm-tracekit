@@ -17,6 +17,7 @@ members = [
     "llm-tracekit-gemini",
     "llm-tracekit-google-adk",
     "llm-tracekit-langchain",
+    "llm-tracekit-langgraph",
     "llm-tracekit-openai",
     "llm-tracekit-openai-agents",
 ]
@@ -1576,6 +1577,9 @@ guardrails = [
 langchain = [
     { name = "llm-tracekit-langchain" },
 ]
+langgraph = [
+    { name = "llm-tracekit-langgraph" },
+]
 openai = [
     { name = "llm-tracekit-openai" },
 ]
@@ -1608,10 +1612,11 @@ requires-dist = [
     { name = "llm-tracekit-gemini", marker = "extra == 'gemini'", editable = "instrumentations/gemini" },
     { name = "llm-tracekit-google-adk", marker = "extra == 'google-adk'", editable = "instrumentations/google-adk" },
     { name = "llm-tracekit-langchain", marker = "extra == 'langchain'", editable = "instrumentations/langchain" },
+    { name = "llm-tracekit-langgraph", marker = "extra == 'langgraph'", editable = "instrumentations/langgraph" },
     { name = "llm-tracekit-openai", marker = "extra == 'openai'", editable = "instrumentations/openai" },
     { name = "llm-tracekit-openai-agents", marker = "extra == 'openai-agents'", editable = "instrumentations/openai_agents" },
 ]
-provides-extras = ["openai", "bedrock", "gemini", "openai-agents", "guardrails", "langchain", "google-adk"]
+provides-extras = ["openai", "bedrock", "gemini", "openai-agents", "guardrails", "langchain", "google-adk", "langgraph"]
 
 [package.metadata.requires-dev]
 dev = [
@@ -1826,6 +1831,47 @@ dev = [
     { name = "langchain-aws", specifier = ">=0.2.0" },
     { name = "langchain-openai", specifier = ">=0.3.0" },
     { name = "mypy", specifier = ">=1.14.1" },
+    { name = "pytest", specifier = ">=8.3.4" },
+    { name = "pytest-asyncio", specifier = ">=1.0.0" },
+    { name = "pytest-vcr", specifier = ">=1.0.2" },
+    { name = "pyyaml", specifier = ">=6.0.2" },
+    { name = "ruff", specifier = ">=0.9.7" },
+]
+
+[[package]]
+name = "llm-tracekit-langgraph"
+version = "1.0.0"
+source = { editable = "instrumentations/langgraph" }
+dependencies = [
+    { name = "langchain-core" },
+    { name = "langgraph" },
+    { name = "llm-tracekit-core" },
+    { name = "opentelemetry-instrumentation" },
+]
+
+[package.dev-dependencies]
+dev = [
+    { name = "assertpy" },
+    { name = "langgraph" },
+    { name = "pytest" },
+    { name = "pytest-asyncio" },
+    { name = "pytest-vcr" },
+    { name = "pyyaml" },
+    { name = "ruff" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "langchain-core", specifier = ">=0.3.0" },
+    { name = "langgraph", specifier = ">=1.0.6,<2" },
+    { name = "llm-tracekit-core", editable = "core" },
+    { name = "opentelemetry-instrumentation", specifier = ">=0.53b1" },
+]
+
+[package.metadata.requires-dev]
+dev = [
+    { name = "assertpy", specifier = ">=1.1" },
+    { name = "langgraph", specifier = ">=1.0.6,<2" },
     { name = "pytest", specifier = ">=8.3.4" },
     { name = "pytest-asyncio", specifier = ">=1.0.0" },
     { name = "pytest-vcr", specifier = ">=1.0.2" },
