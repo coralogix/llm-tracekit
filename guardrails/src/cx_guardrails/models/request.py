@@ -56,7 +56,11 @@ class Custom(BaseGuardrailConfig):
         return v
 
 
-GuardrailConfigType = PII | PromptInjection | Custom
+class Toxicity(BaseGuardrailConfig):
+    type: Literal["toxicity"] = "toxicity"
+
+
+GuardrailConfigType = PII | PromptInjection | Custom | Toxicity
 
 
 class Message(BaseModel):

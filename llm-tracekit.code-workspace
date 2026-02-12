@@ -18,7 +18,7 @@
     },
     {
       "name": "openai-agents",
-      "path": "instrumentations/openai_agents"
+      "path": "instrumentations/openai-agents"
     },
     {
       "name": "bedrock",

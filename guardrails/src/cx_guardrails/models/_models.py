@@ -13,6 +13,7 @@ class GuardrailType(str, Enum):
     PII = "pii"
     PROMPT_INJECTION = "prompt_injection"
     CUSTOM = "custom"
+    TOXICITY = "toxicity"
 
 
 class GuardrailsTarget(str, Enum):
