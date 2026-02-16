@@ -165,13 +165,16 @@ def _generate_claude_request_and_message_attributes(
 
         tool_attributes.update(
             {
-                ExtendedGenAIAttributes.GEN_AI_BEDROCK_REQUEST_TOOLS_FUNCTION_NAME.format(
+                ExtendedGenAIAttributes.GEN_AI_REQUEST_TOOLS_TYPE.format(
+                    tool_index=index
+                ): "function",
+                ExtendedGenAIAttributes.GEN_AI_REQUEST_TOOLS_FUNCTION_NAME.format(
                     tool_index=index
                 ): tool_definition.get("name"),
-                ExtendedGenAIAttributes.GEN_AI_BEDROCK_REQUEST_TOOLS_FUNCTION_DESCRIPTION.format(
+                ExtendedGenAIAttributes.GEN_AI_REQUEST_TOOLS_FUNCTION_DESCRIPTION.format(
                     tool_index=index
                 ): tool_definition.get("description"),
-                ExtendedGenAIAttributes.GEN_AI_BEDROCK_REQUEST_TOOLS_FUNCTION_PARAMETERS.format(
+                ExtendedGenAIAttributes.GEN_AI_REQUEST_TOOLS_FUNCTION_PARAMETERS.format(
                     tool_index=index
                 ): tool_params,
             }
