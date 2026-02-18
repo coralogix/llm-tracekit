@@ -434,12 +434,12 @@ def _config_to_request_attributes(config: Any) -> dict[str, Any]:
     return attributes
 
 
-def _config_to_tool_attributes(config: Any) -> Dict[str, Any]:
+def _config_to_tool_attributes(config: Any) -> dict[str, Any]:
     if config is None:
         return {}
 
     tools_value = _safe_get(config, "tools")
-    tool_definitions: List[Any] = []
+    tool_definitions: list[Any] = []
     for tool in _iter_sequence(tools_value):
         function_declarations = (
             _safe_get(tool, "function_declarations")
@@ -448,7 +448,7 @@ def _config_to_tool_attributes(config: Any) -> Dict[str, Any]:
         for declaration in _iter_sequence(function_declarations):
             tool_definitions.append(declaration)
 
-    attributes: Dict[str, Any] = {}
+    attributes: dict[str, Any] = {}
     for tool_index, declaration in enumerate(tool_definitions):
         name = _safe_get(declaration, "name")
         description = _safe_get(declaration, "description")
@@ -668,7 +668,7 @@ def _to_jsonable(value: Any) -> Any:
         return {str(key): _to_jsonable(child) for key, child in value.items()}
     if isinstance(value, (list, tuple, set)):
         return [_to_jsonable(item) for item in value]
-    if is_dataclass(value):
+    if is_dataclass(value) and not isinstance(value, type):
         return _to_jsonable(asdict(value))
 
     model_dump = getattr(value, "model_dump", None)
