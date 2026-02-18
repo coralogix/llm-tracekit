@@ -32,7 +32,7 @@ openai-agents = ["llm-tracekit-openai-agents>=1.0.0"]
 guardrails = ["cx-guardrails>=1.0.0"]
 langchain = ["llm-tracekit-langchain>=1.0.0"]
 google-adk = ["llm-tracekit-google-adk>=1.0.0"]
-
+langgraph = ["llm-tracekit-langgraph>=1.0.0"]
 
 [project.urls]
 homepage = "https://coralogix.com"
@@ -74,6 +74,7 @@ members = [
     "instrumentations/bedrock",
     "instrumentations/gemini",
     "instrumentations/langchain",
+    "instrumentations/langgraph",
     "instrumentations/google-adk",
 ]
 
@@ -86,10 +87,11 @@ llm-tracekit-openai-agents = { workspace = true }
 llm-tracekit-google-adk = { workspace = true }
 cx-guardrails = { workspace = true }
 llm-tracekit-langchain = { workspace = true }
+llm-tracekit-langgraph = { workspace = true }
 
 [tool.mypy]
 ignore_missing_imports = true
 namespace_packages = true
 explicit_package_bases = true
-mypy_path = "core/src:instrumentations/openai/src:instrumentations/bedrock/src:instrumentations/gemini/src:instrumentations/langchain/src:instrumentations/openai-agents/src:instrumentations/google-adk/src:guardrails/src"
+mypy_path = "core/src:instrumentations/openai/src:instrumentations/bedrock/src:instrumentations/gemini/src:instrumentations/langchain/src:instrumentations/langgraph/src:instrumentations/openai_agents/src:instrumentations/google-adk/src:guardrails/src"
 exclude = ["tests/"]
