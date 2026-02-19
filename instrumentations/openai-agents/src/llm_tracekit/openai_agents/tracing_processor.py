@@ -15,7 +15,7 @@
 
 from dataclasses import dataclass, field
 from contextvars import Token
-from typing import Any, Callable, Sequence
+from typing import Any, Callable
 
 from agents import (
     AgentSpanData,
@@ -56,39 +56,43 @@ from opentelemetry.semconv._incubating.attributes import (
 )
 
 
-def _stringify_message_content(content: Any) -> str | None:
+# Text content types: input_text (user), output_text (assistant in conversation history)
+_TEXT_CONTENT_TYPES = ("input_text", "output_text")
+
+
+def _stringify_message_content(content: str | list | dict | None) -> str | None:
+    """Extract text content from OpenAI message content.
+
+    Content can be either:
+    - str: Plain text message
+    - dict: Single content item with "type" ("input_text", "output_text",
+            "input_image", "input_file"); only input_text and output_text are extracted
+    - list: List of content items, where each item is a dict with "type" and "text";
+            only items with type "input_text" or "output_text" are used
+    """
     if content is None:
         return None
 
     if isinstance(content, str):
-        stripped = content.strip()
-        return stripped or None
-
-    text_attr = getattr(content, "text", None)
-    if isinstance(text_attr, str):
-        stripped = text_attr.strip()
-        if stripped:
-            return stripped
+        return content.strip() or None
 
     if isinstance(content, dict):
-        text_value = content.get("text")
-        if isinstance(text_value, str):
-            stripped = text_value.strip()
-            if stripped:
-                return stripped
+        if content.get("type") in _TEXT_CONTENT_TYPES:
+            text = content.get("text")
+            if isinstance(text, str) and text.strip():
+                return text.strip()
+        return None
 
-    if isinstance(content, Sequence) and not isinstance(content, (str, bytes)):
+    if isinstance(content, list):
         parts: list[str] = []
-        for part in content:
-            part_text = _stringify_message_content(part)
-            if part_text:
-                parts.append(part_text)
-        if parts:
-            joined = " ".join(parts).strip()
-            return joined or None
+        for item in content:
+            if isinstance(item, dict) and item.get("type") in _TEXT_CONTENT_TYPES:
+                text = item.get("text")
+                if isinstance(text, str) and text.strip():
+                    parts.append(text.strip())
+        return " ".join(parts) if parts else None
 
-    serialized = str(content).strip()
-    return serialized or None
+    return None
 
 
 @dataclass
