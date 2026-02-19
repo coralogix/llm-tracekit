@@ -56,6 +56,45 @@ from opentelemetry.semconv._incubating.attributes import (
 )
 
 
+# Text content types: input_text (user), output_text (assistant in conversation history)
+_TEXT_CONTENT_TYPES = ("input_text", "output_text")
+
+
+def _stringify_message_content(content: str | list | dict | None) -> str | None:
+    """Extract text content from OpenAI message content.
+
+    Content can be either:
+    - str: Plain text message
+    - dict: Single content item with "type" ("input_text", "output_text",
+            "input_image", "input_file"); only input_text and output_text are extracted
+    - list: List of content items, where each item is a dict with "type" and "text";
+            only items with type "input_text" or "output_text" are used
+    """
+    if content is None:
+        return None
+
+    if isinstance(content, str):
+        return content.strip() or None
+
+    if isinstance(content, dict):
+        if content.get("type") in _TEXT_CONTENT_TYPES:
+            text = content.get("text")
+            if isinstance(text, str) and text.strip():
+                return text.strip()
+        return None
+
+    if isinstance(content, list):
+        parts: list[str] = []
+        for item in content:
+            if isinstance(item, dict) and item.get("type") in _TEXT_CONTENT_TYPES:
+                text = item.get("text")
+                if isinstance(text, str) and text.strip():
+                    parts.append(text.strip())
+        return " ".join(parts) if parts else None
+
+    return None
+
+
 @dataclass
 class _TraceState:
     parent_span: OTELSpan | None = None
@@ -109,22 +148,14 @@ class OpenAIAgentsTracingProcessor(TracingProcessor):
             while idx < len(input_messages):
                 msg = input_messages[idx]
                 if msg.get("role") == "user":
-                    history.append(
-                        Message(role="user", content=str(msg.get("content")))
-                    )
+                    user_content = _stringify_message_content(msg.get("content"))
+                    history.append(Message(role="user", content=user_content))
                     idx += 1
                     continue
 
                 if msg.get("role") == "assistant" and msg.get("type") == "message":
-                    content: str = ""
-                    msg_content = msg.get("content")
-                    if (
-                        msg_content is not None
-                        and isinstance(msg_content, list)
-                        and len(msg_content) > 0
-                    ):
-                        content = msg_content[0].get("text", "")
-                    history.append(Message(role="assistant", content=content))
+                    assistant_content = _stringify_message_content(msg.get("content"))
+                    history.append(Message(role="assistant", content=assistant_content))
                     idx += 1
                     continue
 
