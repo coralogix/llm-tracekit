@@ -13,8 +13,6 @@
 # limitations under the License.
 
 
-import re
-import json
 from dataclasses import dataclass, field
 from contextvars import Token
 from typing import Any, Callable, Sequence
@@ -146,14 +144,14 @@ class OpenAIAgentsTracingProcessor(TracingProcessor):
             while idx < len(input_messages):
                 msg = input_messages[idx]
                 if msg.get("role") == "user":
-                    user_content = _stringify_message_content(msg.get('content'))
-                    history.append(Message(role='user', content=user_content))
+                    user_content = _stringify_message_content(msg.get("content"))
+                    history.append(Message(role="user", content=user_content))
                     idx += 1
                     continue
 
                 if msg.get("role") == "assistant" and msg.get("type") == "message":
-                    assistant_content = _stringify_message_content(msg.get('content'))
-                    history.append(Message(role='assistant', content=assistant_content))
+                    assistant_content = _stringify_message_content(msg.get("content"))
+                    history.append(Message(role="assistant", content=assistant_content))
                     idx += 1
                     continue
 
