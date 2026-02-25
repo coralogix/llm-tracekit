@@ -13,6 +13,7 @@ members = [
     "cx-guardrails",
     "llm-tracekit",
     "llm-tracekit-bedrock",
+    "llm-tracekit-claude-agent-sdk",
     "llm-tracekit-core",
     "llm-tracekit-gemini",
     "llm-tracekit-google-adk",
@@ -350,6 +351,23 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/c4/26/b9924fa27db384bdcd97ab83b4f0a8058d96ad9626ead570674d5e737d90/charset_normalizer-3.4.4-cp313-cp313-win_amd64.whl", hash = "sha256:b435cba5f4f750aa6c0a0d92c541fb79f69a387c91e61f1795227e4ed9cece14", size = 107092, upload-time = "2025-10-14T04:41:31.188Z" },
     { url = "https://files.pythonhosted.org/packages/af/8f/3ed4bfa0c0c72a7ca17f0380cd9e4dd842b09f664e780c13cff1dcf2ef1b/charset_normalizer-3.4.4-cp313-cp313-win_arm64.whl", hash = "sha256:542d2cee80be6f80247095cc36c418f7bddd14f4a6de45af91dfad36d817bba2", size = 100408, upload-time = "2025-10-14T04:41:32.624Z" },
     { url = "https://files.pythonhosted.org/packages/0a/4c/925909008ed5a988ccbb72dcc897407e5d6d3bd72410d69e051fc0c14647/charset_normalizer-3.4.4-py3-none-any.whl", hash = "sha256:7a32c560861a02ff789ad905a2fe94e3f840803362c84fecf1851cb4cf3dc37f", size = 53402, upload-time = "2025-10-14T04:42:31.76Z" },
+]
+
+[[package]]
+name = "claude-agent-sdk"
+version = "0.1.37"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "anyio" },
+    { name = "mcp" },
+    { name = "typing-extensions", marker = "python_full_version < '3.11'" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/b9/12/c5b09c7fe50cc54bf3a4316059c0e2fb7653fb739f6fb35c9a2e8a363493/claude_agent_sdk-0.1.37.tar.gz", hash = "sha256:5a021582b8b44ca735415b85a2dd8732490f22bc3d51452ede82d7f2db4ee592", size = 61610, upload-time = "2026-02-16T21:50:42.115Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/51/61/fdc15695a89cc1f3c4b0e0d714593e00a89094b95fc5dcbec6972a602197/claude_agent_sdk-0.1.37-py3-none-macosx_11_0_arm64.whl", hash = "sha256:c810592bfb2927ba619d01c5588ead0c052452a51052a548fda885ca0dbca7ab", size = 54799463, upload-time = "2026-02-16T21:50:28.258Z" },
+    { url = "https://files.pythonhosted.org/packages/d9/3f/8057bd6f2dc6a077c32b9065336ced45c18aff602575c656b492b95b2428/claude_agent_sdk-0.1.37-py3-none-manylinux_2_17_aarch64.whl", hash = "sha256:61e821ba330ffc66fe9870c1ae3a76b05f69ac47da4446928ca6fe0569e1d42e", size = 69543239, upload-time = "2026-02-16T21:50:31.642Z" },
+    { url = "https://files.pythonhosted.org/packages/d0/7f/d13c843edea7418747127dc5d511968c5f83709737e296e54be40098299e/claude_agent_sdk-0.1.37-py3-none-manylinux_2_17_x86_64.whl", hash = "sha256:9814fbf52dd6a3aa070da023187184cf6fc679e88d8b3fd69d72dac55f8cc319", size = 70142154, upload-time = "2026-02-16T21:50:35.353Z" },
+    { url = "https://files.pythonhosted.org/packages/62/37/4ef55c5202246ac7c9319bc0b11896be5fd976051eff35109b95a039b76f/claude_agent_sdk-0.1.37-py3-none-win_amd64.whl", hash = "sha256:0934f5eba7598b613ce386cc57b985c7a9f6f1c4a1fba94e587ad84130374258", size = 72673142, upload-time = "2026-02-16T21:50:39.531Z" },
 ]
 
 [[package]]
@@ -1564,6 +1582,9 @@ dependencies = [
 bedrock = [
     { name = "llm-tracekit-bedrock" },
 ]
+claude-agent-sdk = [
+    { name = "llm-tracekit-claude-agent-sdk" },
+]
 gemini = [
     { name = "llm-tracekit-gemini" },
 ]
@@ -1604,6 +1625,7 @@ dev = [
 requires-dist = [
     { name = "cx-guardrails", marker = "extra == 'guardrails'", editable = "guardrails" },
     { name = "llm-tracekit-bedrock", marker = "extra == 'bedrock'", editable = "instrumentations/bedrock" },
+    { name = "llm-tracekit-claude-agent-sdk", marker = "extra == 'claude-agent-sdk'", editable = "instrumentations/claude-agent-sdk" },
     { name = "llm-tracekit-core", editable = "core" },
     { name = "llm-tracekit-gemini", marker = "extra == 'gemini'", editable = "instrumentations/gemini" },
     { name = "llm-tracekit-google-adk", marker = "extra == 'google-adk'", editable = "instrumentations/google-adk" },
@@ -1611,7 +1633,7 @@ requires-dist = [
     { name = "llm-tracekit-openai", marker = "extra == 'openai'", editable = "instrumentations/openai" },
     { name = "llm-tracekit-openai-agents", marker = "extra == 'openai-agents'", editable = "instrumentations/openai-agents" },
 ]
-provides-extras = ["openai", "bedrock", "gemini", "openai-agents", "guardrails", "langchain", "google-adk"]
+provides-extras = ["openai", "bedrock", "gemini", "openai-agents", "guardrails", "langchain", "google-adk", "claude-agent-sdk"]
 
 [package.metadata.requires-dev]
 dev = [
@@ -1671,6 +1693,45 @@ dev = [
     { name = "pyyaml", specifier = ">=6.0.2" },
     { name = "ruff", specifier = ">=0.9.7" },
     { name = "types-boto3", specifier = ">=1.38.4" },
+]
+
+[[package]]
+name = "llm-tracekit-claude-agent-sdk"
+version = "1.0.0"
+source = { editable = "instrumentations/claude-agent-sdk" }
+dependencies = [
+    { name = "claude-agent-sdk" },
+    { name = "llm-tracekit-core" },
+    { name = "opentelemetry-instrumentation" },
+]
+
+[package.dev-dependencies]
+dev = [
+    { name = "assertpy" },
+    { name = "mypy" },
+    { name = "pytest" },
+    { name = "pytest-asyncio" },
+    { name = "pytest-vcr" },
+    { name = "pyyaml" },
+    { name = "ruff" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "claude-agent-sdk", specifier = ">=0.0.20" },
+    { name = "llm-tracekit-core", editable = "core" },
+    { name = "opentelemetry-instrumentation", specifier = ">=0.53b1" },
+]
+
+[package.metadata.requires-dev]
+dev = [
+    { name = "assertpy", specifier = ">=1.1" },
+    { name = "mypy", specifier = ">=1.14.1" },
+    { name = "pytest", specifier = ">=8.3.4" },
+    { name = "pytest-asyncio", specifier = ">=1.0.0" },
+    { name = "pytest-vcr", specifier = ">=1.0.2" },
+    { name = "pyyaml", specifier = ">=6.0.2" },
+    { name = "ruff", specifier = ">=0.9.7" },
 ]
 
 [[package]]
