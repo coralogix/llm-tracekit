@@ -49,7 +49,7 @@ def create_wrapped_query(
     ) -> Any:
         model = getattr(options, "model", None) if options else None
         span = tracer.start_span(
-            f"chat {model or "claude"}",
+            f"chat {model or 'claude'}",
             kind=SpanKind.CLIENT,
         )
         if span.is_recording():

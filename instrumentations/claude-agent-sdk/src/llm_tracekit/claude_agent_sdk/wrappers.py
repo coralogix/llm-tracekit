@@ -143,7 +143,7 @@ class ClientReceiveResponseWrapper(AsyncIterator[Any]):
         if not self._started:
             self._started = True
             self._span = self._tracer.start_span(
-                f"chat {self._model or "claude"}",
+                f"chat {self._model or 'claude'}",
                 kind=SpanKind.CLIENT,
             )
             if self._span.is_recording():
