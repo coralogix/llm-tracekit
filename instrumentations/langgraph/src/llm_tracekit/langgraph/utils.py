@@ -16,25 +16,14 @@
 
 from __future__ import annotations
 
-from typing import Any, Mapping, MutableMapping
-
-from opentelemetry.semconv._incubating.attributes import (
-    gen_ai_attributes as GenAIAttributes,
-)
+from typing import Any, Mapping
 
 
 class LangGraphSpanAttributes:
-    """Attribute keys emitted for LangGraph node spans."""
+    """Attribute keys for LangGraph node spans (node name and step)."""
 
     NODE = "gen_ai.langgraph.node"
     STEP = "gen_ai.langgraph.step"
-    TRIGGERS = "gen_ai.langgraph.triggers"
-    PATH = "gen_ai.langgraph.path"
-    CHECKPOINT_NS = "gen_ai.langgraph.checkpoint_ns"
-    THREAD_ID = "gen_ai.thread.id"
-    TASK_ID = "gen_ai.task.id"
-    STATUS = "gen_ai.langgraph.status"
-    TAGS = "gen_ai.tags"
 
 
 def build_node_span_name(node_name: str | None) -> str:
@@ -47,22 +36,29 @@ def build_node_span_name(node_name: str | None) -> str:
 
 def extract_node_attributes(
     metadata: Mapping[str, Any] | None,
-    tags: list[str] | None,
 ) -> tuple[str | None, dict[str, Any]] | None:
-    """Extract OTEL attributes for a LangGraph node span.
+    """Extract node name and attributes for a LangGraph node span.
 
-    Returns the node name (if present) and the attribute dictionary. If the
-    provided metadata does not represent a LangGraph node execution, ``None``
-    is returned.
+    Returns the node name (if present) and a dict with NODE and STEP when set.
+    If the metadata does not represent a LangGraph node execution, returns None.
     """
 
-    if not metadata or "langgraph_node" not in metadata:
+    if not isinstance(metadata, Mapping) or "langgraph_node" not in metadata:
         return None
 
+    path = metadata.get("langgraph_path")
+    path_value = _safe_str(path)
+    # Only create a span for top-level node runs. Conditional edges (and other
+    # sub-invocations) can be reported with the same langgraph_node; they often
+    # have a path with more than two segments (e.g. "root.llm_call.conditional").
+    # Skip those so we get one span per node execution.
+    if path_value is not None:
+        segments = [s for s in path_value.split(".") if s]
+        if len(segments) > 2:
+            return None
+
     node_name = _safe_str(metadata.get("langgraph_node"))
-    attributes: dict[str, Any] = {
-        GenAIAttributes.GEN_AI_OPERATION_NAME: "langgraph.node",
-    }
+    attributes: dict[str, Any] = {}
     if node_name:
         attributes[LangGraphSpanAttributes.NODE] = node_name
 
@@ -70,46 +66,7 @@ def extract_node_attributes(
     if step is not None:
         attributes[LangGraphSpanAttributes.STEP] = step
 
-    triggers = metadata.get("langgraph_triggers")
-    if isinstance(triggers, (list, tuple)):
-        attributes[LangGraphSpanAttributes.TRIGGERS] = list(triggers)
-
-    path = metadata.get("langgraph_path")
-    path_value = _safe_str(path)
-    if path_value is not None:
-        attributes[LangGraphSpanAttributes.PATH] = path_value
-
-    checkpoint_ns = _safe_str(metadata.get("langgraph_checkpoint_ns"))
-    if checkpoint_ns is not None:
-        attributes[LangGraphSpanAttributes.CHECKPOINT_NS] = checkpoint_ns
-
-    thread_id = _safe_str(
-        metadata.get("thread_id") or metadata.get("langgraph_thread_id")
-    )
-    if thread_id is not None:
-        attributes[LangGraphSpanAttributes.THREAD_ID] = thread_id
-
-    task_id = _safe_str(metadata.get("langgraph_task_id"))
-    if task_id is not None:
-        attributes[LangGraphSpanAttributes.TASK_ID] = task_id
-
-    if tags:
-        attributes[LangGraphSpanAttributes.TAGS] = list(tags)
-
-    _merge_user_metadata(metadata, attributes)
     return node_name, attributes
-
-
-def _merge_user_metadata(
-    metadata: Mapping[str, Any],
-    attributes: MutableMapping[str, Any],
-) -> None:
-    for key, value in metadata.items():
-        if key.startswith("langgraph_"):
-            continue
-        if key in {"thread_id", "langgraph_thread_id", "langgraph_task_id"}:
-            continue
-        attributes.setdefault(f"langgraph.metadata.{key}", value)
 
 
 def _safe_str(value: Any) -> str | None:

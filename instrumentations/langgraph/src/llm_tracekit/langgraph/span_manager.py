@@ -12,68 +12,116 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Span lifecycle helpers for LangGraph instrumentation."""
+"""Span lifecycle helpers for LangGraph instrumentation.
+
+Provides a 3-level structure: global span (START→END), node spans (children of
+global), and LLM spans (children of node spans, created by other instrumentors).
+Node spans are attached to the current context so LLM calls inside a node become
+children of that node span.
+"""
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
-from timeit import default_timer
+from contextvars import Token
+from dataclasses import dataclass
 from typing import Any
 from uuid import UUID
 
+from opentelemetry import context
 from opentelemetry.trace import Span, SpanKind, Tracer, set_span_in_context
 
 
-@dataclass
-class LangGraphNodeSpanState:
-    """Book-keeping for an in-flight LangGraph node span."""
+GLOBAL_SPAN_NAME = "LangGraph"
 
+
+@dataclass
+class _GlobalSpanState:
     span: Span
-    attributes: dict[str, Any] = field(default_factory=dict)
-    start_time: float = field(default_factory=default_timer)
-    node_name: str | None = None
+    token: Token[Any]
+    root_run_id: UUID
+
+
+@dataclass
+class _NodeSpanState:
+    span: Span
+    token: Token[Any]
 
 
 class LangGraphSpanManager:
-    """Tracks spans created for LangGraph node executions."""
+    """Tracks global (graph) and node spans for LangGraph runs.
+
+    Global span: one per graph invocation, created on the first node and reused
+    for all nodes in that run. Ended when the root run ends. Node spans: one
+    per node, child of the single global span.
+    """
 
     def __init__(self, tracer: Tracer) -> None:
         self._tracer = tracer
-        self._states: dict[UUID, LangGraphNodeSpanState] = {}
+        self._node_states: dict[UUID, _NodeSpanState] = {}
+        self._global_span_state: _GlobalSpanState | None = None
 
-    def create_node_span(
+    def ensure_global_span_and_create_node_span(
         self,
         *,
         run_id: UUID,
         parent_run_id: UUID | None,
         span_name: str,
-        attributes: dict[str, Any],
-        node_name: str | None = None,
-    ) -> LangGraphNodeSpanState:
-        """Create and register a new span for a LangGraph node."""
+    ) -> None:
+        """Ensure a global span exists for this graph run, then create a node span as its child.
 
-        context = None
-        if parent_run_id is not None:
-            parent_state = self._states.get(parent_run_id)
-            if parent_state is not None:
-                context = set_span_in_context(parent_state.span)
-        span = self._tracer.start_span(
+        Only one global span exists per graph invocation (created on first node).
+        The node span is attached to the current context so LLM calls are children of it.
+        """
+        if self._global_span_state is None and parent_run_id is not None:
+            global_span = self._tracer.start_span(
+                name=GLOBAL_SPAN_NAME,
+                kind=SpanKind.INTERNAL,
+            )
+            ctx = set_span_in_context(global_span)
+            token = context.attach(ctx)
+            self._global_span_state = _GlobalSpanState(
+                span=global_span,
+                token=token,
+                root_run_id=parent_run_id,
+            )
+
+        parent_ctx = None
+        if self._global_span_state is not None:
+            parent_ctx = set_span_in_context(self._global_span_state.span)
+
+        node_span = self._tracer.start_span(
             name=span_name,
             kind=SpanKind.INTERNAL,
-            context=context,
-            attributes=attributes,
+            context=parent_ctx,
         )
+        ctx = set_span_in_context(node_span)
+        token = context.attach(ctx)
+        self._node_states[run_id] = _NodeSpanState(span=node_span, token=token)
 
-        state = LangGraphNodeSpanState(
-            span=span,
-            attributes=dict(attributes),
-            node_name=node_name,
-        )
-        self._states[run_id] = state
-        return state
+    def has_node_run(self, run_id: UUID) -> bool:
+        """Return True if we have an active node span for this run_id.
 
-    def get_state(self, run_id: UUID) -> LangGraphNodeSpanState | None:
-        return self._states.get(run_id)
+        Used to skip sub-runs (e.g. conditional edges) whose parent is a node
+        we already spanned, so we get one span per node execution.
+        """
+        return run_id in self._node_states
 
-    def pop_state(self, run_id: UUID) -> LangGraphNodeSpanState | None:
-        return self._states.pop(run_id, None)
+    def pop_node_state(self, run_id: UUID) -> _NodeSpanState | None:
+        """Remove and return node state for run_id. Caller must detach token and end span."""
+        return self._node_states.pop(run_id, None)
+
+    def end_global_span(self, root_run_id: UUID) -> bool:
+        """End the global span only if run_id is the root run we stored. Return True if ended."""
+        if (
+            self._global_span_state is None
+            or self._global_span_state.root_run_id != root_run_id
+        ):
+            return False
+        state = self._global_span_state
+        self._global_span_state = None
+        try:
+            context.detach(state.token)
+        finally:
+            if state.span.is_recording():
+                state.span.end()
+        return True

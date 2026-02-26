@@ -23,13 +23,10 @@ from opentelemetry.instrumentation.instrumentor import (  # type: ignore[attr-de
     BaseInstrumentor,
 )
 from opentelemetry.instrumentation.utils import unwrap
-from opentelemetry.metrics import Meter, get_meter
 from opentelemetry.semconv.schemas import Schemas
 from opentelemetry.trace import Tracer, get_tracer
 from wrapt import wrap_function_wrapper
 
-from llm_tracekit.core import is_content_enabled
-from llm_tracekit.core._metrics import Instruments
 from llm_tracekit.langgraph.callback import LangGraphCallbackHandler
 from llm_tracekit.langgraph.package import _instruments
 
@@ -38,14 +35,14 @@ class LangGraphInstrumentor(BaseInstrumentor):
     """OpenTelemetry instrumentor for LangGraph.
 
     Patches LangChain's BaseCallbackManager so that every new callback manager
-    receives a LangGraphCallbackHandler. When a LangGraph graph runs, node
-    executions are traced as spans. Call instrument() to activate and
-    uninstrument() to remove the patch.
+    receives a LangGraphCallbackHandler. Creates a 3-level span structure: one
+    global span per graph run (START→END), one span per node, and LLM spans
+    from other instrumentors as children of node spans. Node spans get
+    attributes: node name and step number.
     """
 
     def __init__(self) -> None:
         self._tracer: Tracer | None = None
-        self._meter: Meter | None = None
         self._handler: LangGraphCallbackHandler | None = None
 
     def instrumentation_dependencies(self) -> Collection[str]:
@@ -56,21 +53,7 @@ class LangGraphInstrumentor(BaseInstrumentor):
         self._tracer = get_tracer(
             __name__, "", tracer_provider, schema_url=Schemas.V1_28_0.value
         )
-
-        meter_provider = kwargs.get("meter_provider")
-        self._meter = get_meter(
-            __name__,
-            "",
-            meter_provider,
-            schema_url=Schemas.V1_28_0.value,
-        )
-        instruments = Instruments(self._meter)
-
-        self._handler = LangGraphCallbackHandler(
-            tracer=self._tracer,
-            capture_content=is_content_enabled(),
-            instruments=instruments,
-        )
+        self._handler = LangGraphCallbackHandler(tracer=self._tracer)
 
         wrap_function_wrapper(
             module="langchain_core.callbacks",
