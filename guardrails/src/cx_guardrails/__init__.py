@@ -5,6 +5,7 @@ from .models.request import (
     PromptInjection,
     Custom,
     CustomEvaluationExample,
+    Toxicity,
     GuardrailRequest,
     Message,
 )
@@ -31,6 +32,7 @@ __all__ = [
     "PromptInjection",
     "Custom",
     "CustomEvaluationExample",
+    "Toxicity",
     "GuardrailRequest",
     "Message",
     "GuardrailsResultBase",

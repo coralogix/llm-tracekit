@@ -21,6 +21,7 @@ from cx_guardrails import (
     PromptInjection,
     Custom,
     CustomEvaluationExample,
+    Toxicity,
     Message,
     GuardrailRequest,
     PIICategory,
@@ -409,6 +410,64 @@ class TestCustom:
         assert_that(request.guardrails[2].type).is_equal_to("custom")
 
 
+class TestToxicity:
+    def test_toxicity_default_threshold(self):
+        toxicity = Toxicity()
+        assert_that(toxicity.type).is_equal_to("toxicity")
+        assert_that(toxicity.threshold).is_equal_to(DEFAULT_THRESHOLD)
+
+    def test_toxicity_with_custom_threshold(self):
+        toxicity = Toxicity(threshold=0.9)
+        assert_that(toxicity.type).is_equal_to("toxicity")
+        assert_that(toxicity.threshold).is_equal_to(0.9)
+
+    def test_toxicity_threshold_validation(self):
+        with pytest.raises(ValidationError):
+            Toxicity(threshold=1.5)
+
+    def test_toxicity_threshold_negative_validation(self):
+        with pytest.raises(ValidationError):
+            Toxicity(threshold=-0.1)
+
+    def test_toxicity_serialization(self):
+        toxicity = Toxicity(threshold=0.8)
+        data = toxicity.model_dump(mode="json")
+        assert_that(data["type"]).is_equal_to("toxicity")
+        assert_that(data["threshold"]).is_equal_to(0.8)
+
+    def test_toxicity_in_request(self):
+        toxicity = Toxicity()
+        request = GuardrailRequest(
+            application="test",
+            subsystem="test",
+            messages=[{"role": "user", "content": "Hello"}],
+            guardrails=[toxicity],
+            target=GuardrailsTarget.PROMPT,
+            timeout=10,
+        )
+        assert_that(request.guardrails).is_length(1)
+        assert_that(request.guardrails[0].type).is_equal_to("toxicity")
+
+    def test_toxicity_combined_with_other_guardrails(self):
+        """Test request with PII, PromptInjection, and Toxicity guardrails."""
+        request = GuardrailRequest(
+            application="test",
+            subsystem="test",
+            messages=[{"role": "user", "content": "Hello"}],
+            guardrails=[
+                PII(categories=[PIICategory.EMAIL_ADDRESS]),
+                PromptInjection(),
+                Toxicity(threshold=0.8),
+            ],
+            target=GuardrailsTarget.PROMPT,
+            timeout=10,
+        )
+        assert_that(request.guardrails).is_length(3)
+        assert_that(request.guardrails[0].type).is_equal_to("pii")
+        assert_that(request.guardrails[1].type).is_equal_to("prompt_injection")
+        assert_that(request.guardrails[2].type).is_equal_to("toxicity")
+
+
 class TestPIICategorys:
     def test_category_values(self):
         assert_that(PIICategory.EMAIL_ADDRESS.value).is_equal_to("email_address")
@@ -458,6 +517,15 @@ class TestGuardrailsResultBase:
         }
         result = GuardrailsResultBase.model_validate(data)
         assert_that(result.type).is_equal_to(GuardrailType.CUSTOM)
+
+    def test_result_toxicity_type(self):
+        data = {
+            "type": "toxicity",
+            "detected": True,
+            "score": 0.65,
+        }
+        result = GuardrailsResultBase.model_validate(data)
+        assert_that(result.type).is_equal_to(GuardrailType.TOXICITY)
 
     def test_result_score_validation(self):
         with pytest.raises(ValidationError):

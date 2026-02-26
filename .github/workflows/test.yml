@@ -30,8 +30,8 @@ jobs:
               - 'instrumentations/openai/**'
               - 'core/**'
               - 'pyproject.toml'
-            openai_agents:
-              - 'instrumentations/openai_agents/**'
+            openai-agents:
+              - 'instrumentations/openai-agents/**'
               - 'core/**'
               - 'pyproject.toml'
             bedrock:
