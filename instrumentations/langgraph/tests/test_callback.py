@@ -85,7 +85,7 @@ def test_node_span_has_node_name_and_step_attributes(
     assert len(node_spans) == 1
     span = node_spans[0]
     assert span.attributes.get(LangGraphSpanAttributes.NODE) == "ingest_messages"
-    assert span.attributes.get(LangGraphSpanAttributes.STEP) == 3
+    assert span.attributes.get(LangGraphSpanAttributes.STEP) == 1
 
 
 def test_on_chain_end_marks_success(
@@ -173,6 +173,13 @@ def test_two_nodes_under_same_global_span(
     assert len(node_spans) == 2
     for node_span in node_spans:
         assert node_span.parent.span_id == global_spans[0].get_span_context().span_id
+    # Step is 1-based order: first node=1, second=2
+    node_spans_sorted = sorted(
+        node_spans,
+        key=lambda s: s.attributes.get(LangGraphSpanAttributes.STEP),
+    )
+    assert node_spans_sorted[0].attributes.get(LangGraphSpanAttributes.STEP) == 1
+    assert node_spans_sorted[1].attributes.get(LangGraphSpanAttributes.STEP) == 2
 
 
 def test_path_with_more_than_two_segments_skips_node_span(

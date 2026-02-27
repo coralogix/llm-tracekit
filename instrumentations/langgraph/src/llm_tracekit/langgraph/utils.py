@@ -62,10 +62,6 @@ def extract_node_attributes(
     if node_name:
         attributes[LangGraphSpanAttributes.NODE] = node_name
 
-    step = _maybe_int(metadata.get("langgraph_step"))
-    if step is not None:
-        attributes[LangGraphSpanAttributes.STEP] = step
-
     return node_name, attributes
 
 
@@ -73,14 +69,3 @@ def _safe_str(value: Any) -> str | None:
     if value is None:
         return None
     return value if isinstance(value, str) else str(value)
-
-
-def _maybe_int(value: Any) -> int | None:
-    if isinstance(value, bool):
-        return None
-    if isinstance(value, int):
-        return value
-    try:
-        return int(value)
-    except (TypeError, ValueError):
-        return None

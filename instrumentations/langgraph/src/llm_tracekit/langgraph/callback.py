@@ -85,10 +85,10 @@ class LangGraphCallbackHandler(BaseCallbackHandler):  # type: ignore[misc]
                 current_span.set_attribute(
                     LangGraphSpanAttributes.NODE, attrs[LangGraphSpanAttributes.NODE]
                 )
-            if LangGraphSpanAttributes.STEP in attrs:
-                current_span.set_attribute(
-                    LangGraphSpanAttributes.STEP, attrs[LangGraphSpanAttributes.STEP]
-                )
+            current_span.set_attribute(
+                LangGraphSpanAttributes.STEP,
+                self._span_manager.node_execution_index(),
+            )
         return None
 
     def on_chain_end(  # type: ignore[override]

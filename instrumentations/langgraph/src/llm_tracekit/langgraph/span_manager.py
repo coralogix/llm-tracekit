@@ -59,6 +59,7 @@ class LangGraphSpanManager:
         self._tracer = tracer
         self._node_states: dict[UUID, _NodeSpanState] = {}
         self._global_span_state: _GlobalSpanState | None = None
+        self._node_execution_counter = 0
 
     def ensure_global_span_and_create_node_span(
         self,
@@ -97,6 +98,11 @@ class LangGraphSpanManager:
         ctx = set_span_in_context(node_span)
         token = context.attach(ctx)
         self._node_states[run_id] = _NodeSpanState(span=node_span, token=token)
+        self._node_execution_counter += 1
+
+    def node_execution_index(self) -> int:
+        """Return the 1-based execution index of the node span just created in this graph run."""
+        return self._node_execution_counter
 
     def has_node_run(self, run_id: UUID) -> bool:
         """Return True if we have an active node span for this run_id.
@@ -119,6 +125,7 @@ class LangGraphSpanManager:
             return False
         state = self._global_span_state
         self._global_span_state = None
+        self._node_execution_counter = 0
         try:
             context.detach(state.token)
         finally:
