@@ -1,5 +1,5 @@
 version = 1
-revision = 2
+revision = 3
 requires-python = ">=3.10, <3.14"
 resolution-markers = [
     "python_full_version >= '3.13'",
@@ -1236,10 +1236,10 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [
-    { name = "opentelemetry-api", specifier = ">=1.32.1" },
-    { name = "opentelemetry-exporter-otlp", specifier = ">=1.32.1" },
-    { name = "opentelemetry-sdk", specifier = ">=1.32.1" },
-    { name = "opentelemetry-semantic-conventions", specifier = ">=0.53b1" },
+    { name = "opentelemetry-api", specifier = ">=1.39.0" },
+    { name = "opentelemetry-exporter-otlp", specifier = ">=1.39.0" },
+    { name = "opentelemetry-sdk", specifier = ">=1.39.0" },
+    { name = "opentelemetry-semantic-conventions", specifier = ">=0.60b0" },
     { name = "pydantic", specifier = ">=2.10.0" },
 ]
 
@@ -1276,7 +1276,7 @@ dev = [
 requires-dist = [
     { name = "litellm", extras = ["proxy"], specifier = ">=1.65.4" },
     { name = "llm-tracekit-core", directory = "../../core" },
-    { name = "opentelemetry-instrumentation", specifier = ">=0.53b1" },
+    { name = "opentelemetry-instrumentation", specifier = ">=0.60b0" },
 ]
 
 [package.metadata.requires-dev]
