@@ -2225,7 +2225,7 @@ dev = [
 requires-dist = [
     { name = "boto3", specifier = ">=1.36.0" },
     { name = "llm-tracekit-core", editable = "core" },
-    { name = "opentelemetry-instrumentation", specifier = ">=0.53b1" },
+    { name = "opentelemetry-instrumentation", specifier = ">=0.60b0" },
 ]
 
 [package.metadata.requires-dev]
@@ -2262,10 +2262,10 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "opentelemetry-api", specifier = ">=1.32.1" },
-    { name = "opentelemetry-exporter-otlp", specifier = ">=1.32.1" },
-    { name = "opentelemetry-sdk", specifier = ">=1.32.1" },
-    { name = "opentelemetry-semantic-conventions", specifier = ">=0.53b1" },
+    { name = "opentelemetry-api", specifier = ">=1.39.0" },
+    { name = "opentelemetry-exporter-otlp", specifier = ">=1.39.0" },
+    { name = "opentelemetry-sdk", specifier = ">=1.39.0" },
+    { name = "opentelemetry-semantic-conventions", specifier = ">=0.60b0" },
     { name = "pydantic", specifier = ">=2.10.0" },
 ]
 
@@ -2301,7 +2301,7 @@ dev = [
 requires-dist = [
     { name = "google-genai", specifier = ">=1.0.0,<2" },
     { name = "llm-tracekit-core", editable = "core" },
-    { name = "opentelemetry-instrumentation", specifier = ">=0.53b1" },
+    { name = "opentelemetry-instrumentation", specifier = ">=0.60b0" },
 ]
 
 [package.metadata.requires-dev]
@@ -2340,7 +2340,7 @@ dev = [
 requires-dist = [
     { name = "google-adk", specifier = ">=1.0.0" },
     { name = "llm-tracekit-core", editable = "core" },
-    { name = "opentelemetry-instrumentation", specifier = ">=0.53b1" },
+    { name = "opentelemetry-instrumentation", specifier = ">=0.60b0" },
 ]
 
 [package.metadata.requires-dev]
@@ -2384,7 +2384,7 @@ dev = [
 requires-dist = [
     { name = "langchain-core", specifier = ">=0.3.0" },
     { name = "llm-tracekit-core", editable = "core" },
-    { name = "opentelemetry-instrumentation", specifier = ">=0.53b1" },
+    { name = "opentelemetry-instrumentation", specifier = ">=0.60b0" },
 ]
 
 [package.metadata.requires-dev]
@@ -2512,7 +2512,7 @@ dev = [
 requires-dist = [
     { name = "llm-tracekit-core", editable = "core" },
     { name = "openai", specifier = ">=1.26.0" },
-    { name = "opentelemetry-instrumentation", specifier = ">=0.53b1" },
+    { name = "opentelemetry-instrumentation", specifier = ">=0.60b0" },
 ]
 
 [package.metadata.requires-dev]
@@ -2553,7 +2553,7 @@ requires-dist = [
     { name = "llm-tracekit-core", editable = "core" },
     { name = "openai", specifier = ">=1.26.0" },
     { name = "openai-agents", specifier = ">=0.1.0" },
-    { name = "opentelemetry-instrumentation", specifier = ">=0.53b1" },
+    { name = "opentelemetry-instrumentation", specifier = ">=0.60b0" },
 ]
 
 [package.metadata.requires-dev]
