@@ -11,6 +11,7 @@ from .span_attributes import (
     RESPONSE,
     APPLICATION_NAME,
     SUBSYSTEM_NAME,
+    GUARDRAILS_TRIGGERED,
 )
 
 
@@ -40,6 +41,7 @@ def generate_guardrail_response_attributes(
     target: str,
 ) -> dict[str, Any]:
     span_attributes: dict[str, Any] = {}
+    span_attributes[GUARDRAILS_TRIGGERED] = str(any(result.detected for result in guardrail_response.results))
     for result in guardrail_response.results:
         name = getattr(result, "name", None)
         guardrail_type = result.type.value

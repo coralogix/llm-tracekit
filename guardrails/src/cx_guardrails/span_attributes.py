@@ -14,6 +14,11 @@
 
 from typing import Final
 
+GUARDRAILS_TRIGGERED = "guardrails.triggered"
+"""
+Boolean indicating guardrail evaluation was performed.
+"""
+
 NAME: Final = "guardrails.{target}.{guardrail_type}.name"
 """
 The name of the guardrail from guardrail response.
