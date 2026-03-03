@@ -148,13 +148,19 @@ class OpenAIAgentsTracingProcessor(TracingProcessor):
             while idx < len(input_messages):
                 msg = input_messages[idx]
                 if msg.get("role") == "user":
-                    user_content = _stringify_message_content(msg.get("content"))
+                    raw_content = msg.get("content")
+                    user_content = _stringify_message_content(
+                        raw_content if isinstance(raw_content, (str, list, dict)) else None
+                    )
                     history.append(Message(role="user", content=user_content))
                     idx += 1
                     continue
 
                 if msg.get("role") == "assistant" and msg.get("type") == "message":
-                    assistant_content = _stringify_message_content(msg.get("content"))
+                    raw_content = msg.get("content")
+                    assistant_content = _stringify_message_content(
+                        raw_content if isinstance(raw_content, (str, list, dict)) else None
+                    )
                     history.append(Message(role="assistant", content=assistant_content))
                     idx += 1
                     continue
