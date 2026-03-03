@@ -2,7 +2,7 @@
 name = "llm-tracekit-core"
 version = "1.0.0"
 description = "Core utilities for LLM Tracekit and Coralogix Guardrails SDK."
-readme = "../README.md"
+readme = "README.md"
 authors = [
     { name="Coralogix Ltd.", email="info@coralogix.com" },
 ]
