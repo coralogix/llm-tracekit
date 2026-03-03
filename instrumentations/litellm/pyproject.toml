@@ -58,5 +58,5 @@ only-include = [
 ]
 
 [tool.uv.sources]
-llm-tracekit-core = { path = "../../core" }
+llm-tracekit-core = { workspace = true }
 
