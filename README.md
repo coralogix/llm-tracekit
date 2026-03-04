@@ -15,6 +15,7 @@ pip install llm-tracekit-gemini        # For Google Gemini
 pip install llm-tracekit-google-adk    # For Google ADK
 pip install llm-tracekit-litellm       # For LiteLLM
 pip install llm-tracekit-langchain     # For LangChain
+pip install llm-tracekit-langgraph     # For LangGraph
 pip install llm-tracekit-openai-agents # For OpenAI Agents SDK
 ```
 
@@ -55,7 +56,8 @@ response = client.chat.completions.create(
 | [Google ADK](https://github.com/google/adk-python) | `llm-tracekit-google-adk` | `GoogleADKInstrumentor` |
 | [LiteLLM](https://github.com/BerriAI/litellm) | `llm-tracekit-litellm` | `LiteLLMInstrumentor` |
 | [LangChain](https://www.langchain.com/) | `llm-tracekit-langchain` | `LangChainInstrumentor` |
-| [OpenAI Agents SDK](https://openai.github.io/openai-agents-python/) | `llm-tracekit-openai-agents` | `OpenAIAgentsInstrumentor` |
+| [LangGraph](https://langchain-ai.github.io/langgraph/) | `llm-tracekit-langgraph` | `LangGraphInstrumentor` |
+| [OpenAI Agents SDK](https://openai.github.io/openai-agents-python/) | `llm-tracekit-openai_agents` | `OpenAIAgentsInstrumentor` |
 
 
 ## 📖 Usage
@@ -91,7 +93,8 @@ For detailed documentation on each instrumentation, see the individual READMEs:
 - [Google ADK](./instrumentations/google-adk/README.md)
 - [LiteLLM](./instrumentations/litellm/README.md)
 - [LangChain](./instrumentations/langchain/README.md)
-- [OpenAI Agents SDK](./instrumentations/openai-agents/README.md)
+- [LangGraph](./instrumentations/langgraph/README.md)
+- [OpenAI Agents SDK](./instrumentations/openai_agents/README.md)
 
 ## 📜 License
 
