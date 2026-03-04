@@ -18,7 +18,6 @@ jobs:
           - llm-tracekit-litellm
           - llm-tracekit-openai-agents
           - llm-tracekit-langchain
-          - cx-guardrails
     steps:
       - uses: actions/checkout@v4
       - name: Set up Python

@@ -107,11 +107,12 @@ response = bedrock.converse(
 | `gen_ai.completion.<choice_number>.tool_calls.<tool_call_number >.type` | string | Type of tool call in choice <choice_number>  | `function`
 | `gen_ai.completion.<choice_number>.tool_calls.<tool_call_number >.function.name` | string | The name of the function used in tool call  within choice <choice_number> | `get_current_weather`
 | `gen_ai.completion.<choice_number>.tool_calls.<tool_call_number >.function.arguments` | string | Arguments passed to the function used in tool call within choice <choice_number> | `{"location": "Seattle, WA"}`
+| `gen_ai.request.tools.<tool_number>.type` | string | Type of tool definition advertised to the model | `function`
+| `gen_ai.request.tools.<tool_number>.function.name` | string | Name of the tool/function exposed to the model | `get_current_weather`
+| `gen_ai.request.tools.<tool_number>.function.description` | string | Description of the tool/function | `Get the current weather in a given location`
+| `gen_ai.request.tools.<tool_number>.function.parameters` | string | JSON schema describing the tool/function parameters | `{"type": "object", "properties": {"location": {"type": "string"}}, "required": ["location"]}`
 
 ### Bedrock specific attributes
 | Attribute | Type | Description | Examples
 | --------- | ---- | ----------- | --------
 | `gen_ai.bedrock.agent_alias.id` | string | The ID of the agent-alias in an `invoke_agent` call | `TSTALIASID`
-| `gen_ai.bedrock.request.tools.<tool_number>.function.name` | string | The name of the function to use in tool calls | `get_current_weather`
-| `gen_ai.bedrock.request.tools.<tool_number>.function.description` | string | Description of the function | `Get the current weather in a given location`
-| `gen_ai.bedrock.request.tools.<tool_number>.function.parameters` | string | JSON describing the schema of the function parameters | `{"type": "object", "properties": {"location": {"type": "string", "description": "The city and state, e.g. San Francisco, CA"}, "unit": {"type": "string", "enum": ["celsius", "fahrenheit"]}}, "required": ["location"]}`

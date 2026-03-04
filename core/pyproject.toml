@@ -2,12 +2,12 @@
 name = "llm-tracekit-core"
 version = "1.0.0"
 description = "Core utilities for LLM Tracekit and Coralogix Guardrails SDK."
-readme = "../README.md"
+readme = "README.md"
 authors = [
     { name="Coralogix Ltd.", email="info@coralogix.com" },
 ]
 license = "Apache-2.0"
-license-files = ["../LICENSE"]
+license-files = ["LICENSE"]
 requires-python = ">=3.10,<3.14"
 dependencies = [
     "opentelemetry-api>=1.32.1",

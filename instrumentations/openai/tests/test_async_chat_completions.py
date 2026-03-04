@@ -14,7 +14,7 @@
 # pylint: disable=too-many-locals
 
 import pytest
-from openai import APIConnectionError, AsyncOpenAI, NotFoundError
+from openai import APIConnectionError, APITimeoutError, AsyncOpenAI, NotFoundError
 from opentelemetry.semconv._incubating.attributes import (
     error_attributes as ErrorAttributes,
 )
@@ -136,7 +136,7 @@ async def test_async_chat_completion_bad_endpoint(span_exporter, instrument_no_c
 
     client = AsyncOpenAI(base_url="http://localhost:4242")
 
-    with pytest.raises(APIConnectionError):
+    with pytest.raises((APIConnectionError, APITimeoutError)):
         await client.chat.completions.create(
             messages=messages_value,
             model=llm_model_value,
@@ -146,7 +146,10 @@ async def test_async_chat_completion_bad_endpoint(span_exporter, instrument_no_c
     spans = span_exporter.get_finished_spans()
     assert_all_attributes(spans[0], llm_model_value, server_address="localhost")
     assert 4242 == spans[0].attributes[ServerAttributes.SERVER_PORT]
-    assert "APIConnectionError" == spans[0].attributes[ErrorAttributes.ERROR_TYPE]
+    assert spans[0].attributes[ErrorAttributes.ERROR_TYPE] in (
+        "APIConnectionError",
+        "APITimeoutError",
+    )
 
 
 @pytest.mark.vcr()

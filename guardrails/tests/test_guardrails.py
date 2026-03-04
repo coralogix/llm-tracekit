@@ -430,7 +430,7 @@ class TestGuardrailsRequestFormat:
             # Verify headers
             call_kwargs = mock_post.call_args
             headers = call_kwargs.kwargs["headers"]
-            assert_that(headers["X-Coralogix-Auth"]).is_equal_to("test-key")
+            assert_that(headers["Authorization"]).is_equal_to("test-key")
             assert_that(headers["cx-application-name"]).is_equal_to("test-app")
             assert_that(headers["cx-subsystem-name"]).is_equal_to("test-subsystem")
 

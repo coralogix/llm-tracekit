@@ -37,7 +37,15 @@ def assert_tool_definitions_in_span(span: ReadableSpan, tools: list[dict]):
     for index, tool in enumerate(tools):
         assert (
             span.attributes[
-                ExtendedGenAIAttributes.GEN_AI_BEDROCK_REQUEST_TOOLS_FUNCTION_NAME.format(
+                ExtendedGenAIAttributes.GEN_AI_REQUEST_TOOLS_TYPE.format(
+                    tool_index=index
+                )
+            ]
+            == "function"
+        )
+        assert (
+            span.attributes[
+                ExtendedGenAIAttributes.GEN_AI_REQUEST_TOOLS_FUNCTION_NAME.format(
                     tool_index=index
                 )
             ]
@@ -45,7 +53,7 @@ def assert_tool_definitions_in_span(span: ReadableSpan, tools: list[dict]):
         )
         assert (
             span.attributes[
-                ExtendedGenAIAttributes.GEN_AI_BEDROCK_REQUEST_TOOLS_FUNCTION_DESCRIPTION.format(
+                ExtendedGenAIAttributes.GEN_AI_REQUEST_TOOLS_FUNCTION_DESCRIPTION.format(
                     tool_index=index
                 )
             ]
@@ -53,7 +61,7 @@ def assert_tool_definitions_in_span(span: ReadableSpan, tools: list[dict]):
         )
         assert (
             span.attributes[
-                ExtendedGenAIAttributes.GEN_AI_BEDROCK_REQUEST_TOOLS_FUNCTION_PARAMETERS.format(
+                ExtendedGenAIAttributes.GEN_AI_REQUEST_TOOLS_FUNCTION_PARAMETERS.format(
                     tool_index=index
                 )
             ]

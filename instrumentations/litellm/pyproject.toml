@@ -7,7 +7,7 @@ authors = [
     { name="Coralogix Ltd.", email="info@coralogix.com" },
 ]
 license = "Apache-2.0"
-license-files = ["../../LICENSE"]
+license-files = ["LICENSE"]
 requires-python = ">=3.10,<3.14"
 dependencies = [
     "llm-tracekit-core>=1.0.0",
@@ -58,5 +58,5 @@ only-include = [
 ]
 
 [tool.uv.sources]
-llm-tracekit-core = { path = "../../core" }
+llm-tracekit-core = { workspace = true }
 

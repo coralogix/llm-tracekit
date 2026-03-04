@@ -225,7 +225,7 @@ class GuardrailRequestSender:
 
     def _get_headers(self) -> dict[str, str]:
         return {
-            "X-Coralogix-Auth": self.config.api_key,
+            "Authorization": self.config.api_key,
             "cx-application-name": self.config.application_name,
             "cx-subsystem-name": self.config.subsystem_name,
         }
