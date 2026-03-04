@@ -97,5 +97,5 @@ llm-tracekit-litellm = { workspace = true }
 ignore_missing_imports = true
 namespace_packages = true
 explicit_package_bases = true
-mypy_path = "core/src:instrumentations/openai/src:instrumentations/bedrock/src:instrumentations/gemini/src:instrumentations/langchain/src:instrumentations/langgraph/src:instrumentations/litellm/src:instrumentations/openai_agents/src:instrumentations/google-adk/src:guardrails/src"
+mypy_path = "core/src:instrumentations/openai/src:instrumentations/bedrock/src:instrumentations/gemini/src:instrumentations/langchain/src:instrumentations/langgraph/src:instrumentations/litellm/src:instrumentations/openai-agents/src:instrumentations/google-adk/src:guardrails/src"
 exclude = ["tests/"]
