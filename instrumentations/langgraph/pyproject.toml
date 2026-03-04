@@ -1,6 +1,6 @@
 [project]
 name = "llm-tracekit-langgraph"
-version = "1.0.0"
+version = "1.0.1"
 description = "OpenTelemetry instrumentation for LangGraph."
 readme = "README.md"
 authors = [
