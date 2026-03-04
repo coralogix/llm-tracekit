@@ -54,6 +54,10 @@ jobs:
               - 'instrumentations/litellm/**'
               - 'core/**'
               - 'pyproject.toml'
+            langgraph:
+              - 'instrumentations/langgraph/**'
+              - 'core/**'
+              - 'pyproject.toml'
 
   test:
     needs: detect-changes
