@@ -1853,6 +1853,7 @@ dependencies = [
 dev = [
     { name = "assertpy" },
     { name = "langgraph" },
+    { name = "mypy" },
     { name = "pytest" },
     { name = "pytest-asyncio" },
     { name = "pytest-vcr" },
@@ -1872,6 +1873,7 @@ requires-dist = [
 dev = [
     { name = "assertpy", specifier = ">=1.1" },
     { name = "langgraph", specifier = ">=1.0.6,<2" },
+    { name = "mypy", specifier = ">=1.14.1" },
     { name = "pytest", specifier = ">=8.3.4" },
     { name = "pytest-asyncio", specifier = ">=1.0.0" },
     { name = "pytest-vcr", specifier = ">=1.0.2" },

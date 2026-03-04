@@ -38,6 +38,7 @@ langgraph = "llm_tracekit.langgraph:LangGraphInstrumentor"
 dev = [
     "assertpy>=1.1",
     "langgraph>=1.0.6,<2",
+    "mypy>=1.14.1",
     "pytest>=8.3.4",
     "pytest-asyncio>=1.0.0",
     "pytest-vcr>=1.0.2",
@@ -59,4 +60,3 @@ only-include = [
 
 [tool.uv.sources]
 llm-tracekit-core = { workspace = true }
-llm-tracekit-langchain = { workspace = true }
