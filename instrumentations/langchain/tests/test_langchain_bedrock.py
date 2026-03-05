@@ -322,7 +322,7 @@ def test_langchain_bedrock_streaming(span_exporter, instrument_langchain):
     choice = {
         "finish_reason": "end_turn",
         "message": {
-            "role": getattr(full_message, "type", "assistant"),
+            "role": "assistant",
             "content": full_message.content,
         },
     }

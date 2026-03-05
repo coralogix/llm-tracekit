@@ -122,6 +122,8 @@ def fixture_vcr(vcr):
 def langchain_env_vars():
     if not os.getenv("OPENAI_API_KEY"):
         os.environ["OPENAI_API_KEY"] = "test_openai_api_key"
+    if not os.getenv("ANTHROPIC_API_KEY"):
+        os.environ["ANTHROPIC_API_KEY"] = "test_anthropic_api_key"
     if not os.getenv("AWS_ACCESS_KEY_ID"):
         os.environ["AWS_ACCESS_KEY_ID"] = "test_aws_access_key"
     if not os.getenv("AWS_SECRET_ACCESS_KEY"):
@@ -133,6 +135,8 @@ def handle_response(response):
     headers["openai-organization"] = "test_openai_org_id"
     headers["openai-project"] = "test_openai_project"
     headers["Set-Cookie"] = "redacted_set_cookie"
+    if "anthropic-organization-id" in headers:
+        headers["anthropic-organization-id"] = ["redacted_anthropic_organization_id"]
     if "Content-Encoding" in headers and "br" in headers["Content-Encoding"]:
         body = response.get("body", {}).get("string")
         if body and isinstance(body, bytes):
@@ -173,6 +177,8 @@ def vcr_config():
     return {
         "filter_headers": [
             "authorization",
+            "anthropic-organization-id",
+            "x-api-key",
             "accept-encoding",
             "content-length",
             "user-agent",

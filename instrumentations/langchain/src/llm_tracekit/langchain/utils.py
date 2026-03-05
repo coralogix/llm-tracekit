@@ -33,12 +33,20 @@ def flatten_message_batches(
 
 
 def build_prompt_history(messages: Iterable[BaseMessage]) -> list[Message]:
+    """Build prompt message list for span attributes.
+
+    Uses completion-style content stringification so assistant messages
+    that contain tool_use blocks do not dump that into gen_ai.prompt.*.content
+    (tool call data belongs only in gen_ai.prompt.*.tool_calls.*).
+    """
     history: list[Message] = []
     for message in messages:
         history.append(
             Message(
                 role=_get_message_role(message),
-                content=_stringify_content(getattr(message, "content", None)),
+                content=_stringify_completion_content(
+                    getattr(message, "content", None)
+                ),
                 tool_call_id=_get_tool_call_id(message),
                 tool_calls=_parse_tool_calls(message),
             )
@@ -70,7 +78,9 @@ def build_response_choices(
                 Choice(
                     finish_reason=finish_reason,
                     role=_get_message_role(message) or "assistant",
-                    content=_stringify_content(getattr(message, "content", None)),
+                    content=_stringify_completion_content(
+                        getattr(message, "content", None)
+                    ),
                     tool_calls=_parse_tool_calls(message),
                 )
             )
@@ -219,16 +229,65 @@ def _stringify_content(content: Any) -> str | None:
     return string_content if string_content.strip() else None
 
 
+def _stringify_completion_content(content: Any) -> str | None:
+    """Stringify assistant completion content for gen_ai.completion.0.content.
+
+    Only text content is included. Tool-use blocks are excluded so they are
+    not duplicated in the content attribute.
+    """
+    if content is None:
+        return None
+    if isinstance(content, str):
+        return content if content.strip() else None
+    if isinstance(content, (list, tuple)):
+        parts = []
+        for item in content:
+            if isinstance(item, dict):
+                if item.get("type") == "tool_use":
+                    continue
+                if "text" in item:
+                    parts.append(str(item["text"]))
+                elif item.get("type") == "text":
+                    parts.append(str(item.get("text", "")))
+            elif isinstance(item, str) and item.strip():
+                parts.append(item)
+        joined = " ".join(parts).strip()
+        return joined or None
+    if isinstance(content, dict) and content.get("type") == "tool_use":
+        return None
+    result = _stringify_content(content)
+    # Avoid putting tool_use block into completion content (semantic: use tool_calls only)
+    if result and ("'type': 'tool_use'" in result or '"type": "tool_use"' in result):
+        return None
+    return result
+
+
 def _get_message_role(message: BaseMessage) -> str | None:
     role = getattr(message, "role", None)
     if role:
-        return role
+        if role in ("system", "user", "assistant", "tool"):
+            return role
+        if role in ("ai", "model"):
+            return "assistant"
+        if role == "human":
+            return "user"
 
     msg_type = getattr(message, "type", None)
     if msg_type == "human":
         return "user"
     if msg_type == "ai":
         return "assistant"
+    # LangChain chunk/class names (e.g. AIMessageChunk) use type = class name
+    if msg_type and isinstance(msg_type, str):
+        lower = msg_type.lower()
+        if "human" in lower and "message" in lower:
+            return "user"
+        if "ai" in lower and "message" in lower:
+            return "assistant"
+        if "tool" in lower and "message" in lower:
+            return "tool"
+        if "system" in lower and "message" in lower:
+            return "system"
     return msg_type
 
 

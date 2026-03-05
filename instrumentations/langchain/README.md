@@ -1,6 +1,18 @@
 # LLM Tracekit - LangChain
 OpenTelemetry instrumentation for [LangChain](https://www.langchain.com/), designed to simplify LLM application development and production tracing and debugging.
 
+## Supported Providers
+
+The following providers are supported with full prompt/completion attributes:
+
+| Provider | Chat Model Class | System Value |
+| -------- | ---------------- | ------------ |
+| OpenAI | `ChatOpenAI` | `openai` |
+| Anthropic | `ChatAnthropic` | `anthropic` |
+| AWS Bedrock | `ChatBedrock`, `ChatBedrockConverse`, `BedrockChat` | `aws.bedrock` |
+
+Other chat model classes are still instrumented with system value `langchain` and a span is always created (model name uses metadata or provider class name when not in standard keys).
+
 ## Installation
 ```bash
 pip install "llm-tracekit-langchain"
