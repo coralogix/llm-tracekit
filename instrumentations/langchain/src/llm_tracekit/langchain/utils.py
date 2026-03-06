@@ -247,8 +247,6 @@ def _stringify_completion_content(content: Any) -> str | None:
                     continue
                 if "text" in item:
                     parts.append(str(item["text"]))
-                elif item.get("type") == "text":
-                    parts.append(str(item.get("text", "")))
             elif isinstance(item, str) and item.strip():
                 parts.append(item)
         joined = " ".join(parts).strip()
@@ -273,21 +271,33 @@ def _get_message_role(message: BaseMessage) -> str | None:
             return "user"
 
     msg_type = getattr(message, "type", None)
-    if msg_type == "human":
+    if not isinstance(msg_type, str):
+        return None
+
+    # Direct mappings for the standard LangChain message types
+    _DIRECT: dict[str, str] = {
+        "human": "user",
+        "ai": "assistant",
+        "system": "system",
+        "tool": "tool",
+        "function": "tool",
+    }
+    if msg_type in _DIRECT:
+        return _DIRECT[msg_type]
+
+    # LangChain streaming chunks encode their class name as the type field
+    # (e.g. AIMessageChunk, HumanMessageChunk).  Use startswith on the
+    # lowercased type to map them to the same semantic roles.
+    lower = msg_type.lower()
+    if lower.startswith("human"):
         return "user"
-    if msg_type == "ai":
+    if lower.startswith("ai"):
         return "assistant"
-    # LangChain chunk/class names (e.g. AIMessageChunk) use type = class name
-    if msg_type and isinstance(msg_type, str):
-        lower = msg_type.lower()
-        if "human" in lower and "message" in lower:
-            return "user"
-        if "ai" in lower and "message" in lower:
-            return "assistant"
-        if "tool" in lower and "message" in lower:
-            return "tool"
-        if "system" in lower and "message" in lower:
-            return "system"
+    if lower.startswith("system"):
+        return "system"
+    if lower.startswith("tool"):
+        return "tool"
+
     return msg_type
 
 

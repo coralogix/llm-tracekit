@@ -87,8 +87,6 @@ class LangChainCallbackHandler(BaseCallbackHandler):  # type: ignore[misc]
         if not isinstance(provider_name, str):
             return None
 
-        # Look up the system value, falling back to "langchain" for unknown providers
-        # This ensures all chat models get instrumented, not just known ones
         system_value = _PROVIDER_SYSTEM_MAP.get(provider_name, _FALLBACK_SYSTEM)
 
         invocation_params = _extract_invocation_params(kwargs)
@@ -325,10 +323,9 @@ def _extract_request_model(
 def _fallback_request_model(metadata: dict[str, Any] | None, provider_name: str) -> str:
     """Return a fallback model string when standard extraction finds nothing."""
     if metadata:
-        for key in ("ls_model_name", "model_name", "model", "model_id"):
-            value = metadata.get(key)
-            if isinstance(value, str):
-                return value
+        value = metadata.get("ls_model_name")
+        if isinstance(value, str):
+            return value
     return provider_name
 
 
