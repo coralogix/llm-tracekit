@@ -306,7 +306,7 @@ def test_langchain_openai_streaming(span_exporter, instrument_langchain):
     choice = {
         "finish_reason": "stop",
         "message": {
-            "role": getattr(full_message, "type", "assistant"),
+            "role": "assistant",
             "content": full_message.content,
         },
     }

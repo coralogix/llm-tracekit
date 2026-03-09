@@ -44,12 +44,20 @@ from llm_tracekit.core._span_builder import (
     generate_response_attributes,
 )
 
-_PROVIDER_SYSTEM_MAP = {
+# Map LangChain chat model class names to OpenTelemetry GenAI system values.
+# Only these providers are officially supported; others use _FALLBACK_SYSTEM.
+_PROVIDER_SYSTEM_MAP: dict[str, GenAIAttributes.GenAiSystemValues | str] = {
     "ChatOpenAI": GenAIAttributes.GenAiSystemValues.OPENAI,
+    "ChatAnthropic": GenAIAttributes.GenAiSystemValues.ANTHROPIC,
     "ChatBedrock": GenAIAttributes.GenAiSystemValues.AWS_BEDROCK,
+    "ChatBedrockConverse": GenAIAttributes.GenAiSystemValues.AWS_BEDROCK,
+    "BedrockChat": GenAIAttributes.GenAiSystemValues.AWS_BEDROCK,
 }
 
 _PROVIDER_ATTRIBUTE = "gen_ai.provider.name"
+
+# Fallback system value for unknown providers - still creates spans
+_FALLBACK_SYSTEM = "langchain"
 
 
 class LangChainCallbackHandler(BaseCallbackHandler):  # type: ignore[misc]
@@ -78,14 +86,15 @@ class LangChainCallbackHandler(BaseCallbackHandler):  # type: ignore[misc]
         provider_name = serialized.get("name")
         if not isinstance(provider_name, str):
             return None
-        system_value = _PROVIDER_SYSTEM_MAP.get(provider_name)
-        if system_value is None:
-            return None
+
+        system_value = _PROVIDER_SYSTEM_MAP.get(provider_name, _FALLBACK_SYSTEM)
 
         invocation_params = _extract_invocation_params(kwargs)
         request_model = _extract_request_model(invocation_params, metadata)
+        # Always create a span: use fallback if model not in standard params/metadata
+        # (some integrations use different keys; we still want traces)
         if request_model is None:
-            return None
+            request_model = _fallback_request_model(metadata, provider_name)
 
         prompt_history = build_prompt_history(flatten_message_batches(messages))
 
@@ -309,6 +318,15 @@ def _extract_request_model(
             if isinstance(value, str):
                 return value
     return None
+
+
+def _fallback_request_model(metadata: dict[str, Any] | None, provider_name: str) -> str:
+    """Return a fallback model string when standard extraction finds nothing."""
+    if metadata:
+        value = metadata.get("ls_model_name")
+        if isinstance(value, str):
+            return value
+    return provider_name
 
 
 def _extract_response_model(llm_output: dict[str, Any] | None) -> str | None:
