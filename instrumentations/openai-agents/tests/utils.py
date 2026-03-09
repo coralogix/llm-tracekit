@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import json
+
 
 from opentelemetry.sdk.trace import ReadableSpan
 from opentelemetry.semconv._incubating.attributes import (
@@ -246,6 +248,71 @@ def assert_choices_in_span(
     assert (
         ExtendedGenAIAttributes.GEN_AI_COMPLETION_ROLE.format(
             completion_index=index + 1
+        )
+        not in span.attributes
+    )
+
+
+def assert_request_tools_in_span(span: ReadableSpan, expected_tools: list[dict]):
+    assert span.attributes is not None
+
+    for index, tool in enumerate(expected_tools):
+        assert (
+            span.attributes[
+                ExtendedGenAIAttributes.GEN_AI_REQUEST_TOOLS_TYPE.format(
+                    tool_index=index
+                )
+            ]
+            == tool["type"]
+        )
+        assert (
+            span.attributes[
+                ExtendedGenAIAttributes.GEN_AI_REQUEST_TOOLS_FUNCTION_NAME.format(
+                    tool_index=index
+                )
+            ]
+            == tool["name"]
+        )
+
+        if "description" in tool and tool["description"] is not None:
+            assert (
+                span.attributes[
+                    ExtendedGenAIAttributes.GEN_AI_REQUEST_TOOLS_FUNCTION_DESCRIPTION.format(
+                        tool_index=index
+                    )
+                ]
+                == tool["description"]
+            )
+        else:
+            assert (
+                ExtendedGenAIAttributes.GEN_AI_REQUEST_TOOLS_FUNCTION_DESCRIPTION.format(
+                    tool_index=index
+                )
+                not in span.attributes
+            )
+
+        if "parameters" in tool:
+            serialized_parameters = span.attributes[
+                ExtendedGenAIAttributes.GEN_AI_REQUEST_TOOLS_FUNCTION_PARAMETERS.format(
+                    tool_index=index
+                )
+            ]
+            assert isinstance(serialized_parameters, str)
+            assert (
+                json.loads(serialized_parameters)
+                == tool["parameters"]
+            )
+        else:
+            assert (
+                ExtendedGenAIAttributes.GEN_AI_REQUEST_TOOLS_FUNCTION_PARAMETERS.format(
+                    tool_index=index
+                )
+                not in span.attributes
+            )
+
+    assert (
+        ExtendedGenAIAttributes.GEN_AI_REQUEST_TOOLS_TYPE.format(
+            tool_index=len(expected_tools)
         )
         not in span.attributes
     )
