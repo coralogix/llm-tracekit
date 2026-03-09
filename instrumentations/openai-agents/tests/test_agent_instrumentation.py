@@ -137,6 +137,18 @@ async def test_agent_tool_usage(span_exporter, instrument):
         agent_name=weather_agent.name,
     )
 
+    agent_span = next((s for s in spans if s.name == "Agent - WeatherAgent"), None)
+    assert agent_span is not None, "Agent - WeatherAgent span not found"
+    assert "tools" not in agent_span.attributes, (
+        "Agent span must not have plain 'tools' attribute; use gen_ai.request.tools.*"
+    )
+    assert agent_span.attributes.get("gen_ai.request.tools.0.type") == "function"
+    assert (
+        agent_span.attributes.get("gen_ai.request.tools.0.function.name")
+        == "get_weather"
+    )
+    assert "gen_ai.request.tools.0.function.description" not in agent_span.attributes
+
     assert_messages_in_span(
         span=final_response_span,
         expected_messages=expected_messages,
