@@ -118,8 +118,7 @@ These spans represent the execution of a single agent. They act as parents for L
 | `type`          | string   | The type of the span, identifying it as an agent execution.          | `agent`            |
 | `agent_name`    | string   | The name of the agent being executed.                                | `Assistant`        |
 | `handoffs`      | string[] | A list of other agents that this agent is capable of handing off to. | `["WeatherAgent"]` |
-| `gen_ai.request.tools.<n>.type` | string | Type of tool entry (tool definitions available to the agent). | `function` |
-| `gen_ai.request.tools.<n>.function.name` | string | Name of the tool/function exposed to the agent. | `get_current_weather` |
+| `tools`         | string[] | A list of tool names available to the agent.                         | `["get_current_weather"]` |
 | `output_type`   | string   | The expected data type of the agent's final output.                  | `MessageOutput`    |
 
 #### Guardrail spans
