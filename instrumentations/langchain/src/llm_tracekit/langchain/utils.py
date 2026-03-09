@@ -22,6 +22,19 @@ from langchain_core.outputs import Generation  # type: ignore
 
 from llm_tracekit.core._span_builder import Choice, Message, ToolCall
 
+# Module-level constants for role mapping (avoid recreating on every call)
+_STANDARD_ROLES = {"system", "user", "assistant", "tool"}
+
+_ROLE_MAP: dict[str, str] = {
+    "human": "user",
+    "ai": "assistant",
+    "model": "assistant",
+    "function": "tool",
+}
+
+# Tool block types to exclude from completion content
+_TOOL_BLOCK_TYPES = {"tool_use", "tool_result"}
+
 
 def flatten_message_batches(
     message_batches: Sequence[Sequence[BaseMessage]],
@@ -78,9 +91,7 @@ def build_response_choices(
                 Choice(
                     finish_reason=finish_reason,
                     role=_get_message_role(message) or "assistant",
-                    content=_stringify_completion_content(
-                        getattr(message, "content", None)
-                    ),
+                    content=_stringify_completion_content(getattr(message, "content", None)),
                     tool_calls=_parse_tool_calls(message),
                 )
             )
@@ -239,11 +250,21 @@ def _stringify_completion_content(content: Any) -> str | None:
         return None
     if isinstance(content, str):
         return content if content.strip() else None
+
+    # Handle single tool block dict - check before stringifying
+    if isinstance(content, dict):
+        if content.get("type") in _TOOL_BLOCK_TYPES:
+            return None
+        if "text" in content:
+            text = str(content["text"])
+            return text if text.strip() else None
+        return _stringify_content(content)
+
     if isinstance(content, (list, tuple)):
         parts = []
         for item in content:
             if isinstance(item, dict):
-                if item.get("type") == "tool_use":
+                if item.get("type") in _TOOL_BLOCK_TYPES:
                     continue
                 if "text" in item:
                     parts.append(str(item["text"]))
@@ -251,54 +272,44 @@ def _stringify_completion_content(content: Any) -> str | None:
                 parts.append(item)
         joined = " ".join(parts).strip()
         return joined or None
-    if isinstance(content, dict) and content.get("type") == "tool_use":
-        return None
-    result = _stringify_content(content)
-    # Avoid putting tool_use block into completion content (semantic: use tool_calls only)
-    if result and ("'type': 'tool_use'" in result or '"type": "tool_use"' in result):
-        return None
-    return result
+
+    return _stringify_content(content)
 
 
 def _get_message_role(message: BaseMessage) -> str | None:
+    """Map LangChain message to semantic convention role."""
     role = getattr(message, "role", None)
-    if role:
-        if role in ("system", "user", "assistant", "tool"):
-            return role
-        if role in ("ai", "model"):
-            return "assistant"
-        if role == "human":
-            return "user"
+    if isinstance(role, str):
+        normalized = _normalize_role_value(role)
+        if normalized:
+            return normalized
 
     msg_type = getattr(message, "type", None)
-    if not isinstance(msg_type, str):
-        return None
+    if isinstance(msg_type, str):
+        return _normalize_role_value(msg_type)
 
-    # Direct mappings for the standard LangChain message types
-    _DIRECT: dict[str, str] = {
-        "human": "user",
-        "ai": "assistant",
-        "system": "system",
-        "tool": "tool",
-        "function": "tool",
-    }
-    if msg_type in _DIRECT:
-        return _DIRECT[msg_type]
+    return None
 
-    # LangChain streaming chunks encode their class name as the type field
-    # (e.g. AIMessageChunk, HumanMessageChunk).  Use startswith on the
-    # lowercased type to map them to the same semantic roles.
-    lower = msg_type.lower()
-    if lower.startswith("human"):
-        return "user"
-    if lower.startswith("ai"):
-        return "assistant"
-    if lower.startswith("system"):
-        return "system"
-    if lower.startswith("tool"):
-        return "tool"
 
-    return msg_type
+def _normalize_role_value(value: str) -> str | None:
+    """Normalize a role/type string to semantic convention role."""
+    if value in _STANDARD_ROLES:
+        return value
+
+    if mapped := _ROLE_MAP.get(value):
+        return mapped
+
+    # Handle streaming chunks (e.g., "AIMessageChunk" -> "assistant")
+    value_lower = value.lower()
+    for prefix, role in _ROLE_MAP.items():
+        if value_lower.startswith(prefix):
+            return role
+
+    for role in _STANDARD_ROLES:
+        if value_lower.startswith(role):
+            return role
+
+    return value
 
 
 def _safe_getattr(obj: Any, name: str) -> Any:
