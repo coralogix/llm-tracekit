@@ -13,9 +13,11 @@
 # limitations under the License.
 
 
+import json
+
 from dataclasses import dataclass, field
 from contextvars import Token
-from typing import Any, Callable
+from typing import Any, Callable, Mapping
 
 from agents import (
     AgentSpanData,
@@ -49,6 +51,9 @@ from llm_tracekit.core import (
     generate_message_attributes,
     generate_request_attributes,
     generate_response_attributes,
+)
+from llm_tracekit.core import (
+    _extended_gen_ai_attributes as ExtendedGenAIAttributes,
 )
 
 from opentelemetry.semconv._incubating.attributes import (
@@ -93,6 +98,79 @@ def _stringify_message_content(content: str | list | dict | None) -> str | None:
         return " ".join(parts) if parts else None
 
     return None
+
+
+def _get_object_value(obj: Any, key: str) -> Any:
+    """Read a field from either a mapping or an SDK object."""
+    if isinstance(obj, Mapping):
+        return obj.get(key)
+    return getattr(obj, key, None)
+
+
+def _serialize_tool_parameters(parameters: Any) -> str | None:
+    """Serialize tool parameters to JSON when available."""
+    if parameters is None:
+        return None
+
+    if hasattr(parameters, "model_dump"):
+        parameters = parameters.model_dump(exclude_none=True)
+
+    try:
+        return json.dumps(parameters)
+    except (TypeError, ValueError):
+        return str(parameters)
+
+
+def _extract_response_tool_attributes(response: Any) -> dict[str, Any]:
+    """Extract request-level tool definition attributes from a response payload."""
+    tools = _get_object_value(response, "tools")
+    if not isinstance(tools, list):
+        return {}
+
+    attributes: dict[str, Any] = {}
+    for index, tool in enumerate(tools):
+        tool_type = _get_object_value(tool, "type") or "function"
+        tool_name = _get_object_value(tool, "name")
+        tool_description = _get_object_value(tool, "description")
+        tool_parameters = _get_object_value(tool, "parameters")
+
+        function = _get_object_value(tool, "function")
+        if function is not None:
+            tool_name = _get_object_value(function, "name") or tool_name
+            tool_description = (
+                _get_object_value(function, "description") or tool_description
+            )
+            tool_parameters = _get_object_value(function, "parameters") or tool_parameters
+
+        attributes[
+            ExtendedGenAIAttributes.GEN_AI_REQUEST_TOOLS_TYPE.format(
+                tool_index=index
+            )
+        ] = tool_type
+
+        if tool_name is not None:
+            attributes[
+                ExtendedGenAIAttributes.GEN_AI_REQUEST_TOOLS_FUNCTION_NAME.format(
+                    tool_index=index
+                )
+            ] = tool_name
+
+        if tool_description is not None:
+            attributes[
+                ExtendedGenAIAttributes.GEN_AI_REQUEST_TOOLS_FUNCTION_DESCRIPTION.format(
+                    tool_index=index
+                )
+            ] = tool_description
+
+        serialized_parameters = _serialize_tool_parameters(tool_parameters)
+        if serialized_parameters is not None:
+            attributes[
+                ExtendedGenAIAttributes.GEN_AI_REQUEST_TOOLS_FUNCTION_PARAMETERS.format(
+                    tool_index=index
+                )
+            ] = serialized_parameters
+
+    return attributes
 
 
 @dataclass
@@ -329,6 +407,7 @@ class OpenAIAgentsTracingProcessor(TracingProcessor):
             **generate_request_attributes(
                 model=response_model, top_p=top_p, temperature=temperature
             ),
+            **_extract_response_tool_attributes(span_data.response),
             **generate_response_attributes(
                 usage_input_tokens=usage_input_tokens,
                 usage_output_tokens=usage_output_tokens,
