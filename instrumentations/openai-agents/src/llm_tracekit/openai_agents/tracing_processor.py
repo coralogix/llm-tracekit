@@ -50,6 +50,9 @@ from llm_tracekit.core import (
     generate_request_attributes,
     generate_response_attributes,
 )
+from llm_tracekit.core import (
+    _extended_gen_ai_attributes as ExtendedGenAIAttributes,
+)
 
 from opentelemetry.semconv._incubating.attributes import (
     gen_ai_attributes as GenAIAttributes,
@@ -275,7 +278,17 @@ class OpenAIAgentsTracingProcessor(TracingProcessor):
             "output_type": span_data.output_type,
         }
         if span_data.tools is not None:
-            attributes["tools"] = span_data.tools
+            for index, tool_name in enumerate(span_data.tools):
+                attributes[
+                    ExtendedGenAIAttributes.GEN_AI_REQUEST_TOOLS_TYPE.format(
+                        tool_index=index
+                    )
+                ] = "function"
+                attributes[
+                    ExtendedGenAIAttributes.GEN_AI_REQUEST_TOOLS_FUNCTION_NAME.format(
+                        tool_index=index
+                    )
+                ] = tool_name
         return attributes
 
     def _process_function_span(self, span_data: FunctionSpanData) -> dict[str, Any]:
