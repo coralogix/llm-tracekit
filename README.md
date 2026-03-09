@@ -85,6 +85,17 @@ See the [Guardrails documentation](./guardrails/README.md) for details.
 
 ## 📚 Documentation
 
+### Knowledge spine
+
+For a comprehensive understanding of the project:
+
+- [**Overview**](docs/overview.md) — Mental model, workflows, quick start, key concepts
+- [Architecture](docs/architecture.md) — Components, data flow, dependencies, failure modes
+- [Design principles](docs/design-principles.md) — Strategies, invariants, versioning
+- [Testing strategy](docs/testing-strategy.md) — Frameworks, coverage, definition of done
+
+### Instrumentation READMEs
+
 For detailed documentation on each instrumentation, see the individual READMEs:
 
 - [OpenAI](./instrumentations/openai/README.md)
