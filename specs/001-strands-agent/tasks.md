@@ -25,11 +25,11 @@
 
 **Purpose**: Scaffold the `llm-tracekit-strands` package within the uv workspace
 
-- [ ] T001 Create package directory structure per plan.md: `instrumentations/strands/src/llm_tracekit/strands/`, `instrumentations/strands/tests/`, `instrumentations/strands/tests/cassettes/`
-- [ ] T002 Create `instrumentations/strands/pyproject.toml` with dependencies (`strands-agents>=1.0.0`, `llm-tracekit-core>=1.0.0`, `opentelemetry-instrumentation>=0.53b1`), entry point (`strands = "llm_tracekit.strands:StrandsInstrumentor"`), and dev dependencies (`pytest`, `pytest-asyncio`, `pytest-vcr`, `assertpy`)
-- [ ] T003 [P] Create `instrumentations/strands/pyrightconfig.json` matching the OpenAI Agents adapter config
-- [ ] T004 [P] Create `instrumentations/strands/LICENSE` (Apache 2.0, matching other adapters)
-- [ ] T005 Register the package in the workspace root `pyproject.toml` under `tool.uv.workspace.members`
+- [x] T001 Create package directory structure per plan.md: `instrumentations/strands/src/llm_tracekit/strands/`, `instrumentations/strands/tests/`, `instrumentations/strands/tests/cassettes/`
+- [x] T002 Create `instrumentations/strands/pyproject.toml` with dependencies (`strands-agents>=1.0.0`, `llm-tracekit-core>=1.0.0`, `opentelemetry-instrumentation>=0.53b1`), entry point (`strands = "llm_tracekit.strands:StrandsInstrumentor"`), and dev dependencies (`pytest`, `pytest-asyncio`, `pytest-vcr`, `assertpy`)
+- [x] T003 [P] Create `instrumentations/strands/pyrightconfig.json` matching the OpenAI Agents adapter config
+- [x] T004 [P] Create `instrumentations/strands/LICENSE` (Apache 2.0, matching other adapters)
+- [x] T005 Register the package in the workspace root `pyproject.toml` under `tool.uv.workspace.members`
 
 ---
 
@@ -39,13 +39,13 @@
 
 **CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T006 Create `instrumentations/strands/src/llm_tracekit/strands/package.py` with `_instruments` tuple containing `("strands-agents", ">=1.0.0")`
-- [ ] T007 Create `instrumentations/strands/src/llm_tracekit/strands/instrumentor.py` with `StrandsInstrumentor(BaseInstrumentor)` skeleton — implement `instrumentation_dependencies()` returning `_instruments`, and stub `_instrument()` / `_uninstrument()` methods
-- [ ] T008 Create `instrumentations/strands/src/llm_tracekit/strands/hook_provider.py` with `StrandsHookProvider` class skeleton implementing the Strands `HookProvider` protocol — stub all hook callbacks (`before_invocation`, `after_invocation`, `before_model_call`, `after_model_call`, `before_tool_call`, `after_tool_call`)
-- [ ] T009 Create `instrumentations/strands/src/llm_tracekit/strands/__init__.py` with public exports per `contracts/public-api.md`: `StrandsInstrumentor`, `setup_export_to_coralogix`, `enable_capture_content`, `OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT`
-- [ ] T010 Create `instrumentations/strands/tests/conftest.py` with test fixtures: `InMemorySpanExporter`, `InMemoryMetricReader`, `StrandsInstrumentor` setup/teardown, matching the OpenAI Agents adapter test fixtures
-- [ ] T011 [P] Create `instrumentations/strands/tests/utils.py` with span assertion helpers (find span by name, assert attributes, assert parent-child relationships)
-- [ ] T012 Verify the package installs and imports correctly: `uv sync` and `python -c "from llm_tracekit.strands import StrandsInstrumentor"`
+- [x] T006 Create `instrumentations/strands/src/llm_tracekit/strands/package.py` with `_instruments` tuple containing `("strands-agents", ">=1.0.0")`
+- [x] T007 Create `instrumentations/strands/src/llm_tracekit/strands/instrumentor.py` with `StrandsInstrumentor(BaseInstrumentor)` skeleton — implement `instrumentation_dependencies()` returning `_instruments`, and stub `_instrument()` / `_uninstrument()` methods
+- [x] T008 Create `instrumentations/strands/src/llm_tracekit/strands/hook_provider.py` with `StrandsHookProvider` class skeleton implementing the Strands `HookProvider` protocol — stub all hook callbacks (`before_invocation`, `after_invocation`, `before_model_call`, `after_model_call`, `before_tool_call`, `after_tool_call`)
+- [x] T009 Create `instrumentations/strands/src/llm_tracekit/strands/__init__.py` with public exports per `contracts/public-api.md`: `StrandsInstrumentor`, `setup_export_to_coralogix`, `enable_capture_content`, `OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT`
+- [x] T010 Create `instrumentations/strands/tests/conftest.py` with test fixtures: `InMemorySpanExporter`, `InMemoryMetricReader`, `StrandsInstrumentor` setup/teardown, matching the OpenAI Agents adapter test fixtures
+- [x] T011 [P] Create `instrumentations/strands/tests/utils.py` with span assertion helpers (find span by name, assert attributes, assert parent-child relationships)
+- [x] T012 Verify the package installs and imports correctly: `uv sync` and `python -c "from llm_tracekit.strands import StrandsInstrumentor"`
 
 **Checkpoint**: Package structure ready — user story implementation can now begin
 

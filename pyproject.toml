@@ -34,6 +34,7 @@ langchain = ["llm-tracekit-langchain>=1.1.0"]
 google-adk = ["llm-tracekit-google-adk>=1.0.0"]
 langgraph = ["llm-tracekit-langgraph>=1.0.0"]
 litellm = ["llm-tracekit-litellm>=1.0.0"]
+strands = ["llm-tracekit-strands>=1.0.0"]
 
 
 [project.urls]
@@ -79,6 +80,7 @@ members = [
     "instrumentations/langgraph",
     "instrumentations/litellm",
     "instrumentations/google-adk",
+    "instrumentations/strands",
 ]
 
 [tool.uv.sources]
@@ -92,10 +94,11 @@ cx-guardrails = { workspace = true }
 llm-tracekit-langchain = { workspace = true }
 llm-tracekit-langgraph = { workspace = true }
 llm-tracekit-litellm = { workspace = true }
+llm-tracekit-strands = { workspace = true }
 
 [tool.mypy]
 ignore_missing_imports = true
 namespace_packages = true
 explicit_package_bases = true
-mypy_path = "core/src:instrumentations/openai/src:instrumentations/bedrock/src:instrumentations/gemini/src:instrumentations/langchain/src:instrumentations/langgraph/src:instrumentations/litellm/src:instrumentations/openai-agents/src:instrumentations/google-adk/src:guardrails/src"
+mypy_path = "core/src:instrumentations/openai/src:instrumentations/bedrock/src:instrumentations/gemini/src:instrumentations/langchain/src:instrumentations/langgraph/src:instrumentations/litellm/src:instrumentations/openai-agents/src:instrumentations/google-adk/src:instrumentations/strands/src:guardrails/src"
 exclude = ["tests/"]
