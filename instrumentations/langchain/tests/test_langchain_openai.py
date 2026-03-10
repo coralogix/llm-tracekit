@@ -315,12 +315,12 @@ def test_langchain_openai_streaming(span_exporter, instrument_langchain):
 
 
 @pytest.mark.vcr()
-def test_langchain_openai_user_id_from_metadata(span_exporter, instrument_langchain):
+def test_langchain_openai_user_from_metadata(span_exporter, instrument_langchain):
     llm = ChatOpenAI(model="gpt-4o-mini", temperature=0)
 
     llm.invoke(
         [HumanMessage(content="Say this is a test")],
-        config={"metadata": {"user_id": "test-user-123"}},
+        config={"metadata": {"user": "test-user-123"}},
     )
 
     span = _get_chat_spans(span_exporter.get_finished_spans())[-1]

@@ -144,9 +144,9 @@ class LangChainCallbackHandler(BaseCallbackHandler):  # type: ignore[misc]
         if provider_attr:
             span_attributes[_PROVIDER_ATTRIBUTE] = provider_attr
 
-        user_id = (metadata or {}).get("user_id")
-        if user_id is not None:
-            span_attributes[ExtendedGenAIAttributes.GEN_AI_REQUEST_USER] = str(user_id)
+        user = (metadata or {}).get("user")
+        if user is not None:
+            span_attributes[ExtendedGenAIAttributes.GEN_AI_REQUEST_USER] = str(user)
 
         span_name = (
             f"{GenAIAttributes.GenAiOperationNameValues.CHAT.value} {request_model}"
