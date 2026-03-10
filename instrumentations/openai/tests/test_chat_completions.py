@@ -241,8 +241,7 @@ def test_chat_completion_extra_params(
         == "text"
     )
     assert (
-        spans[0].attributes[ExtendedGenAIAttributes.GEN_AI_OPENAI_REQUEST_USER]
-        == "test_user"
+        spans[0].attributes[ExtendedGenAIAttributes.GEN_AI_REQUEST_USER] == "test_user"
     )
 
 

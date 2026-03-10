@@ -14,7 +14,7 @@
 
 from typing import Final
 
-GEN_AI_OPENAI_REQUEST_USER: Final = "gen_ai.openai.request.user"
+GEN_AI_REQUEST_USER: Final = "gen_ai.request.user"
 """
 The user of the request.
 """
