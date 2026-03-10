@@ -16,7 +16,7 @@ from typing import Final
 
 GUARDRAILS_TRIGGERED = "guardrails.triggered"
 """
-Boolean indicating guardrail evaluation was performed.
+Boolean indicating a guardrail detected a violation or flagged content.
 """
 
 NAME: Final = "guardrails.{target}.{guardrail_type}.name"
