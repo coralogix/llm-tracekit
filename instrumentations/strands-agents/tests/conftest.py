@@ -23,7 +23,7 @@ from opentelemetry.sdk.trace.export import SimpleSpanProcessor
 from opentelemetry.sdk.trace.export.in_memory_span_exporter import InMemorySpanExporter
 
 try:
-    from llm_tracekit.strands.instrumentor import StrandsInstrumentor
+    from llm_tracekit.strands_agents.instrumentor import StrandsInstrumentor
 except (ImportError, ModuleNotFoundError):
     pytest.skip(
         "Strands agents not available (requires Python 3.10+)", allow_module_level=True

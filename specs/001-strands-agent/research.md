@@ -73,8 +73,8 @@ All existing llm-tracekit adapters use the per-index format defined in `_extende
 
 ## 5. Package Name and Dependencies
 
-### Decision: `llm-tracekit-strands`, depending on `strands-agents` and `llm-tracekit-core`
+### Decision: `llm-tracekit-strands-agents`, depending on `strands-agents` and `llm-tracekit-core`
 
 ### Rationale
 
-Follows the naming pattern: `llm-tracekit-{provider}`. The `strands-agents` package is the PyPI name for the Strands Agents SDK. Entry point: `strands = "llm_tracekit.strands:StrandsInstrumentor"`.
+Follows the naming pattern: `llm-tracekit-{provider}`. The `strands-agents` package is the PyPI name for the Strands Agents SDK. Entry point: `strands_agents = "llm_tracekit.strands_agents:StrandsInstrumentor"`.

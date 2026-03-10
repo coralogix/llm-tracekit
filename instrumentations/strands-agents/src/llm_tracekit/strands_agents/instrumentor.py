@@ -23,8 +23,8 @@ from opentelemetry.trace import get_tracer
 
 from llm_tracekit.core import is_content_enabled
 from llm_tracekit.core._metrics import Instruments
-from llm_tracekit.strands.hook_provider import StrandsHookProvider
-from llm_tracekit.strands.package import _instruments
+from llm_tracekit.strands_agents.hook_provider import StrandsHookProvider
+from llm_tracekit.strands_agents.package import _instruments
 
 
 class StrandsInstrumentor(BaseInstrumentor):

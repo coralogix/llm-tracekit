@@ -1,5 +1,5 @@
 [project]
-name = "llm-tracekit-strands"
+name = "llm-tracekit-strands-agents"
 version = "1.0.0"
 description = "OpenTelemetry instrumentation for Strands Agents SDK."
 readme = "README.md"
@@ -31,7 +31,7 @@ homepage = "https://coralogix.com"
 repository = "https://github.com/coralogix/llm-tracekit.git"
 
 [project.entry-points.opentelemetry_instrumentor]
-strands = "llm_tracekit.strands:StrandsInstrumentor"
+strands_agents = "llm_tracekit.strands_agents:StrandsInstrumentor"
 
 [dependency-groups]
 dev = [

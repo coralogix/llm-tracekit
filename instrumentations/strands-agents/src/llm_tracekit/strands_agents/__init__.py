@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from llm_tracekit.strands.instrumentor import (
+from llm_tracekit.strands_agents.instrumentor import (
     StrandsInstrumentor as StrandsInstrumentor,
 )
 

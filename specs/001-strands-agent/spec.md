@@ -90,7 +90,7 @@ A developer wants to disable tracing at runtime without restarting their applica
 - **FR-007**: The adapter MUST re-export the Coralogix setup helper from `llm-tracekit-core` for streamlined Coralogix integration.
 - **FR-008**: The adapter MUST handle errors in agent execution (model failures, tool exceptions) by recording error status and details on the relevant span without crashing the host application.
 - **FR-009**: The adapter MUST support concurrent agent executions with correct trace context propagation.
-- **FR-010**: The adapter MUST be installable as a standalone package (`llm-tracekit-strands`) and optionally through the `llm-tracekit` meta-package.
+- **FR-010**: The adapter MUST be installable as a standalone package (`llm-tracekit-strands-agents`) and optionally through the `llm-tracekit` meta-package.
 - **FR-011**: The adapter MUST register an OpenTelemetry auto-instrumentation entry point so it can be activated without code changes when using the OpenTelemetry SDK's auto-instrumentation.
 
 ### Key Entities

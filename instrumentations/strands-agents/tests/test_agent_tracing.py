@@ -24,7 +24,7 @@ from opentelemetry.semconv._incubating.attributes import (
     gen_ai_attributes as GenAIAttributes,
 )
 
-from llm_tracekit.strands.hook_provider import StrandsHookProvider
+from llm_tracekit.strands_agents.hook_provider import StrandsHookProvider
 from strands.hooks.events import (
     BeforeInvocationEvent,
     AfterInvocationEvent,

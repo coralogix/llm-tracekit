@@ -15,20 +15,20 @@
 
 ## Path Conventions
 
-- **Package root**: `instrumentations/strands/`
-- **Source**: `instrumentations/strands/src/llm_tracekit/strands/`
-- **Tests**: `instrumentations/strands/tests/`
+- **Package root**: `instrumentations/strands-agents/`
+- **Source**: `instrumentations/strands-agents/src/llm_tracekit/strands_agents/`
+- **Tests**: `instrumentations/strands-agents/tests/`
 
 ---
 
 ## Phase 1: Setup
 
-**Purpose**: Scaffold the `llm-tracekit-strands` package within the uv workspace
+**Purpose**: Scaffold the `llm-tracekit-strands-agents` package within the uv workspace
 
-- [x] T001 Create package directory structure per plan.md: `instrumentations/strands/src/llm_tracekit/strands/`, `instrumentations/strands/tests/`, `instrumentations/strands/tests/cassettes/`
-- [x] T002 Create `instrumentations/strands/pyproject.toml` with dependencies (`strands-agents>=1.0.0`, `llm-tracekit-core>=1.0.0`, `opentelemetry-instrumentation>=0.53b1`), entry point (`strands = "llm_tracekit.strands:StrandsInstrumentor"`), and dev dependencies (`pytest`, `pytest-asyncio`, `pytest-vcr`, `assertpy`)
-- [x] T003 [P] Create `instrumentations/strands/pyrightconfig.json` matching the OpenAI Agents adapter config
-- [x] T004 [P] Create `instrumentations/strands/LICENSE` (Apache 2.0, matching other adapters)
+- [x] T001 Create package directory structure per plan.md: `instrumentations/strands-agents/src/llm_tracekit/strands_agents/`, `instrumentations/strands-agents/tests/`, `instrumentations/strands-agents/tests/cassettes/`
+- [x] T002 Create `instrumentations/strands-agents/pyproject.toml` with dependencies (`strands-agents>=1.0.0`, `llm-tracekit-core>=1.0.0`, `opentelemetry-instrumentation>=0.53b1`), entry point (`strands_agents = "llm_tracekit.strands_agents:StrandsInstrumentor"`), and dev dependencies (`pytest`, `pytest-asyncio`, `pytest-vcr`, `assertpy`)
+- [x] T003 [P] Create `instrumentations/strands-agents/pyrightconfig.json` matching the OpenAI Agents adapter config
+- [x] T004 [P] Create `instrumentations/strands-agents/LICENSE` (Apache 2.0, matching other adapters)
 - [x] T005 Register the package in the workspace root `pyproject.toml` under `tool.uv.workspace.members`
 
 ---
@@ -39,13 +39,13 @@
 
 **CRITICAL**: No user story work can begin until this phase is complete
 
-- [x] T006 Create `instrumentations/strands/src/llm_tracekit/strands/package.py` with `_instruments` tuple containing `("strands-agents", ">=1.0.0")`
-- [x] T007 Create `instrumentations/strands/src/llm_tracekit/strands/instrumentor.py` with `StrandsInstrumentor(BaseInstrumentor)` skeleton — implement `instrumentation_dependencies()` returning `_instruments`, and stub `_instrument()` / `_uninstrument()` methods
-- [x] T008 Create `instrumentations/strands/src/llm_tracekit/strands/hook_provider.py` with `StrandsHookProvider` class skeleton implementing the Strands `HookProvider` protocol — stub all hook callbacks (`before_invocation`, `after_invocation`, `before_model_call`, `after_model_call`, `before_tool_call`, `after_tool_call`)
-- [x] T009 Create `instrumentations/strands/src/llm_tracekit/strands/__init__.py` with public exports per `contracts/public-api.md`: `StrandsInstrumentor`, `setup_export_to_coralogix`, `enable_capture_content`, `OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT`
-- [x] T010 Create `instrumentations/strands/tests/conftest.py` with test fixtures: `InMemorySpanExporter`, `InMemoryMetricReader`, `StrandsInstrumentor` setup/teardown, matching the OpenAI Agents adapter test fixtures
-- [x] T011 [P] Create `instrumentations/strands/tests/utils.py` with span assertion helpers (find span by name, assert attributes, assert parent-child relationships)
-- [x] T012 Verify the package installs and imports correctly: `uv sync` and `python -c "from llm_tracekit.strands import StrandsInstrumentor"`
+- [x] T006 Create `instrumentations/strands-agents/src/llm_tracekit/strands_agents/package.py` with `_instruments` tuple containing `("strands-agents", ">=1.0.0")`
+- [x] T007 Create `instrumentations/strands-agents/src/llm_tracekit/strands_agents/instrumentor.py` with `StrandsInstrumentor(BaseInstrumentor)` skeleton — implement `instrumentation_dependencies()` returning `_instruments`, and stub `_instrument()` / `_uninstrument()` methods
+- [x] T008 Create `instrumentations/strands-agents/src/llm_tracekit/strands_agents/hook_provider.py` with `StrandsHookProvider` class skeleton implementing the Strands `HookProvider` protocol — stub all hook callbacks (`before_invocation`, `after_invocation`, `before_model_call`, `after_model_call`, `before_tool_call`, `after_tool_call`)
+- [x] T009 Create `instrumentations/strands-agents/src/llm_tracekit/strands_agents/__init__.py` with public exports per `contracts/public-api.md`: `StrandsInstrumentor`, `setup_export_to_coralogix`, `enable_capture_content`, `OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT`
+- [x] T010 Create `instrumentations/strands-agents/tests/conftest.py` with test fixtures: `InMemorySpanExporter`, `InMemoryMetricReader`, `StrandsInstrumentor` setup/teardown, matching the OpenAI Agents adapter test fixtures
+- [x] T011 [P] Create `instrumentations/strands-agents/tests/utils.py` with span assertion helpers (find span by name, assert attributes, assert parent-child relationships)
+- [x] T012 Verify the package installs and imports correctly: `uv sync` and `python -c "from llm_tracekit.strands_agents import StrandsInstrumentor"`
 
 **Checkpoint**: Package structure ready — user story implementation can now begin
 
@@ -61,26 +61,26 @@
 
 > **NOTE: Write these tests FIRST, ensure they FAIL before implementation**
 
-- [ ] T013 [P] [US1] Test basic agent span creation in `instrumentations/strands/tests/test_agent_tracing.py` — invoke agent, assert `invoke_agent {name}` span exists with `gen_ai.system`, `gen_ai.operation.name`, `gen_ai.agent.name`, `gen_ai.agent.tools`, `gen_ai.usage.input_tokens`, `gen_ai.usage.output_tokens` attributes
-- [ ] T014 [P] [US1] Test cycle span creation in `instrumentations/strands/tests/test_agent_tracing.py` — assert `cycle {id}` spans as children of agent span with `strands.agent.cycle.id` and optional `event_loop.parent_cycle_id`
-- [ ] T015 [P] [US1] Test model invocation span in `instrumentations/strands/tests/test_agent_tracing.py` — assert `chat {model}` span as child of cycle span with `gen_ai.request.model`, `gen_ai.usage.input_tokens`, `gen_ai.usage.output_tokens`, `gen_ai.response.finish_reasons`, `gen_ai.usage.cache_read_input_tokens`, `gen_ai.usage.cache_write_input_tokens`
-- [ ] T016 [P] [US1] Test tool span creation in `instrumentations/strands/tests/test_agent_tracing.py` — assert `execute_tool {name}` span as child of cycle span with `gen_ai.tool.call.id`, `gen_ai.tool.status`, `name`, `type`
-- [ ] T017 [P] [US1] Test multi-cycle agent in `instrumentations/strands/tests/test_agent_tracing.py` — invoke agent requiring multiple cycles, assert each cycle produces its own span with model/tool children
-- [ ] T018 [P] [US1] Test agent with no tools in `instrumentations/strands/tests/test_agent_tracing.py` — invoke agent without tools, assert agent → cycle → model spans only (no tool spans)
-- [ ] T019 [P] [US1] Test error handling in `instrumentations/strands/tests/test_agent_tracing.py` — trigger model error, assert span status is ERROR with `error.type` attribute; trigger tool error, assert same
-- [ ] T020 [P] [US1] Test metrics emission in `instrumentations/strands/tests/test_agent_tracing.py` — assert `gen_ai.client.operation.duration` and `gen_ai.client.token.usage` histograms are recorded via `InMemoryMetricReader`
+- [ ] T013 [P] [US1] Test basic agent span creation in `instrumentations/strands-agents/tests/test_agent_tracing.py` — invoke agent, assert `invoke_agent {name}` span exists with `gen_ai.system`, `gen_ai.operation.name`, `gen_ai.agent.name`, `gen_ai.agent.tools`, `gen_ai.usage.input_tokens`, `gen_ai.usage.output_tokens` attributes
+- [ ] T014 [P] [US1] Test cycle span creation in `instrumentations/strands-agents/tests/test_agent_tracing.py` — assert `cycle {id}` spans as children of agent span with `strands.agent.cycle.id` and optional `event_loop.parent_cycle_id`
+- [ ] T015 [P] [US1] Test model invocation span in `instrumentations/strands-agents/tests/test_agent_tracing.py` — assert `chat {model}` span as child of cycle span with `gen_ai.request.model`, `gen_ai.usage.input_tokens`, `gen_ai.usage.output_tokens`, `gen_ai.response.finish_reasons`, `gen_ai.usage.cache_read_input_tokens`, `gen_ai.usage.cache_write_input_tokens`
+- [ ] T016 [P] [US1] Test tool span creation in `instrumentations/strands-agents/tests/test_agent_tracing.py` — assert `execute_tool {name}` span as child of cycle span with `gen_ai.tool.call.id`, `gen_ai.tool.status`, `name`, `type`
+- [ ] T017 [P] [US1] Test multi-cycle agent in `instrumentations/strands-agents/tests/test_agent_tracing.py` — invoke agent requiring multiple cycles, assert each cycle produces its own span with model/tool children
+- [ ] T018 [P] [US1] Test agent with no tools in `instrumentations/strands-agents/tests/test_agent_tracing.py` — invoke agent without tools, assert agent → cycle → model spans only (no tool spans)
+- [ ] T019 [P] [US1] Test error handling in `instrumentations/strands-agents/tests/test_agent_tracing.py` — trigger model error, assert span status is ERROR with `error.type` attribute; trigger tool error, assert same
+- [ ] T020 [P] [US1] Test metrics emission in `instrumentations/strands-agents/tests/test_agent_tracing.py` — assert `gen_ai.client.operation.duration` and `gen_ai.client.token.usage` histograms are recorded via `InMemoryMetricReader`
 
 ### Implementation for User Story 1
 
-- [ ] T021 [US1] Implement `StrandsHookProvider` agent span logic in `instrumentations/strands/src/llm_tracekit/strands/hook_provider.py` — `before_invocation` starts agent span (`invoke_agent {name}`, kind=INTERNAL) with attributes per data-model.md; `after_invocation` records aggregated token usage and ends span
-- [ ] T022 [US1] Implement `StrandsHookProvider` cycle span logic in `instrumentations/strands/src/llm_tracekit/strands/hook_provider.py` — track cycle transitions via cycle ID changes in model/tool callbacks; start/end cycle spans with `strands.agent.cycle.id` and `event_loop.parent_cycle_id`
-- [ ] T023 [US1] Implement `StrandsHookProvider` model span logic in `instrumentations/strands/src/llm_tracekit/strands/hook_provider.py` — `before_model_call` starts `chat {model}` span (kind=CLIENT); `after_model_call` records token usage (including cache tokens), finish reasons, and ends span
-- [ ] T024 [US1] Implement `StrandsHookProvider` tool span logic in `instrumentations/strands/src/llm_tracekit/strands/hook_provider.py` — `before_tool_call` starts `execute_tool {name}` span (kind=INTERNAL) with `gen_ai.tool.call.id`, `name`, `type`; `after_tool_call` records `gen_ai.tool.status` and ends span
-- [ ] T025 [US1] Implement error handling in `instrumentations/strands/src/llm_tracekit/strands/hook_provider.py` — use core `handle_span_exception(span, error)` on `AfterModelCallEvent.exception` and `AfterToolCallEvent.exception`; handle agent-level errors in `after_invocation`
-- [ ] T026 [US1] Implement metrics recording in `instrumentations/strands/src/llm_tracekit/strands/hook_provider.py` — instantiate core `Instruments` from meter; record `gen_ai.client.operation.duration` and `gen_ai.client.token.usage` on model span end
-- [ ] T027 [US1] Wire up `StrandsInstrumentor._instrument()` in `instrumentations/strands/src/llm_tracekit/strands/instrumentor.py` — create tracer and `StrandsHookProvider`; patch `Agent.__init__` via wrapt to inject hook provider; create meter and `Instruments`
-- [ ] T028 [US1] Wire up `StrandsInstrumentor._uninstrument()` in `instrumentations/strands/src/llm_tracekit/strands/instrumentor.py` — remove wrapt patch; disable hook provider
-- [ ] T029 [US1] Create VCR cassettes in `instrumentations/strands/tests/cassettes/` for basic agent test scenarios (single tool, multi-cycle, no tools, model error, tool error)
+- [ ] T021 [US1] Implement `StrandsHookProvider` agent span logic in `instrumentations/strands-agents/src/llm_tracekit/strands_agents/hook_provider.py` — `before_invocation` starts agent span (`invoke_agent {name}`, kind=INTERNAL) with attributes per data-model.md; `after_invocation` records aggregated token usage and ends span
+- [ ] T022 [US1] Implement `StrandsHookProvider` cycle span logic in `instrumentations/strands-agents/src/llm_tracekit/strands_agents/hook_provider.py` — track cycle transitions via cycle ID changes in model/tool callbacks; start/end cycle spans with `strands.agent.cycle.id` and `event_loop.parent_cycle_id`
+- [ ] T023 [US1] Implement `StrandsHookProvider` model span logic in `instrumentations/strands-agents/src/llm_tracekit/strands_agents/hook_provider.py` — `before_model_call` starts `chat {model}` span (kind=CLIENT); `after_model_call` records token usage (including cache tokens), finish reasons, and ends span
+- [ ] T024 [US1] Implement `StrandsHookProvider` tool span logic in `instrumentations/strands-agents/src/llm_tracekit/strands_agents/hook_provider.py` — `before_tool_call` starts `execute_tool {name}` span (kind=INTERNAL) with `gen_ai.tool.call.id`, `name`, `type`; `after_tool_call` records `gen_ai.tool.status` and ends span
+- [ ] T025 [US1] Implement error handling in `instrumentations/strands-agents/src/llm_tracekit/strands_agents/hook_provider.py` — use core `handle_span_exception(span, error)` on `AfterModelCallEvent.exception` and `AfterToolCallEvent.exception`; handle agent-level errors in `after_invocation`
+- [ ] T026 [US1] Implement metrics recording in `instrumentations/strands-agents/src/llm_tracekit/strands_agents/hook_provider.py` — instantiate core `Instruments` from meter; record `gen_ai.client.operation.duration` and `gen_ai.client.token.usage` on model span end
+- [ ] T027 [US1] Wire up `StrandsInstrumentor._instrument()` in `instrumentations/strands-agents/src/llm_tracekit/strands_agents/instrumentor.py` — create tracer and `StrandsHookProvider`; patch `Agent.__init__` via wrapt to inject hook provider; create meter and `Instruments`
+- [ ] T028 [US1] Wire up `StrandsInstrumentor._uninstrument()` in `instrumentations/strands-agents/src/llm_tracekit/strands_agents/instrumentor.py` — remove wrapt patch; disable hook provider
+- [ ] T029 [US1] Create VCR cassettes in `instrumentations/strands-agents/tests/cassettes/` for basic agent test scenarios (single tool, multi-cycle, no tools, model error, tool error)
 - [ ] T030 [US1] Run all US1 tests and verify they pass
 
 **Checkpoint**: Basic agent tracing works end-to-end. The adapter produces a complete span hierarchy with GenAI attributes and metrics.
@@ -97,17 +97,17 @@
 
 > **NOTE: Write these tests FIRST, ensure they FAIL before implementation**
 
-- [ ] T031 [P] [US2] Test prompt/completion content capture in `instrumentations/strands/tests/test_content_capture.py` — enable content capture, invoke agent, assert `gen_ai.prompt.{n}.role`, `gen_ai.prompt.{n}.content`, `gen_ai.completion.{n}.role`, `gen_ai.completion.{n}.content` on model span
-- [ ] T032 [P] [US2] Test tool call attributes on model span in `instrumentations/strands/tests/test_content_capture.py` — assert `gen_ai.prompt.{n}.tool_calls.{m}.id`, `.type`, `.function.name`, `.function.arguments`, and `gen_ai.prompt.{n}.tool_call_id` for tool result messages
-- [ ] T033 [P] [US2] Test completion tool call attributes in `instrumentations/strands/tests/test_content_capture.py` — assert `gen_ai.completion.{n}.tool_calls.{m}.*` when model requests tool calls
-- [ ] T034 [P] [US2] Test content capture disabled by default in `instrumentations/strands/tests/test_content_capture.py` — invoke agent without enabling capture, assert no content attributes on spans
-- [ ] T035 [P] [US2] Test tool span content capture in `instrumentations/strands/tests/test_content_capture.py` — enable content capture, assert `input` and `output` attributes on tool spans
+- [ ] T031 [P] [US2] Test prompt/completion content capture in `instrumentations/strands-agents/tests/test_content_capture.py` — enable content capture, invoke agent, assert `gen_ai.prompt.{n}.role`, `gen_ai.prompt.{n}.content`, `gen_ai.completion.{n}.role`, `gen_ai.completion.{n}.content` on model span
+- [ ] T032 [P] [US2] Test tool call attributes on model span in `instrumentations/strands-agents/tests/test_content_capture.py` — assert `gen_ai.prompt.{n}.tool_calls.{m}.id`, `.type`, `.function.name`, `.function.arguments`, and `gen_ai.prompt.{n}.tool_call_id` for tool result messages
+- [ ] T033 [P] [US2] Test completion tool call attributes in `instrumentations/strands-agents/tests/test_content_capture.py` — assert `gen_ai.completion.{n}.tool_calls.{m}.*` when model requests tool calls
+- [ ] T034 [P] [US2] Test content capture disabled by default in `instrumentations/strands-agents/tests/test_content_capture.py` — invoke agent without enabling capture, assert no content attributes on spans
+- [ ] T035 [P] [US2] Test tool span content capture in `instrumentations/strands-agents/tests/test_content_capture.py` — enable content capture, assert `input` and `output` attributes on tool spans
 
 ### Implementation for User Story 2
 
-- [ ] T036 [US2] Implement model span content capture in `instrumentations/strands/src/llm_tracekit/strands/hook_provider.py` — in `after_model_call`, convert Strands messages to core `Message`/`Choice` models; call `generate_message_attributes()` and `generate_choice_attributes()` from core; set attributes on model span
-- [ ] T037 [US2] Implement tool span content capture in `instrumentations/strands/src/llm_tracekit/strands/hook_provider.py` — in `after_tool_call`, if content capture enabled, set `input` (tool arguments) and `output` (tool result) and `mcp_data` (if MCP) on tool span
-- [ ] T038 [US2] Create VCR cassettes in `instrumentations/strands/tests/cassettes/` for content capture scenarios (with/without tools, with content enabled/disabled)
+- [ ] T036 [US2] Implement model span content capture in `instrumentations/strands-agents/src/llm_tracekit/strands_agents/hook_provider.py` — in `after_model_call`, convert Strands messages to core `Message`/`Choice` models; call `generate_message_attributes()` and `generate_choice_attributes()` from core; set attributes on model span
+- [ ] T037 [US2] Implement tool span content capture in `instrumentations/strands-agents/src/llm_tracekit/strands_agents/hook_provider.py` — in `after_tool_call`, if content capture enabled, set `input` (tool arguments) and `output` (tool result) and `mcp_data` (if MCP) on tool span
+- [ ] T038 [US2] Create VCR cassettes in `instrumentations/strands-agents/tests/cassettes/` for content capture scenarios (with/without tools, with content enabled/disabled)
 - [ ] T039 [US2] Run all US2 tests and verify they pass
 
 **Checkpoint**: Content capture works. Coralogix AI Center can render full conversation views including tool call/response segments.
@@ -122,7 +122,7 @@
 
 ### Implementation for User Story 3
 
-- [ ] T040 [US3] Verify `setup_export_to_coralogix` re-export works in `instrumentations/strands/src/llm_tracekit/strands/__init__.py` — this was done in T009; write a smoke test in `instrumentations/strands/tests/test_coralogix_integration.py` confirming the import path and that it configures a `TracerProvider`
+- [ ] T040 [US3] Verify `setup_export_to_coralogix` re-export works in `instrumentations/strands-agents/src/llm_tracekit/strands_agents/__init__.py` — this was done in T009; write a smoke test in `instrumentations/strands-agents/tests/test_coralogix_integration.py` confirming the import path and that it configures a `TracerProvider`
 - [ ] T041 [US3] Run US3 test and verify it passes
 
 **Checkpoint**: Coralogix integration works via the re-exported helper.
@@ -137,12 +137,12 @@
 
 ### Tests for User Story 4
 
-- [ ] T042 [US4] Test uninstrument/re-instrument lifecycle in `instrumentations/strands/tests/test_uninstrument.py` — instrument → invoke agent (assert spans) → uninstrument → invoke agent (assert no new spans) → re-instrument → invoke agent (assert spans resume)
+- [ ] T042 [US4] Test uninstrument/re-instrument lifecycle in `instrumentations/strands-agents/tests/test_uninstrument.py` — instrument → invoke agent (assert spans) → uninstrument → invoke agent (assert no new spans) → re-instrument → invoke agent (assert spans resume)
 
 ### Implementation for User Story 4
 
-- [ ] T043 [US4] Verify uninstrument logic in `instrumentations/strands/src/llm_tracekit/strands/instrumentor.py` — ensure `_uninstrument()` fully removes wrapt patch and disables hook provider so no spans are emitted; ensure re-instrument works cleanly
-- [ ] T044 [US4] Create VCR cassettes in `instrumentations/strands/tests/cassettes/` for uninstrument test scenarios
+- [ ] T043 [US4] Verify uninstrument logic in `instrumentations/strands-agents/src/llm_tracekit/strands_agents/instrumentor.py` — ensure `_uninstrument()` fully removes wrapt patch and disables hook provider so no spans are emitted; ensure re-instrument works cleanly
+- [ ] T044 [US4] Create VCR cassettes in `instrumentations/strands-agents/tests/cassettes/` for uninstrument test scenarios
 - [ ] T045 [US4] Run US4 test and verify it passes
 
 **Checkpoint**: Full lifecycle management works — instrument, uninstrument, re-instrument.
@@ -153,8 +153,8 @@
 
 **Purpose**: Documentation, concurrent execution, final validation
 
-- [ ] T046 [P] Create `instrumentations/strands/README.md` with overview, installation, usage, semantic conventions table (matching the OpenAI adapter README format). Must include a prominent note to disable Strands' built-in telemetry (`StrandsTelemetry`) when using llm-tracekit to avoid duplicate traces
-- [ ] T047 [P] Test concurrent agent executions in `instrumentations/strands/tests/test_agent_tracing.py` — run 3+ agents concurrently, assert independent traces with no context leakage (FR-009, SC-006)
+- [ ] T046 [P] Create `instrumentations/strands-agents/README.md` with overview, installation, usage, semantic conventions table (matching the OpenAI adapter README format). Must include a prominent note to disable Strands' built-in telemetry (`StrandsTelemetry`) when using llm-tracekit to avoid duplicate traces
+- [ ] T047 [P] Test concurrent agent executions in `instrumentations/strands-agents/tests/test_agent_tracing.py` — run 3+ agents concurrently, assert independent traces with no context leakage (FR-009, SC-006)
 - [ ] T048 Run the full test suite across all adapters to verify no regressions (SC-005)
 - [ ] T049 Run quickstart.md validation — follow the quickstart steps manually and verify the output matches expectations
 - [ ] T050 Code cleanup: run `ruff check` and `ruff format`, verify `pyright` passes with no errors

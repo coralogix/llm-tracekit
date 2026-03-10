@@ -2,12 +2,12 @@
 
 **Branch**: `001-strands-agent` | **Date**: 2026-03-09
 
-## Package: `llm_tracekit.strands`
+## Package: `llm_tracekit.strands_agents`
 
 ### Exports (from `__init__.py`)
 
 ```python
-from llm_tracekit.strands import (
+from llm_tracekit.strands_agents import (
     StrandsInstrumentor,          # BaseInstrumentor subclass
     setup_export_to_coralogix,    # Re-export from core
     enable_capture_content,       # Re-export from core
@@ -37,7 +37,7 @@ class StrandsInstrumentor(BaseInstrumentor):
 ### Usage
 
 ```python
-from llm_tracekit.strands import StrandsInstrumentor, setup_export_to_coralogix
+from llm_tracekit.strands_agents import StrandsInstrumentor, setup_export_to_coralogix
 
 # Option A: Coralogix
 setup_export_to_coralogix(api_key="...", application="my-app")
@@ -58,7 +58,7 @@ StrandsInstrumentor().uninstrument()
 
 ```toml
 [project.entry-points.opentelemetry_instrumentor]
-strands = "llm_tracekit.strands:StrandsInstrumentor"
+strands_agents = "llm_tracekit.strands_agents:StrandsInstrumentor"
 ```
 
 ### Dependencies

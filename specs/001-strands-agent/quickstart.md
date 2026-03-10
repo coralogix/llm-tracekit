@@ -17,7 +17,7 @@ The Strands Agents SDK includes its own OpenTelemetry tracing (`StrandsTelemetry
 ```python
 from strands import Agent
 from strands.models.bedrock import BedrockModel
-from llm_tracekit.strands import StrandsInstrumentor, setup_export_to_coralogix
+from llm_tracekit.strands_agents import StrandsInstrumentor, setup_export_to_coralogix
 
 # 1. Set up tracing export (replaces StrandsTelemetry — do NOT use both)
 setup_export_to_coralogix(api_key="your-api-key", application="my-agent-app")

@@ -23,7 +23,7 @@ from opentelemetry.sdk.trace.export import SimpleSpanProcessor
 from opentelemetry.sdk.metrics import MeterProvider
 from opentelemetry.sdk.metrics.export import InMemoryMetricReader
 
-from llm_tracekit.strands import StrandsInstrumentor
+from llm_tracekit.strands_agents import StrandsInstrumentor
 
 
 class TestInstrumentUninstrument:

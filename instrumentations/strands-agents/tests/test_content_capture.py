@@ -22,7 +22,7 @@ from opentelemetry.sdk.trace.export.in_memory_span_exporter import InMemorySpanE
 from opentelemetry.trace import get_tracer
 from opentelemetry.metrics import get_meter
 
-from llm_tracekit.strands.hook_provider import StrandsHookProvider
+from llm_tracekit.strands_agents.hook_provider import StrandsHookProvider
 from llm_tracekit.core._metrics import Instruments
 from strands.hooks.events import (
     BeforeInvocationEvent,

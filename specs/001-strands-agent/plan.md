@@ -5,7 +5,7 @@
 
 ## Summary
 
-Add a new `llm-tracekit-strands` instrumentation package that provides OpenTelemetry tracing for the Strands Agents SDK. The adapter uses the Strands hooks system (HookProvider pattern) to capture agent lifecycle events and map them to OTel spans with GenAI semantic attributes, consistent with existing adapters.
+Add a new `llm-tracekit-strands-agents` instrumentation package that provides OpenTelemetry tracing for the Strands Agents SDK. The adapter uses the Strands hooks system (HookProvider pattern) to capture agent lifecycle events and map them to OTel spans with GenAI semantic attributes, consistent with existing adapters.
 
 ## Technical Context
 
@@ -22,7 +22,7 @@ Add a new `llm-tracekit-strands` instrumentation package that provides OpenTelem
 | Principle | Status | Notes |
 |-----------|--------|-------|
 | I. OpenTelemetry Standards | ✅ Pass | Uses GenAI semantic attributes from core |
-| II. Workspace Modularity | ✅ Pass | New independent package in `instrumentations/strands/` |
+| II. Workspace Modularity | ✅ Pass | New independent package in `instrumentations/strands-agents/` |
 | III. Instrumentation Consistency | ✅ Pass | Follows BaseInstrumentor pattern; HookProvider replaces wrapt (analogous to TracingProcessor in OpenAI Agents) |
 | IV. Test-Driven with VCR | ✅ Pass | Tests will use pytest-vcr with cassettes, InMemorySpanExporter |
 | V. Type Safety & Linting | ✅ Pass | Type hints, ruff, mypy |
@@ -48,7 +48,7 @@ specs/001-strands-agent/
 ### Source Code (repository root)
 
 ```text
-instrumentations/strands/
+instrumentations/strands-agents/
 ├── src/llm_tracekit/strands/
 │   ├── __init__.py           # Public exports
 │   ├── instrumentor.py       # StrandsInstrumentor (BaseInstrumentor)

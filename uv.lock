@@ -21,7 +21,7 @@ members = [
     "llm-tracekit-litellm",
     "llm-tracekit-openai",
     "llm-tracekit-openai-agents",
-    "llm-tracekit-strands",
+    "llm-tracekit-strands-agents",
 ]
 
 [[package]]
@@ -2149,8 +2149,8 @@ openai = [
 openai-agents = [
     { name = "llm-tracekit-openai-agents" },
 ]
-strands = [
-    { name = "llm-tracekit-strands" },
+strands-agents = [
+    { name = "llm-tracekit-strands-agents" },
 ]
 
 [package.dev-dependencies]
@@ -2182,9 +2182,9 @@ requires-dist = [
     { name = "llm-tracekit-litellm", marker = "extra == 'litellm'", editable = "instrumentations/litellm" },
     { name = "llm-tracekit-openai", marker = "extra == 'openai'", editable = "instrumentations/openai" },
     { name = "llm-tracekit-openai-agents", marker = "extra == 'openai-agents'", editable = "instrumentations/openai-agents" },
-    { name = "llm-tracekit-strands", marker = "extra == 'strands'", editable = "instrumentations/strands" },
+    { name = "llm-tracekit-strands-agents", marker = "extra == 'strands-agents'", editable = "instrumentations/strands-agents" },
 ]
-provides-extras = ["openai", "bedrock", "gemini", "openai-agents", "guardrails", "langchain", "google-adk", "langgraph", "litellm", "strands"]
+provides-extras = ["openai", "bedrock", "gemini", "openai-agents", "guardrails", "langchain", "google-adk", "langgraph", "litellm", "strands-agents"]
 
 [package.metadata.requires-dev]
 dev = [
@@ -2573,9 +2573,9 @@ dev = [
 ]
 
 [[package]]
-name = "llm-tracekit-strands"
+name = "llm-tracekit-strands-agents"
 version = "1.0.0"
-source = { editable = "instrumentations/strands" }
+source = { editable = "instrumentations/strands-agents" }
 dependencies = [
     { name = "llm-tracekit-core" },
     { name = "opentelemetry-instrumentation" },

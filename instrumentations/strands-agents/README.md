@@ -3,7 +3,7 @@ OpenTelemetry instrumentation for the [Strands Agents SDK](https://strandsagents
 
 ## Installation
 ```bash
-pip install "llm-tracekit-strands"
+pip install "llm-tracekit-strands-agents"
 ```
 
 ## Important: Disable Strands Built-in Telemetry
@@ -11,7 +11,7 @@ pip install "llm-tracekit-strands"
 Strands Agents SDK includes built-in OpenTelemetry tracing. **Do not** initialize the native telemetry when using this adapter, as it will produce duplicate traces that are incompatible with Coralogix's AI Center rendering.
 
 ```python
-# Do NOT use the following when using llm-tracekit-strands:
+# Do NOT use the following when using llm-tracekit-strands-agents:
 # from strands.telemetry import StrandsTelemetry
 # StrandsTelemetry.init()
 ```
@@ -22,7 +22,7 @@ This section describes how to set up instrumentation for the Strands Agents SDK.
 ### Setting up tracing
 You can use the `setup_export_to_coralogix` function to setup tracing and export traces to Coralogix
 ```python
-from llm_tracekit.strands import setup_export_to_coralogix
+from llm_tracekit.strands_agents import setup_export_to_coralogix
 
 setup_export_to_coralogix(
     service_name="ai-service",
@@ -52,7 +52,7 @@ trace.set_tracer_provider(tracer_provider)
 ### Activation
 To instrument all Strands agents, call the `instrument` method
 ```python
-from llm_tracekit.strands import StrandsInstrumentor
+from llm_tracekit.strands_agents import StrandsInstrumentor
 
 StrandsInstrumentor().instrument()
 ```
@@ -74,7 +74,7 @@ StrandsInstrumentor().uninstrument()
 ### Full Example
 ```python
 from strands import Agent
-from llm_tracekit.strands import StrandsInstrumentor, setup_export_to_coralogix
+from llm_tracekit.strands_agents import StrandsInstrumentor, setup_export_to_coralogix
 
 # Optional: Configure sending spans to Coralogix
 # Reads Coralogix connection details from the following environment variables:
