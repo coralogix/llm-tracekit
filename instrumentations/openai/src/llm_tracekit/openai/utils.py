@@ -192,7 +192,7 @@ def get_llm_request_attributes(kwargs, client_instance, capture_content: bool):
             messages=kwargs.get("messages", []), capture_content=capture_content
         ),
         GenAIAttributes.GEN_AI_OPENAI_REQUEST_SEED: kwargs.get("seed"),
-        ExtendedGenAIAttributes.GEN_AI_OPENAI_REQUEST_USER: kwargs.get("user"),
+        ExtendedGenAIAttributes.GEN_AI_REQUEST_USER: kwargs.get("user"),
     }
 
     response_format = kwargs.get("response_format")
