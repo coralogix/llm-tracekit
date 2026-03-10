@@ -90,7 +90,7 @@ setup_export_to_coralogix(
 # Activate instrumentation
 StrandsInstrumentor().instrument()
 
-# Example Strands Agent Usage
+# Example Strands Agents Usage
 agent = Agent(
     model="anthropic.claude-sonnet-4-20250514",
     system_prompt="You are a helpful assistant.",

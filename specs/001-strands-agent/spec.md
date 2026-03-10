@@ -1,9 +1,9 @@
-# Feature Specification: Strands Agent Instrumentation Adapter
+# Feature Specification: Strands Agents Instrumentation Adapter
 
 **Feature Branch**: `001-strands-agent`
 **Created**: 2026-03-09
 **Status**: Draft
-**Input**: User description: "Add an adapter for Strands Agent support."
+**Input**: User description: "Add an adapter for Strands Agents support."
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -103,7 +103,7 @@ A developer wants to disable tracing at runtime without restarting their applica
 ## Assumptions
 
 - Strands Agents SDK provides sufficient instrumentation hooks (callbacks, processors, or patchable internals) to capture the required span hierarchy without invasive monkey-patching.
-- The Strands SDK already uses OpenTelemetry internally for some tracing; the adapter enriches or replaces these spans with GenAI semantic attributes rather than duplicating them.
+- The Strands Agents SDK already uses OpenTelemetry internally for some tracing; the adapter enriches or replaces these spans with GenAI semantic attributes rather than duplicating them.
 - The adapter focuses on agent-level tracing. If the underlying model provider (e.g., Bedrock) is independently instrumented via its own `llm-tracekit` adapter, those spans are complementary, not conflicting.
 
 ## Success Criteria *(mandatory)*

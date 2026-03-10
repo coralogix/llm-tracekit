@@ -1,4 +1,4 @@
-# Data Model: Strands Agent Instrumentation
+# Data Model: Strands Agents Instrumentation
 
 **Branch**: `001-strands-agent` | **Date**: 2026-03-09
 
@@ -11,7 +11,7 @@
 | ---------------------------- | -------------------------------------- | ---------------------- |
 | `gen_ai.system`              | Hardcoded `"strands"`                  | Required               |
 | `gen_ai.operation.name`      | `"invoke_agent"`                       | Required               |
-| `gen_ai.agent.name`          | `agent.name` from Strands Agent        | Conditionally Required |
+| `gen_ai.agent.name`          | `agent.name` from Strands Agents        | Conditionally Required |
 | `gen_ai.agent.id`            | Agent instance identifier if available | Conditionally Required |
 | `gen_ai.agent.description`   | `agent.description` if available       | Conditionally Required |
 | `gen_ai.request.model`       | Model identifier from agent config     | Conditionally Required |
@@ -135,7 +135,7 @@ The adapter emits the standard OTel GenAI metrics via the core `Instruments` cla
 | Token usage (input) | `gen_ai.client.token.usage` | `{token}` | Model span end, `gen_ai.token.type = "input"` |
 | Token usage (output) | `gen_ai.client.token.usage` | `{token}` | Model span end, `gen_ai.token.type = "output"` |
 
-These feed into Coralogix's AI Center cost tracking and token usage dashboards. The Strands SDK's native metrics (`strands.event_loop.*`, `strands.tool.*`) use custom names that are not recognized by Coralogix's built-in dashboards.
+These feed into Coralogix's AI Center cost tracking and token usage dashboards. The Strands Agents SDK's native metrics (`strands.event_loop.*`, `strands.tool.*`) use custom names that are not recognized by Coralogix's built-in dashboards.
 
 ## Relationships
 

@@ -1,4 +1,4 @@
-# Research: Strands Agent Instrumentation
+# Research: Strands Agents Instrumentation
 
 **Branch**: `001-strands-agent` | **Date**: 2026-03-09
 
@@ -34,7 +34,7 @@ The hooks system is the right integration point because:
 
 ### Rationale
 
-The Strands SDK's event loop is explicitly cycle-based (`event_loop_cycle()`), making cycles a natural span boundary. This maps to:
+The Strands Agents SDK's event loop is explicitly cycle-based (`event_loop_cycle()`), making cycles a natural span boundary. This maps to:
 
 ```
 invoke_agent {agent_name}           (root, per invocation, INTERNAL)
@@ -77,4 +77,4 @@ All existing llm-tracekit adapters use the per-index format defined in `_extende
 
 ### Rationale
 
-Follows the naming pattern: `llm-tracekit-{provider}`. The `strands-agents` package is the PyPI name for the Strands SDK. Entry point: `strands = "llm_tracekit.strands:StrandsInstrumentor"`.
+Follows the naming pattern: `llm-tracekit-{provider}`. The `strands-agents` package is the PyPI name for the Strands Agents SDK. Entry point: `strands = "llm_tracekit.strands:StrandsInstrumentor"`.

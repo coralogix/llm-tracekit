@@ -1,4 +1,4 @@
-# Specification Quality Checklist: Strands Agent Instrumentation Adapter
+# Specification Quality Checklist: Strands Agents Instrumentation Adapter
 
 **Purpose**: Validate specification completeness and quality before proceeding to planning
 **Created**: 2026-03-09
@@ -33,4 +33,4 @@
 
 - All items pass validation.
 - The spec references GenAI semantic conventions and the BaseInstrumentor pattern by name — these are domain terms for this project (observability toolkit), not implementation leaks. They describe *what* the adapter must conform to, not *how* to build it.
-- Assumptions section documents key dependencies on the Strands SDK's observability hooks.
+- Assumptions section documents key dependencies on the Strands Agents SDK's observability hooks.

@@ -1,4 +1,4 @@
-# Quickstart: Strands Agent Instrumentation
+# Quickstart: Strands Agents Instrumentation
 
 **Branch**: `001-strands-agent` | **Date**: 2026-03-09
 
@@ -10,7 +10,7 @@ pip install llm-tracekit-strands
 
 ## Disable Strands Built-in Telemetry
 
-The Strands SDK includes its own OpenTelemetry tracing (`StrandsTelemetry`). When using llm-tracekit, you should **not** initialize Strands' built-in telemetry to avoid duplicate traces. Simply skip any calls to `StrandsTelemetry.init()` or `StrandsTelemetry.setup()` — llm-tracekit handles all tracing setup.
+The Strands Agents SDK includes its own OpenTelemetry tracing (`StrandsTelemetry`). When using llm-tracekit, you should **not** initialize Strands' built-in telemetry to avoid duplicate traces. Simply skip any calls to `StrandsTelemetry.init()` or `StrandsTelemetry.setup()` — llm-tracekit handles all tracing setup.
 
 ## Basic Usage
 

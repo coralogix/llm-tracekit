@@ -1,4 +1,4 @@
-# Implementation Plan: Strands Agent Instrumentation
+# Implementation Plan: Strands Agents Instrumentation
 
 **Branch**: `001-strands-agent` | **Date**: 2026-03-09 | **Spec**: [spec.md](spec.md)
 **Input**: Feature specification from `specs/001-strands-agent/spec.md`

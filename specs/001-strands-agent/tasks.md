@@ -1,4 +1,4 @@
-# Tasks: Strands Agent Instrumentation Adapter
+# Tasks: Strands Agents Instrumentation Adapter
 
 **Input**: Design documents from `/specs/001-strands-agent/`
 **Prerequisites**: plan.md, spec.md, research.md, data-model.md, contracts/public-api.md, quickstart.md
