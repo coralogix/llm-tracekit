@@ -2247,7 +2247,7 @@ dev = [
 
 [[package]]
 name = "llm-tracekit-core"
-version = "1.0.0"
+version = "1.1.0"
 source = { editable = "core" }
 dependencies = [
     { name = "opentelemetry-api" },
@@ -2360,7 +2360,7 @@ dev = [
 
 [[package]]
 name = "llm-tracekit-langchain"
-version = "1.1.0"
+version = "1.2.0"
 source = { editable = "instrumentations/langchain" }
 dependencies = [
     { name = "langchain-core" },
@@ -2493,7 +2493,7 @@ dev = [
 
 [[package]]
 name = "llm-tracekit-openai"
-version = "1.0.0"
+version = "1.1.0"
 source = { editable = "instrumentations/openai" }
 dependencies = [
     { name = "llm-tracekit-core" },
