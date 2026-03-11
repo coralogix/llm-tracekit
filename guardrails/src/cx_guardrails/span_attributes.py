@@ -21,17 +21,17 @@ Boolean indicating a guardrail detected a violation or flagged content.
 
 NAME: Final = "guardrails.{target}.{guardrail_type}.name"
 """
-The name of the guardrail from guardrail response.
+The guardrail name from the response.
 """
 
 SCORE: Final = "guardrails.{target}.{guardrail_type}.score"
 """
-The score of the guardrail from guardrail response.
+The guardrail response score.
 """
 
-DETECTION_THRESHOLD: Final = "guardrails.{target}.{guardrail_type}.detection_threshold"
+THRESHOLD: Final = "guardrails.{target}.{guardrail_type}.threshold"
 """
-The threshold of the guardrail.
+The guardrail threshold.
 """
 
 PROMPT: Final = "guardrails.prompt.{index}"

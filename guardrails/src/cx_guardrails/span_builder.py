@@ -6,7 +6,7 @@ from .models.response import GuardrailsResponse
 from .span_attributes import (
     NAME,
     SCORE,
-    DETECTION_THRESHOLD,
+    THRESHOLD,
     PROMPT,
     RESPONSE,
     APPLICATION_NAME,
@@ -47,7 +47,7 @@ def generate_guardrail_response_attributes(
         guardrail_type = result.type.value
         result_attributes: dict[str, Any] = {
             SCORE.format(target=target, guardrail_type=guardrail_type): result.score,
-            DETECTION_THRESHOLD.format(
+            THRESHOLD.format(
                 target=target, guardrail_type=guardrail_type
             ): result.threshold,
         }
