@@ -29,7 +29,11 @@ class PromptInjectionResult(GuardrailsResultBase):
     pass
 
 
-GuardrailsResponseType = PIIResult | PromptInjectionResult
+class CustomResult(GuardrailsResultBase):
+    name: str | None = None
+
+
+GuardrailsResponseType = CustomResult | PIIResult | PromptInjectionResult
 
 
 class GuardrailsResponse(BaseModel):

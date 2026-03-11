@@ -19,19 +19,34 @@ GUARDRAILS_TRIGGERED = "guardrails.triggered"
 Boolean indicating a guardrail detected a violation or flagged content.
 """
 
-NAME: Final = "guardrails.{target}.{guardrail_type}.name"
-"""
-The guardrail name from the response.
-"""
-
-SCORE: Final = "guardrails.{target}.{guardrail_type}.score"
+SCORE: Final = "gen_ai.{target}.guardrails.{guardrail_type}.score"
 """
 The guardrail response score.
 """
 
-THRESHOLD: Final = "guardrails.{target}.{guardrail_type}.threshold"
+CUSTOM_GUARDRAIL_SCORE: Final = "gen_ai.{target}.guardrails.custom.{name}.score"
+"""
+The custom guardrail response score.
+"""
+
+THRESHOLD: Final = "gen_ai.{target}.guardrails.{guardrail_type}.threshold"
 """
 The guardrail threshold.
+"""
+
+CUSTOM_GUARDRAIL_THRESHOLD: Final = "gen_ai.{target}.guardrails.custom.{name}.threshold"
+"""
+The custom guardrail threshold.
+"""
+
+CUSTOM_GUARDRAIL_TRIGGERED: Final = "gen_ai.{target}.guardrails.custom.{name}.triggered"
+"""
+Boolean indicating a spesific custom guardrail detected a violation or flagged content.
+"""
+
+TRIGGERED: Final = "gen_ai.{target}.guardrails.{guardrail_type}.triggered"
+"""
+Boolean indicating a spesific guardrail detected a violation or flagged content.
 """
 
 PROMPT: Final = "guardrails.prompt.{index}"
