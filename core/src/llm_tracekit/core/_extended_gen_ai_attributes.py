@@ -139,3 +139,9 @@ GEN_AI_COMPLETION_TOOL_CALLS_FUNCTION_ARGUMENTS: Final = "gen_ai.completion.{com
 The arguments of the tool function in JSON format.
 Only captured if OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT is set to `true`.
 """
+
+GEN_AI_EMBEDDING_VECTOR: Final = "gen_ai.embedding.{embedding_index}.vector"
+"""
+The embedding vector at the given index.
+Only captured if OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT is set to `true`.
+"""

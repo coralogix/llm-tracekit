@@ -174,7 +174,9 @@ def embeddings_create(
             try:
                 result = wrapped(*args, **kwargs)
                 if span.is_recording():
-                    span.set_attributes(get_embedding_response_attributes(result))
+                    span.set_attributes(
+                        get_embedding_response_attributes(result, capture_content)
+                    )
                 span.end()
                 return result
             except Exception as error:
@@ -222,7 +224,9 @@ def async_embeddings_create(
             try:
                 result = await wrapped(*args, **kwargs)
                 if span.is_recording():
-                    span.set_attributes(get_embedding_response_attributes(result))
+                    span.set_attributes(
+                        get_embedding_response_attributes(result, capture_content)
+                    )
                 span.end()
                 return result
             except Exception as error:

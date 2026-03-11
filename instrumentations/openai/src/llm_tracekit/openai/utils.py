@@ -333,7 +333,9 @@ def get_embedding_request_attributes(
 
 
 @attribute_generator
-def get_embedding_response_attributes(result: Any) -> dict[str, Any]:
+def get_embedding_response_attributes(
+    result: Any, capture_content: bool = False
+) -> dict[str, Any]:
     usage = getattr(result, "usage", None)
     usage_input_tokens = None
     if usage is not None:
@@ -341,7 +343,7 @@ def get_embedding_response_attributes(result: Any) -> dict[str, Any]:
             usage, "total_tokens", None
         )
 
-    return {
+    attributes: dict[str, Any] = {
         **generate_response_attributes(
             model=getattr(result, "model", None),
             id=getattr(result, "id", None),
@@ -350,3 +352,18 @@ def get_embedding_response_attributes(result: Any) -> dict[str, Any]:
             finish_reasons=None,
         ),
     }
+
+    if capture_content:
+        data = getattr(result, "data", None)
+        if data:
+            for item in data:
+                index = getattr(item, "index", None)
+                embedding = getattr(item, "embedding", None)
+                if index is not None and embedding is not None:
+                    attributes[
+                        ExtendedGenAIAttributes.GEN_AI_EMBEDDING_VECTOR.format(
+                            embedding_index=index
+                        )
+                    ] = embedding
+
+    return attributes
