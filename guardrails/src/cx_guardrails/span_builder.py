@@ -49,15 +49,16 @@ def generate_guardrail_response_attributes(
     span_attributes[GUARDRAILS_TRIGGERED] = str(any(result.detected for result in guardrail_response.results))
     for result in guardrail_response.results:
         guardrail_type = result.type.value
+        result_attributes: dict[str, Any]
         if result.type == GuardrailType.CUSTOM:
             name = getattr(result, "name", "unknown") 
-            result_attributes: dict[str, Any] = {
+            result_attributes = {
                 CUSTOM_GUARDRAIL_SCORE.format(target=target, name=name): result.score,
                 CUSTOM_GUARDRAIL_THRESHOLD.format(target=target, name=name): result.threshold,
                 CUSTOM_GUARDRAIL_TRIGGERED.format(target=target, name=name): result.score > result.threshold
             }
         else:    
-            result_attributes: dict[str, Any] = {
+            result_attributes = {
                 SCORE.format(target=target, guardrail_type=guardrail_type): result.score,
                 THRESHOLD.format(target=target, guardrail_type=guardrail_type): result.threshold,
                 TRIGGERED.format(target=target, guardrail_type=guardrail_type): result.score > result.threshold
