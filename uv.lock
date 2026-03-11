@@ -2597,7 +2597,7 @@ dev = [
 requires-dist = [
     { name = "llm-tracekit-core", editable = "core" },
     { name = "opentelemetry-instrumentation", specifier = ">=0.53b1" },
-    { name = "strands-agents", specifier = ">=1.0.0" },
+    { name = "strands-agents", specifier = ">=1.28.0,<2.0.0" },
 ]
 
 [package.metadata.requires-dev]

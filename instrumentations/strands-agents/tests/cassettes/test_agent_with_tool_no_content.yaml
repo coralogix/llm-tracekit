@@ -1,0 +1,506 @@
+interactions:
+- request:
+    body: |-
+      {
+        "messages": [
+          {
+            "content": [
+              {
+                "text": "What is 2 + 2?"
+              }
+            ],
+            "role": "user"
+          }
+        ],
+        "system": [
+          {
+            "text": "Use the calculator tool for math."
+          }
+        ],
+        "toolConfig": {
+          "tools": [
+            {
+              "toolSpec": {
+                "name": "calculator",
+                "description": "Evaluate a math expression.\n\nReturns:\n    The result.",
+                "inputSchema": {
+                  "json": {
+                    "properties": {
+                      "expression": {
+                        "description": "The math expression to evaluate.",
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "expression"
+                    ],
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          ],
+          "toolChoice": {
+            "auto": {}
+          }
+        },
+        "inferenceConfig": {}
+      }
+    headers:
+      Authorization:
+      - test-auth
+      Content-Length:
+      - '497'
+      Content-Type:
+      - application/json
+      X-Amz-Security-Token:
+      - test-security-token
+    method: POST
+    uri: https://bedrock-runtime.us-east-1.amazonaws.com/model/us.anthropic.claude-sonnet-4-20250514-v1%3A0/converse-stream
+  response:
+    body:
+      string: !!binary |
+        AAAAnQAAAFLJ0QwQCzpldmVudC10eXBlBwAMbWVzc2FnZVN0YXJ0DTpjb250ZW50LXR5cGUHABBh
+        cHBsaWNhdGlvbi9qc29uDTptZXNzYWdlLXR5cGUHAAVldmVudHsicCI6ImFiY2RlZmdoaWprbG1u
+        b3BxcnN0dXZ3eHl6QUJDREVGIiwicm9sZSI6ImFzc2lzdGFudCJ9EQf77QAAALcAAABXMsrPOgs6
+        ZXZlbnQtdHlwZQcAEWNvbnRlbnRCbG9ja0RlbHRhDTpjb250ZW50LXR5cGUHABBhcHBsaWNhdGlv
+        bi9qc29uDTptZXNzYWdlLXR5cGUHAAVldmVudHsiY29udGVudEJsb2NrSW5kZXgiOjAsImRlbHRh
+        Ijp7InRleHQiOiJJIn0sInAiOiJhYmNkZWZnaGlqa2xtbm9wcXJzdHV2d3h5ekFCQyJ9n1ktugAA
+        ANUAAABX0TjrFws6ZXZlbnQtdHlwZQcAEWNvbnRlbnRCbG9ja0RlbHRhDTpjb250ZW50LXR5cGUH
+        ABBhcHBsaWNhdGlvbi9qc29uDTptZXNzYWdlLXR5cGUHAAVldmVudHsiY29udGVudEJsb2NrSW5k
+        ZXgiOjAsImRlbHRhIjp7InRleHQiOiInbGwgY2FsY3VsYXRlIDIgKyAyIn0sInAiOiJhYmNkZWZn
+        aGlqa2xtbm9wcXJzdHV2d3h5ekFCQ0RFRkdISUpLTE1OTyJ9CAJFaAAAAL0AAABXeHrXmws6ZXZl
+        bnQtdHlwZQcAEWNvbnRlbnRCbG9ja0RlbHRhDTpjb250ZW50LXR5cGUHABBhcHBsaWNhdGlvbi9q
+        c29uDTptZXNzYWdlLXR5cGUHAAVldmVudHsiY29udGVudEJsb2NrSW5kZXgiOjAsImRlbHRhIjp7
+        InRleHQiOiIgZm9yIHlvdS4ifSwicCI6ImFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6QSJ9BKJr
+        iAAAAJgAAABWBlxHeQs6ZXZlbnQtdHlwZQcAEGNvbnRlbnRCbG9ja1N0b3ANOmNvbnRlbnQtdHlw
+        ZQcAEGFwcGxpY2F0aW9uL2pzb24NOm1lc3NhZ2UtdHlwZQcABWV2ZW50eyJjb250ZW50QmxvY2tJ
+        bmRleCI6MCwicCI6ImFiY2RlZmdoaWprbG1ub3BxcnN0In0SA5FeAAAA/wAAAFdaSdyyCzpldmVu
+        dC10eXBlBwARY29udGVudEJsb2NrU3RhcnQNOmNvbnRlbnQtdHlwZQcAEGFwcGxpY2F0aW9uL2pz
+        b24NOm1lc3NhZ2UtdHlwZQcABWV2ZW50eyJjb250ZW50QmxvY2tJbmRleCI6MSwicCI6ImFiY2Rl
+        ZmdoaWprbG1ub3BxIiwic3RhcnQiOnsidG9vbFVzZSI6eyJuYW1lIjoiY2FsY3VsYXRvciIsInRv
+        b2xVc2VJZCI6InRvb2x1c2VfMmMwUWFET1BGWWhtT2tOcXVuMDVJOCIsInR5cGUiOiJ0b29sX3Vz
+        ZSJ9fX3Nqlu1AAAAyQAAAFd0KJGUCzpldmVudC10eXBlBwARY29udGVudEJsb2NrRGVsdGENOmNv
+        bnRlbnQtdHlwZQcAEGFwcGxpY2F0aW9uL2pzb24NOm1lc3NhZ2UtdHlwZQcABWV2ZW50eyJjb250
+        ZW50QmxvY2tJbmRleCI6MSwiZGVsdGEiOnsidG9vbFVzZSI6eyJpbnB1dCI6IiJ9fSwicCI6ImFi
+        Y2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6QUJDREVGR0hJIn1WLPp2AAAArgAAAFdfOjrJCzpldmVu
+        dC10eXBlBwARY29udGVudEJsb2NrRGVsdGENOmNvbnRlbnQtdHlwZQcAEGFwcGxpY2F0aW9uL2pz
+        b24NOm1lc3NhZ2UtdHlwZQcABWV2ZW50eyJjb250ZW50QmxvY2tJbmRleCI6MSwiZGVsdGEiOnsi
+        dG9vbFVzZSI6eyJpbnB1dCI6IntcImV4In19LCJwIjoiYWJjIn0s3o+OAAAA5AAAAFdNeXohCzpl
+        dmVudC10eXBlBwARY29udGVudEJsb2NrRGVsdGENOmNvbnRlbnQtdHlwZQcAEGFwcGxpY2F0aW9u
+        L2pzb24NOm1lc3NhZ2UtdHlwZQcABWV2ZW50eyJjb250ZW50QmxvY2tJbmRleCI6MSwiZGVsdGEi
+        OnsidG9vbFVzZSI6eyJpbnB1dCI6InByIn19LCJwIjoiYWJjZGVmZ2hpamtsbW5vcHFyc3R1dnd4
+        eXpBQkNERUZHSElKS0xNTk9QUVJTVFVWV1hZWjAxMjM0NTY3In1mEaxFAAAA2AAAAFcpqC+mCzpl
+        dmVudC10eXBlBwARY29udGVudEJsb2NrRGVsdGENOmNvbnRlbnQtdHlwZQcAEGFwcGxpY2F0aW9u
+        L2pzb24NOm1lc3NhZ2UtdHlwZQcABWV2ZW50eyJjb250ZW50QmxvY2tJbmRleCI6MSwiZGVsdGEi
+        OnsidG9vbFVzZSI6eyJpbnB1dCI6ImVzc2kifX0sInAiOiJhYmNkZWZnaGlqa2xtbm9wcXJzdHV2
+        d3h5ekFCQ0RFRkdISUpLTE1OT1BRUlNUIn1mXlIsAAAAuAAAAFewmljrCzpldmVudC10eXBlBwAR
+        Y29udGVudEJsb2NrRGVsdGENOmNvbnRlbnQtdHlwZQcAEGFwcGxpY2F0aW9uL2pzb24NOm1lc3Nh
+        Z2UtdHlwZQcABWV2ZW50eyJjb250ZW50QmxvY2tJbmRleCI6MSwiZGVsdGEiOnsidG9vbFVzZSI6
+        eyJpbnB1dCI6Im9uIn19LCJwIjoiYWJjZGVmZ2hpamtsbW5vcCJ9yeLYQwAAAOIAAABXwjmPgQs6
+        ZXZlbnQtdHlwZQcAEWNvbnRlbnRCbG9ja0RlbHRhDTpjb250ZW50LXR5cGUHABBhcHBsaWNhdGlv
+        bi9qc29uDTptZXNzYWdlLXR5cGUHAAVldmVudHsiY29udGVudEJsb2NrSW5kZXgiOjEsImRlbHRh
+        Ijp7InRvb2xVc2UiOnsiaW5wdXQiOiJcIjogXCIyICsgMlwifSJ9fSwicCI6ImFiY2RlZmdoaWpr
+        bG1ub3BxcnN0dXZ3eHl6QUJDREVGR0hJSktMTU5PUFFSU1QifS6VmxwAAACyAAAAVo0tcNwLOmV2
+        ZW50LXR5cGUHABBjb250ZW50QmxvY2tTdG9wDTpjb250ZW50LXR5cGUHABBhcHBsaWNhdGlvbi9q
+        c29uDTptZXNzYWdlLXR5cGUHAAVldmVudHsiY29udGVudEJsb2NrSW5kZXgiOjEsInAiOiJhYmNk
+        ZWZnaGlqa2xtbm9wcXJzdHV2d3h5ekFCQ0RFRkdISUpLTE1OT1BRUlNUIn2vrBDbAAAAtAAAAFGc
+        CRDfCzpldmVudC10eXBlBwALbWVzc2FnZVN0b3ANOmNvbnRlbnQtdHlwZQcAEGFwcGxpY2F0aW9u
+        L2pzb24NOm1lc3NhZ2UtdHlwZQcABWV2ZW50eyJwIjoiYWJjZGVmZ2hpamtsbW5vcHFyc3R1dnd4
+        eXpBQkNERUZHSElKS0xNTk9QUVJTVFVWV1hZIiwic3RvcFJlYXNvbiI6InRvb2xfdXNlIn18LCq6
+        AAABCQAAAE4yCgIqCzpldmVudC10eXBlBwAIbWV0YWRhdGENOmNvbnRlbnQtdHlwZQcAEGFwcGxp
+        Y2F0aW9uL2pzb24NOm1lc3NhZ2UtdHlwZQcABWV2ZW50eyJtZXRyaWNzIjp7ImxhdGVuY3lNcyI6
+        MTE3NH0sInAiOiJhYmNkZWZnaGlqa2xtbm9wcXJzdHV2d3h5ekFCQ0RFRkdISUpLTE1OT1BRUlNU
+        VVZXIiwidXNhZ2UiOnsiaW5wdXRUb2tlbnMiOjQxMCwib3V0cHV0VG9rZW5zIjo2OSwic2VydmVy
+        VG9vbFVzYWdlIjp7fSwidG90YWxUb2tlbnMiOjQ3OX19SNI1HA==
+    headers:
+      Connection:
+      - keep-alive
+      Content-Type:
+      - application/vnd.amazon.eventstream
+      Date:
+      - Tue, 10 Mar 2026 12:09:29 GMT
+      Transfer-Encoding:
+      - chunked
+      x-amzn-RequestId:
+      - f1315d1f-9ab1-4673-a4ae-3e2c37943401
+    status:
+      code: 200
+      message: OK
+- request:
+    body: |-
+      {
+        "messages": [
+          {
+            "content": [
+              {
+                "text": "What is 2 + 2?"
+              }
+            ],
+            "role": "user"
+          },
+          {
+            "content": [
+              {
+                "text": "I'll calculate 2 + 2 for you."
+              },
+              {
+                "toolUse": {
+                  "input": {
+                    "expression": "2 + 2"
+                  },
+                  "name": "calculator",
+                  "toolUseId": "tooluse_2c0QaDOPFYhmOkNqun05I8"
+                }
+              }
+            ],
+            "role": "assistant"
+          },
+          {
+            "content": [
+              {
+                "toolResult": {
+                  "content": [
+                    {
+                      "text": "4"
+                    }
+                  ],
+                  "toolUseId": "tooluse_2c0QaDOPFYhmOkNqun05I8",
+                  "status": "success"
+                }
+              }
+            ],
+            "role": "user"
+          }
+        ],
+        "system": [
+          {
+            "text": "Use the calculator tool for math."
+          }
+        ],
+        "toolConfig": {
+          "tools": [
+            {
+              "toolSpec": {
+                "name": "calculator",
+                "description": "Evaluate a math expression.\n\nReturns:\n    The result.",
+                "inputSchema": {
+                  "json": {
+                    "properties": {
+                      "expression": {
+                        "description": "The math expression to evaluate.",
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "expression"
+                    ],
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          ],
+          "toolChoice": {
+            "auto": {}
+          }
+        },
+        "inferenceConfig": {}
+      }
+    headers:
+      Authorization:
+      - test-auth
+      Content-Length:
+      - '839'
+      Content-Type:
+      - application/json
+      X-Amz-Security-Token:
+      - test-security-token
+    method: POST
+    uri: https://bedrock-runtime.us-east-1.amazonaws.com/model/us.anthropic.claude-sonnet-4-20250514-v1%3A0/converse-stream
+  response:
+    body:
+      string: !!binary |
+        AAAAhgAAAFLe4aqDCzpldmVudC10eXBlBwAMbWVzc2FnZVN0YXJ0DTpjb250ZW50LXR5cGUHABBh
+        cHBsaWNhdGlvbi9qc29uDTptZXNzYWdlLXR5cGUHAAVldmVudHsicCI6ImFiY2RlZmdoaSIsInJv
+        bGUiOiJhc3Npc3RhbnQifTptJB8AAADQAAAAVxnYZGcLOmV2ZW50LXR5cGUHABFjb250ZW50Qmxv
+        Y2tEZWx0YQ06Y29udGVudC10eXBlBwAQYXBwbGljYXRpb24vanNvbg06bWVzc2FnZS10eXBlBwAF
+        ZXZlbnR7ImNvbnRlbnRCbG9ja0luZGV4IjowLCJkZWx0YSI6eyJ0ZXh0IjoiVGhlIGFuc3dlciBp
+        cyAifSwicCI6ImFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6QUJDREVGR0hJSktMTU5PIn029SrI
+        AAAArwAAAFdiWhN5CzpldmVudC10eXBlBwARY29udGVudEJsb2NrRGVsdGENOmNvbnRlbnQtdHlw
+        ZQcAEGFwcGxpY2F0aW9uL2pzb24NOm1lc3NhZ2UtdHlwZQcABWV2ZW50eyJjb250ZW50QmxvY2tJ
+        bmRleCI6MCwiZGVsdGEiOnsidGV4dCI6IjQuIn0sInAiOiJhYmNkZWZnaGlqa2xtbm9wcXJzdCJ9
+        N+IAqgAAAJMAAABWcYx2aAs6ZXZlbnQtdHlwZQcAEGNvbnRlbnRCbG9ja1N0b3ANOmNvbnRlbnQt
+        dHlwZQcAEGFwcGxpY2F0aW9uL2pzb24NOm1lc3NhZ2UtdHlwZQcABWV2ZW50eyJjb250ZW50Qmxv
+        Y2tJbmRleCI6MCwicCI6ImFiY2RlZmdoaWprbG1ubyJ9uOXHGAAAAKcAAABRu0n9jQs6ZXZlbnQt
+        dHlwZQcAC21lc3NhZ2VTdG9wDTpjb250ZW50LXR5cGUHABBhcHBsaWNhdGlvbi9qc29uDTptZXNz
+        YWdlLXR5cGUHAAVldmVudHsicCI6ImFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6QUJDREVGR0hJ
+        SktMIiwic3RvcFJlYXNvbiI6ImVuZF90dXJuIn28NdyKAAABEwAAAE4YWo0JCzpldmVudC10eXBl
+        BwAIbWV0YWRhdGENOmNvbnRlbnQtdHlwZQcAEGFwcGxpY2F0aW9uL2pzb24NOm1lc3NhZ2UtdHlw
+        ZQcABWV2ZW50eyJtZXRyaWNzIjp7ImxhdGVuY3lNcyI6MTc5NX0sInAiOiJhYmNkZWZnaGlqa2xt
+        bm9wcXJzdHV2d3h5ekFCQ0RFRkdISUpLTE1OT1BRUlNUVVZXWFlaMDEyMzQ1NjciLCJ1c2FnZSI6
+        eyJpbnB1dFRva2VucyI6NDkyLCJvdXRwdXRUb2tlbnMiOjksInNlcnZlclRvb2xVc2FnZSI6e30s
+        InRvdGFsVG9rZW5zIjo1MDF9fTQMqOE=
+    headers:
+      Connection:
+      - keep-alive
+      Content-Type:
+      - application/vnd.amazon.eventstream
+      Date:
+      - Tue, 10 Mar 2026 12:09:32 GMT
+      Transfer-Encoding:
+      - chunked
+      x-amzn-RequestId:
+      - e033ece5-1519-4513-8d6f-b9570360193c
+    status:
+      code: 200
+      message: OK
+- request:
+    body: |-
+      {
+        "messages": [
+          {
+            "content": [
+              {
+                "text": "What is 2 + 2?"
+              }
+            ],
+            "role": "user"
+          }
+        ],
+        "system": [
+          {
+            "text": "Use the calculator tool for math."
+          }
+        ],
+        "toolConfig": {
+          "tools": [
+            {
+              "toolSpec": {
+                "name": "calculator",
+                "description": "Evaluate a math expression.\n\nReturns:\n    The result.",
+                "inputSchema": {
+                  "json": {
+                    "properties": {
+                      "expression": {
+                        "description": "The math expression to evaluate.",
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "expression"
+                    ],
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          ],
+          "toolChoice": {
+            "auto": {}
+          }
+        },
+        "inferenceConfig": {}
+      }
+    headers:
+      Authorization:
+      - test-auth
+      Content-Length:
+      - '497'
+      Content-Type:
+      - application/json
+      X-Amz-Security-Token:
+      - test-security-token
+    method: POST
+    uri: https://bedrock-runtime.us-east-1.amazonaws.com/model/us.anthropic.claude-sonnet-4-20250514-v1%3A0/converse-stream
+  response:
+    body:
+      string: !!binary |
+        AAAAoAAAAFKQYHAnCzpldmVudC10eXBlBwAMbWVzc2FnZVN0YXJ0DTpjb250ZW50LXR5cGUHABBh
+        cHBsaWNhdGlvbi9qc29uDTptZXNzYWdlLXR5cGUHAAVldmVudHsicCI6ImFiY2RlZmdoaWprbG1u
+        b3BxcnN0dXZ3eHl6QUJDREVGR0hJIiwicm9sZSI6ImFzc2lzdGFudCJ9CdeWBQAAAMgAAABXSUi4
+        JAs6ZXZlbnQtdHlwZQcAEWNvbnRlbnRCbG9ja0RlbHRhDTpjb250ZW50LXR5cGUHABBhcHBsaWNh
+        dGlvbi9qc29uDTptZXNzYWdlLXR5cGUHAAVldmVudHsiY29udGVudEJsb2NrSW5kZXgiOjAsImRl
+        bHRhIjp7InRleHQiOiJJJ2xsIGNhbGN1bGF0ZSB0aGF0In0sInAiOiJhYmNkZWZnaGlqa2xtbm9w
+        cXJzdHV2d3h5ekFCIn1jVl2nAAAApQAAAFco6gvYCzpldmVudC10eXBlBwARY29udGVudEJsb2Nr
+        RGVsdGENOmNvbnRlbnQtdHlwZQcAEGFwcGxpY2F0aW9uL2pzb24NOm1lc3NhZ2UtdHlwZQcABWV2
+        ZW50eyJjb250ZW50QmxvY2tJbmRleCI6MCwiZGVsdGEiOnsidGV4dCI6IiBmb3IgeW91LiJ9LCJw
+        IjoiYWJjIn2yqpaWAAAApAAAAFZijRL+CzpldmVudC10eXBlBwAQY29udGVudEJsb2NrU3RvcA06
+        Y29udGVudC10eXBlBwAQYXBwbGljYXRpb24vanNvbg06bWVzc2FnZS10eXBlBwAFZXZlbnR7ImNv
+        bnRlbnRCbG9ja0luZGV4IjowLCJwIjoiYWJjZGVmZ2hpamtsbW5vcHFyc3R1dnd4eXpBQkNERUYi
+        fTuXJTkAAAD0AAAAVy2Z7aMLOmV2ZW50LXR5cGUHABFjb250ZW50QmxvY2tTdGFydA06Y29udGVu
+        dC10eXBlBwAQYXBwbGljYXRpb24vanNvbg06bWVzc2FnZS10eXBlBwAFZXZlbnR7ImNvbnRlbnRC
+        bG9ja0luZGV4IjoxLCJwIjoiYWJjZGVmIiwic3RhcnQiOnsidG9vbFVzZSI6eyJuYW1lIjoiY2Fs
+        Y3VsYXRvciIsInRvb2xVc2VJZCI6InRvb2x1c2VfZnZCWkViSUZkeHlOOU54eHpJNTRUMyIsInR5
+        cGUiOiJ0b29sX3VzZSJ9fX36ZeS9AAAAzQAAAFeBqDdUCzpldmVudC10eXBlBwARY29udGVudEJs
+        b2NrRGVsdGENOmNvbnRlbnQtdHlwZQcAEGFwcGxpY2F0aW9uL2pzb24NOm1lc3NhZ2UtdHlwZQcA
+        BWV2ZW50eyJjb250ZW50QmxvY2tJbmRleCI6MSwiZGVsdGEiOnsidG9vbFVzZSI6eyJpbnB1dCI6
+        IiJ9fSwicCI6ImFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6QUJDREVGR0hJSktMTSJ9CwqLtQAA
+        AOAAAABXuPnc4Qs6ZXZlbnQtdHlwZQcAEWNvbnRlbnRCbG9ja0RlbHRhDTpjb250ZW50LXR5cGUH
+        ABBhcHBsaWNhdGlvbi9qc29uDTptZXNzYWdlLXR5cGUHAAVldmVudHsiY29udGVudEJsb2NrSW5k
+        ZXgiOjEsImRlbHRhIjp7InRvb2xVc2UiOnsiaW5wdXQiOiJ7XCJleHByIn19LCJwIjoiYWJjZGVm
+        Z2hpamtsbW5vcHFyc3R1dnd4eXpBQkNERUZHSElKS0xNTk9QUVJTVFVWV1hZIn3xbhnfAAAAvQAA
+        AFd4etebCzpldmVudC10eXBlBwARY29udGVudEJsb2NrRGVsdGENOmNvbnRlbnQtdHlwZQcAEGFw
+        cGxpY2F0aW9uL2pzb24NOm1lc3NhZ2UtdHlwZQcABWV2ZW50eyJjb250ZW50QmxvY2tJbmRleCI6
+        MSwiZGVsdGEiOnsidG9vbFVzZSI6eyJpbnB1dCI6ImVzc2lvblwiOiAifX0sInAiOiJhYmNkZWZn
+        aGlqa2xtIn2wQvxAAAAA6AAAAFeIiZcgCzpldmVudC10eXBlBwARY29udGVudEJsb2NrRGVsdGEN
+        OmNvbnRlbnQtdHlwZQcAEGFwcGxpY2F0aW9uL2pzb24NOm1lc3NhZ2UtdHlwZQcABWV2ZW50eyJj
+        b250ZW50QmxvY2tJbmRleCI6MSwiZGVsdGEiOnsidG9vbFVzZSI6eyJpbnB1dCI6IlwiMiArIDJc
+        In0ifX0sInAiOiJhYmNkZWZnaGlqa2xtbm9wcXJzdHV2d3h5ekFCQ0RFRkdISUpLTE1OT1BRUlNU
+        VVZXWFlaMDEyMyJ9WXSbfQAAAJ4AAABWiRyy2Qs6ZXZlbnQtdHlwZQcAEGNvbnRlbnRCbG9ja1N0
+        b3ANOmNvbnRlbnQtdHlwZQcAEGFwcGxpY2F0aW9uL2pzb24NOm1lc3NhZ2UtdHlwZQcABWV2ZW50
+        eyJjb250ZW50QmxvY2tJbmRleCI6MSwicCI6ImFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6In0Z
+        jkY6AAAAlQAAAFFgqBZrCzpldmVudC10eXBlBwALbWVzc2FnZVN0b3ANOmNvbnRlbnQtdHlwZQcA
+        EGFwcGxpY2F0aW9uL2pzb24NOm1lc3NhZ2UtdHlwZQcABWV2ZW50eyJwIjoiYWJjZGVmZ2hpamts
+        bW5vcHFyc3QiLCJzdG9wUmVhc29uIjoidG9vbF91c2UifUV9XIkAAADgAAAATtySdCELOmV2ZW50
+        LXR5cGUHAAhtZXRhZGF0YQ06Y29udGVudC10eXBlBwAQYXBwbGljYXRpb24vanNvbg06bWVzc2Fn
+        ZS10eXBlBwAFZXZlbnR7Im1ldHJpY3MiOnsibGF0ZW5jeU1zIjoyMTUxfSwicCI6ImFiY2RlZmdo
+        IiwidXNhZ2UiOnsiaW5wdXRUb2tlbnMiOjQxMCwib3V0cHV0VG9rZW5zIjo2Mywic2VydmVyVG9v
+        bFVzYWdlIjp7fSwidG90YWxUb2tlbnMiOjQ3M319cHgKgQ==
+    headers:
+      Connection:
+      - keep-alive
+      Content-Type:
+      - application/vnd.amazon.eventstream
+      Date:
+      - Tue, 10 Mar 2026 12:10:54 GMT
+      Transfer-Encoding:
+      - chunked
+      x-amzn-RequestId:
+      - 575107ff-b87a-4818-b4df-d889b9527e2a
+    status:
+      code: 200
+      message: OK
+- request:
+    body: |-
+      {
+        "messages": [
+          {
+            "content": [
+              {
+                "text": "What is 2 + 2?"
+              }
+            ],
+            "role": "user"
+          },
+          {
+            "content": [
+              {
+                "text": "I'll calculate that for you."
+              },
+              {
+                "toolUse": {
+                  "input": {
+                    "expression": "2 + 2"
+                  },
+                  "name": "calculator",
+                  "toolUseId": "tooluse_fvBZEbIFdxyN9NxxzI54T3"
+                }
+              }
+            ],
+            "role": "assistant"
+          },
+          {
+            "content": [
+              {
+                "toolResult": {
+                  "content": [
+                    {
+                      "text": "4"
+                    }
+                  ],
+                  "toolUseId": "tooluse_fvBZEbIFdxyN9NxxzI54T3",
+                  "status": "success"
+                }
+              }
+            ],
+            "role": "user"
+          }
+        ],
+        "system": [
+          {
+            "text": "Use the calculator tool for math."
+          }
+        ],
+        "toolConfig": {
+          "tools": [
+            {
+              "toolSpec": {
+                "name": "calculator",
+                "description": "Evaluate a math expression.\n\nReturns:\n    The result.",
+                "inputSchema": {
+                  "json": {
+                    "properties": {
+                      "expression": {
+                        "description": "The math expression to evaluate.",
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "expression"
+                    ],
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          ],
+          "toolChoice": {
+            "auto": {}
+          }
+        },
+        "inferenceConfig": {}
+      }
+    headers:
+      Authorization:
+      - test-auth
+      Content-Length:
+      - '838'
+      Content-Type:
+      - application/json
+      X-Amz-Security-Token:
+      - test-security-token
+    method: POST
+    uri: https://bedrock-runtime.us-east-1.amazonaws.com/model/us.anthropic.claude-sonnet-4-20250514-v1%3A0/converse-stream
+  response:
+    body:
+      string: !!binary |
+        AAAAtAAAAFIFAEFlCzpldmVudC10eXBlBwAMbWVzc2FnZVN0YXJ0DTpjb250ZW50LXR5cGUHABBh
+        cHBsaWNhdGlvbi9qc29uDTptZXNzYWdlLXR5cGUHAAVldmVudHsicCI6ImFiY2RlZmdoaWprbG1u
+        b3BxcnN0dXZ3eHl6QUJDREVGR0hJSktMTU5PUFFSU1RVVldYWVowMTIiLCJyb2xlIjoiYXNzaXN0
+        YW50In2fX38tAAAAzAAAAFe8yB7kCzpldmVudC10eXBlBwARY29udGVudEJsb2NrRGVsdGENOmNv
+        bnRlbnQtdHlwZQcAEGFwcGxpY2F0aW9uL2pzb24NOm1lc3NhZ2UtdHlwZQcABWV2ZW50eyJjb250
+        ZW50QmxvY2tJbmRleCI6MCwiZGVsdGEiOnsidGV4dCI6IjIifSwicCI6ImFiY2RlZmdoaWprbG1u
+        b3BxcnN0dXZ3eHl6QUJDREVGR0hJSktMTU5PUFFSU1RVVldYIn27v3hfAAAA4AAAAFe4+dzhCzpl
+        dmVudC10eXBlBwARY29udGVudEJsb2NrRGVsdGENOmNvbnRlbnQtdHlwZQcAEGFwcGxpY2F0aW9u
+        L2pzb24NOm1lc3NhZ2UtdHlwZQcABWV2ZW50eyJjb250ZW50QmxvY2tJbmRleCI6MCwiZGVsdGEi
+        OnsidGV4dCI6IiArIDIgZXF1YWxzIDQifSwicCI6ImFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6
+        QUJDREVGR0hJSktMTU5PUFFSU1RVVldYWVowMTIzNDUifUnh92AAAACyAAAAV/oqQEoLOmV2ZW50
+        LXR5cGUHABFjb250ZW50QmxvY2tEZWx0YQ06Y29udGVudC10eXBlBwAQYXBwbGljYXRpb24vanNv
+        bg06bWVzc2FnZS10eXBlBwAFZXZlbnR7ImNvbnRlbnRCbG9ja0luZGV4IjowLCJkZWx0YSI6eyJ0
+        ZXh0IjoiLiJ9LCJwIjoiYWJjZGVmZ2hpamtsbW5vcHFyc3R1dnd4In2Ia+uRAAAAogAAAFbtzede
+        CzpldmVudC10eXBlBwAQY29udGVudEJsb2NrU3RvcA06Y29udGVudC10eXBlBwAQYXBwbGljYXRp
+        b24vanNvbg06bWVzc2FnZS10eXBlBwAFZXZlbnR7ImNvbnRlbnRCbG9ja0luZGV4IjowLCJwIjoi
+        YWJjZGVmZ2hpamtsbW5vcHFyc3R1dnd4eXpBQkNEIn1kJygQAAAAmAAAAFGYONLaCzpldmVudC10
+        eXBlBwALbWVzc2FnZVN0b3ANOmNvbnRlbnQtdHlwZQcAEGFwcGxpY2F0aW9uL2pzb24NOm1lc3Nh
+        Z2UtdHlwZQcABWV2ZW50eyJwIjoiYWJjZGVmZ2hpamtsbW5vcHFyc3R1dnciLCJzdG9wUmVhc29u
+        IjoiZW5kX3R1cm4ifc04oSUAAADbAAAATgpj/bYLOmV2ZW50LXR5cGUHAAhtZXRhZGF0YQ06Y29u
+        dGVudC10eXBlBwAQYXBwbGljYXRpb24vanNvbg06bWVzc2FnZS10eXBlBwAFZXZlbnR7Im1ldHJp
+        Y3MiOnsibGF0ZW5jeU1zIjoxOTE4fSwicCI6ImFiYyIsInVzYWdlIjp7ImlucHV0VG9rZW5zIjo0
+        ODYsIm91dHB1dFRva2VucyI6MTMsInNlcnZlclRvb2xVc2FnZSI6e30sInRvdGFsVG9rZW5zIjo0
+        OTl9faPhqUA=
+    headers:
+      Connection:
+      - keep-alive
+      Content-Type:
+      - application/vnd.amazon.eventstream
+      Date:
+      - Tue, 10 Mar 2026 12:10:57 GMT
+      Transfer-Encoding:
+      - chunked
+      x-amzn-RequestId:
+      - a5d09232-d91f-45d6-a038-fbbd6dbecad1
+    status:
+      code: 200
+      message: OK
+version: 1

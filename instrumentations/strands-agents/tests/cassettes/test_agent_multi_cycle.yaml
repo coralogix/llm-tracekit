@@ -1,0 +1,472 @@
+interactions:
+- request:
+    body: |-
+      {
+        "messages": [
+          {
+            "content": [
+              {
+                "text": "What is the capital of France?"
+              }
+            ],
+            "role": "user"
+          }
+        ],
+        "system": [
+          {
+            "text": "Use the get_capital tool when asked about capitals. Answer concisely."
+          }
+        ],
+        "toolConfig": {
+          "tools": [
+            {
+              "toolSpec": {
+                "name": "get_capital",
+                "description": "Get the capital city of a country.\n\nReturns:\n    The capital city.",
+                "inputSchema": {
+                  "json": {
+                    "properties": {
+                      "country": {
+                        "description": "The country name.",
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "country"
+                    ],
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          ],
+          "toolChoice": {
+            "auto": {}
+          }
+        },
+        "inferenceConfig": {}
+      }
+    headers:
+      Authorization:
+      - test-auth
+      Content-Length:
+      - '542'
+      Content-Type:
+      - application/json
+      X-Amz-Security-Token:
+      - test-security-token
+    method: POST
+    uri: https://bedrock-runtime.us-east-1.amazonaws.com/model/us.anthropic.claude-sonnet-4-20250514-v1%3A0/converse-stream
+  response:
+    body:
+      string: !!binary |
+        AAAAtAAAAFIFAEFlCzpldmVudC10eXBlBwAMbWVzc2FnZVN0YXJ0DTpjb250ZW50LXR5cGUHABBh
+        cHBsaWNhdGlvbi9qc29uDTptZXNzYWdlLXR5cGUHAAVldmVudHsicCI6ImFiY2RlZmdoaWprbG1u
+        b3BxcnN0dXZ3eHl6QUJDREVGR0hJSktMTU5PUFFSU1RVVldYWVowMTIiLCJyb2xlIjoiYXNzaXN0
+        YW50In2fX38tAAABLAAAAFdfQAqeCzpldmVudC10eXBlBwARY29udGVudEJsb2NrU3RhcnQNOmNv
+        bnRlbnQtdHlwZQcAEGFwcGxpY2F0aW9uL2pzb24NOm1lc3NhZ2UtdHlwZQcABWV2ZW50eyJjb250
+        ZW50QmxvY2tJbmRleCI6MCwicCI6ImFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6QUJDREVGR0hJ
+        SktMTU5PUFFSU1RVVldYWVowMTIzNDU2NzgiLCJzdGFydCI6eyJ0b29sVXNlIjp7Im5hbWUiOiJn
+        ZXRfY2FwaXRhbCIsInRvb2xVc2VJZCI6InRvb2x1c2VfTWZBczVBbGJNeUY2U0ZwdnN6N0V4SCIs
+        InR5cGUiOiJ0b29sX3VzZSJ9fX2pb6h0AAAAwAAAAFd5OPPlCzpldmVudC10eXBlBwARY29udGVu
+        dEJsb2NrRGVsdGENOmNvbnRlbnQtdHlwZQcAEGFwcGxpY2F0aW9uL2pzb24NOm1lc3NhZ2UtdHlw
+        ZQcABWV2ZW50eyJjb250ZW50QmxvY2tJbmRleCI6MCwiZGVsdGEiOnsidG9vbFVzZSI6eyJpbnB1
+        dCI6IiJ9fSwicCI6ImFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6In1RtmgsAAAAzQAAAFeBqDdU
+        CzpldmVudC10eXBlBwARY29udGVudEJsb2NrRGVsdGENOmNvbnRlbnQtdHlwZQcAEGFwcGxpY2F0
+        aW9uL2pzb24NOm1lc3NhZ2UtdHlwZQcABWV2ZW50eyJjb250ZW50QmxvY2tJbmRleCI6MCwiZGVs
+        dGEiOnsidG9vbFVzZSI6eyJpbnB1dCI6IntcImNvdW50cnkifX0sInAiOiJhYmNkZWZnaGlqa2xt
+        bm9wcXJzdHV2d3h5ekFCQyJ9/L9LigAAAMAAAABXeTjz5Qs6ZXZlbnQtdHlwZQcAEWNvbnRlbnRC
+        bG9ja0RlbHRhDTpjb250ZW50LXR5cGUHABBhcHBsaWNhdGlvbi9qc29uDTptZXNzYWdlLXR5cGUH
+        AAVldmVudHsiY29udGVudEJsb2NrSW5kZXgiOjAsImRlbHRhIjp7InRvb2xVc2UiOnsiaW5wdXQi
+        OiJcIjogXCJGciJ9fSwicCI6ImFiY2RlZmdoaWprbG1ub3BxciJ9Zk+MxAAAANcAAABXq/i4dws6
+        ZXZlbnQtdHlwZQcAEWNvbnRlbnRCbG9ja0RlbHRhDTpjb250ZW50LXR5cGUHABBhcHBsaWNhdGlv
+        bi9qc29uDTptZXNzYWdlLXR5cGUHAAVldmVudHsiY29udGVudEJsb2NrSW5kZXgiOjAsImRlbHRh
+        Ijp7InRvb2xVc2UiOnsiaW5wdXQiOiJhbmNlIn19LCJwIjoiYWJjZGVmZ2hpamtsbW5vcHFyc3R1
+        dnd4eXpBQkNERUZHSElKS0xNTk9QUVJTIn1sOXcmAAAA4gAAAFfCOY+BCzpldmVudC10eXBlBwAR
+        Y29udGVudEJsb2NrRGVsdGENOmNvbnRlbnQtdHlwZQcAEGFwcGxpY2F0aW9uL2pzb24NOm1lc3Nh
+        Z2UtdHlwZQcABWV2ZW50eyJjb250ZW50QmxvY2tJbmRleCI6MCwiZGVsdGEiOnsidG9vbFVzZSI6
+        eyJpbnB1dCI6IlwifSJ9fSwicCI6ImFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6QUJDREVGR0hJ
+        SktMTU5PUFFSU1RVVldYWVowMTIzNCJ91nOfjAAAAJUAAABW/syDyAs6ZXZlbnQtdHlwZQcAEGNv
+        bnRlbnRCbG9ja1N0b3ANOmNvbnRlbnQtdHlwZQcAEGFwcGxpY2F0aW9uL2pzb24NOm1lc3NhZ2Ut
+        dHlwZQcABWV2ZW50eyJjb250ZW50QmxvY2tJbmRleCI6MCwicCI6ImFiY2RlZmdoaWprbG1ub3Bx
+        In2NwpVtAAAAngAAAFEXeCd6CzpldmVudC10eXBlBwALbWVzc2FnZVN0b3ANOmNvbnRlbnQtdHlw
+        ZQcAEGFwcGxpY2F0aW9uL2pzb24NOm1lc3NhZ2UtdHlwZQcABWV2ZW50eyJwIjoiYWJjZGVmZ2hp
+        amtsbW5vcHFyc3R1dnd4eXpBQkMiLCJzdG9wUmVhc29uIjoidG9vbF91c2Uifck9a8QAAADcAAAA
+        TrhDIaYLOmV2ZW50LXR5cGUHAAhtZXRhZGF0YQ06Y29udGVudC10eXBlBwAQYXBwbGljYXRpb24v
+        anNvbg06bWVzc2FnZS10eXBlBwAFZXZlbnR7Im1ldHJpY3MiOnsibGF0ZW5jeU1zIjoxMDI0fSwi
+        cCI6ImFiY2QiLCJ1c2FnZSI6eyJpbnB1dFRva2VucyI6NDIwLCJvdXRwdXRUb2tlbnMiOjUzLCJz
+        ZXJ2ZXJUb29sVXNhZ2UiOnt9LCJ0b3RhbFRva2VucyI6NDczfX0VO1w6
+    headers:
+      Connection:
+      - keep-alive
+      Content-Type:
+      - application/vnd.amazon.eventstream
+      Date:
+      - Tue, 10 Mar 2026 12:09:34 GMT
+      Transfer-Encoding:
+      - chunked
+      x-amzn-RequestId:
+      - 1c38ad4a-6918-4548-a448-b222aa401372
+    status:
+      code: 200
+      message: OK
+- request:
+    body: |-
+      {
+        "messages": [
+          {
+            "content": [
+              {
+                "text": "What is the capital of France?"
+              }
+            ],
+            "role": "user"
+          },
+          {
+            "content": [
+              {
+                "toolUse": {
+                  "input": {
+                    "country": "France"
+                  },
+                  "name": "get_capital",
+                  "toolUseId": "tooluse_MfAs5AlbMyF6SFpvsz7ExH"
+                }
+              }
+            ],
+            "role": "assistant"
+          },
+          {
+            "content": [
+              {
+                "toolResult": {
+                  "content": [
+                    {
+                      "text": "The capital of France is Paris."
+                    }
+                  ],
+                  "toolUseId": "tooluse_MfAs5AlbMyF6SFpvsz7ExH",
+                  "status": "success"
+                }
+              }
+            ],
+            "role": "user"
+          }
+        ],
+        "system": [
+          {
+            "text": "Use the get_capital tool when asked about capitals. Answer concisely."
+          }
+        ],
+        "toolConfig": {
+          "tools": [
+            {
+              "toolSpec": {
+                "name": "get_capital",
+                "description": "Get the capital city of a country.\n\nReturns:\n    The capital city.",
+                "inputSchema": {
+                  "json": {
+                    "properties": {
+                      "country": {
+                        "description": "The country name.",
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "country"
+                    ],
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          ],
+          "toolChoice": {
+            "auto": {}
+          }
+        },
+        "inferenceConfig": {}
+      }
+    headers:
+      Authorization:
+      - test-auth
+      Content-Length:
+      - '870'
+      Content-Type:
+      - application/json
+      X-Amz-Security-Token:
+      - test-security-token
+    method: POST
+    uri: https://bedrock-runtime.us-east-1.amazonaws.com/model/us.anthropic.claude-sonnet-4-20250514-v1%3A0/converse-stream
+  response:
+    body:
+      string: !!binary |
+        AAAAnQAAAFLJ0QwQCzpldmVudC10eXBlBwAMbWVzc2FnZVN0YXJ0DTpjb250ZW50LXR5cGUHABBh
+        cHBsaWNhdGlvbi9qc29uDTptZXNzYWdlLXR5cGUHAAVldmVudHsicCI6ImFiY2RlZmdoaWprbG1u
+        b3BxcnN0dXZ3eHl6QUJDREVGIiwicm9sZSI6ImFzc2lzdGFudCJ9EQf77QAAAOcAAABXCtkA8Qs6
+        ZXZlbnQtdHlwZQcAEWNvbnRlbnRCbG9ja0RlbHRhDTpjb250ZW50LXR5cGUHABBhcHBsaWNhdGlv
+        bi9qc29uDTptZXNzYWdlLXR5cGUHAAVldmVudHsiY29udGVudEJsb2NrSW5kZXgiOjAsImRlbHRh
+        Ijp7InRleHQiOiJUaGUgY2FwaXRhbCBvZiBGcmFuY2UgaXMifSwicCI6ImFiY2RlZmdoaWprbG1u
+        b3BxcnN0dXZ3eHl6QUJDREVGR0hJSktMTU5PUFFSU1RVVldYWVowMSJ9wBylyQAAAMsAAABXDujC
+        9As6ZXZlbnQtdHlwZQcAEWNvbnRlbnRCbG9ja0RlbHRhDTpjb250ZW50LXR5cGUHABBhcHBsaWNh
+        dGlvbi9qc29uDTptZXNzYWdlLXR5cGUHAAVldmVudHsiY29udGVudEJsb2NrSW5kZXgiOjAsImRl
+        bHRhIjp7InRleHQiOiIgUGFyaXMuIn0sInAiOiJhYmNkZWZnaGlqa2xtbm9wcXJzdHV2d3h5ekFC
+        Q0RFRkdISUpLTE1OT1BRIn2sh13FAAAAjQAAAFauXF+LCzpldmVudC10eXBlBwAQY29udGVudEJs
+        b2NrU3RvcA06Y29udGVudC10eXBlBwAQYXBwbGljYXRpb24vanNvbg06bWVzc2FnZS10eXBlBwAF
+        ZXZlbnR7ImNvbnRlbnRCbG9ja0luZGV4IjowLCJwIjoiYWJjZGVmZ2hpIn0k8RCxAAAAlgAAAFEn
+        CGy7CzpldmVudC10eXBlBwALbWVzc2FnZVN0b3ANOmNvbnRlbnQtdHlwZQcAEGFwcGxpY2F0aW9u
+        L2pzb24NOm1lc3NhZ2UtdHlwZQcABWV2ZW50eyJwIjoiYWJjZGVmZ2hpamtsbW5vcHFyc3R1Iiwi
+        c3RvcFJlYXNvbiI6ImVuZF90dXJuIn0ASzi6AAAA8gAAAE7GsrDDCzpldmVudC10eXBlBwAIbWV0
+        YWRhdGENOmNvbnRlbnQtdHlwZQcAEGFwcGxpY2F0aW9uL2pzb24NOm1lc3NhZ2UtdHlwZQcABWV2
+        ZW50eyJtZXRyaWNzIjp7ImxhdGVuY3lNcyI6MTA3NH0sInAiOiJhYmNkZWZnaGlqa2xtbm9wcXJz
+        dHV2d3h5eiIsInVzYWdlIjp7ImlucHV0VG9rZW5zIjo0OTIsIm91dHB1dFRva2VucyI6MTAsInNl
+        cnZlclRvb2xVc2FnZSI6e30sInRvdGFsVG9rZW5zIjo1MDJ9fTmgWnU=
+    headers:
+      Connection:
+      - keep-alive
+      Content-Type:
+      - application/vnd.amazon.eventstream
+      Date:
+      - Tue, 10 Mar 2026 12:09:36 GMT
+      Transfer-Encoding:
+      - chunked
+      x-amzn-RequestId:
+      - dd9f5a67-e5fd-4b06-af32-f385fed5f507
+    status:
+      code: 200
+      message: OK
+- request:
+    body: |-
+      {
+        "messages": [
+          {
+            "content": [
+              {
+                "text": "What is the capital of France?"
+              }
+            ],
+            "role": "user"
+          }
+        ],
+        "system": [
+          {
+            "text": "Use the get_capital tool when asked about capitals. Answer concisely."
+          }
+        ],
+        "toolConfig": {
+          "tools": [
+            {
+              "toolSpec": {
+                "name": "get_capital",
+                "description": "Get the capital city of a country.\n\nReturns:\n    The capital city.",
+                "inputSchema": {
+                  "json": {
+                    "properties": {
+                      "country": {
+                        "description": "The country name.",
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "country"
+                    ],
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          ],
+          "toolChoice": {
+            "auto": {}
+          }
+        },
+        "inferenceConfig": {}
+      }
+    headers:
+      Authorization:
+      - test-auth
+      Content-Length:
+      - '542'
+      Content-Type:
+      - application/json
+      X-Amz-Security-Token:
+      - test-security-token
+    method: POST
+    uri: https://bedrock-runtime.us-east-1.amazonaws.com/model/us.anthropic.claude-sonnet-4-20250514-v1%3A0/converse-stream
+  response:
+    body:
+      string: !!binary |
+        AAAAoQAAAFKtAFmXCzpldmVudC10eXBlBwAMbWVzc2FnZVN0YXJ0DTpjb250ZW50LXR5cGUHABBh
+        cHBsaWNhdGlvbi9qc29uDTptZXNzYWdlLXR5cGUHAAVldmVudHsicCI6ImFiY2RlZmdoaWprbG1u
+        b3BxcnN0dXZ3eHl6QUJDREVGR0hJSiIsInJvbGUiOiJhc3Npc3RhbnQifUMJiXoAAAD2AAAAV1dZ
+        vsMLOmV2ZW50LXR5cGUHABFjb250ZW50QmxvY2tTdGFydA06Y29udGVudC10eXBlBwAQYXBwbGlj
+        YXRpb24vanNvbg06bWVzc2FnZS10eXBlBwAFZXZlbnR7ImNvbnRlbnRCbG9ja0luZGV4IjowLCJw
+        IjoiYWJjZGVmZyIsInN0YXJ0Ijp7InRvb2xVc2UiOnsibmFtZSI6ImdldF9jYXBpdGFsIiwidG9v
+        bFVzZUlkIjoidG9vbHVzZV9JVmxhcW1rYThOenZvc3pRQkRIQnpVIiwidHlwZSI6InRvb2xfdXNl
+        In19fc17ZDEAAADBAAAAV0RY2lULOmV2ZW50LXR5cGUHABFjb250ZW50QmxvY2tEZWx0YQ06Y29u
+        dGVudC10eXBlBwAQYXBwbGljYXRpb24vanNvbg06bWVzc2FnZS10eXBlBwAFZXZlbnR7ImNvbnRl
+        bnRCbG9ja0luZGV4IjowLCJkZWx0YSI6eyJ0b29sVXNlIjp7ImlucHV0IjoiIn19LCJwIjoiYWJj
+        ZGVmZ2hpamtsbW5vcHFyc3R1dnd4eXpBIn0ha/e2AAAAzwAAAFf7aGQ0CzpldmVudC10eXBlBwAR
+        Y29udGVudEJsb2NrRGVsdGENOmNvbnRlbnQtdHlwZQcAEGFwcGxpY2F0aW9uL2pzb24NOm1lc3Nh
+        Z2UtdHlwZQcABWV2ZW50eyJjb250ZW50QmxvY2tJbmRleCI6MCwiZGVsdGEiOnsidG9vbFVzZSI6
+        eyJpbnB1dCI6IntcImMifX0sInAiOiJhYmNkZWZnaGlqa2xtbm9wcXJzdHV2d3h5ekFCQ0RFRkdI
+        SUpLIn2fm6+iAAAA4QAAAFeFmfVRCzpldmVudC10eXBlBwARY29udGVudEJsb2NrRGVsdGENOmNv
+        bnRlbnQtdHlwZQcAEGFwcGxpY2F0aW9uL2pzb24NOm1lc3NhZ2UtdHlwZQcABWV2ZW50eyJjb250
+        ZW50QmxvY2tJbmRleCI6MCwiZGVsdGEiOnsidG9vbFVzZSI6eyJpbnB1dCI6Im91bnRyeVwiIn19
+        LCJwIjoiYWJjZGVmZ2hpamtsbW5vcHFyc3R1dnd4eXpBQkNERUZHSElKS0xNTk9QUVJTVFVWV1hZ
+        In13GS8lAAAAvAAAAFdFGv4rCzpldmVudC10eXBlBwARY29udGVudEJsb2NrRGVsdGENOmNvbnRl
+        bnQtdHlwZQcAEGFwcGxpY2F0aW9uL2pzb24NOm1lc3NhZ2UtdHlwZQcABWV2ZW50eyJjb250ZW50
+        QmxvY2tJbmRleCI6MCwiZGVsdGEiOnsidG9vbFVzZSI6eyJpbnB1dCI6IjogXCJGcmFuY2UifX0s
+        InAiOiJhYmNkZWZnaGlqa2wifbipOswAAAC8AAAAV0Ua/isLOmV2ZW50LXR5cGUHABFjb250ZW50
+        QmxvY2tEZWx0YQ06Y29udGVudC10eXBlBwAQYXBwbGljYXRpb24vanNvbg06bWVzc2FnZS10eXBl
+        BwAFZXZlbnR7ImNvbnRlbnRCbG9ja0luZGV4IjowLCJkZWx0YSI6eyJ0b29sVXNlIjp7ImlucHV0
+        IjoiXCJ9In19LCJwIjoiYWJjZGVmZ2hpamtsbW5vcHFycyJ9Kj982wAAAJMAAABWcYx2aAs6ZXZl
+        bnQtdHlwZQcAEGNvbnRlbnRCbG9ja1N0b3ANOmNvbnRlbnQtdHlwZQcAEGFwcGxpY2F0aW9uL2pz
+        b24NOm1lc3NhZ2UtdHlwZQcABWV2ZW50eyJjb250ZW50QmxvY2tJbmRleCI6MCwicCI6ImFiY2Rl
+        ZmdoaWprbG1ubyJ9uOXHGAAAAJEAAABRlSiwqws6ZXZlbnQtdHlwZQcAC21lc3NhZ2VTdG9wDTpj
+        b250ZW50LXR5cGUHABBhcHBsaWNhdGlvbi9qc29uDTptZXNzYWdlLXR5cGUHAAVldmVudHsicCI6
+        ImFiY2RlZmdoaWprbG1ub3AiLCJzdG9wUmVhc29uIjoidG9vbF91c2UifZ0r6lMAAADtAAAATiQC
+        sJALOmV2ZW50LXR5cGUHAAhtZXRhZGF0YQ06Y29udGVudC10eXBlBwAQYXBwbGljYXRpb24vanNv
+        bg06bWVzc2FnZS10eXBlBwAFZXZlbnR7Im1ldHJpY3MiOnsibGF0ZW5jeU1zIjoxMTExfSwicCI6
+        ImFiY2RlZmdoaWprbG1ub3BxcnN0dSIsInVzYWdlIjp7ImlucHV0VG9rZW5zIjo0MjAsIm91dHB1
+        dFRva2VucyI6NTMsInNlcnZlclRvb2xVc2FnZSI6e30sInRvdGFsVG9rZW5zIjo0NzN9fdcmORE=
+    headers:
+      Connection:
+      - keep-alive
+      Content-Type:
+      - application/vnd.amazon.eventstream
+      Date:
+      - Tue, 10 Mar 2026 12:10:59 GMT
+      Transfer-Encoding:
+      - chunked
+      x-amzn-RequestId:
+      - 96a42016-f539-433e-8ccf-91d8c9fa4e21
+    status:
+      code: 200
+      message: OK
+- request:
+    body: |-
+      {
+        "messages": [
+          {
+            "content": [
+              {
+                "text": "What is the capital of France?"
+              }
+            ],
+            "role": "user"
+          },
+          {
+            "content": [
+              {
+                "toolUse": {
+                  "input": {
+                    "country": "France"
+                  },
+                  "name": "get_capital",
+                  "toolUseId": "tooluse_IVlaqmka8NzvoszQBDHBzU"
+                }
+              }
+            ],
+            "role": "assistant"
+          },
+          {
+            "content": [
+              {
+                "toolResult": {
+                  "content": [
+                    {
+                      "text": "The capital of France is Paris."
+                    }
+                  ],
+                  "toolUseId": "tooluse_IVlaqmka8NzvoszQBDHBzU",
+                  "status": "success"
+                }
+              }
+            ],
+            "role": "user"
+          }
+        ],
+        "system": [
+          {
+            "text": "Use the get_capital tool when asked about capitals. Answer concisely."
+          }
+        ],
+        "toolConfig": {
+          "tools": [
+            {
+              "toolSpec": {
+                "name": "get_capital",
+                "description": "Get the capital city of a country.\n\nReturns:\n    The capital city.",
+                "inputSchema": {
+                  "json": {
+                    "properties": {
+                      "country": {
+                        "description": "The country name.",
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "country"
+                    ],
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          ],
+          "toolChoice": {
+            "auto": {}
+          }
+        },
+        "inferenceConfig": {}
+      }
+    headers:
+      Authorization:
+      - test-auth
+      Content-Length:
+      - '870'
+      Content-Type:
+      - application/json
+      X-Amz-Security-Token:
+      - test-security-token
+    method: POST
+    uri: https://bedrock-runtime.us-east-1.amazonaws.com/model/us.anthropic.claude-sonnet-4-20250514-v1%3A0/converse-stream
+  response:
+    body:
+      string: !!binary |
+        AAAAoAAAAFKQYHAnCzpldmVudC10eXBlBwAMbWVzc2FnZVN0YXJ0DTpjb250ZW50LXR5cGUHABBh
+        cHBsaWNhdGlvbi9qc29uDTptZXNzYWdlLXR5cGUHAAVldmVudHsicCI6ImFiY2RlZmdoaWprbG1u
+        b3BxcnN0dXZ3eHl6QUJDREVGR0hJIiwicm9sZSI6ImFzc2lzdGFudCJ9CdeWBQAAAK8AAABXYloT
+        eQs6ZXZlbnQtdHlwZQcAEWNvbnRlbnRCbG9ja0RlbHRhDTpjb250ZW50LXR5cGUHABBhcHBsaWNh
+        dGlvbi9qc29uDTptZXNzYWdlLXR5cGUHAAVldmVudHsiY29udGVudEJsb2NrSW5kZXgiOjAsImRl
+        bHRhIjp7InRleHQiOiJUaGUifSwicCI6ImFiY2RlZmdoaWprbG1ub3BxcnMifTReMxAAAADeAAAA
+        V6bo2gYLOmV2ZW50LXR5cGUHABFjb250ZW50QmxvY2tEZWx0YQ06Y29udGVudC10eXBlBwAQYXBw
+        bGljYXRpb24vanNvbg06bWVzc2FnZS10eXBlBwAFZXZlbnR7ImNvbnRlbnRCbG9ja0luZGV4Ijow
+        LCJkZWx0YSI6eyJ0ZXh0IjoiIGNhcGl0YWwgb2YgRnJhbmNlIGlzIFBhcmlzLiJ9LCJwIjoiYWJj
+        ZGVmZ2hpamtsbW5vcHFyc3R1dnd4eXpBQkNERUZHSElKS0xNTk8ifXBBoOIAAACKAAAAVhx8g5sL
+        OmV2ZW50LXR5cGUHABBjb250ZW50QmxvY2tTdG9wDTpjb250ZW50LXR5cGUHABBhcHBsaWNhdGlv
+        bi9qc29uDTptZXNzYWdlLXR5cGUHAAVldmVudHsiY29udGVudEJsb2NrSW5kZXgiOjAsInAiOiJh
+        YmNkZWYifXbreQwAAAC5AAAAUWSZ1G4LOmV2ZW50LXR5cGUHAAttZXNzYWdlU3RvcA06Y29udGVu
+        dC10eXBlBwAQYXBwbGljYXRpb24vanNvbg06bWVzc2FnZS10eXBlBwAFZXZlbnR7InAiOiJhYmNk
+        ZWZnaGlqa2xtbm9wcXJzdHV2d3h5ekFCQ0RFRkdISUpLTE1OT1BRUlNUVVZXWFlaMDEyMyIsInN0
+        b3BSZWFzb24iOiJlbmRfdHVybiJ94X5cZAAAAO8AAABOXsLj8As6ZXZlbnQtdHlwZQcACG1ldGFk
+        YXRhDTpjb250ZW50LXR5cGUHABBhcHBsaWNhdGlvbi9qc29uDTptZXNzYWdlLXR5cGUHAAVldmVu
+        dHsibWV0cmljcyI6eyJsYXRlbmN5TXMiOjE2OTN9LCJwIjoiYWJjZGVmZ2hpamtsbW5vcHFyc3R1
+        dnciLCJ1c2FnZSI6eyJpbnB1dFRva2VucyI6NDkyLCJvdXRwdXRUb2tlbnMiOjEwLCJzZXJ2ZXJU
+        b29sVXNhZ2UiOnt9LCJ0b3RhbFRva2VucyI6NTAyfX3VK0jV
+    headers:
+      Connection:
+      - keep-alive
+      Content-Type:
+      - application/vnd.amazon.eventstream
+      Date:
+      - Tue, 10 Mar 2026 12:11:02 GMT
+      Transfer-Encoding:
+      - chunked
+      x-amzn-RequestId:
+      - de208eac-b98f-4213-bd8a-38ee2a7c933c
+    status:
+      code: 200
+      message: OK
+version: 1

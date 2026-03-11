@@ -1,0 +1,131 @@
+interactions:
+- request:
+    body: |-
+      {
+        "messages": [
+          {
+            "content": [
+              {
+                "text": "Say 'Hello world.'"
+              }
+            ],
+            "role": "user"
+          }
+        ],
+        "system": [
+          {
+            "text": "Be a helpful assistant. Be concise."
+          }
+        ],
+        "inferenceConfig": {}
+      }
+    headers:
+      Authorization:
+      - test-auth
+      Content-Length:
+      - '161'
+      Content-Type:
+      - application/json
+      X-Amz-Security-Token:
+      - test-security-token
+    method: POST
+    uri: https://bedrock-runtime.us-east-1.amazonaws.com/model/us.anthropic.claude-sonnet-4-20250514-v1%3A0/converse-stream
+  response:
+    body:
+      string: !!binary |
+        AAAAkAAAAFIxQcihCzpldmVudC10eXBlBwAMbWVzc2FnZVN0YXJ0DTpjb250ZW50LXR5cGUHABBh
+        cHBsaWNhdGlvbi9qc29uDTptZXNzYWdlLXR5cGUHAAVldmVudHsicCI6ImFiY2RlZmdoaWprbG1u
+        b3BxcnMiLCJyb2xlIjoiYXNzaXN0YW50In0RduqwAAAAqwAAAFeX2rW5CzpldmVudC10eXBlBwAR
+        Y29udGVudEJsb2NrRGVsdGENOmNvbnRlbnQtdHlwZQcAEGFwcGxpY2F0aW9uL2pzb24NOm1lc3Nh
+        Z2UtdHlwZQcABWV2ZW50eyJjb250ZW50QmxvY2tJbmRleCI6MCwiZGVsdGEiOnsidGV4dCI6Ikhl
+        bGxvIHdvcmxkLiJ9LCJwIjoiYWJjZGVmIn0OU+4GAAAAuQAAAFb6/UHNCzpldmVudC10eXBlBwAQ
+        Y29udGVudEJsb2NrU3RvcA06Y29udGVudC10eXBlBwAQYXBwbGljYXRpb24vanNvbg06bWVzc2Fn
+        ZS10eXBlBwAFZXZlbnR7ImNvbnRlbnRCbG9ja0luZGV4IjowLCJwIjoiYWJjZGVmZ2hpamtsbW5v
+        cHFyc3R1dnd4eXpBQkNERUZHSElKS0xNTk9QUVJTVFVWV1hZWjAifYgARNQAAACqAAAAUUPZOTwL
+        OmV2ZW50LXR5cGUHAAttZXNzYWdlU3RvcA06Y29udGVudC10eXBlBwAQYXBwbGljYXRpb24vanNv
+        bg06bWVzc2FnZS10eXBlBwAFZXZlbnR7InAiOiJhYmNkZWZnaGlqa2xtbm9wcXJzdHV2d3h5ekFC
+        Q0RFRkdISUpLTE1OTyIsInN0b3BSZWFzb24iOiJlbmRfdHVybiJ9gTJEwQAAAOoAAABOliJsgAs6
+        ZXZlbnQtdHlwZQcACG1ldGFkYXRhDTpjb250ZW50LXR5cGUHABBhcHBsaWNhdGlvbi9qc29uDTpt
+        ZXNzYWdlLXR5cGUHAAVldmVudHsibWV0cmljcyI6eyJsYXRlbmN5TXMiOjE1OTV9LCJwIjoiYWJj
+        ZGVmZ2hpamtsbW5vcHFyc3R1IiwidXNhZ2UiOnsiaW5wdXRUb2tlbnMiOjIyLCJvdXRwdXRUb2tl
+        bnMiOjYsInNlcnZlclRvb2xVc2FnZSI6e30sInRvdGFsVG9rZW5zIjoyOH19d9HBzw==
+    headers:
+      Connection:
+      - keep-alive
+      Content-Type:
+      - application/vnd.amazon.eventstream
+      Date:
+      - Tue, 10 Mar 2026 12:10:34 GMT
+      Transfer-Encoding:
+      - chunked
+      x-amzn-RequestId:
+      - a111feba-e6e9-4437-ac77-017d99b2b634
+    status:
+      code: 200
+      message: OK
+- request:
+    body: |-
+      {
+        "messages": [
+          {
+            "content": [
+              {
+                "text": "Say 'Hello world.'"
+              }
+            ],
+            "role": "user"
+          }
+        ],
+        "system": [
+          {
+            "text": "Be a helpful assistant. Be concise."
+          }
+        ],
+        "inferenceConfig": {}
+      }
+    headers:
+      Authorization:
+      - test-auth
+      Content-Length:
+      - '161'
+      Content-Type:
+      - application/json
+      X-Amz-Security-Token:
+      - test-security-token
+    method: POST
+    uri: https://bedrock-runtime.us-east-1.amazonaws.com/model/us.anthropic.claude-sonnet-4-20250514-v1%3A0/converse-stream
+  response:
+    body:
+      string: !!binary |
+        AAAAlgAAAFK+AT0BCzpldmVudC10eXBlBwAMbWVzc2FnZVN0YXJ0DTpjb250ZW50LXR5cGUHABBh
+        cHBsaWNhdGlvbi9qc29uDTptZXNzYWdlLXR5cGUHAAVldmVudHsicCI6ImFiY2RlZmdoaWprbG1u
+        b3BxcnN0dXZ3eHkiLCJyb2xlIjoiYXNzaXN0YW50In2XA/WtAAAA0QAAAFckuE3XCzpldmVudC10
+        eXBlBwARY29udGVudEJsb2NrRGVsdGENOmNvbnRlbnQtdHlwZQcAEGFwcGxpY2F0aW9uL2pzb24N
+        Om1lc3NhZ2UtdHlwZQcABWV2ZW50eyJjb250ZW50QmxvY2tJbmRleCI6MCwiZGVsdGEiOnsidGV4
+        dCI6IkhlbGxvIHdvcmxkLiJ9LCJwIjoiYWJjZGVmZ2hpamtsbW5vcHFyc3R1dnd4eXpBQkNERUZH
+        SElKS0xNTk9QUVIifWwGs0wAAACPAAAAVtScDOsLOmV2ZW50LXR5cGUHABBjb250ZW50QmxvY2tT
+        dG9wDTpjb250ZW50LXR5cGUHABBhcHBsaWNhdGlvbi9qc29uDTptZXNzYWdlLXR5cGUHAAVldmVu
+        dHsiY29udGVudEJsb2NrSW5kZXgiOjAsInAiOiJhYmNkZWZnaGlqayJ9J36lqwAAAKAAAABRCWkh
+        nQs6ZXZlbnQtdHlwZQcAC21lc3NhZ2VTdG9wDTpjb250ZW50LXR5cGUHABBhcHBsaWNhdGlvbi9q
+        c29uDTptZXNzYWdlLXR5cGUHAAVldmVudHsicCI6ImFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6
+        QUJDREUiLCJzdG9wUmVhc29uIjoiZW5kX3R1cm4ifaeQXRIAAAEPAAAATr1K94oLOmV2ZW50LXR5
+        cGUHAAhtZXRhZGF0YQ06Y29udGVudC10eXBlBwAQYXBwbGljYXRpb24vanNvbg06bWVzc2FnZS10
+        eXBlBwAFZXZlbnR7Im1ldHJpY3MiOnsibGF0ZW5jeU1zIjoxNjg4fSwicCI6ImFiY2RlZmdoaWpr
+        bG1ub3BxcnN0dXZ3eHl6QUJDREVGR0hJSktMTU5PUFFSU1RVVldYWVowMTIzNDUiLCJ1c2FnZSI6
+        eyJpbnB1dFRva2VucyI6MjIsIm91dHB1dFRva2VucyI6Niwic2VydmVyVG9vbFVzYWdlIjp7fSwi
+        dG90YWxUb2tlbnMiOjI4fX0f1FgR
+    headers:
+      Connection:
+      - keep-alive
+      Content-Type:
+      - application/vnd.amazon.eventstream
+      Date:
+      - Tue, 10 Mar 2026 12:10:51 GMT
+      Transfer-Encoding:
+      - chunked
+      x-amzn-RequestId:
+      - d9cc257f-fca7-4555-9719-d6e34b3e645c
+    status:
+      code: 200
+      message: OK
+version: 1

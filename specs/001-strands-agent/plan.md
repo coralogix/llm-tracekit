@@ -1,110 +1,104 @@
-# Implementation Plan: Strands Agents Instrumentation
+# Implementation Plan: [FEATURE]
 
-**Branch**: `001-strands-agent` | **Date**: 2026-03-09 | **Spec**: [spec.md](spec.md)
-**Input**: Feature specification from `specs/001-strands-agent/spec.md`
+**Branch**: `[###-feature-name]` | **Date**: [DATE] | **Spec**: [link]
+**Input**: Feature specification from `/specs/[###-feature-name]/spec.md`
+
+**Note**: This template is filled in by the `/speckit.plan` command. See `.specify/templates/plan-template.md` for the execution workflow.
 
 ## Summary
 
-Add a new `llm-tracekit-strands-agents` instrumentation package that provides OpenTelemetry tracing for the Strands Agents SDK. The adapter uses the Strands hooks system (HookProvider pattern) to capture agent lifecycle events and map them to OTel spans with GenAI semantic attributes, consistent with existing adapters.
+[Extract from feature spec: primary requirement + technical approach from research]
 
 ## Technical Context
 
-**Language/Version**: Python 3.10–3.13
-**Primary Dependencies**: strands-agents, llm-tracekit-core, opentelemetry-instrumentation
-**Testing**: pytest, pytest-asyncio, pytest-vcr, assertpy
-**Project Type**: Library (instrumentation package within uv workspace)
-**Constraints**: Must not add overhead >5% to agent execution; must coexist with Strands' built-in tracing
+<!--
+  ACTION REQUIRED: Replace the content in this section with the technical details
+  for the project. The structure here is presented in advisory capacity to guide
+  the iteration process.
+-->
+
+**Language/Version**: [e.g., Python 3.11, Swift 5.9, Rust 1.75 or NEEDS CLARIFICATION]  
+**Primary Dependencies**: [e.g., FastAPI, UIKit, LLVM or NEEDS CLARIFICATION]  
+**Storage**: [if applicable, e.g., PostgreSQL, CoreData, files or N/A]  
+**Testing**: [e.g., pytest, XCTest, cargo test or NEEDS CLARIFICATION]  
+**Target Platform**: [e.g., Linux server, iOS 15+, WASM or NEEDS CLARIFICATION]
+**Project Type**: [e.g., library/cli/web-service/mobile-app/compiler/desktop-app or NEEDS CLARIFICATION]  
+**Performance Goals**: [domain-specific, e.g., 1000 req/s, 10k lines/sec, 60 fps or NEEDS CLARIFICATION]  
+**Constraints**: [domain-specific, e.g., <200ms p95, <100MB memory, offline-capable or NEEDS CLARIFICATION]  
+**Scale/Scope**: [domain-specific, e.g., 10k users, 1M LOC, 50 screens or NEEDS CLARIFICATION]
 
 ## Constitution Check
 
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-| Principle | Status | Notes |
-|-----------|--------|-------|
-| I. OpenTelemetry Standards | ✅ Pass | Uses GenAI semantic attributes from core |
-| II. Workspace Modularity | ✅ Pass | New independent package in `instrumentations/strands-agents/` |
-| III. Instrumentation Consistency | ✅ Pass | Follows BaseInstrumentor pattern; HookProvider replaces wrapt (analogous to TracingProcessor in OpenAI Agents) |
-| IV. Test-Driven with VCR | ✅ Pass | Tests will use pytest-vcr with cassettes, InMemorySpanExporter |
-| V. Type Safety & Linting | ✅ Pass | Type hints, ruff, mypy |
-| VI. Semantic Versioning | ✅ Pass | v1.0.0 initial release |
+[Gates determined based on constitution file]
 
 ## Project Structure
 
 ### Documentation (this feature)
 
 ```text
-specs/001-strands-agent/
-├── spec.md
-├── plan.md              # This file
-├── research.md          # Integration approach decisions
-├── data-model.md        # Span entities and attribute tables
-├── quickstart.md        # Usage examples
-├── contracts/
-│   └── public-api.md    # Public API contract
-└── checklists/
-    └── requirements.md  # Spec quality checklist
+specs/[###-feature]/
+├── plan.md              # This file (/speckit.plan command output)
+├── research.md          # Phase 0 output (/speckit.plan command)
+├── data-model.md        # Phase 1 output (/speckit.plan command)
+├── quickstart.md        # Phase 1 output (/speckit.plan command)
+├── contracts/           # Phase 1 output (/speckit.plan command)
+└── tasks.md             # Phase 2 output (/speckit.tasks command - NOT created by /speckit.plan)
 ```
 
 ### Source Code (repository root)
+<!--
+  ACTION REQUIRED: Replace the placeholder tree below with the concrete layout
+  for this feature. Delete unused options and expand the chosen structure with
+  real paths (e.g., apps/admin, packages/something). The delivered plan must
+  not include Option labels.
+-->
 
 ```text
-instrumentations/strands-agents/
-├── src/llm_tracekit/strands/
-│   ├── __init__.py           # Public exports
-│   ├── instrumentor.py       # StrandsInstrumentor (BaseInstrumentor)
-│   ├── hook_provider.py      # StrandsHookProvider (maps hooks → spans)
-│   └── package.py            # _instruments tuple
-├── tests/
-│   ├── conftest.py           # Fixtures (span exporter, metric reader, instrumentor)
-│   ├── utils.py              # Assert helpers
-│   ├── test_agent_tracing.py # US1: basic agent tracing
-│   ├── test_content_capture.py  # US2: content capture
-│   ├── test_uninstrument.py  # US4: uninstrumentation
-│   └── cassettes/            # VCR cassettes
-├── pyproject.toml
-├── pyrightconfig.json
-├── README.md
-└── LICENSE
+# [REMOVE IF UNUSED] Option 1: Single project (DEFAULT)
+src/
+├── models/
+├── services/
+├── cli/
+└── lib/
+
+tests/
+├── contract/
+├── integration/
+└── unit/
+
+# [REMOVE IF UNUSED] Option 2: Web application (when "frontend" + "backend" detected)
+backend/
+├── src/
+│   ├── models/
+│   ├── services/
+│   └── api/
+└── tests/
+
+frontend/
+├── src/
+│   ├── components/
+│   ├── pages/
+│   └── services/
+└── tests/
+
+# [REMOVE IF UNUSED] Option 3: Mobile + API (when "iOS/Android" detected)
+api/
+└── [same as backend above]
+
+ios/ or android/
+└── [platform-specific structure: feature modules, UI flows, platform tests]
 ```
 
-**Structure Decision**: Follows the same layout as `instrumentations/openai-agents/`. Uses `hook_provider.py` instead of `tracing_processor.py` since Strands uses hooks rather than a tracing processor API. The remaining structure is identical.
-
-## Integration Design
-
-### Hook-to-Span Mapping
-
-The `StrandsHookProvider` implements the Strands `HookProvider` protocol and registers callbacks for agent lifecycle events. Each callback creates or ends an OTel span.
-
-```text
-BeforeInvocationEvent  → start agent span ("invoke_agent {agent_name}")
-  cycle transition     → start cycle span ("cycle {cycle_id}")
-  BeforeModelCallEvent → start model span ("chat {model}")
-  AfterModelCallEvent  → end model span (record tokens, content)
-  BeforeToolCallEvent  → start tool span ("execute_tool {tool_name}")
-  AfterToolCallEvent   → end tool span
-  cycle end            → end cycle span
-AfterInvocationEvent   → end agent span (record aggregated metrics)
-```
-
-Cycle spans are managed by tracking cycle transitions within the model/tool callbacks (a new cycle starts when BeforeModelCallEvent fires with a new cycle ID).
-
-### Instrumentation Flow
-
-1. `StrandsInstrumentor._instrument()` creates a `StrandsHookProvider` with the tracer.
-2. It patches `Agent.__init__` via wrapt to inject the hook provider into every new agent instance (`agent.hooks.add_hook_provider(provider)`).
-3. `_uninstrument()` removes the patch and disables the hook provider.
-
-This mirrors how OpenAI Agents uses `add_trace_processor()` — the hook provider is registered once and receives events from all agent instances.
+**Structure Decision**: [Document the selected structure and reference the real
+directories captured above]
 
 ## Complexity Tracking
 
-No constitution violations. The hook-based approach avoids unnecessary complexity.
+> **Fill ONLY if Constitution Check has violations that must be justified**
 
-## Design Artifacts
-
-| Artifact | Path | Status |
-|----------|------|--------|
-| Research | [research.md](research.md) | ✅ Complete |
-| Data Model | [data-model.md](data-model.md) | ✅ Complete |
-| Public API | [contracts/public-api.md](contracts/public-api.md) | ✅ Complete |
-| Quickstart | [quickstart.md](quickstart.md) | ✅ Complete |
+| Violation | Why Needed | Simpler Alternative Rejected Because |
+|-----------|------------|-------------------------------------|
+| [e.g., 4th project] | [current need] | [why 3 projects insufficient] |
+| [e.g., Repository pattern] | [specific problem] | [why direct DB access insufficient] |

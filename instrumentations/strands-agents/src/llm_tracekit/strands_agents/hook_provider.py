@@ -93,12 +93,12 @@ class StrandsHookProvider(HookProvider):
             self._states.pop(tid, None)
 
     def register_hooks(self, registry: HookRegistry):
-        registry.add_callback("before_invocation", self._before_invocation)
-        registry.add_callback("after_invocation", self._after_invocation)
-        registry.add_callback("before_model_call", self._before_model_call)
-        registry.add_callback("after_model_call", self._after_model_call)
-        registry.add_callback("before_tool_call", self._before_tool_call)
-        registry.add_callback("after_tool_call", self._after_tool_call)
+        registry.add_callback(BeforeInvocationEvent, self._before_invocation)
+        registry.add_callback(AfterInvocationEvent, self._after_invocation)
+        registry.add_callback(BeforeModelCallEvent, self._before_model_call)
+        registry.add_callback(AfterModelCallEvent, self._after_model_call)
+        registry.add_callback(BeforeToolCallEvent, self._before_tool_call)
+        registry.add_callback(AfterToolCallEvent, self._after_tool_call)
 
     # ── Agent span ──────────────────────────────────────────────────────
 
@@ -124,7 +124,9 @@ class StrandsHookProvider(HookProvider):
                 if callable(tool_names):
                     try:
                         tools_list = [
-                            t.get("name", "") for t in tool_names() if isinstance(t, dict)
+                            t.get("name", "")
+                            for t in tool_names()
+                            if isinstance(t, dict)
                         ]
                     except Exception:
                         pass
@@ -161,19 +163,47 @@ class StrandsHookProvider(HookProvider):
 
         self._end_cycle_span(state)
 
+        result = getattr(event, "result", None)
+
         if state.agent_span is not None:
-            if state.total_input_tokens > 0:
+            input_tokens = state.total_input_tokens
+            output_tokens = state.total_output_tokens
+
+            if result is not None:
+                metrics = getattr(result, "metrics", None)
+                if metrics is not None:
+                    usage = getattr(metrics, "accumulated_usage", None)
+                    if isinstance(usage, dict):
+                        input_tokens = usage.get("inputTokens", 0) or 0
+                        output_tokens = usage.get("outputTokens", 0) or 0
+
+            if input_tokens > 0:
                 state.agent_span.set_attribute(
                     GenAIAttributes.GEN_AI_USAGE_INPUT_TOKENS,
-                    state.total_input_tokens,
+                    input_tokens,
                 )
-            if state.total_output_tokens > 0:
+                self._instruments.token_usage_histogram.record(
+                    input_tokens,
+                    attributes={
+                        GenAIAttributes.GEN_AI_OPERATION_NAME: "invoke_agent",
+                        GenAIAttributes.GEN_AI_SYSTEM: _SYSTEM,
+                        GenAIAttributes.GEN_AI_TOKEN_TYPE: "input",
+                    },
+                )
+            if output_tokens > 0:
                 state.agent_span.set_attribute(
                     GenAIAttributes.GEN_AI_USAGE_OUTPUT_TOKENS,
-                    state.total_output_tokens,
+                    output_tokens,
+                )
+                self._instruments.token_usage_histogram.record(
+                    output_tokens,
+                    attributes={
+                        GenAIAttributes.GEN_AI_OPERATION_NAME: "invoke_agent",
+                        GenAIAttributes.GEN_AI_SYSTEM: _SYSTEM,
+                        GenAIAttributes.GEN_AI_TOKEN_TYPE: "output",
+                    },
                 )
 
-            result = getattr(event, "result", None)
             if result is None:
                 exception = getattr(event, "exception", None)
                 if exception is not None:
@@ -221,6 +251,21 @@ class StrandsHookProvider(HookProvider):
             state.cycle_token = None
         state.current_cycle_id = None
 
+    # ── Helpers ────────────────────────────────────────────────────────
+
+    def _resolve_model_id(self, event: Any) -> str | None:
+        agent = getattr(event, "agent", None)
+        if agent is not None:
+            model = getattr(agent, "model", None)
+            if model is not None:
+                model_id = getattr(model, "model_id", None)
+                if model_id is None:
+                    config = getattr(model, "config", None)
+                    if isinstance(config, dict):
+                        model_id = config.get("model_id")
+                return model_id
+        return None
+
     # ── Model span ──────────────────────────────────────────────────────
 
     def _before_model_call(self, event: BeforeModelCallEvent, **kwargs: Any):
@@ -228,17 +273,17 @@ class StrandsHookProvider(HookProvider):
             return
 
         state = self._get_state()
-        invocation_state = getattr(event, "invocation_state", None)
+        invocation_state = getattr(event, "invocation_state", None) or {}
 
         cycle_id = None
-        if invocation_state is not None:
-            cycle_id = str(getattr(invocation_state, "cycle_id", None))
+        if isinstance(invocation_state, dict):
+            raw_cycle_id = invocation_state.get("event_loop_cycle_id")
+            if raw_cycle_id is not None:
+                cycle_id = str(raw_cycle_id)
 
         self._ensure_cycle_span(state, cycle_id)
 
-        model_id = None
-        if invocation_state is not None:
-            model_id = getattr(invocation_state, "model_id", None)
+        model_id = self._resolve_model_id(event)
 
         span_name = f"chat {model_id or 'unknown'}"
         parent = state.cycle_span or state.agent_span
@@ -286,43 +331,19 @@ class StrandsHookProvider(HookProvider):
 
         stop_response = getattr(event, "stop_response", None)
 
-        input_tokens = 0
-        output_tokens = 0
         finish_reason = None
-        response_model = None
-        cache_read = None
-        cache_write = None
+        response_model = self._resolve_model_id(event)
 
         if stop_response is not None:
-            metrics = getattr(stop_response, "metrics", None) or {}
-            if isinstance(metrics, dict):
-                usage = metrics.get("usage", {})
-                if isinstance(usage, dict):
-                    input_tokens = usage.get("inputTokens", 0) or 0
-                    output_tokens = usage.get("outputTokens", 0) or 0
-                    cache_read = usage.get("cacheReadInputTokens")
-                    cache_write = usage.get("cacheWriteInputTokens")
-
             finish_reason = getattr(stop_response, "stop_reason", None)
-            response_model = getattr(stop_response, "model", None)
-
-        state.total_input_tokens += input_tokens
-        state.total_output_tokens += output_tokens
 
         finish_reasons = [finish_reason] if finish_reason else None
         response_attrs = generate_response_attributes(
             model=response_model,
             finish_reasons=finish_reasons,
-            usage_input_tokens=input_tokens if input_tokens > 0 else None,
-            usage_output_tokens=output_tokens if output_tokens > 0 else None,
         )
         for k, v in response_attrs.items():
             span.set_attribute(k, v)
-
-        if cache_read is not None and cache_read > 0:
-            span.set_attribute("gen_ai.usage.cache_read_input_tokens", cache_read)
-        if cache_write is not None and cache_write > 0:
-            span.set_attribute("gen_ai.usage.cache_write_input_tokens", cache_write)
 
         if self._capture_content or is_content_enabled():
             self._record_content_attributes(span, event, stop_response)
@@ -334,24 +355,6 @@ class StrandsHookProvider(HookProvider):
                 GenAIAttributes.GEN_AI_SYSTEM: _SYSTEM,
             },
         )
-        if input_tokens > 0:
-            self._instruments.token_usage_histogram.record(
-                input_tokens,
-                attributes={
-                    GenAIAttributes.GEN_AI_OPERATION_NAME: "chat",
-                    GenAIAttributes.GEN_AI_SYSTEM: _SYSTEM,
-                    GenAIAttributes.GEN_AI_TOKEN_TYPE: "input",
-                },
-            )
-        if output_tokens > 0:
-            self._instruments.token_usage_histogram.record(
-                output_tokens,
-                attributes={
-                    GenAIAttributes.GEN_AI_OPERATION_NAME: "chat",
-                    GenAIAttributes.GEN_AI_SYSTEM: _SYSTEM,
-                    GenAIAttributes.GEN_AI_TOKEN_TYPE: "output",
-                },
-            )
 
         span.set_status(StatusCode.OK)
         span.end()
@@ -365,11 +368,8 @@ class StrandsHookProvider(HookProvider):
     def _record_content_attributes(
         self, span: Span, event: AfterModelCallEvent, stop_response: Any
     ):
-        invocation_state = getattr(event, "invocation_state", None)
-        if invocation_state is None:
-            return
-
-        messages_raw = getattr(invocation_state, "messages", None)
+        agent = getattr(event, "agent", None)
+        messages_raw = getattr(agent, "messages", None) if agent else None
         if messages_raw and isinstance(messages_raw, list):
             messages = self._convert_messages(messages_raw)
             msg_attrs = generate_message_attributes(messages, capture_content=True)
@@ -467,7 +467,11 @@ class StrandsHookProvider(HookProvider):
                 text_content = "\n".join(texts)
 
         finish_reason = getattr(stop_response, "stop_reason", None)
-        role = message.get("role", "assistant") if isinstance(message, dict) else "assistant"
+        role = (
+            message.get("role", "assistant")
+            if isinstance(message, dict)
+            else "assistant"
+        )
 
         return [
             Choice(
@@ -487,7 +491,9 @@ class StrandsHookProvider(HookProvider):
         state = self._get_state()
 
         tool_use = getattr(event, "tool_use", None) or {}
-        tool_name = tool_use.get("name", "unknown") if isinstance(tool_use, dict) else "unknown"
+        tool_name = (
+            tool_use.get("name", "unknown") if isinstance(tool_use, dict) else "unknown"
+        )
         tool_use_id = tool_use.get("toolUseId") if isinstance(tool_use, dict) else None
 
         selected_tool = getattr(event, "selected_tool", None)
@@ -553,11 +559,21 @@ class StrandsHookProvider(HookProvider):
             if isinstance(tool_use, dict):
                 tool_input = tool_use.get("input")
                 if tool_input is not None:
-                    span.set_attribute("input", json.dumps(tool_input) if not isinstance(tool_input, str) else tool_input)
+                    span.set_attribute(
+                        "input",
+                        json.dumps(tool_input)
+                        if not isinstance(tool_input, str)
+                        else tool_input,
+                    )
             if isinstance(result, dict):
                 result_content = result.get("content", [])
                 if result_content:
-                    span.set_attribute("output", json.dumps(result_content) if not isinstance(result_content, str) else result_content)
+                    span.set_attribute(
+                        "output",
+                        json.dumps(result_content)
+                        if not isinstance(result_content, str)
+                        else result_content,
+                    )
 
         span.set_status(StatusCode.OK)
         span.end()

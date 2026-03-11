@@ -67,7 +67,7 @@ class StrandsInstrumentor(BaseInstrumentor):
         @wrapt.patch_function_wrapper("strands", "Agent.__init__")
         def patched_init(wrapped, instance, args, kwargs):
             wrapped(*args, **kwargs)
-            instance.hooks.add_hook_provider(self._hook_provider)
+            instance.hooks.add_hook(self._hook_provider)
 
     def _uninstrument(self, **kwargs):
         if self._hook_provider is not None:
