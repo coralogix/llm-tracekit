@@ -319,7 +319,7 @@ def get_embedding_request_attributes(
         GenAIAttributes.GEN_AI_OPERATION_NAME: "embedding",
         GenAIAttributes.GEN_AI_SYSTEM: GenAIAttributes.GenAiSystemValues.OPENAI.value,
         GenAIAttributes.GEN_AI_REQUEST_MODEL: kwargs.get("model"),
-        ExtendedGenAIAttributes.GEN_AI_OPENAI_REQUEST_USER: kwargs.get("user"),
+        ExtendedGenAIAttributes.GEN_AI_REQUEST_USER: kwargs.get("user"),
     }
 
     embedding_input = kwargs.get("input")
