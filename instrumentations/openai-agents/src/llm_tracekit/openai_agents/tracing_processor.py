@@ -65,7 +65,7 @@ from opentelemetry.semconv._incubating.attributes import (
 _TEXT_CONTENT_TYPES = ("input_text", "output_text")
 
 
-def _stringify_message_content(content: str | list | dict | None) -> str | None:
+def _stringify_message_content(content: Any) -> str | None:
     """Extract text content from OpenAI message content.
 
     Content can be either:

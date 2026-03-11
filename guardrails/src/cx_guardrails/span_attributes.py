@@ -14,19 +14,39 @@
 
 from typing import Final
 
-NAME: Final = "guardrails.{target}.{guardrail_type}.name"
+GUARDRAILS_TRIGGERED = "guardrails.triggered"
 """
-The name of the guardrail from guardrail response.
-"""
-
-SCORE: Final = "guardrails.{target}.{guardrail_type}.score"
-"""
-The score of the guardrail from guardrail response.
+Boolean indicating a guardrail detected a violation or flagged content.
 """
 
-DETECTION_THRESHOLD: Final = "guardrails.{target}.{guardrail_type}.detection_threshold"
+SCORE: Final = "gen_ai.{target}.guardrails.{guardrail_type}.score"
 """
-The threshold of the guardrail.
+The guardrail response score.
+"""
+
+CUSTOM_GUARDRAIL_SCORE: Final = "gen_ai.{target}.guardrails.custom.{name}.score"
+"""
+The custom guardrail response score.
+"""
+
+THRESHOLD: Final = "gen_ai.{target}.guardrails.{guardrail_type}.threshold"
+"""
+The guardrail threshold.
+"""
+
+CUSTOM_GUARDRAIL_THRESHOLD: Final = "gen_ai.{target}.guardrails.custom.{name}.threshold"
+"""
+The custom guardrail threshold.
+"""
+
+TRIGGERED: Final = "gen_ai.{target}.guardrails.{guardrail_type}.triggered"
+"""
+Boolean indicating a spesific guardrail detected a violation or flagged content.
+"""
+
+CUSTOM_GUARDRAIL_TRIGGERED: Final = "gen_ai.{target}.guardrails.custom.{name}.triggered"
+"""
+Boolean indicating a spesific custom guardrail detected a violation or flagged content.
 """
 
 PROMPT: Final = "guardrails.prompt.{index}"

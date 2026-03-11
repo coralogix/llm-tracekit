@@ -1,16 +1,22 @@
 from typing import Any
 
+from .models._models import GuardrailType
+
 from llm_tracekit.core import attribute_generator
 
 from .models.response import GuardrailsResponse
 from .span_attributes import (
-    NAME,
     SCORE,
-    DETECTION_THRESHOLD,
+    THRESHOLD,
+    TRIGGERED,
+    CUSTOM_GUARDRAIL_SCORE,
+    CUSTOM_GUARDRAIL_THRESHOLD,
+    CUSTOM_GUARDRAIL_TRIGGERED,
     PROMPT,
     RESPONSE,
     APPLICATION_NAME,
     SUBSYSTEM_NAME,
+    GUARDRAILS_TRIGGERED,
 )
 
 
@@ -40,20 +46,23 @@ def generate_guardrail_response_attributes(
     target: str,
 ) -> dict[str, Any]:
     span_attributes: dict[str, Any] = {}
+    span_attributes[GUARDRAILS_TRIGGERED] = str(any(result.detected for result in guardrail_response.results))
     for result in guardrail_response.results:
-        name = getattr(result, "name", None)
         guardrail_type = result.type.value
-        result_attributes: dict[str, Any] = {
-            SCORE.format(target=target, guardrail_type=guardrail_type): result.score,
-            DETECTION_THRESHOLD.format(
-                target=target, guardrail_type=guardrail_type
-            ): result.threshold,
-        }
-        if name is not None:
-            result_attributes[
-                NAME.format(target=target, guardrail_type=guardrail_type)
-            ] = name
-
+        result_attributes: dict[str, Any]
+        if result.type == GuardrailType.CUSTOM:
+            name = getattr(result, "name", "unknown") 
+            result_attributes = {
+                CUSTOM_GUARDRAIL_SCORE.format(target=target, name=name): result.score,
+                CUSTOM_GUARDRAIL_THRESHOLD.format(target=target, name=name): result.threshold,
+                CUSTOM_GUARDRAIL_TRIGGERED.format(target=target, name=name): result.score > result.threshold
+            }
+        else:    
+            result_attributes = {
+                SCORE.format(target=target, guardrail_type=guardrail_type): result.score,
+                THRESHOLD.format(target=target, guardrail_type=guardrail_type): result.threshold,
+                TRIGGERED.format(target=target, guardrail_type=guardrail_type): result.score > result.threshold
+            }        
         span_attributes.update(result_attributes)
 
     return span_attributes
