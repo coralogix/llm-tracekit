@@ -39,14 +39,14 @@ CUSTOM_GUARDRAIL_THRESHOLD: Final = "gen_ai.{target}.guardrails.custom.{name}.th
 The custom guardrail threshold.
 """
 
-CUSTOM_GUARDRAIL_TRIGGERED: Final = "gen_ai.{target}.guardrails.custom.{name}.triggered"
-"""
-Boolean indicating a spesific custom guardrail detected a violation or flagged content.
-"""
-
 TRIGGERED: Final = "gen_ai.{target}.guardrails.{guardrail_type}.triggered"
 """
 Boolean indicating a spesific guardrail detected a violation or flagged content.
+"""
+
+CUSTOM_GUARDRAIL_TRIGGERED: Final = "gen_ai.{target}.guardrails.custom.{name}.triggered"
+"""
+Boolean indicating a spesific custom guardrail detected a violation or flagged content.
 """
 
 PROMPT: Final = "guardrails.prompt.{index}"
