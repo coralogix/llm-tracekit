@@ -145,3 +145,13 @@ GEN_AI_EMBEDDING_VECTOR: Final = "gen_ai.embedding.{embedding_index}.vector"
 The embedding vector at the given index.
 Only captured if OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT is set to `true`.
 """
+
+GEN_AI_REQUEST_ENCODING_FORMATS: Final = "gen_ai.request.encoding_formats"
+"""
+The encoding formats requested in an embeddings operation.
+"""
+
+GEN_AI_EMBEDDINGS_DIMENSION_COUNT: Final = "gen_ai.embeddings.dimension.count"
+"""
+The number of dimensions requested for the output embeddings.
+"""

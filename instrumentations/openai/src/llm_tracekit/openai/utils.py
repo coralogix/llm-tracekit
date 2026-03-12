@@ -280,15 +280,13 @@ def get_llm_response_attributes(
 def _embedding_input_to_prompt_messages(
     embedding_input: Any,
 ) -> list[Message]:
-    """
-    Convert an OpenAI embeddings `input` payload into `gen_ai.prompt.*` messages.
-
-    The embeddings API accepts strings or an array of strings (and other types).
-    We only emit prompt content when it is a string (or list of strings).
-    """
+    """Convert embeddings input to prompt messages."""
 
     def to_message(content: str | None) -> Message:
         return Message(role="user", content=content)
+
+    if embedding_input is None:
+        return []
 
     if isinstance(embedding_input, str):
         return [to_message(embedding_input)]
@@ -321,6 +319,16 @@ def get_embedding_request_attributes(
         GenAIAttributes.GEN_AI_REQUEST_MODEL: kwargs.get("model"),
         ExtendedGenAIAttributes.GEN_AI_REQUEST_USER: kwargs.get("user"),
     }
+
+    encoding_format = kwargs.get("encoding_format")
+    if encoding_format and encoding_format is not NOT_GIVEN:
+        attributes[ExtendedGenAIAttributes.GEN_AI_REQUEST_ENCODING_FORMATS] = (encoding_format,)
+    else:
+        attributes[ExtendedGenAIAttributes.GEN_AI_REQUEST_ENCODING_FORMATS] = ("float",)
+
+    dimensions = kwargs.get("dimensions")
+    if dimensions and dimensions is not NOT_GIVEN:
+        attributes[ExtendedGenAIAttributes.GEN_AI_EMBEDDINGS_DIMENSION_COUNT] = dimensions
 
     embedding_input = kwargs.get("input")
     prompt_messages = _embedding_input_to_prompt_messages(embedding_input)
@@ -365,5 +373,5 @@ def get_embedding_response_attributes(
                             embedding_index=index
                         )
                     ] = embedding
-
+            
     return attributes
