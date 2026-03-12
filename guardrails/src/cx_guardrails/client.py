@@ -219,6 +219,8 @@ class GuardrailRequestSender:
             try:
                 http_response = await self._send_request(request)
                 return self._handle_response(http_response, span, target)
+            except GuardrailsTriggered:
+                raise
             except Exception as e:
                 span.set_status(Status(StatusCode.ERROR, str(e)))
                 raise
