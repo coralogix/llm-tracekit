@@ -6,6 +6,7 @@ from .models.request import (
     Custom,
     CustomEvaluationExample,
     Toxicity,
+    TestPolicy,
     GuardrailRequest,
     Message,
 )
@@ -33,6 +34,7 @@ __all__ = [
     "Custom",
     "CustomEvaluationExample",
     "Toxicity",
+    "TestPolicy",
     "GuardrailRequest",
     "Message",
     "GuardrailsResultBase",
