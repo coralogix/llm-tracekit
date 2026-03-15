@@ -14,7 +14,7 @@
 
 from typing import Final
 
-GUARDRAILS_TRIGGERED = "guardrails.triggered"
+GUARDRAILS_TRIGGERED: Final = "guardrails.triggered"
 """
 Boolean indicating a guardrail detected a violation or flagged content.
 """
