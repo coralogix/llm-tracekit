@@ -79,5 +79,11 @@ class Message(BaseModel):
         if isinstance(v, Role):
             return v
         if isinstance(v, str):
-            role = Role(v.lower())
-            return role
+            return Role(v.lower())
+
+    @field_validator("content", mode="before")
+    @classmethod
+    def normalize_content(cls, v: Any) -> str:
+        if v is None:
+            return ""
+        return str(v)
