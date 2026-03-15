@@ -10,7 +10,6 @@ from opentelemetry.trace import SpanKind, Status, StatusCode, Span
 
 from .models._constants import (
     DEFAULT_TIMEOUT,
-    GUARDRAILS_ENDPOINT_URL,
     PARENT_SPAN_NAME,
 )
 from .models.request import (
@@ -184,7 +183,6 @@ class GuardrailRequestSender:
     def __init__(self, config: GuardrailsClientConfig) -> None:
         self.config = config
         self._client = httpx.AsyncClient(
-            base_url=self.config.cx_guardrails_endpoint,
             timeout=httpx.Timeout(self.config.timeout, connect=2.0),
         )
 
@@ -235,7 +233,7 @@ class GuardrailRequestSender:
     async def _send_request(self, request: GuardrailRequest) -> httpx.Response:
         try:
             response = await self._client.post(
-                GUARDRAILS_ENDPOINT_URL,
+                url=self.config.cx_guardrails_endpoint,
                 json=request.model_dump(mode="json", exclude_none=True),
                 headers=self._get_headers(),
             )

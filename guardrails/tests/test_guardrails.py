@@ -406,7 +406,7 @@ class TestGuardrailsRequestFormat:
             api_key="test-key",
             application_name="test-app",
             subsystem_name="test-subsystem",
-            cx_guardrails_endpoint="https://test.example.com",
+            cx_guardrails_endpoint="https://test.example.com/api/v1/guardrails/guard",
         )
 
     @pytest.mark.asyncio
@@ -449,9 +449,11 @@ class TestGuardrailsRequestFormat:
                     prompt="Hello",
                 )
 
-            # Verify the endpoint
+            # Verify the endpoint (full URL passed as keyword arg)
             call_args = mock_post.call_args
-            assert_that(call_args.args[0]).is_equal_to("/api/v1/guardrails/guard")
+            assert_that(call_args.kwargs["url"]).is_equal_to(
+                "https://test.example.com/api/v1/guardrails/guard"
+            )
 
     @pytest.mark.asyncio
     async def test_guard_response_uses_correct_endpoint(self, guardrails_client):
@@ -469,4 +471,6 @@ class TestGuardrailsRequestFormat:
                 )
 
             call_args = mock_post.call_args
-            assert_that(call_args.args[0]).is_equal_to("/api/v1/guardrails/guard")
+            assert_that(call_args.kwargs["url"]).is_equal_to(
+                "https://test.example.com/api/v1/guardrails/guard"
+            )
