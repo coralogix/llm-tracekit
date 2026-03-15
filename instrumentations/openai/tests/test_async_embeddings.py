@@ -55,7 +55,7 @@ async def test_async_embeddings_create_with_content(
             response_model=response.model,
             input_tokens=response.usage.prompt_tokens,
             output_tokens=None,
-            operation_name="embedding",
+            operation_name="embeddings",
         )
 
         user_message = {"role": "user", "content": input_value}

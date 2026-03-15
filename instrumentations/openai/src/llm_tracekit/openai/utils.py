@@ -314,7 +314,7 @@ def get_embedding_request_attributes(
     """
 
     attributes: dict[str, Any] = {
-        GenAIAttributes.GEN_AI_OPERATION_NAME: "embedding",
+        GenAIAttributes.GEN_AI_OPERATION_NAME: "embeddings",
         GenAIAttributes.GEN_AI_SYSTEM: GenAIAttributes.GenAiSystemValues.OPENAI.value,
         GenAIAttributes.GEN_AI_REQUEST_MODEL: kwargs.get("model"),
         ExtendedGenAIAttributes.GEN_AI_REQUEST_USER: kwargs.get("user"),
