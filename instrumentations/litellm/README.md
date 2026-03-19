@@ -85,6 +85,8 @@ LiteLLMInstrumentor().instrument()
 response = litellm.completion(
     model="gpt-4o-mini",
     messages=[{"role": "user", "content": "Write a short poem on open telemetry."}],
+    # Pass user identifier directly as a parameter
+    user="user@company.com",
 )
 ```
 
@@ -109,3 +111,4 @@ response = litellm.completion(
 | `gen_ai.request.tools.<tool_number>.function.name` | string | Name of the tool/function exposed to the model | `get_current_weather`
 | `gen_ai.request.tools.<tool_number>.function.description` | string | Description of the tool/function | `Get the current weather in a given location`
 | `gen_ai.request.tools.<tool_number>.function.parameters` | string | JSON schema describing the tool/function parameters passed with the request | `{"type": "object", "properties": {"city": {"type": "string"}}}`
+| `gen_ai.request.user` | string | A unique identifier representing the end-user (from the `user` parameter) | `user@company.com`

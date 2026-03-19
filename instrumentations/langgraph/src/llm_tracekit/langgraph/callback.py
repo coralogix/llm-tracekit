@@ -30,6 +30,7 @@ from opentelemetry import context, trace
 from opentelemetry.trace import Tracer
 
 from llm_tracekit.core import handle_span_exception
+from llm_tracekit.core import _extended_gen_ai_attributes as ExtendedGenAIAttributes
 from llm_tracekit.langgraph.span_manager import LangGraphSpanManager
 from llm_tracekit.langgraph.utils import (
     LangGraphSpanAttributes,
@@ -89,6 +90,11 @@ class LangGraphCallbackHandler(BaseCallbackHandler):  # type: ignore[misc]
                 LangGraphSpanAttributes.STEP,
                 self._span_manager.node_execution_index(),
             )
+            user = (metadata or {}).get("user")
+            if user is not None:
+                current_span.set_attribute(
+                    ExtendedGenAIAttributes.GEN_AI_REQUEST_USER, str(user)
+                )
         return None
 
     def on_chain_end(  # type: ignore[override]

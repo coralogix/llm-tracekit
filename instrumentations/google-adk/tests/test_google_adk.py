@@ -17,6 +17,7 @@ from google.adk import Agent, Runner
 from google.adk.sessions import InMemorySessionService
 from google.genai import types
 
+import llm_tracekit.core._extended_gen_ai_attributes as ExtendedGenAIAttributes
 from .utils import assert_base_attributes, get_call_llm_spans
 
 
@@ -247,3 +248,92 @@ async def test_google_adk_multi_turn(span_exporter, instrument):
     assert second_span.attributes.get("gen_ai.prompt.2.role") == "assistant"
     assert second_span.attributes.get("gen_ai.prompt.3.role") == "user"
     assert second_span.attributes.get("gen_ai.prompt.3.content") == "What is my name?"
+
+
+@pytest.mark.vcr()
+@pytest.mark.asyncio
+async def test_google_adk_user_id_from_session(span_exporter, instrument):
+    """Test that user_id from session is captured as gen_ai.request.user."""
+    agent = Agent(
+        name="test_agent",
+        model="gemini-2.5-flash",
+        instruction="You are a helpful assistant. Be concise.",
+    )
+
+    session_service = InMemorySessionService()
+    runner = Runner(
+        agent=agent,
+        app_name="test_app",
+        session_service=session_service,
+    )
+
+    session = await session_service.create_session(
+        app_name="test_app",
+        user_id="alice@example.com",
+    )
+
+    async for _ in runner.run_async(
+        user_id="alice@example.com",
+        session_id=session.id,
+        new_message=types.Content(
+            role="user",
+            parts=[types.Part(text="Say hello in exactly 3 words.")],
+        ),
+    ):
+        pass
+
+    await runner.close()
+
+    spans = span_exporter.get_finished_spans()
+    call_llm_spans = get_call_llm_spans(spans)
+    assert len(call_llm_spans) == 1
+    span = call_llm_spans[0]
+
+    assert span.attributes is not None
+    assert (
+        span.attributes[ExtendedGenAIAttributes.GEN_AI_REQUEST_USER]
+        == "alice@example.com"
+    )
+
+
+@pytest.mark.vcr()
+@pytest.mark.asyncio
+async def test_google_adk_no_user_attribute_when_missing(span_exporter, instrument):
+    """Test that gen_ai.request.user is absent when session user_id is empty."""
+    agent = Agent(
+        name="test_agent",
+        model="gemini-2.5-flash",
+        instruction="You are a helpful assistant. Be concise.",
+    )
+
+    session_service = InMemorySessionService()
+    runner = Runner(
+        agent=agent,
+        app_name="test_app",
+        session_service=session_service,
+    )
+
+    session = await session_service.create_session(
+        app_name="test_app",
+        user_id="",
+    )
+
+    async for _ in runner.run_async(
+        user_id="",
+        session_id=session.id,
+        new_message=types.Content(
+            role="user",
+            parts=[types.Part(text="Say hello in exactly 3 words.")],
+        ),
+    ):
+        pass
+
+    await runner.close()
+
+    spans = span_exporter.get_finished_spans()
+    call_llm_spans = get_call_llm_spans(spans)
+    assert len(call_llm_spans) == 1
+    span = call_llm_spans[0]
+
+    assert span.attributes is not None
+    assert ExtendedGenAIAttributes.GEN_AI_REQUEST_USER not in span.attributes

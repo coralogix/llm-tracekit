@@ -177,6 +177,13 @@ def generate_attributes_from_converse_input(
             }
         )
 
+    request_metadata = kwargs.get("requestMetadata") or {}
+    user = request_metadata.get("user") or request_metadata.get("userId")
+
+    user_attributes = {}
+    if user is not None:
+        user_attributes[ExtendedGenAIAttributes.GEN_AI_REQUEST_USER] = str(user)
+
     return {
         **generate_base_attributes(
             system=GenAIAttributes.GenAiSystemValues.AWS_BEDROCK
@@ -191,6 +198,7 @@ def generate_attributes_from_converse_input(
             messages=messages, capture_content=capture_content
         ),
         **tool_attributes,
+        **user_attributes,
     }
 
 
