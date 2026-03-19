@@ -214,7 +214,7 @@ def _process_tool_specs(tool_specs: list[dict]) -> dict[str, Any]:
         tool_type = "function"
         tool_name = tool.get("name")
         tool_description = tool.get("description")
-        tool_parameters = tool.get("inputSchema")
+        input_schema = tool.get("inputSchema")
 
         attributes[
             ExtendedGenAIAttributes.GEN_AI_REQUEST_TOOLS_TYPE.format(tool_index=index)
@@ -234,7 +234,13 @@ def _process_tool_specs(tool_specs: list[dict]) -> dict[str, Any]:
                 )
             ] = tool_description
 
-        if tool_parameters is not None:
+        if input_schema is not None:
+            # Strands wraps the JSON schema in {"json": <schema>}, extract the inner schema
+            if isinstance(input_schema, dict) and "json" in input_schema:
+                tool_parameters = input_schema["json"]
+            else:
+                tool_parameters = input_schema
+
             try:
                 params_str = json.dumps(tool_parameters)
                 attributes[

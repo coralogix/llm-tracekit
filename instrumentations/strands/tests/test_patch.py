@@ -270,7 +270,34 @@ class TestParseStrandsResponse:
 
 
 class TestProcessToolSpecs:
-    def test_single_tool(self):
+    def test_single_tool_with_json_wrapper(self):
+        """Test that Strands' {"json": <schema>} format is properly unwrapped."""
+        tool_specs = [
+            {
+                "name": "calculator",
+                "description": "Perform calculations",
+                "inputSchema": {
+                    "json": {
+                        "type": "object",
+                        "properties": {"expr": {"type": "string"}},
+                    }
+                },
+            }
+        ]
+        attrs = _process_tool_specs(tool_specs)
+        assert attrs["gen_ai.request.tools.0.type"] == "function"
+        assert attrs["gen_ai.request.tools.0.function.name"] == "calculator"
+        assert (
+            attrs["gen_ai.request.tools.0.function.description"]
+            == "Perform calculations"
+        )
+        # Parameters should be the unwrapped schema, not {"json": ...}
+        params = attrs["gen_ai.request.tools.0.function.parameters"]
+        assert '"type": "object"' in params
+        assert '"json"' not in params
+
+    def test_single_tool_without_json_wrapper(self):
+        """Test that direct schema (without json wrapper) is handled correctly."""
         tool_specs = [
             {
                 "name": "calculator",
@@ -283,12 +310,8 @@ class TestProcessToolSpecs:
         ]
         attrs = _process_tool_specs(tool_specs)
         assert attrs["gen_ai.request.tools.0.type"] == "function"
-        assert attrs["gen_ai.request.tools.0.function.name"] == "calculator"
-        assert (
-            attrs["gen_ai.request.tools.0.function.description"]
-            == "Perform calculations"
-        )
-        assert "gen_ai.request.tools.0.function.parameters" in attrs
+        params = attrs["gen_ai.request.tools.0.function.parameters"]
+        assert '"type": "object"' in params
 
     def test_multiple_tools(self):
         tool_specs = [
