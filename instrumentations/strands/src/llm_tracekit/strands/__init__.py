@@ -12,17 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""OpenTelemetry instrumentation for Strands Agents SDK.
+from llm_tracekit.strands.instrumentor import StrandsInstrumentor as StrandsInstrumentor
 
-This instrumentation enriches the OpenTelemetry spans created by Strands Agents SDK
-with GenAI semantic convention attributes for prompts, completions, and tool definitions.
-
-Usage:
-    from llm_tracekit.strands import StrandsInstrumentor
-
-    StrandsInstrumentor().instrument()
-"""
-
-from llm_tracekit.strands.instrumentor import StrandsInstrumentor
-
-__all__ = ["StrandsInstrumentor"]
+from llm_tracekit.core import (
+    setup_export_to_coralogix as setup_export_to_coralogix,
+    enable_capture_content as enable_capture_content,
+    OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT as OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT,
+)
