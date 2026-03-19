@@ -45,7 +45,7 @@ class TestMapRole:
         assert _map_role("unknown") == "unknown"
 
     def test_empty_role(self):
-        assert _map_role("") == "user"
+        assert _map_role("") == ""
 
     def test_case_insensitive(self):
         assert _map_role("USER") == "user"

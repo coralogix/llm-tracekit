@@ -186,7 +186,7 @@ def _map_role(role: str) -> str:
         "system": "system",
         "model": "assistant",
     }
-    return role_mapping.get(role.lower() if role else "", role or "user")
+    return role_mapping.get(role.lower() if role else "", role or "")
 
 
 def _map_stop_reason(stop_reason: str | None) -> str:
