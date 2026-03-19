@@ -202,7 +202,7 @@ class GuardrailRequestSender:
         )
 
         with tracer.start_as_current_span(
-            f"guardrails.{target.value}", kind=SpanKind.CLIENT
+            f"guardrails.{target.value}", kind=SpanKind.CLIENT, set_status_on_exception=False
         ) as span:
             span.set_attributes(
                 generate_base_attributes(
