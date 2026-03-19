@@ -126,5 +126,3 @@ model = OpenAIModel(
 
 agent = Agent(model=model)
 ```
-
-This works with any Strands model that supports the `user` parameter (OpenAI, etc.).
