@@ -245,6 +245,43 @@ class TestInstrumentor:
         assert attrs["gen_ai.prompt.2.role"] == "assistant"
         assert attrs["gen_ai.prompt.2.content"] == "Your balance is $100."
 
+    def test_no_system_prompt_user_is_index_0(self):
+        """Test that user message is at index 0 when no system prompt is provided."""
+        from llm_tracekit.strands.patch import (
+            _parse_strands_messages,
+            _build_system_prompt_text,
+        )
+        from llm_tracekit.core import generate_message_attributes, Message
+
+        messages = [
+            {"role": "user", "content": [{"text": "Hello!"}]},
+            {"role": "assistant", "content": [{"text": "Hi there!"}]},
+        ]
+
+        # No system prompt
+        system_text = _build_system_prompt_text(None, None)
+        parsed_messages = _parse_strands_messages(messages)
+
+        # Same logic as in stream_messages wrapper
+        if system_text:
+            system_message = Message(role="system", content=system_text)
+            all_messages = [system_message] + parsed_messages
+        else:
+            all_messages = parsed_messages
+
+        attrs = generate_message_attributes(all_messages, capture_content=True)
+
+        # User should be at index 0 (no system prompt)
+        assert attrs["gen_ai.prompt.0.role"] == "user"
+        assert attrs["gen_ai.prompt.0.content"] == "Hello!"
+
+        # Assistant at index 1
+        assert attrs["gen_ai.prompt.1.role"] == "assistant"
+        assert attrs["gen_ai.prompt.1.content"] == "Hi there!"
+
+        # No system role should exist
+        assert "gen_ai.prompt.2.role" not in attrs
+
 
 def teardown_module():
     """Clean up after all tests."""

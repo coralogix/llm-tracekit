@@ -9,6 +9,7 @@ Strands Agents SDK already includes built-in OpenTelemetry tracing. This instrum
 - **Prompt messages** (`gen_ai.prompt.*`) - Full conversation history with roles, content, and tool calls
 - **Completion choices** (`gen_ai.completion.*`) - Model responses with finish reasons and tool calls
 - **Tool definitions** (`gen_ai.request.tools.*`) - Available tools with names, descriptions, and parameters
+- **User identification** (`gen_ai.request.user`) - User ID from model configuration
 
 ## Installation
 
@@ -106,6 +107,27 @@ trace.set_tracer_provider(provider)
 | `gen_ai.request.tools.<n>.function.name` | Function name |
 | `gen_ai.request.tools.<n>.function.description` | Function description |
 | `gen_ai.request.tools.<n>.function.parameters` | JSON schema of parameters |
+
+### User Identification
+
+| Attribute | Description |
+|-----------|-------------|
+| `gen_ai.request.user` | User identifier from model configuration |
+
+To capture user identification, pass the `user` parameter in your model's `params` configuration:
+
+```python
+from strands.models.openai import OpenAIModel
+
+model = OpenAIModel(
+    model_id="gpt-4o",
+    params={"user": "user@example.com"}
+)
+
+agent = Agent(model=model)
+```
+
+This works with any Strands model that supports the `user` parameter (OpenAI, Anthropic, etc.).
 
 ## License
 

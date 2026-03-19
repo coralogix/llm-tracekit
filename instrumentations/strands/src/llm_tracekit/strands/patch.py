@@ -224,12 +224,7 @@ def _process_tool_specs(tool_specs: list[dict]) -> dict[str, Any]:
 
 
 def create_wrapped_start_model_invoke_span(original_func, capture_content: bool):
-    """Create a wrapped version of start_model_invoke_span.
-
-    Note: Message attributes (gen_ai.prompt.*) are set in stream_messages wrapper
-    because it has access to both the system_prompt and messages, allowing us to
-    properly set the system prompt as gen_ai.prompt.0.
-    """
+    """Create a wrapped version of start_model_invoke_span."""
 
     def wrapped_start_model_invoke_span(
         self,
@@ -239,8 +234,7 @@ def create_wrapped_start_model_invoke_span(original_func, capture_content: bool)
         custom_trace_attributes=None,
         **kwargs,
     ) -> Span:
-        # Call the original function - it creates the span
-        span = original_func(
+        return original_func(
             self,
             messages,
             parent_span=parent_span,
@@ -249,24 +243,17 @@ def create_wrapped_start_model_invoke_span(original_func, capture_content: bool)
             **kwargs,
         )
 
-        # Message attributes are set in stream_messages wrapper which has access
-        # to both system_prompt and messages
-
-        return span
-
     return wrapped_start_model_invoke_span
 
 
 def create_wrapped_end_model_invoke_span(original_func, capture_content: bool):
-    """Create a wrapped version of end_model_invoke_span that adds semantic attributes."""
+    """Create a wrapped version of end_model_invoke_span that adds completion attributes."""
 
     def wrapped_end_model_invoke_span(
         self, span: Span, message, usage, metrics, stop_reason
     ):
-        # Add our semantic convention attributes before the original function ends the span
-        if span is not None and span.is_recording():
+        if span is not None and span.is_recording() and _is_model_invoke_span(span):
             try:
-                # Parse response and add completion attributes
                 choice = _parse_strands_response(message, str(stop_reason))
                 attributes = generate_choice_attributes(
                     choices=[choice], capture_content=capture_content
@@ -275,7 +262,6 @@ def create_wrapped_end_model_invoke_span(original_func, capture_content: bool):
             except Exception:
                 pass
 
-        # Call the original function
         original_func(self, span, message, usage, metrics, stop_reason)
 
     return wrapped_end_model_invoke_span
@@ -285,16 +271,7 @@ def _build_system_prompt_text(
     system_prompt: str | None,
     system_prompt_content: list[dict] | None,
 ) -> str | None:
-    """Extract system prompt text from Strands system prompt parameters.
-
-    Args:
-        system_prompt: Simple string system prompt (legacy/fallback)
-        system_prompt_content: List of SystemContentBlock dicts with text
-
-    Returns:
-        Combined system prompt text, or None if not available
-    """
-    # system_prompt_content is the authoritative source when available
+    """Extract system prompt text from Strands system prompt parameters."""
     if system_prompt_content:
         text_parts = []
         for block in system_prompt_content:
@@ -310,8 +287,33 @@ def _build_system_prompt_text(
     return None
 
 
+def _is_model_invoke_span(span: Span) -> bool:
+    """Check if the span is a model_invoke span (LLM call span)."""
+    if hasattr(span, "attributes") and span.attributes:
+        operation_name = span.attributes.get("gen_ai.operation.name")
+        if operation_name == "chat":
+            return True
+
+    span_name = span.name if hasattr(span, "name") else ""
+    return span_name == "chat"
+
+
+def _extract_user_from_model(model) -> str | None:
+    """Extract user ID from model configuration if available."""
+    try:
+        if hasattr(model, "config") and model.config:
+            params = model.config.get("params")
+            if params and isinstance(params, dict):
+                user = params.get("user")
+                if user:
+                    return str(user)
+    except Exception:
+        pass
+    return None
+
+
 def create_wrapped_stream_messages(original_func, capture_content: bool):
-    """Create a wrapped version of stream_messages that captures system prompt, messages, and tool specs."""
+    """Create a wrapped version of stream_messages that adds prompt and tool attributes."""
 
     async def wrapped_stream_messages(
         model,
@@ -328,35 +330,36 @@ def create_wrapped_stream_messages(original_func, capture_content: bool):
         from opentelemetry import trace
 
         span = trace.get_current_span()
-        if span is not None and span.is_recording():
+        if span is not None and span.is_recording() and _is_model_invoke_span(span):
             try:
-                # Build the full message list with system prompt as first message (gen_ai.prompt.0)
                 system_text = _build_system_prompt_text(
                     system_prompt, system_prompt_content
                 )
                 parsed_messages = _parse_strands_messages(messages)
 
-                # If we have a system prompt, prepend it as the first message
                 if system_text:
                     system_message = Message(role="system", content=system_text)
                     all_messages = [system_message] + parsed_messages
                 else:
                     all_messages = parsed_messages
 
-                # Generate and set message attributes
                 message_attributes = generate_message_attributes(
                     messages=all_messages, capture_content=capture_content
                 )
                 span.set_attributes(message_attributes)
 
-                # Add tool specs
                 if tool_specs:
                     tool_attributes = _process_tool_specs(tool_specs)
                     span.set_attributes(tool_attributes)
+
+                user_id = _extract_user_from_model(model)
+                if user_id:
+                    span.set_attribute(
+                        ExtendedGenAIAttributes.GEN_AI_REQUEST_USER, user_id
+                    )
             except Exception:
                 pass
 
-        # Call the original async generator
         async for event in original_func(
             model,
             system_prompt,
