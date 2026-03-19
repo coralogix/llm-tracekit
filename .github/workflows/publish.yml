@@ -19,6 +19,7 @@ jobs:
           - llm-tracekit-openai-agents
           - llm-tracekit-langchain
           - llm-tracekit-langgraph
+          - llm-tracekit-strands
     steps:
       - uses: actions/checkout@v4
       - name: Set up Python
