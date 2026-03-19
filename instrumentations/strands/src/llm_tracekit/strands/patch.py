@@ -97,6 +97,27 @@ def _extract_tool_result_content(content_blocks: list[dict]) -> str | None:
     return None
 
 
+def _extract_single_tool_result(
+    tool_result_block: dict,
+) -> tuple[str | None, str | None]:
+    """Extract content and tool_call_id from a single toolResult block."""
+    tool_result = tool_result_block.get("toolResult", {})
+    tool_call_id = tool_result.get("toolUseId")
+    result_content = tool_result.get("content")
+
+    content = None
+    if isinstance(result_content, list):
+        text_parts = []
+        for item in result_content:
+            if isinstance(item, dict) and "text" in item:
+                text_parts.append(item["text"])
+        content = " ".join(text_parts) if text_parts else None
+    elif isinstance(result_content, str):
+        content = result_content
+
+    return content, tool_call_id
+
+
 def _parse_strands_messages(messages: list[dict]) -> list[Message]:
     """Parse Strands messages format to our Message objects."""
     parsed_messages: list[Message] = []
@@ -105,31 +126,35 @@ def _parse_strands_messages(messages: list[dict]) -> list[Message]:
         role = msg.get("role", "")
         content_blocks = msg.get("content", [])
 
-        # Check if this is a tool result message
-        has_tool_result = any("toolResult" in block for block in content_blocks)
+        # Collect all tool result blocks
+        tool_result_blocks = [b for b in content_blocks if "toolResult" in b]
 
-        if has_tool_result:
-            # Tool result messages
-            mapped_role = "tool"
-            content = _extract_tool_result_content(content_blocks)
-            tool_call_id = _extract_tool_call_id_from_content_blocks(content_blocks)
-            tool_calls = None
+        if tool_result_blocks:
+            # Create a separate Message for each tool result
+            for block in tool_result_blocks:
+                content, tool_call_id = _extract_single_tool_result(block)
+                message = Message(
+                    role="tool",
+                    content=content,
+                    tool_call_id=tool_call_id,
+                    tool_calls=None,
+                )
+                parsed_messages.append(message)
         else:
-            # Regular messages
+            # Regular messages (user, assistant, system)
             mapped_role = _map_role(role)
             content = _extract_text_from_content_blocks(content_blocks)
-            tool_call_id = None
-            tool_calls = _extract_tool_calls_from_content_blocks(content_blocks)
-            if not tool_calls:
-                tool_calls = None
+            extracted_tool_calls = _extract_tool_calls_from_content_blocks(
+                content_blocks
+            )
 
-        message = Message(
-            role=mapped_role,
-            content=content,
-            tool_call_id=tool_call_id,
-            tool_calls=tool_calls,
-        )
-        parsed_messages.append(message)
+            message = Message(
+                role=mapped_role,
+                content=content,
+                tool_call_id=None,
+                tool_calls=extracted_tool_calls if extracted_tool_calls else None,
+            )
+            parsed_messages.append(message)
 
     return parsed_messages
 

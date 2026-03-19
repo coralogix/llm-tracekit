@@ -199,6 +199,41 @@ class TestParseStrandsMessages:
         assert parsed[1].role == "assistant"
         assert parsed[2].role == "user"
 
+    def test_multiple_tool_results_in_single_message(self):
+        """Test that multiple tool results in one message are split into separate Messages."""
+        messages = [
+            {
+                "role": "user",
+                "content": [
+                    {
+                        "toolResult": {
+                            "toolUseId": "call_abc123",
+                            "status": "success",
+                            "content": [{"text": "News about Microsoft"}],
+                        }
+                    },
+                    {
+                        "toolResult": {
+                            "toolUseId": "call_def456",
+                            "status": "success",
+                            "content": [{"text": "Stock price is $378.90"}],
+                        }
+                    },
+                ],
+            }
+        ]
+        parsed = _parse_strands_messages(messages)
+        # Should create 2 separate Message objects
+        assert len(parsed) == 2
+
+        assert parsed[0].role == "tool"
+        assert parsed[0].tool_call_id == "call_abc123"
+        assert parsed[0].content == "News about Microsoft"
+
+        assert parsed[1].role == "tool"
+        assert parsed[1].tool_call_id == "call_def456"
+        assert parsed[1].content == "Stock price is $378.90"
+
 
 class TestParseStrandsResponse:
     def test_simple_response(self):
