@@ -1,6 +1,6 @@
 [project]
 name = "llm-tracekit-strands"
-version = "1.0.0"
+version = "1.1.0"
 description = "OpenTelemetry instrumentation for Strands Agents SDK."
 readme = "README.md"
 authors = [
