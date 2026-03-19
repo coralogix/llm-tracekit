@@ -17,6 +17,7 @@ pip install llm-tracekit-litellm       # For LiteLLM
 pip install llm-tracekit-langchain     # For LangChain
 pip install llm-tracekit-langgraph     # For LangGraph
 pip install llm-tracekit-openai-agents # For OpenAI Agents SDK
+pip install llm-tracekit-strands      # For Strands Agents
 ```
 
 Then instrument your code:
@@ -57,7 +58,8 @@ response = client.chat.completions.create(
 | [LiteLLM](https://github.com/BerriAI/litellm) | `llm-tracekit-litellm` | `LiteLLMInstrumentor` |
 | [LangChain](https://www.langchain.com/) | `llm-tracekit-langchain` | `LangChainInstrumentor` |
 | [LangGraph](https://langchain-ai.github.io/langgraph/) | `llm-tracekit-langgraph` | `LangGraphInstrumentor` |
-| [OpenAI Agents SDK](https://openai.github.io/openai-agents-python/) | `llm-tracekit-openai_agents` | `OpenAIAgentsInstrumentor` |
+| [OpenAI Agents SDK](https://openai.github.io/openai-agents-python/) | `llm-tracekit-openai-agents` | `OpenAIAgentsInstrumentor` |
+| [Strands Agents](https://github.com/strands-agents/sdk-python) | `llm-tracekit-strands` | `StrandsInstrumentor` |
 
 
 ## 📖 Usage
@@ -94,7 +96,8 @@ For detailed documentation on each instrumentation, see the individual READMEs:
 - [LiteLLM](./instrumentations/litellm/README.md)
 - [LangChain](./instrumentations/langchain/README.md)
 - [LangGraph](./instrumentations/langgraph/README.md)
-- [OpenAI Agents SDK](./instrumentations/openai_agents/README.md)
+- [OpenAI Agents SDK](./instrumentations/openai-agents/README.md)
+- [Strands Agents](./instrumentations/strands/README.md)
 
 ## 📜 License
 
