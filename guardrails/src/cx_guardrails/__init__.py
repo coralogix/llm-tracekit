@@ -1,5 +1,11 @@
 from .client import Guardrails
-from .models._models import PIICategory, Role, GuardrailsTarget, GuardrailType
+from .models._models import (
+    PIICategory,
+    Role,
+    GuardrailsTarget,
+    GuardrailType,
+    GuardrailCategory,
+)
 from .models.request import (
     PII,
     PromptInjection,
@@ -41,6 +47,7 @@ __all__ = [
     "Role",
     "GuardrailsTarget",
     "GuardrailType",
+    "GuardrailCategory",
     "GuardrailsError",
     "GuardrailsAPIConnectionError",
     "GuardrailsAPITimeoutError",

@@ -1,12 +1,13 @@
 from __future__ import annotations
 
-from typing import Literal, Any, Optional
+from typing import Literal, Any
 
 
 from pydantic import BaseModel, Field, field_validator
 
 from ._constants import DEFAULT_THRESHOLD
 from ._models import GuardrailsTarget, PIICategory, Role
+from ._models import GuardrailCategory
 
 
 class GuardrailRequest(BaseModel):
@@ -42,8 +43,9 @@ class Custom(BaseGuardrailConfig):
     instructions: str
     violates: str
     safe: str
-    examples: Optional[list[CustomEvaluationExample]] = None
-    should_include_system_prompt: bool = False 
+    examples: list[CustomEvaluationExample] | None = None
+    should_include_system_prompt: bool = False
+    category: GuardrailCategory = GuardrailCategory.QUALITY
 
     @field_validator("instructions", mode="after")
     @classmethod

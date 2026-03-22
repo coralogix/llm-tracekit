@@ -26,3 +26,7 @@ class Role(str, Enum):
     ASSISTANT = "assistant"
     SYSTEM = "system"
     TOOL = "tool"
+
+class GuardrailCategory(str, Enum):
+    SECURITY = "security"
+    QUALITY = "quality"

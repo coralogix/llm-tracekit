@@ -24,7 +24,7 @@ SCORE: Final = "gen_ai.{target}.guardrails.{guardrail_type}.score"
 The guardrail response score.
 """
 
-CUSTOM_GUARDRAIL_SCORE: Final = "gen_ai.{target}.guardrails.custom.{name}.score"
+CUSTOM_GUARDRAIL_SCORE: Final = "gen_ai.{target}.guardrails.custom.{index}.score"
 """
 The custom guardrail response score.
 """
@@ -34,19 +34,29 @@ THRESHOLD: Final = "gen_ai.{target}.guardrails.{guardrail_type}.threshold"
 The guardrail threshold.
 """
 
-CUSTOM_GUARDRAIL_THRESHOLD: Final = "gen_ai.{target}.guardrails.custom.{name}.threshold"
+CUSTOM_GUARDRAIL_THRESHOLD: Final = "gen_ai.{target}.guardrails.custom.{index}.threshold"
 """
 The custom guardrail threshold.
 """
 
 TRIGGERED: Final = "gen_ai.{target}.guardrails.{guardrail_type}.triggered"
 """
-Boolean indicating a spesific guardrail detected a violation or flagged content.
+Boolean indicating a specific guardrail detected a violation or flagged content.
 """
 
-CUSTOM_GUARDRAIL_TRIGGERED: Final = "gen_ai.{target}.guardrails.custom.{name}.triggered"
+CUSTOM_GUARDRAIL_TRIGGERED: Final = "gen_ai.{target}.guardrails.custom.{index}.triggered"
 """
-Boolean indicating a spesific custom guardrail detected a violation or flagged content.
+Boolean indicating a specific custom guardrail detected a violation or flagged content.
+"""
+
+CUSTOM_GUARDRAIL_NAME: Final = "gen_ai.{target}.guardrails.custom.{index}.name"
+"""
+The custom guardrail name.
+"""
+
+CUSTOM_GUARDRAIL_CATEGORY: Final = "gen_ai.{target}.guardrails.custom.{index}.category"
+"""
+The custom guardrail category (security or quality).
 """
 
 PROMPT: Final = "guardrails.prompt.{index}"
