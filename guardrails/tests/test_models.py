@@ -676,16 +676,16 @@ class TestSpanAttributes:
         attrs = generate_guardrail_response_attributes(response, "prompt")
 
         # Verify index-based custom guardrail tags
-        assert_that(attrs["gen_ai.guardrails.prompt.custom.0.name"]).is_equal_to("my-policy")
-        assert_that(attrs["gen_ai.guardrails.prompt.custom.0.category"]).is_equal_to(GuardrailCategory.SECURITY)
-        assert_that(attrs["gen_ai.guardrails.prompt.custom.0.triggered"]).is_equal_to("true")
-        assert_that(attrs["gen_ai.guardrails.prompt.custom.0.threshold"]).is_equal_to(0.7)
-        assert_that(attrs["gen_ai.guardrails.prompt.custom.0.score"]).is_equal_to(0.85)
+        assert_that(attrs["gen_ai.prompt.guardrails.custom.0.name"]).is_equal_to("my-policy")
+        assert_that(attrs["gen_ai.prompt.guardrails.custom.0.category"]).is_equal_to(GuardrailCategory.SECURITY)
+        assert_that(attrs["gen_ai.prompt.guardrails.custom.0.triggered"]).is_equal_to("true")
+        assert_that(attrs["gen_ai.prompt.guardrails.custom.0.threshold"]).is_equal_to(0.7)
+        assert_that(attrs["gen_ai.prompt.guardrails.custom.0.score"]).is_equal_to(0.85)
 
-        assert_that(attrs["gen_ai.guardrails.prompt.custom.1.name"]).is_equal_to("another-policy")
-        assert_that(attrs["gen_ai.guardrails.prompt.custom.1.category"]).is_equal_to(GuardrailCategory.QUALITY)
-        assert_that(attrs["gen_ai.guardrails.prompt.custom.1.triggered"]).is_equal_to("false")
-        assert_that(attrs["gen_ai.guardrails.prompt.custom.1.score"]).is_equal_to(0.3)
+        assert_that(attrs["gen_ai.prompt.guardrails.custom.1.name"]).is_equal_to("another-policy")
+        assert_that(attrs["gen_ai.prompt.guardrails.custom.1.category"]).is_equal_to(GuardrailCategory.QUALITY)
+        assert_that(attrs["gen_ai.prompt.guardrails.custom.1.triggered"]).is_equal_to("false")
+        assert_that(attrs["gen_ai.prompt.guardrails.custom.1.score"]).is_equal_to(0.3)
 
         # Verify built-in guardrail tags still use old format
         assert_that(attrs["gen_ai.prompt.guardrails.pii.score"]).is_equal_to(0.95)
@@ -710,8 +710,8 @@ class TestSpanAttributes:
         })
         attrs = generate_guardrail_response_attributes(response, "prompt")
 
-        assert_that("gen_ai.guardrails.prompt.custom.0.category" in attrs).is_false()
-        assert_that(attrs["gen_ai.guardrails.prompt.custom.0.name"]).is_equal_to("no-category-policy")
+        assert_that("gen_ai.prompt.guardrails.custom.0.category" in attrs).is_false()
+        assert_that(attrs["gen_ai.prompt.guardrails.custom.0.name"]).is_equal_to("no-category-policy")
 
     def test_generate_guardrail_response_attributes_no_custom(self):
         from cx_guardrails.span_builder import generate_guardrail_response_attributes
@@ -730,4 +730,4 @@ class TestSpanAttributes:
 
         assert_that(attrs["gen_ai.response.guardrails.pii.score"]).is_equal_to(0.1)
         # No custom keys should exist
-        assert_that("gen_ai.guardrails.response.custom.0.name" in attrs).is_false()
+        assert_that("gen_ai.response.guardrails.custom.0.name" in attrs).is_false()
