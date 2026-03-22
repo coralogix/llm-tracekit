@@ -60,9 +60,7 @@ def generate_guardrail_response_attributes(
                 CUSTOM_GUARDRAIL_TRIGGERED.format(target=target, index=custom_guardrails_index): str(result.score > result.threshold).lower(),
                 CUSTOM_GUARDRAIL_NAME.format(target=target, index=custom_guardrails_index): custom_result.name or "unknown",
             }
-            category = custom_result.category
-            if category:
-                result_attributes[CUSTOM_GUARDRAIL_CATEGORY.format(target=target, index=custom_guardrails_index)] = category
+            result_attributes[CUSTOM_GUARDRAIL_CATEGORY.format(target=target, index=custom_guardrails_index)] = custom_result.category
             custom_guardrails_index += 1
         else:
             guardrail_type = result.type.value
