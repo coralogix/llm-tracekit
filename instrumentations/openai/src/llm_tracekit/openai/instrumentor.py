@@ -57,8 +57,12 @@ from llm_tracekit.openai.package import _instruments
 from llm_tracekit.openai.patch import (
     async_chat_completions_create,
     async_embeddings_create,
+    async_responses_create,
+    async_responses_parse,
     chat_completions_create,
     embeddings_create,
+    responses_create,
+    responses_parse,
 )
 
 
@@ -115,8 +119,36 @@ class OpenAIInstrumentor(BaseInstrumentor):
             wrapper=async_embeddings_create(tracer, instruments, is_content_enabled()),
         )
 
+        wrap_function_wrapper(
+            module="openai.resources.responses.responses",
+            name="Responses.create",
+            wrapper=responses_create(tracer, instruments, is_content_enabled()),
+        )
+
+        wrap_function_wrapper(
+            module="openai.resources.responses.responses",
+            name="AsyncResponses.create",
+            wrapper=async_responses_create(tracer, instruments, is_content_enabled()),
+        )
+
+        wrap_function_wrapper(
+            module="openai.resources.responses.responses",
+            name="Responses.parse",
+            wrapper=responses_parse(tracer, instruments, is_content_enabled()),
+        )
+
+        wrap_function_wrapper(
+            module="openai.resources.responses.responses",
+            name="AsyncResponses.parse",
+            wrapper=async_responses_parse(tracer, instruments, is_content_enabled()),
+        )
+
     def _uninstrument(self, **kwargs):
         unwrap(openai.resources.chat.completions.Completions, "create")
         unwrap(openai.resources.chat.completions.AsyncCompletions, "create")
         unwrap(openai.resources.embeddings.Embeddings, "create")
         unwrap(openai.resources.embeddings.AsyncEmbeddings, "create")
+        unwrap(openai.resources.responses.responses.Responses, "create")
+        unwrap(openai.resources.responses.responses.AsyncResponses, "create")
+        unwrap(openai.resources.responses.responses.Responses, "parse")
+        unwrap(openai.resources.responses.responses.AsyncResponses, "parse")

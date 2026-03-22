@@ -92,10 +92,16 @@ response = client.chat.completions.create(
 )
 ```
 
+### Responses API
+The instrumentor also wraps `client.responses.create` and `client.responses.parse` (sync and async). Spans use the same `gen_ai.*` attributes as chat completions: string or structured `input` and optional `instructions` are mapped to `gen_ai.prompt.*`, and the response `output` (messages and function calls) to `gen_ai.completion.*`. Token usage is taken from `usage.input_tokens` / `usage.output_tokens`.
+
+When `stream=True`, the SDK yields server-sent events; the span is finalized when a `response.completed` (or `response.failed`) event is received, using the embedded `Response` for attributes.
+
 ### Changes from OpenTelemetry
 #### General
 * The `user` parameter in the OpenAI Chat Completions API is now recorded in the span as the `gen_ai.request.user` attribute
 * User prompts and model responses are captured as span attributes instead of log events (see [Semantic Conventions](#semantic-conventions) below)
+* **Responses API**: `previous_response_id` and conversation id (when provided) are recorded as `gen_ai.openai.request.previous_response_id` and `gen_ai.openai.request.conversation_id`
 #### For OpenAI Agents SDK
 * Agent & Tool Spans: Creates dedicated spans for each agent execution and for each tool call, providing clear visibility into the agent's inner workings.
 * Enriched Spans: Automatically adds agent-specific attributes like the agent's `name` to the relevant spans.

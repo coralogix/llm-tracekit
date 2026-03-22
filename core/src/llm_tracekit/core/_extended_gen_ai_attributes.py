@@ -19,6 +19,11 @@ GEN_AI_REQUEST_USER: Final = "gen_ai.request.user"
 The user of the request.
 """
 
+GEN_AI_CUSTOM: Final = "gen_ai.custom"
+"""
+JSON string of extra request parameters (e.g. provider-specific metadata) not mapped to other attributes.
+"""
+
 GEN_AI_REQUEST_TOOLS_TYPE: Final = "gen_ai.request.tools.{tool_index}.type"
 """
 The type of the tool. Expected to be `function`.
