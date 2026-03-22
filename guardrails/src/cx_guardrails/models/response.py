@@ -4,7 +4,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from ._constants import DEFAULT_THRESHOLD
 from ._models import GuardrailType
-from .category import GuardrailCategory
+from ._models import GuardrailCategory
 
 
 class GuardrailsResultBase(BaseModel):

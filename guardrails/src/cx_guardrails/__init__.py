@@ -1,6 +1,11 @@
 from .client import Guardrails
-from .models._models import PIICategory, Role, GuardrailsTarget, GuardrailType
-from .models.category import GuardrailCategory
+from .models._models import (
+    PIICategory,
+    Role,
+    GuardrailsTarget,
+    GuardrailType,
+    GuardrailCategory,
+)
 from .models.request import (
     PII,
     PromptInjection,

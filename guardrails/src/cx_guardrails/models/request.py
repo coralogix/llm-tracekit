@@ -7,7 +7,7 @@ from pydantic import BaseModel, Field, field_validator
 
 from ._constants import DEFAULT_THRESHOLD
 from ._models import GuardrailsTarget, PIICategory, Role
-from .category import GuardrailCategory
+from ._models import GuardrailCategory
 
 
 class GuardrailRequest(BaseModel):

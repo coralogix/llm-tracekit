@@ -51,12 +51,10 @@ def generate_guardrail_response_attributes(
     span_attributes[GUARDRAILS_TRIGGERED] = str(any(result.detected for result in guardrail_response.results))
     custom_index = 0
     for result in guardrail_response.results:
-        guardrail_type = result.type.value
         result_attributes: dict[str, Any]
         if result.type == GuardrailType.CUSTOM:
             custom_result = cast(CustomResult, result)
-            name = custom_result.name if custom_result.name is not None else "unknown"
-            category = custom_result.category
+            name = custom_result.name or "unknown"
             triggered = result.score > result.threshold
             result_attributes = {
                 CUSTOM_GUARDRAIL_NAME.format(target=target, index=custom_index): name,
@@ -64,10 +62,12 @@ def generate_guardrail_response_attributes(
                 CUSTOM_GUARDRAIL_THRESHOLD.format(target=target, index=custom_index): result.threshold,
                 CUSTOM_GUARDRAIL_SCORE.format(target=target, index=custom_index): result.score,
             }
-            if category is not None:
+            category = custom_result.category
+            if category:
                 result_attributes[CUSTOM_GUARDRAIL_CATEGORY.format(target=target, index=custom_index)] = category
             custom_index += 1
         else:
+            guardrail_type = result.type.value
             result_attributes = {
                 SCORE.format(target=target, guardrail_type=guardrail_type): result.score,
                 THRESHOLD.format(target=target, guardrail_type=guardrail_type): result.threshold,
