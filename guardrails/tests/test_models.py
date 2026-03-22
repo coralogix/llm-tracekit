@@ -644,7 +644,7 @@ class TestGuardrailCategory:
 
 
 class TestSpanAttributes:
-    def test_generate_guardrail_response_attributes_custom_index_schema(self):
+    def test_generate_guardrail_response_attributes_custom_guardrails_index_schema(self):
         from cx_guardrails.span_builder import generate_guardrail_response_attributes
 
         response = GuardrailsResponse.model_validate({
