@@ -26,13 +26,15 @@ from cx_guardrails import (
     GuardrailRequest,
     PIICategory,
     GuardrailType,
+    GuardrailCategory,
     Role,
     GuardrailsTarget,
     GuardrailsResultBase,
     GuardrailsResponse,
 )
+from cx_guardrails.models.response import CustomResult
 
-DEFAULT_THRESHOLD = 0.7  # Default threshold value used by the SDK
+from cx_guardrails.models._constants import DEFAULT_THRESHOLD
 
 
 class TestMessage:
@@ -468,7 +470,7 @@ class TestToxicity:
         assert_that(request.guardrails[2].type).is_equal_to("toxicity")
 
 
-class TestPIICategorys:
+class TestPIICategory:
     def test_category_values(self):
         assert_that(PIICategory.EMAIL_ADDRESS.value).is_equal_to("email_address")
         assert_that(PIICategory.CREDIT_CARD.value).is_equal_to("credit_card")
@@ -571,3 +573,161 @@ class TestGuardrailsResponse:
         response = GuardrailsResponse.model_validate_json(json_str)
         assert_that(response.results).is_length(1)
         assert_that(response.results[0].score).is_equal_to(0.2)
+
+
+class TestGuardrailCategory:
+    def test_category_values(self):
+        assert_that(GuardrailCategory.SECURITY.value).is_equal_to("security")
+        assert_that(GuardrailCategory.QUALITY.value).is_equal_to("quality")
+
+    def test_custom_guardrail_default_category(self):
+        custom = Custom(
+            name="test",
+            instructions="Check {response}",
+            violates="bad",
+            safe="good",
+        )
+        assert_that(custom.category).is_equal_to(GuardrailCategory.QUALITY)
+
+    def test_custom_guardrail_security_category(self):
+        custom = Custom(
+            name="test",
+            instructions="Check {response}",
+            violates="bad",
+            safe="good",
+            category=GuardrailCategory.SECURITY,
+        )
+        assert_that(custom.category).is_equal_to(GuardrailCategory.SECURITY)
+
+    def test_custom_guardrail_category_string(self):
+        custom = Custom(
+            name="test",
+            instructions="Check {response}",
+            violates="bad",
+            safe="good",
+            category="security",
+        )
+        assert_that(custom.category).is_equal_to(GuardrailCategory.SECURITY)
+
+    def test_custom_guardrail_category_serialization(self):
+        custom = Custom(
+            name="test",
+            instructions="Check {response}",
+            violates="bad",
+            safe="good",
+            category=GuardrailCategory.SECURITY,
+        )
+        data = custom.model_dump(mode="json")
+        assert_that(data["category"]).is_equal_to("security")
+
+    def test_custom_result_with_category(self):
+        data = {
+            "type": "custom",
+            "detected": True,
+            "score": 0.85,
+            "name": "my-policy",
+            "category": "security",
+        }
+        result = CustomResult.model_validate(data)
+        assert_that(result.category).is_equal_to(GuardrailCategory.SECURITY)
+        assert_that(result.name).is_equal_to("my-policy")
+
+    def test_custom_result_without_category(self):
+        data = {
+            "type": "custom",
+            "detected": True,
+            "score": 0.85,
+            "name": "my-policy",
+        }
+        result = CustomResult.model_validate(data)
+        assert_that(result.category).is_none()
+
+
+class TestSpanAttributes:
+    def test_generate_guardrail_response_attributes_custom_index_schema(self):
+        from cx_guardrails.span_builder import generate_guardrail_response_attributes
+
+        response = GuardrailsResponse.model_validate({
+            "results": [
+                {
+                    "type": "custom",
+                    "detected": True,
+                    "score": 0.85,
+                    "threshold": 0.7,
+                    "name": "my-policy",
+                    "category": "security",
+                },
+                {
+                    "type": "custom",
+                    "detected": False,
+                    "score": 0.3,
+                    "threshold": 0.7,
+                    "name": "another-policy",
+                    "category": "quality",
+                },
+                {
+                    "type": "pii",
+                    "detected": True,
+                    "score": 0.95,
+                    "threshold": 0.7,
+                },
+            ]
+        })
+        attrs = generate_guardrail_response_attributes(response, "prompt")
+
+        # Verify index-based custom guardrail tags
+        assert_that(attrs["gen_ai.guardrails.prompt.custom.0.name"]).is_equal_to("my-policy")
+        assert_that(attrs["gen_ai.guardrails.prompt.custom.0.category"]).is_equal_to(GuardrailCategory.SECURITY)
+        assert_that(attrs["gen_ai.guardrails.prompt.custom.0.triggered"]).is_equal_to("true")
+        assert_that(attrs["gen_ai.guardrails.prompt.custom.0.threshold"]).is_equal_to(0.7)
+        assert_that(attrs["gen_ai.guardrails.prompt.custom.0.score"]).is_equal_to(0.85)
+
+        assert_that(attrs["gen_ai.guardrails.prompt.custom.1.name"]).is_equal_to("another-policy")
+        assert_that(attrs["gen_ai.guardrails.prompt.custom.1.category"]).is_equal_to(GuardrailCategory.QUALITY)
+        assert_that(attrs["gen_ai.guardrails.prompt.custom.1.triggered"]).is_equal_to("false")
+        assert_that(attrs["gen_ai.guardrails.prompt.custom.1.score"]).is_equal_to(0.3)
+
+        # Verify built-in guardrail tags still use old format
+        assert_that(attrs["gen_ai.prompt.guardrails.pii.score"]).is_equal_to(0.95)
+        assert_that(attrs["gen_ai.prompt.guardrails.pii.threshold"]).is_equal_to(0.7)
+
+        # Verify guardrails.triggered is set
+        assert_that(attrs["guardrails.triggered"]).is_equal_to("True")
+
+    def test_generate_guardrail_response_attributes_custom_without_category(self):
+        from cx_guardrails.span_builder import generate_guardrail_response_attributes
+
+        response = GuardrailsResponse.model_validate({
+            "results": [
+                {
+                    "type": "custom",
+                    "detected": False,
+                    "score": 0.2,
+                    "threshold": 0.7,
+                    "name": "no-category-policy",
+                },
+            ]
+        })
+        attrs = generate_guardrail_response_attributes(response, "prompt")
+
+        assert_that("gen_ai.guardrails.prompt.custom.0.category" in attrs).is_false()
+        assert_that(attrs["gen_ai.guardrails.prompt.custom.0.name"]).is_equal_to("no-category-policy")
+
+    def test_generate_guardrail_response_attributes_no_custom(self):
+        from cx_guardrails.span_builder import generate_guardrail_response_attributes
+
+        response = GuardrailsResponse.model_validate({
+            "results": [
+                {
+                    "type": "pii",
+                    "detected": False,
+                    "score": 0.1,
+                    "threshold": 0.7,
+                },
+            ]
+        })
+        attrs = generate_guardrail_response_attributes(response, "response")
+
+        assert_that(attrs["gen_ai.response.guardrails.pii.score"]).is_equal_to(0.1)
+        # No custom keys should exist
+        assert_that("gen_ai.guardrails.response.custom.0.name" in attrs).is_false()
