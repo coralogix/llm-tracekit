@@ -669,14 +669,6 @@ def get_responses_request_attributes(
         for index, tool in enumerate(tool_list):
             attributes.update(_responses_tool_item_to_attributes(tool, index))
 
-    metadata = kwargs.get("metadata")
-    if (
-        metadata is not None
-        and metadata is not NOT_GIVEN
-        and isinstance(metadata, Mapping)
-    ):
-        attributes[ExtendedGenAIAttributes.GEN_AI_CUSTOM] = json.dumps(dict(metadata))
-
     prev_id = kwargs.get("previous_response_id")
     if prev_id is not None and prev_id is not NOT_GIVEN:
         attributes["gen_ai.openai.request.previous_response_id"] = prev_id
