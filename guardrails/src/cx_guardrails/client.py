@@ -11,11 +11,13 @@ from opentelemetry.trace import SpanKind, Status, StatusCode, Span
 from .models._constants import (
     DEFAULT_TIMEOUT,
     PARENT_SPAN_NAME,
+    TEST_SPAN_NAME,
 )
 from .models.request import (
     GuardrailConfigType,
     GuardrailRequest,
     Message,
+    TestPolicy,
 )
 from .models._models import GuardrailsTarget, Role
 from .models.response import GuardrailsResponse
@@ -178,6 +180,21 @@ class Guardrails:
     def _to_messages(self, msg: Message | dict[str, Any]) -> Message:
         return msg if isinstance(msg, Message) else Message(msg)
 
+    async def test_connection(self) -> GuardrailsResponse:
+        """Test connection to Guardrails API.
+
+        This method sends a simple test request to verify that the Guardrails API
+        is reachable and functioning correctly. It uses a TestPolicy guardrail with
+        a test prompt.
+
+        Returns:
+            GuardrailsResponse: The response from the test request.
+
+        Raises:
+            GuardrailsAPIConnectionError: If the API is unreachable.
+            GuardrailsAPITimeoutError: If the request times out.
+        """
+        return await self._sender.test_connection()
 
 class GuardrailRequestSender:
     def __init__(self, config: GuardrailsClientConfig) -> None:
@@ -186,6 +203,26 @@ class GuardrailRequestSender:
             timeout=httpx.Timeout(self.config.timeout, connect=2.0),
         )
 
+
+    async def test_connection(self) -> GuardrailsResponse:
+        with tracer.start_as_current_span(
+            TEST_SPAN_NAME, kind=SpanKind.CLIENT
+        ) as span:
+            span.set_attributes(
+                generate_base_attributes(
+                    application_name=self.config.application_name,
+                    subsystem_name=self.config.subsystem_name,
+                )
+            )
+            response = await self._send_request(GuardrailRequest(
+                application=self.config.application_name,
+                subsystem=self.config.subsystem_name,
+                guardrails=[TestPolicy()],
+                target=GuardrailsTarget.PROMPT,
+                timeout=self.config.timeout,
+            ))
+            return self._handle_response(response, span, GuardrailsTarget.PROMPT)
+    
     async def run(
         self,
         guardrails: list[GuardrailConfigType],

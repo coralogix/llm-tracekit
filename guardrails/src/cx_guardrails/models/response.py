@@ -33,10 +33,11 @@ class PromptInjectionResult(GuardrailsResultBase):
 class CustomResult(GuardrailsResultBase):
     name: str | None = None
     category: GuardrailCategory | None = None
+    
+class TestPolicyResult(GuardrailsResultBase):
+    pass
 
-
-GuardrailsResponseType = CustomResult | PIIResult | PromptInjectionResult
-
+GuardrailsResponseType = CustomResult | PIIResult | PromptInjectionResult | TestPolicyResult
 
 class GuardrailsResponse(BaseModel):
     results: list[GuardrailsResponseType] = Field(default_factory=list)
