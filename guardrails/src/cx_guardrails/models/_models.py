@@ -21,7 +21,6 @@ class GuardrailsTarget(str, Enum):
     PROMPT = "prompt"
     RESPONSE = "response"
     
-
 class Role(str, Enum):
     USER = "user"
     ASSISTANT = "assistant"

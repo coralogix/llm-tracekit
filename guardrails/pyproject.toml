@@ -52,6 +52,9 @@ only-include = [
     "src/cx_guardrails",
 ]
 
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
 [tool.uv.sources]
 llm-tracekit-core = { workspace = true }
 
