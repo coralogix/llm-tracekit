@@ -20,6 +20,7 @@ jobs:
           - llm-tracekit-langchain
           - llm-tracekit-langgraph
           - llm-tracekit-strands
+          - cx-guardrails
     steps:
       - uses: actions/checkout@v4
       - name: Set up Python
