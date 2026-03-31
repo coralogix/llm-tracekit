@@ -12,16 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""VCR tests for Anthropic Messages API instrumentation.
-
-Cassettes are aligned with recorded LangChain Anthropic traffic where possible.
-
-Re-record (requires ANTHROPIC_API_KEY):
-  cd instrumentations/anthropic && uv run --group=dev pytest tests/ -v --vcr-record=once
-
-Override model: ANTHROPIC_TEST_MODEL (must match cassette bodies).
-"""
-
 from __future__ import annotations
 
 import os
