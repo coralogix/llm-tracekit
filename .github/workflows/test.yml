@@ -62,6 +62,10 @@ jobs:
               - 'instrumentations/strands/**'
               - 'core/**'
               - 'pyproject.toml'
+            anthropic:
+              - 'instrumentations/anthropic/**'
+              - 'core/**'
+              - 'pyproject.toml'
 
   test:
     needs: detect-changes

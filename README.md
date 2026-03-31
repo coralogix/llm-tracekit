@@ -18,6 +18,7 @@ pip install llm-tracekit-langchain     # For LangChain
 pip install llm-tracekit-langgraph     # For LangGraph
 pip install llm-tracekit-openai-agents # For OpenAI Agents SDK
 pip install llm-tracekit-strands      # For Strands Agents
+pip install llm-tracekit-anthropic    # For Anthropic (Claude API)
 ```
 
 Then instrument your code:
@@ -49,6 +50,7 @@ response = client.chat.completions.create(
 | [OpenAI](https://openai.com/) | `llm-tracekit-openai` | `OpenAIInstrumentor` |
 | [AWS Bedrock](https://aws.amazon.com/bedrock/) | `llm-tracekit-bedrock` | `BedrockInstrumentor` |
 | [Google Gemini](https://ai.google.dev/) | `llm-tracekit-gemini` | `GeminiInstrumentor` |
+| [Anthropic](https://www.anthropic.com/) | `llm-tracekit-anthropic` | `AnthropicInstrumentor` |
 
 ### Frameworks
 
