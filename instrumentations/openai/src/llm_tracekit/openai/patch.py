@@ -463,10 +463,12 @@ def _usage_prompt_and_completion_tokens(result: Any) -> tuple[int | None, int | 
     usage = getattr(result, "usage", None)
     if usage is None:
         return None, None
+    # Chat Completions API
     prompt = getattr(usage, "prompt_tokens", None)
     completion = getattr(usage, "completion_tokens", None)
     if prompt is not None or completion is not None:
         return prompt, completion
+    # Responses API
     input_tok = getattr(usage, "input_tokens", None)
     output_tok = getattr(usage, "output_tokens", None)
     return input_tok, output_tok

@@ -93,9 +93,11 @@ response = client.chat.completions.create(
 ```
 
 ### Responses API
-The instrumentor also wraps `client.responses.create` and `client.responses.parse` (sync and async). Spans use the same `gen_ai.*` attributes as chat completions: string or structured `input` and optional `instructions` are mapped to `gen_ai.prompt.*`, and the response `output` (messages and function calls) to `gen_ai.completion.*`. Token usage is taken from `usage.input_tokens` / `usage.output_tokens`.
+The instrumentor wraps `client.responses.create` and `client.responses.parse` (sync and async). The `.parse` method makes its own HTTP call (not through `.create`) and returns a `ParsedResponse[T]` with a typed `.output_parsed` field for structured outputs. The `.stream(...)` method internally calls `.create(stream=True)`, so it is covered by the `.create` wrapper.
 
-When `stream=True`, the SDK yields server-sent events; the span is finalized when a `response.completed` (or `response.failed`) event is received, using the embedded `Response` for attributes.
+Spans use the same `gen_ai.*` attributes as chat completions: string or structured `input` and optional `instructions` are mapped to `gen_ai.prompt.*`, and the response `output` to `gen_ai.completion.*`. Token usage is read from `usage.input_tokens` / `usage.output_tokens`.
+
+The Responses API uses server-sent events (SSE) for streaming, which differs from Chat Completions delta-accumulation. The span is finalized when a `response.completed` or `response.failed` event arrives.
 
 ### Changes from OpenTelemetry
 #### General
