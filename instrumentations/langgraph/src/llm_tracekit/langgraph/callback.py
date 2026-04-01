@@ -91,6 +91,9 @@ class LangGraphCallbackHandler(BaseCallbackHandler):  # type: ignore[misc]
                 self._span_manager.node_execution_index(),
             )
             user = (metadata or {}).get("user")
+            if user is None:
+                configurable = (kwargs.get("config") or {}).get("configurable") or {}
+                user = configurable.get("user") or configurable.get("user_id")
             if user is not None:
                 current_span.set_attribute(
                     ExtendedGenAIAttributes.GEN_AI_REQUEST_USER, str(user)

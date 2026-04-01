@@ -87,7 +87,6 @@ response = bedrock.converse(
     modelId="anthropic.claude-3-sonnet-20240229-v1:0",
     messages=[{"role": "user", "content": [{"text": "Write a short poem on open telemetry."}]}],
     system=[{"text": "You are a helpful assistant."}],
-    # Pass user identifier via requestMetadata
     requestMetadata={"user": "user@company.com"},
 )
 ```

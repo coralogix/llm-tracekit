@@ -108,18 +108,27 @@ result = app.invoke(initial_state, config={"callbacks": [handler], "configurable
 | --------- | ---- | ----------- | -------- |
 | `gen_ai.langgraph.node` | string | The name of the LangGraph node being executed | `agent`, `tools` |
 | `gen_ai.langgraph.step` | int | Step counter for this node execution within the graph run | `1`, `2` |
-| `gen_ai.request.user` | string | A unique identifier representing the end-user (from `config={"metadata": {"user": "..."}}`) | `user@company.com` |
+| `gen_ai.request.user` | string | A unique identifier representing the end-user (from `config={"metadata": {"user": "..."}}` or `config={"configurable": {"user": "..."}}`) | `user@company.com` |
 
 ### Passing user identity
 
-Pass the user identifier in the `metadata` dict of the LangGraph config:
+Pass the user identifier in either the `metadata` dict or the `configurable` dict of the LangGraph config:
 
 ```python
+# Option 1: via metadata (preferred)
 result = app.invoke(
     {"messages": [HumanMessage(content="Hello")]},
     config={
         "configurable": {"thread_id": "1"},
         "metadata": {"user": "user@company.com"},
+    },
+)
+
+# Option 2: via configurable (also supported)
+result = app.invoke(
+    {"messages": [HumanMessage(content="Hello")]},
+    config={
+        "configurable": {"thread_id": "1", "user": "user@company.com"},
     },
 )
 ```

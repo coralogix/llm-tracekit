@@ -66,11 +66,9 @@ def _build_semantic_attributes(
     """Build semantic convention attributes from LLM request and response."""
     attributes: dict[str, Any] = {}
 
-    session = getattr(invocation_context, "session", None)
-    if session is not None:
-        user_id = getattr(session, "user_id", None)
-        if user_id:
-            attributes[ExtendedGenAIAttributes.GEN_AI_REQUEST_USER] = str(user_id)
+    user_id = getattr(invocation_context, "user_id", None)
+    if user_id:
+        attributes[ExtendedGenAIAttributes.GEN_AI_REQUEST_USER] = str(user_id)
 
     if llm_request is not None:
         attributes.update(_process_request(llm_request, capture_content))

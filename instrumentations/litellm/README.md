@@ -85,7 +85,6 @@ LiteLLMInstrumentor().instrument()
 response = litellm.completion(
     model="gpt-4o-mini",
     messages=[{"role": "user", "content": "Write a short poem on open telemetry."}],
-    # Pass user identifier directly as a parameter
     user="user@company.com",
 )
 ```
