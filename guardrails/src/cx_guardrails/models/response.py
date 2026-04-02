@@ -4,6 +4,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from ._constants import DEFAULT_THRESHOLD
 from ._models import GuardrailType
+from ._models import GuardrailCategory
 
 
 class GuardrailsResultBase(BaseModel):
@@ -29,8 +30,14 @@ class PromptInjectionResult(GuardrailsResultBase):
     pass
 
 
-GuardrailsResponseType = PIIResult | PromptInjectionResult
+class CustomResult(GuardrailsResultBase):
+    name: str | None = None
+    category: GuardrailCategory | None = None
+    
+class TestPolicyResult(GuardrailsResultBase):
+    pass
 
+GuardrailsResponseType = CustomResult | PIIResult | PromptInjectionResult | TestPolicyResult
 
 class GuardrailsResponse(BaseModel):
     results: list[GuardrailsResponseType] = Field(default_factory=list)

@@ -192,7 +192,7 @@ def get_llm_request_attributes(kwargs, client_instance, capture_content: bool):
             messages=kwargs.get("messages", []), capture_content=capture_content
         ),
         GenAIAttributes.GEN_AI_OPENAI_REQUEST_SEED: kwargs.get("seed"),
-        ExtendedGenAIAttributes.GEN_AI_OPENAI_REQUEST_USER: kwargs.get("user"),
+        ExtendedGenAIAttributes.GEN_AI_REQUEST_USER: kwargs.get("user"),
     }
 
     response_format = kwargs.get("response_format")
@@ -216,26 +216,26 @@ def get_llm_request_attributes(kwargs, client_instance, capture_content: bool):
                 continue
 
             attributes[
-                ExtendedGenAIAttributes.GEN_AI_OPENAI_REQUEST_TOOLS_TYPE.format(
+                ExtendedGenAIAttributes.GEN_AI_REQUEST_TOOLS_TYPE.format(
                     tool_index=index
                 )
             ] = tool.get("type", "function")
             function = tool.get("function")
             if function is not None and isinstance(function, Mapping):
                 attributes[
-                    ExtendedGenAIAttributes.GEN_AI_OPENAI_REQUEST_TOOLS_FUNCTION_NAME.format(
+                    ExtendedGenAIAttributes.GEN_AI_REQUEST_TOOLS_FUNCTION_NAME.format(
                         tool_index=index
                     )
                 ] = function.get("name")
                 attributes[
-                    ExtendedGenAIAttributes.GEN_AI_OPENAI_REQUEST_TOOLS_FUNCTION_DESCRIPTION.format(
+                    ExtendedGenAIAttributes.GEN_AI_REQUEST_TOOLS_FUNCTION_DESCRIPTION.format(
                         tool_index=index
                     )
                 ] = function.get("description")
                 function_parameters = function.get("parameters")
                 if function_parameters is not None:
                     attributes[
-                        ExtendedGenAIAttributes.GEN_AI_OPENAI_REQUEST_TOOLS_FUNCTION_PARAMETERS.format(
+                        ExtendedGenAIAttributes.GEN_AI_REQUEST_TOOLS_FUNCTION_PARAMETERS.format(
                             tool_index=index
                         )
                     ] = json.dumps(function_parameters)
@@ -275,3 +275,103 @@ def get_llm_response_attributes(
         ),
         **choices_to_span_attributes(result.choices, capture_content),
     }
+
+
+def _embedding_input_to_prompt_messages(
+    embedding_input: Any,
+) -> list[Message]:
+    """Convert embeddings input to prompt messages."""
+
+    def to_message(content: str | None) -> Message:
+        return Message(role="user", content=content)
+
+    if embedding_input is None:
+        return []
+
+    if isinstance(embedding_input, str):
+        return [to_message(embedding_input)]
+
+    if isinstance(embedding_input, list):
+        messages: list[Message] = []
+        for item in embedding_input:
+            if isinstance(item, str):
+                messages.append(to_message(item))
+            else:
+                messages.append(to_message(None))
+        return messages
+
+    return [to_message(None)]
+
+
+@attribute_generator
+def get_embedding_request_attributes(
+    kwargs: dict[str, Any],
+    client_instance,
+    capture_content: bool,
+) -> dict[str, Any]:
+    """
+    Build span attributes for `client.embeddings.create(...)`.
+    """
+
+    attributes: dict[str, Any] = {
+        GenAIAttributes.GEN_AI_OPERATION_NAME: "embeddings",
+        GenAIAttributes.GEN_AI_SYSTEM: GenAIAttributes.GenAiSystemValues.OPENAI.value,
+        GenAIAttributes.GEN_AI_REQUEST_MODEL: kwargs.get("model"),
+        ExtendedGenAIAttributes.GEN_AI_REQUEST_USER: kwargs.get("user"),
+    }
+
+    encoding_format = kwargs.get("encoding_format")
+    if encoding_format and encoding_format is not NOT_GIVEN:
+        attributes[ExtendedGenAIAttributes.GEN_AI_REQUEST_ENCODING_FORMATS] = (encoding_format,)
+    else:
+        attributes[ExtendedGenAIAttributes.GEN_AI_REQUEST_ENCODING_FORMATS] = ("float",)
+
+    dimensions = kwargs.get("dimensions")
+    if dimensions and dimensions is not NOT_GIVEN:
+        attributes[ExtendedGenAIAttributes.GEN_AI_EMBEDDINGS_DIMENSION_COUNT] = dimensions
+
+    embedding_input = kwargs.get("input")
+    prompt_messages = _embedding_input_to_prompt_messages(embedding_input)
+    attributes.update(
+        generate_message_attributes(messages=prompt_messages, capture_content=capture_content)
+    )
+
+    attributes.update(generate_server_address_and_port_attributes(client_instance))
+    return attributes
+
+
+@attribute_generator
+def get_embedding_response_attributes(
+    result: Any, capture_content: bool = False
+) -> dict[str, Any]:
+    usage = getattr(result, "usage", None)
+    usage_input_tokens = None
+    if usage is not None:
+        usage_input_tokens = getattr(usage, "prompt_tokens", None) or getattr(
+            usage, "total_tokens", None
+        )
+
+    attributes: dict[str, Any] = {
+        **generate_response_attributes(
+            model=getattr(result, "model", None),
+            id=getattr(result, "id", None),
+            usage_input_tokens=usage_input_tokens,
+            usage_output_tokens=None,
+            finish_reasons=None,
+        ),
+    }
+
+    if capture_content:
+        data = getattr(result, "data", None)
+        if data:
+            for item in data:
+                index = getattr(item, "index", None)
+                embedding = getattr(item, "embedding", None)
+                if index is not None and embedding is not None:
+                    attributes[
+                        ExtendedGenAIAttributes.GEN_AI_EMBEDDING_VECTOR.format(
+                            embedding_index=index
+                        )
+                    ] = embedding
+            
+    return attributes

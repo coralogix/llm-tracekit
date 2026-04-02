@@ -56,10 +56,10 @@ def assert_attributes(
 
 
 def find_last_response_span(spans: list[ReadableSpan]) -> ReadableSpan:
-    for span in reversed(spans):
-        if span.name == "litellm_request":
-            return span
-    raise ValueError("No litellm_request span found")
+    response_spans = [s for s in spans if s.name == "litellm_request"]
+    if not response_spans:
+        raise ValueError("No litellm_request span found")
+    return max(response_spans, key=lambda s: s.end_time or 0)
 
 
 def assert_messages_in_span(

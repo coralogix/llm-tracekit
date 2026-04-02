@@ -21,6 +21,7 @@ from langchain_core.tools import tool
 
 from langchain_openai import ChatOpenAI
 
+import llm_tracekit.core._extended_gen_ai_attributes as ExtendedGenAIAttributes
 from .utils import (
     assert_span_attributes,
     assert_choices_in_span,
@@ -306,8 +307,23 @@ def test_langchain_openai_streaming(span_exporter, instrument_langchain):
     choice = {
         "finish_reason": "stop",
         "message": {
-            "role": getattr(full_message, "type", "assistant"),
+            "role": "assistant",
             "content": full_message.content,
         },
     }
     assert_choices_in_span(span, [choice], expect_content=True)
+
+
+@pytest.mark.vcr()
+def test_langchain_openai_user_from_metadata(span_exporter, instrument_langchain):
+    llm = ChatOpenAI(model="gpt-4o-mini", temperature=0)
+
+    llm.invoke(
+        [HumanMessage(content="Say this is a test")],
+        config={"metadata": {"user": "test-user-123"}},
+    )
+
+    span = _get_chat_spans(span_exporter.get_finished_spans())[-1]
+    assert (
+        span.attributes[ExtendedGenAIAttributes.GEN_AI_REQUEST_USER] == "test-user-123"
+    )

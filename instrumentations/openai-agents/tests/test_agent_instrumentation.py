@@ -14,7 +14,12 @@
 
 import pytest
 
-from .utils import assert_attributes, assert_choices_in_span, assert_messages_in_span
+from .utils import (
+    assert_attributes,
+    assert_choices_in_span,
+    assert_messages_in_span,
+    assert_request_tools_in_span,
+)
 
 from agents import Agent, Runner, function_tool
 
@@ -136,6 +141,27 @@ async def test_agent_tool_usage(span_exporter, instrument):
         response_model="gpt-4o-mini-2024-07-18",
         agent_name=weather_agent.name,
     )
+
+    assert_request_tools_in_span(
+        span=final_response_span,
+        expected_tools=[
+            {
+                "type": "function",
+                "name": "get_weather",
+                "parameters": {
+                    "properties": {"city": {"title": "City", "type": "string"}},
+                    "required": ["city"],
+                    "title": "get_weather_args",
+                    "type": "object",
+                    "additionalProperties": False,
+                },
+            }
+        ],
+    )
+
+    agent_span = next((s for s in spans if s.name == "Agent - WeatherAgent"), None)
+    assert agent_span is not None, "Agent - WeatherAgent span not found"
+    assert agent_span.attributes.get("tools") == ("get_weather",)
 
     assert_messages_in_span(
         span=final_response_span,

@@ -1,16 +1,24 @@
-from typing import Any
+from typing import Any, cast
+
+from .models._models import GuardrailType
 
 from llm_tracekit.core import attribute_generator
 
-from .models.response import GuardrailsResponse
+from .models.response import CustomResult, GuardrailsResponse
 from .span_attributes import (
-    NAME,
     SCORE,
-    DETECTION_THRESHOLD,
+    THRESHOLD,
+    TRIGGERED,
+    CUSTOM_GUARDRAIL_NAME,
+    CUSTOM_GUARDRAIL_CATEGORY,
+    CUSTOM_GUARDRAIL_SCORE,
+    CUSTOM_GUARDRAIL_THRESHOLD,
+    CUSTOM_GUARDRAIL_TRIGGERED,
     PROMPT,
     RESPONSE,
     APPLICATION_NAME,
     SUBSYSTEM_NAME,
+    GUARDRAILS_TRIGGERED,
 )
 
 
@@ -40,20 +48,27 @@ def generate_guardrail_response_attributes(
     target: str,
 ) -> dict[str, Any]:
     span_attributes: dict[str, Any] = {}
+    span_attributes[GUARDRAILS_TRIGGERED] = str(any(result.detected for result in guardrail_response.results))
+    custom_guardrails_index = 0
     for result in guardrail_response.results:
-        name = getattr(result, "name", None)
-        guardrail_type = result.type.value
-        result_attributes: dict[str, Any] = {
-            SCORE.format(target=target, guardrail_type=guardrail_type): result.score,
-            DETECTION_THRESHOLD.format(
-                target=target, guardrail_type=guardrail_type
-            ): result.threshold,
-        }
-        if name is not None:
-            result_attributes[
-                NAME.format(target=target, guardrail_type=guardrail_type)
-            ] = name
-
+        result_attributes: dict[str, Any]
+        if result.type == GuardrailType.CUSTOM:
+            custom_result = cast(CustomResult, result)
+            result_attributes = {
+                CUSTOM_GUARDRAIL_SCORE.format(target=target, index=custom_guardrails_index): result.score,
+                CUSTOM_GUARDRAIL_THRESHOLD.format(target=target, index=custom_guardrails_index): result.threshold,
+                CUSTOM_GUARDRAIL_TRIGGERED.format(target=target, index=custom_guardrails_index): str(result.score > result.threshold).lower(),
+                CUSTOM_GUARDRAIL_NAME.format(target=target, index=custom_guardrails_index): custom_result.name or "unknown",
+            }
+            result_attributes[CUSTOM_GUARDRAIL_CATEGORY.format(target=target, index=custom_guardrails_index)] = custom_result.category
+            custom_guardrails_index += 1
+        else:
+            guardrail_type = result.type.value
+            result_attributes = {
+                SCORE.format(target=target, guardrail_type=guardrail_type): result.score,
+                THRESHOLD.format(target=target, guardrail_type=guardrail_type): result.threshold,
+                TRIGGERED.format(target=target, guardrail_type=guardrail_type): str(result.score > result.threshold).lower()
+            }
         span_attributes.update(result_attributes)
 
     return span_attributes

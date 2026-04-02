@@ -1,18 +1,19 @@
 from __future__ import annotations
 
-from typing import Literal, Any, Optional
+from typing import Literal, Any
 
 
 from pydantic import BaseModel, Field, field_validator
 
 from ._constants import DEFAULT_THRESHOLD
 from ._models import GuardrailsTarget, PIICategory, Role
+from ._models import GuardrailCategory
 
 
 class GuardrailRequest(BaseModel):
     application: str
     subsystem: str
-    messages: list[Message] | None = None
+    messages: list[Message] = []
     guardrails: list[GuardrailConfigType]
     target: GuardrailsTarget
     timeout: int
@@ -30,6 +31,8 @@ class PII(BaseGuardrailConfig):
 class PromptInjection(BaseGuardrailConfig):
     type: Literal["prompt_injection"] = "prompt_injection"
 
+class TestPolicy(BaseGuardrailConfig):
+    type: Literal["test_policy"] = "test_policy"
 
 class CustomEvaluationExample(BaseModel):
     conversation: str
@@ -42,8 +45,9 @@ class Custom(BaseGuardrailConfig):
     instructions: str
     violates: str
     safe: str
-    examples: Optional[list[CustomEvaluationExample]] = None
-    should_include_system_prompt: bool = False 
+    examples: list[CustomEvaluationExample] | None = None
+    should_include_system_prompt: bool = False
+    category: GuardrailCategory = GuardrailCategory.QUALITY
 
     @field_validator("instructions", mode="after")
     @classmethod
@@ -60,7 +64,7 @@ class Toxicity(BaseGuardrailConfig):
     type: Literal["toxicity"] = "toxicity"
 
 
-GuardrailConfigType = PII | PromptInjection | Custom | Toxicity
+GuardrailConfigType = PII | PromptInjection | Custom | Toxicity | TestPolicy
 
 
 class Message(BaseModel):
@@ -79,5 +83,11 @@ class Message(BaseModel):
         if isinstance(v, Role):
             return v
         if isinstance(v, str):
-            role = Role(v.lower())
-            return role
+            return Role(v.lower())
+
+    @field_validator("content", mode="before")
+    @classmethod
+    def normalize_content(cls, v: Any) -> str:
+        if v is None:
+            return ""
+        return str(v)

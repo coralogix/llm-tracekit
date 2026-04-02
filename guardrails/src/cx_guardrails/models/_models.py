@@ -14,6 +14,7 @@ class GuardrailType(str, Enum):
     PROMPT_INJECTION = "prompt_injection"
     CUSTOM = "custom"
     TOXICITY = "toxicity"
+    TEST_POLICY = "test_policy"
 
 
 class GuardrailsTarget(str, Enum):
@@ -26,3 +27,7 @@ class Role(str, Enum):
     ASSISTANT = "assistant"
     SYSTEM = "system"
     TOOL = "tool"
+
+class GuardrailCategory(str, Enum):
+    SECURITY = "security"
+    QUALITY = "quality"

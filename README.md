@@ -15,8 +15,10 @@ pip install llm-tracekit-gemini        # For Google Gemini
 pip install llm-tracekit-google-adk    # For Google ADK
 pip install llm-tracekit-litellm       # For LiteLLM
 pip install llm-tracekit-langchain     # For LangChain
+pip install llm-tracekit-langgraph     # For LangGraph
 pip install llm-tracekit-openai-agents # For OpenAI Agents SDK
 pip install llm-tracekit-claude-agent-sdk  # For Claude Agent SDK
+pip install llm-tracekit-strands      # For Strands Agents
 ```
 
 Then instrument your code:
@@ -56,8 +58,10 @@ response = client.chat.completions.create(
 | [Google ADK](https://github.com/google/adk-python) | `llm-tracekit-google-adk` | `GoogleADKInstrumentor` |
 | [LiteLLM](https://github.com/BerriAI/litellm) | `llm-tracekit-litellm` | `LiteLLMInstrumentor` |
 | [LangChain](https://www.langchain.com/) | `llm-tracekit-langchain` | `LangChainInstrumentor` |
+| [LangGraph](https://langchain-ai.github.io/langgraph/) | `llm-tracekit-langgraph` | `LangGraphInstrumentor` |
 | [OpenAI Agents SDK](https://openai.github.io/openai-agents-python/) | `llm-tracekit-openai-agents` | `OpenAIAgentsInstrumentor` |
 | [Claude Agent SDK](https://github.com/anthropics/claude-agent-sdk-python) | `llm-tracekit-claude-agent-sdk` | `ClaudeAgentSDKInstrumentor` |
+| [Strands Agents](https://github.com/strands-agents/sdk-python) | `llm-tracekit-strands` | `StrandsInstrumentor` |
 
 
 ## 📖 Usage
@@ -93,8 +97,10 @@ For detailed documentation on each instrumentation, see the individual READMEs:
 - [Google ADK](./instrumentations/google-adk/README.md)
 - [LiteLLM](./instrumentations/litellm/README.md)
 - [LangChain](./instrumentations/langchain/README.md)
+- [LangGraph](./instrumentations/langgraph/README.md)
 - [OpenAI Agents SDK](./instrumentations/openai-agents/README.md)
 - [Claude Agent SDK](./instrumentations/claude-agent-sdk/README.md)
+- [Strands Agents](./instrumentations/strands/README.md)
 
 ## 📜 License
 

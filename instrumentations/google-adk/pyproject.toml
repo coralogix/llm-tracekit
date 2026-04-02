@@ -1,17 +1,17 @@
 [project]
 name = "llm-tracekit-google-adk"
-version = "1.0.0"
+version = "1.1.0"
 description = "OpenTelemetry instrumentation for Google ADK (Agent Development Kit)."
 readme = "README.md"
 authors = [
     { name="Coralogix Ltd.", email="info@coralogix.com" },
 ]
 license = "Apache-2.0"
-license-files = ["../../LICENSE"]
+license-files = ["LICENSE"]
 requires-python = ">=3.10,<3.14"
 dependencies = [
     "llm-tracekit-core>=1.0.0",
-    "opentelemetry-instrumentation>=0.53b1",
+    "opentelemetry-instrumentation>=0.60b0",
     "google-adk>=1.0.0",
 ]
 classifiers = [

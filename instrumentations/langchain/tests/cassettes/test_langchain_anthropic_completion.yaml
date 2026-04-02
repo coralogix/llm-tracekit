@@ -1,0 +1,126 @@
+interactions:
+- request:
+    body: |-
+      {
+        "max_tokens": 64000,
+        "messages": [
+          {
+            "role": "user",
+            "content": "Say this is a test"
+          }
+        ],
+        "model": "claude-haiku-4-5-20251001",
+        "temperature": 0.0
+      }
+    headers:
+      accept:
+      - application/json
+      anthropic-version:
+      - '2023-06-01'
+      connection:
+      - keep-alive
+      content-type:
+      - application/json
+      host:
+      - api.anthropic.com
+      x-stainless-lang:
+      - python
+      x-stainless-runtime:
+      - CPython
+      x-stainless-timeout:
+      - NOT_GIVEN
+    method: POST
+    uri: https://api.anthropic.com/v1/messages
+  response:
+    body:
+      string: |-
+        {
+          "model": "claude-haiku-4-5-20251001",
+          "id": "msg_013JB56rNzoztBMapRchX2Kb",
+          "type": "message",
+          "role": "assistant",
+          "content": [
+            {
+              "type": "text",
+              "text": "This is a test."
+            }
+          ],
+          "stop_reason": "end_turn",
+          "stop_sequence": null,
+          "usage": {
+            "input_tokens": 12,
+            "cache_creation_input_tokens": 0,
+            "cache_read_input_tokens": 0,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 0,
+              "ephemeral_1h_input_tokens": 0
+            },
+            "output_tokens": 8,
+            "service_tier": "standard",
+            "inference_geo": "not_available"
+          }
+        }
+    headers:
+      CF-RAY:
+      - 9d78fc93fdc3ca45-KBP
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '451'
+      Content-Security-Policy:
+      - default-src 'none'; frame-ancestors 'none'
+      Content-Type:
+      - application/json
+      Date:
+      - Thu, 05 Mar 2026 12:05:03 GMT
+      Server:
+      - cloudflare
+      Set-Cookie: redacted_set_cookie
+      Transfer-Encoding:
+      - chunked
+      X-Robots-Tag:
+      - none
+      anthropic-organization-id:
+      - redacted_anthropic_organization_id
+      anthropic-ratelimit-input-tokens-limit:
+      - '4000000'
+      anthropic-ratelimit-input-tokens-remaining:
+      - '4000000'
+      anthropic-ratelimit-input-tokens-reset:
+      - '2026-03-05T12:05:02Z'
+      anthropic-ratelimit-output-tokens-limit:
+      - '800000'
+      anthropic-ratelimit-output-tokens-remaining:
+      - '800000'
+      anthropic-ratelimit-output-tokens-reset:
+      - '2026-03-05T12:05:03Z'
+      anthropic-ratelimit-requests-limit:
+      - '4000'
+      anthropic-ratelimit-requests-remaining:
+      - '3999'
+      anthropic-ratelimit-requests-reset:
+      - '2026-03-05T12:05:02Z'
+      anthropic-ratelimit-tokens-limit:
+      - '4800000'
+      anthropic-ratelimit-tokens-remaining:
+      - '4800000'
+      anthropic-ratelimit-tokens-reset:
+      - '2026-03-05T12:05:02Z'
+      cf-cache-status:
+      - DYNAMIC
+      content-length:
+      - '451'
+      openai-organization: test_openai_org_id
+      openai-project: test_openai_project
+      request-id:
+      - req_011CYjuJcQzjPx9N3GyMr9X3
+      strict-transport-security:
+      - max-age=31536000; includeSubDomains; preload
+      vary:
+      - Accept-Encoding
+      x-envoy-upstream-service-time:
+      - '335'
+    status:
+      code: 200
+      message: OK
+version: 1

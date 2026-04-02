@@ -22,6 +22,19 @@ from langchain_core.outputs import Generation  # type: ignore
 
 from llm_tracekit.core._span_builder import Choice, Message, ToolCall
 
+# Module-level constants for role mapping (avoid recreating on every call)
+_STANDARD_ROLES = {"system", "user", "assistant", "tool"}
+
+_ROLE_MAP: dict[str, str] = {
+    "human": "user",
+    "ai": "assistant",
+    "model": "assistant",
+    "function": "tool",
+}
+
+# Tool block types to exclude from completion content
+_TOOL_BLOCK_TYPES = {"tool_use", "tool_result"}
+
 
 def flatten_message_batches(
     message_batches: Sequence[Sequence[BaseMessage]],
@@ -33,12 +46,20 @@ def flatten_message_batches(
 
 
 def build_prompt_history(messages: Iterable[BaseMessage]) -> list[Message]:
+    """Build prompt message list for span attributes.
+
+    Uses completion-style content stringification so assistant messages
+    that contain tool_use blocks do not dump that into gen_ai.prompt.*.content
+    (tool call data belongs only in gen_ai.prompt.*.tool_calls.*).
+    """
     history: list[Message] = []
     for message in messages:
         history.append(
             Message(
                 role=_get_message_role(message),
-                content=_stringify_content(getattr(message, "content", None)),
+                content=_stringify_completion_content(
+                    getattr(message, "content", None)
+                ),
                 tool_call_id=_get_tool_call_id(message),
                 tool_calls=_parse_tool_calls(message),
             )
@@ -70,7 +91,7 @@ def build_response_choices(
                 Choice(
                     finish_reason=finish_reason,
                     role=_get_message_role(message) or "assistant",
-                    content=_stringify_content(getattr(message, "content", None)),
+                    content=_stringify_completion_content(getattr(message, "content", None)),
                     tool_calls=_parse_tool_calls(message),
                 )
             )
@@ -219,17 +240,76 @@ def _stringify_content(content: Any) -> str | None:
     return string_content if string_content.strip() else None
 
 
+def _stringify_completion_content(content: Any) -> str | None:
+    """Stringify assistant completion content for gen_ai.completion.0.content.
+
+    Only text content is included. Tool-use blocks are excluded so they are
+    not duplicated in the content attribute.
+    """
+    if content is None:
+        return None
+    if isinstance(content, str):
+        return content if content.strip() else None
+
+    # Handle single tool block dict - check before stringifying
+    if isinstance(content, dict):
+        if content.get("type") in _TOOL_BLOCK_TYPES:
+            return None
+        if "text" in content:
+            text = str(content["text"])
+            return text if text.strip() else None
+        return _stringify_content(content)
+
+    if isinstance(content, (list, tuple)):
+        parts = []
+        for item in content:
+            if isinstance(item, dict):
+                if item.get("type") in _TOOL_BLOCK_TYPES:
+                    continue
+                if "text" in item:
+                    parts.append(str(item["text"]))
+            elif isinstance(item, str) and item.strip():
+                parts.append(item)
+        joined = " ".join(parts).strip()
+        return joined or None
+
+    return _stringify_content(content)
+
+
 def _get_message_role(message: BaseMessage) -> str | None:
+    """Map LangChain message to semantic convention role."""
     role = getattr(message, "role", None)
-    if role:
-        return role
+    if isinstance(role, str):
+        normalized = _normalize_role_value(role)
+        if normalized:
+            return normalized
 
     msg_type = getattr(message, "type", None)
-    if msg_type == "human":
-        return "user"
-    if msg_type == "ai":
-        return "assistant"
-    return msg_type
+    if isinstance(msg_type, str):
+        return _normalize_role_value(msg_type)
+
+    return None
+
+
+def _normalize_role_value(value: str) -> str | None:
+    """Normalize a role/type string to semantic convention role."""
+    if value in _STANDARD_ROLES:
+        return value
+
+    if mapped := _ROLE_MAP.get(value):
+        return mapped
+
+    # Handle streaming chunks (e.g., "AIMessageChunk" -> "assistant")
+    value_lower = value.lower()
+    for prefix, role in _ROLE_MAP.items():
+        if value_lower.startswith(prefix):
+            return role
+
+    for role in _STANDARD_ROLES:
+        if value_lower.startswith(role):
+            return role
+
+    return value
 
 
 def _safe_getattr(obj: Any, name: str) -> Any:

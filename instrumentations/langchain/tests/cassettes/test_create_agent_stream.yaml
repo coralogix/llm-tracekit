@@ -1,0 +1,123 @@
+interactions:
+- request:
+    body: |-
+      {
+        "messages": [
+          {
+            "content": "You are a helpful assistant. Answer in one word.",
+            "role": "system"
+          },
+          {
+            "content": "Say hello!",
+            "role": "user"
+          }
+        ],
+        "model": "gpt-4o-mini",
+        "stream": false
+      }
+    headers:
+      accept:
+      - application/json
+      connection:
+      - keep-alive
+      content-type:
+      - application/json
+      host:
+      - api.openai.com
+      x-stainless-lang:
+      - python
+      x-stainless-runtime:
+      - CPython
+    method: POST
+    uri: https://api.openai.com/v1/chat/completions
+  response:
+    body:
+      string: |-
+        {
+          "id": "chatcmpl-DG1jpkTDCIgRYIApNDO1Djs2mMVag",
+          "object": "chat.completion",
+          "created": 1772712301,
+          "model": "gpt-4o-mini-2024-07-18",
+          "choices": [
+            {
+              "index": 0,
+              "message": {
+                "role": "assistant",
+                "content": "Hello!",
+                "refusal": null,
+                "annotations": []
+              },
+              "logprobs": null,
+              "finish_reason": "stop"
+            }
+          ],
+          "usage": {
+            "prompt_tokens": 25,
+            "completion_tokens": 2,
+            "total_tokens": 27,
+            "prompt_tokens_details": {
+              "cached_tokens": 0,
+              "audio_tokens": 0
+            },
+            "completion_tokens_details": {
+              "reasoning_tokens": 0,
+              "audio_tokens": 0,
+              "accepted_prediction_tokens": 0,
+              "rejected_prediction_tokens": 0
+            }
+          },
+          "service_tier": "default",
+          "system_fingerprint": "fp_4ea526dd98"
+        }
+    headers:
+      CF-RAY:
+      - 9d78fc882a7bca45-KBP
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '812'
+      Content-Type:
+      - application/json
+      Date:
+      - Thu, 05 Mar 2026 12:05:01 GMT
+      Server:
+      - cloudflare
+      Set-Cookie: redacted_set_cookie
+      Strict-Transport-Security:
+      - max-age=31536000; includeSubDomains; preload
+      Transfer-Encoding:
+      - chunked
+      X-Content-Type-Options:
+      - nosniff
+      access-control-expose-headers:
+      - X-Request-ID
+      alt-svc:
+      - h3=":443"; ma=86400
+      cf-cache-status:
+      - DYNAMIC
+      openai-organization: test_openai_org_id
+      openai-processing-ms:
+      - '411'
+      openai-project: test_openai_project
+      openai-version:
+      - '2020-10-01'
+      x-openai-proxy-wasm:
+      - v0.1
+      x-ratelimit-limit-requests:
+      - '30000'
+      x-ratelimit-limit-tokens:
+      - '150000000'
+      x-ratelimit-remaining-requests:
+      - '29999'
+      x-ratelimit-remaining-tokens:
+      - '149999980'
+      x-ratelimit-reset-requests:
+      - 2ms
+      x-ratelimit-reset-tokens:
+      - 0s
+      x-request-id:
+      - req_7b8c6a3e02af4b9b8154bf50f45bcae2
+    status:
+      code: 200
+      message: OK
+version: 1

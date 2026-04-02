@@ -13,9 +13,11 @@
 # limitations under the License.
 
 
+import json
+
 from dataclasses import dataclass, field
 from contextvars import Token
-from typing import Any, Callable
+from typing import Any, Callable, Mapping
 
 from agents import (
     AgentSpanData,
@@ -50,10 +52,125 @@ from llm_tracekit.core import (
     generate_request_attributes,
     generate_response_attributes,
 )
+from llm_tracekit.core import (
+    _extended_gen_ai_attributes as ExtendedGenAIAttributes,
+)
 
 from opentelemetry.semconv._incubating.attributes import (
     gen_ai_attributes as GenAIAttributes,
 )
+
+
+# Text content types: input_text (user), output_text (assistant in conversation history)
+_TEXT_CONTENT_TYPES = ("input_text", "output_text")
+
+
+def _stringify_message_content(content: Any) -> str | None:
+    """Extract text content from OpenAI message content.
+
+    Content can be either:
+    - str: Plain text message
+    - dict: Single content item with "type" ("input_text", "output_text",
+            "input_image", "input_file"); only input_text and output_text are extracted
+    - list: List of content items, where each item is a dict with "type" and "text";
+            only items with type "input_text" or "output_text" are used
+    """
+    if content is None:
+        return None
+
+    if isinstance(content, str):
+        return content.strip() or None
+
+    if isinstance(content, dict):
+        if content.get("type") in _TEXT_CONTENT_TYPES:
+            text = content.get("text")
+            if isinstance(text, str) and text.strip():
+                return text.strip()
+        return None
+
+    if isinstance(content, list):
+        parts: list[str] = []
+        for item in content:
+            if isinstance(item, dict) and item.get("type") in _TEXT_CONTENT_TYPES:
+                text = item.get("text")
+                if isinstance(text, str) and text.strip():
+                    parts.append(text.strip())
+        return " ".join(parts) if parts else None
+
+    return None
+
+
+def _get_object_value(obj: Any, key: str) -> Any:
+    """Read a field from either a mapping or an SDK object."""
+    if isinstance(obj, Mapping):
+        return obj.get(key)
+    return getattr(obj, key, None)
+
+
+def _serialize_tool_parameters(parameters: Any) -> str | None:
+    """Serialize tool parameters to JSON when available."""
+    if parameters is None:
+        return None
+
+    if hasattr(parameters, "model_dump"):
+        parameters = parameters.model_dump(exclude_none=True)
+
+    try:
+        return json.dumps(parameters)
+    except (TypeError, ValueError):
+        return str(parameters)
+
+
+def _extract_response_tool_attributes(response: Any) -> dict[str, Any]:
+    """Extract request-level tool definition attributes from a response payload."""
+    tools = _get_object_value(response, "tools")
+    if not isinstance(tools, list):
+        return {}
+
+    attributes: dict[str, Any] = {}
+    for index, tool in enumerate(tools):
+        tool_type = _get_object_value(tool, "type") or "function"
+        tool_name = _get_object_value(tool, "name")
+        tool_description = _get_object_value(tool, "description")
+        tool_parameters = _get_object_value(tool, "parameters")
+
+        function = _get_object_value(tool, "function")
+        if function is not None:
+            tool_name = _get_object_value(function, "name") or tool_name
+            tool_description = (
+                _get_object_value(function, "description") or tool_description
+            )
+            tool_parameters = _get_object_value(function, "parameters") or tool_parameters
+
+        attributes[
+            ExtendedGenAIAttributes.GEN_AI_REQUEST_TOOLS_TYPE.format(
+                tool_index=index
+            )
+        ] = tool_type
+
+        if tool_name is not None:
+            attributes[
+                ExtendedGenAIAttributes.GEN_AI_REQUEST_TOOLS_FUNCTION_NAME.format(
+                    tool_index=index
+                )
+            ] = tool_name
+
+        if tool_description is not None:
+            attributes[
+                ExtendedGenAIAttributes.GEN_AI_REQUEST_TOOLS_FUNCTION_DESCRIPTION.format(
+                    tool_index=index
+                )
+            ] = tool_description
+
+        serialized_parameters = _serialize_tool_parameters(tool_parameters)
+        if serialized_parameters is not None:
+            attributes[
+                ExtendedGenAIAttributes.GEN_AI_REQUEST_TOOLS_FUNCTION_PARAMETERS.format(
+                    tool_index=index
+                )
+            ] = serialized_parameters
+
+    return attributes
 
 
 @dataclass
@@ -109,22 +226,20 @@ class OpenAIAgentsTracingProcessor(TracingProcessor):
             while idx < len(input_messages):
                 msg = input_messages[idx]
                 if msg.get("role") == "user":
-                    history.append(
-                        Message(role="user", content=str(msg.get("content")))
+                    raw_content = msg.get("content")
+                    user_content = _stringify_message_content(
+                        raw_content if isinstance(raw_content, (str, list, dict)) else None
                     )
+                    history.append(Message(role="user", content=user_content))
                     idx += 1
                     continue
 
                 if msg.get("role") == "assistant" and msg.get("type") == "message":
-                    content: str = ""
-                    msg_content = msg.get("content")
-                    if (
-                        msg_content is not None
-                        and isinstance(msg_content, list)
-                        and len(msg_content) > 0
-                    ):
-                        content = msg_content[0].get("text", "")
-                    history.append(Message(role="assistant", content=content))
+                    raw_content = msg.get("content")
+                    assistant_content = _stringify_message_content(
+                        raw_content if isinstance(raw_content, (str, list, dict)) else None
+                    )
+                    history.append(Message(role="assistant", content=assistant_content))
                     idx += 1
                     continue
 
@@ -292,6 +407,7 @@ class OpenAIAgentsTracingProcessor(TracingProcessor):
             **generate_request_attributes(
                 model=response_model, top_p=top_p, temperature=temperature
             ),
+            **_extract_response_tool_attributes(span_data.response),
             **generate_response_attributes(
                 usage_input_tokens=usage_input_tokens,
                 usage_output_tokens=usage_output_tokens,

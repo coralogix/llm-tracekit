@@ -19,11 +19,6 @@ GEN_AI_REQUEST_USER: Final = "gen_ai.request.user"
 The user of the request.
 """
 
-GEN_AI_OPENAI_REQUEST_USER: Final = "gen_ai.openai.request.user"
-"""
-The user of the request.
-"""
-
 GEN_AI_REQUEST_TOOLS_TYPE: Final = "gen_ai.request.tools.{tool_index}.type"
 """
 The type of the tool. Expected to be `function`.
@@ -50,57 +45,9 @@ GEN_AI_REQUEST_TOOLS_FUNCTION_PARAMETERS: Final = (
 The parameters of the tool function in JSON format.
 """
 
-GEN_AI_OPENAI_REQUEST_TOOLS_TYPE: Final = (
-    "gen_ai.openai.request.tools.{tool_index}.type"
-)
-"""
-The type of the tool. Expected to be `function`.
-"""
-
-GEN_AI_OPENAI_REQUEST_TOOLS_FUNCTION_NAME: Final = (
-    "gen_ai.openai.request.tools.{tool_index}.function.name"
-)
-"""
-The name of the tool function.
-"""
-
-GEN_AI_OPENAI_REQUEST_TOOLS_FUNCTION_DESCRIPTION: Final = (
-    "gen_ai.openai.request.tools.{tool_index}.function.description"
-)
-"""
-The description of the tool function.
-"""
-
-GEN_AI_OPENAI_REQUEST_TOOLS_FUNCTION_PARAMETERS: Final = (
-    "gen_ai.openai.request.tools.{tool_index}.function.parameters"
-)
-"""
-The parameters of the tool function in JSON format.
-"""
-
 GEN_AI_BEDROCK_AGENT_ALIAS_ID: Final = "gen_ai.bedrock.agent_alias.id"
 """
 The ID of the Bedrock agent alias.
-"""
-GEN_AI_BEDROCK_REQUEST_TOOLS_FUNCTION_NAME: Final = (
-    "gen_ai.bedrock.request.tools.{tool_index}.function.name"
-)
-"""
-The name of the tool function.
-"""
-
-GEN_AI_BEDROCK_REQUEST_TOOLS_FUNCTION_DESCRIPTION: Final = (
-    "gen_ai.bedrock.request.tools.{tool_index}.function.description"
-)
-"""
-The description of the tool function.
-"""
-
-GEN_AI_BEDROCK_REQUEST_TOOLS_FUNCTION_PARAMETERS: Final = (
-    "gen_ai.bedrock.request.tools.{tool_index}.function.parameters"
-)
-"""
-The parameters of the tool function in JSON format.
 """
 
 GEN_AI_PROMPT_ROLE: Final = "gen_ai.prompt.{prompt_index}.role"
@@ -191,4 +138,20 @@ GEN_AI_COMPLETION_TOOL_CALLS_FUNCTION_ARGUMENTS: Final = "gen_ai.completion.{com
 """
 The arguments of the tool function in JSON format.
 Only captured if OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT is set to `true`.
+"""
+
+GEN_AI_EMBEDDING_VECTOR: Final = "gen_ai.embeddings.{embedding_index}.vector"
+"""
+The embedding vector at the given index.
+Only captured if OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT is set to `true`.
+"""
+
+GEN_AI_REQUEST_ENCODING_FORMATS: Final = "gen_ai.request.encoding_formats"
+"""
+The encoding formats requested in an embeddings operation.
+"""
+
+GEN_AI_EMBEDDINGS_DIMENSION_COUNT: Final = "gen_ai.embeddings.dimension.count"
+"""
+The number of dimensions requested for the output embeddings.
 """
