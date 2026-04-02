@@ -21,7 +21,7 @@ from typing import Any
 
 from opentelemetry.trace import Span, SpanKind, Tracer
 
-from llm_tracekit.core import handle_span_exception, generate_request_attributes
+from llm_tracekit.core import handle_span_exception
 from llm_tracekit.claude_agent_sdk.span_attrs import (
     build_completion_attributes,
     build_library_specific_attributes,
@@ -147,11 +147,7 @@ class ClientReceiveResponseWrapper(AsyncIterator[Any]):
                 kind=SpanKind.CLIENT,
             )
             if self._span.is_recording():
-                base = build_request_attributes_from_options(
-                    self._options, self._capture_content
-                )
-                if self._model:
-                    base.update(generate_request_attributes(model=self._model))
+                base = build_request_attributes_from_options(self._options)
                 self._span.set_attributes(base)
                 tools_attrs = build_tools_attributes_from_options(self._options)
                 self._span.set_attributes(tools_attrs)

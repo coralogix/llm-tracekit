@@ -47,8 +47,7 @@ async def test_query_one_span_and_attributes(span_exporter, instrument):
         "claude_agent_sdk.query.InternalClient.process_query",
         _fake_process_query,
     ):
-        from claude_agent_sdk.query import query
-        from claude_agent_sdk import ClaudeAgentOptions
+        from claude_agent_sdk import query, ClaudeAgentOptions
 
         options = ClaudeAgentOptions(system_prompt="You are helpful.")
         messages = []
@@ -83,8 +82,7 @@ async def test_query_content_capture_off(span_exporter, instrument_no_content):
         "claude_agent_sdk.query.InternalClient.process_query",
         _fake_process_query,
     ):
-        from claude_agent_sdk.query import query
-        from claude_agent_sdk import ClaudeAgentOptions
+        from claude_agent_sdk import query, ClaudeAgentOptions
 
         async for _ in query(prompt="Secret?", options=ClaudeAgentOptions()):
             pass
@@ -95,7 +93,9 @@ async def test_query_content_capture_off(span_exporter, instrument_no_content):
     span = chat_spans[0]
     assert span.attributes is not None
     assert span.attributes.get("gen_ai.prompt.0.role") == "user"
+    assert "gen_ai.prompt.0.content" not in span.attributes
     assert span.attributes.get("gen_ai.completion.0.role") == "assistant"
+    assert "gen_ai.completion.0.content" not in span.attributes
 
 
 @pytest.mark.asyncio
@@ -115,8 +115,7 @@ async def test_query_error_finalizes_span(span_exporter, instrument):
         "claude_agent_sdk.query.InternalClient.process_query",
         fake_process_query_error,
     ):
-        from claude_agent_sdk.query import query
-        from claude_agent_sdk import ClaudeAgentOptions
+        from claude_agent_sdk import query, ClaudeAgentOptions
 
         with pytest.raises(RuntimeError, match="Stream failed"):
             async for _ in query(prompt="Hi", options=ClaudeAgentOptions()):

@@ -53,7 +53,7 @@ def create_wrapped_query(
             kind=SpanKind.CLIENT,
         )
         if span.is_recording():
-            req = build_request_attributes_from_options(options, capture_content)
+            req = build_request_attributes_from_options(options)
             span.set_attributes(req)
             tools = build_tools_attributes_from_options(options)
             span.set_attributes(tools)
@@ -64,9 +64,6 @@ def create_wrapped_query(
             )
             span.set_attributes(prompt_attrs)
         stream = original_query(prompt=prompt, options=options, transport=transport)
-        # original_query returns AsyncIterator - it's the async generator from 'async for'
-        # In the SDK, query() is async def query(...): async for message in client.process_query(...): yield message
-        # So stream here is the async generator object. We need to wrap it.
         return QueryStreamWrapper(stream, span, capture_content=capture_content)
 
     return wrapped_query

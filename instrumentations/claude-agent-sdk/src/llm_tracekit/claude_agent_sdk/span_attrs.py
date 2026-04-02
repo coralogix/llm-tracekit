@@ -47,7 +47,6 @@ GEN_AI_CLAUDE_AGENT_SDK_RESULT_TOTAL_COST_USD = (
     "gen_ai.claude_agent_sdk.result.total_cost_usd"
 )
 GEN_AI_CLAUDE_AGENT_SDK_RESULT_SESSION_ID = "gen_ai.claude_agent_sdk.result.session_id"
-GEN_AI_REQUEST_USER = "gen_ai.request.user"
 
 DEFAULT_SYSTEM = "claude.agent_sdk"
 
@@ -77,9 +76,10 @@ def _blocks_to_content_and_tool_calls(
     for block in blocks:
         cls_name = type(block).__name__
         if cls_name == "TextBlock":
-            text_parts.append(block.text)
+            if capture_content:
+                text_parts.append(block.text)
         elif cls_name == "ToolUseBlock":
-            args_str = ""
+            args_str = None
             if capture_content and getattr(block, "input", None):
                 args_str = (
                     json.dumps(block.input)
@@ -91,31 +91,29 @@ def _blocks_to_content_and_tool_calls(
                     id=getattr(block, "id", None),
                     type="function",
                     function_name=getattr(block, "name", None),
-                    function_arguments=args_str or None,
+                    function_arguments=args_str,
                 )
             )
         elif isinstance(block, dict):
             if block.get("type") == "text":
-                text_parts.append(block.get("text", ""))
+                if capture_content:
+                    text_parts.append(block.get("text", ""))
             elif block.get("type") == "tool_use":
                 inp = block.get("input", {})
-                args_str = json.dumps(inp) if capture_content and inp else ""
+                args_str = json.dumps(inp) if capture_content and inp else None
                 tool_calls.append(
                     ToolCall(
                         id=block.get("id"),
                         type="function",
                         function_name=block.get("name"),
-                        function_arguments=args_str or None,
+                        function_arguments=args_str,
                     )
                 )
     content = "\n".join(text_parts) if text_parts else None
     return content, tool_calls if tool_calls else None
 
 
-def build_request_attributes_from_options(
-    options: Any | None,
-    capture_content: bool,
-) -> dict[str, Any]:
+def build_request_attributes_from_options(options: Any | None) -> dict[str, Any]:
     """Build request-level attributes (model, user, base) from ClaudeAgentOptions."""
     attrs: dict[str, Any] = {}
     attrs.update(
@@ -130,7 +128,7 @@ def build_request_attributes_from_options(
             attrs.update(generate_request_attributes(model=model))
         user = getattr(options, "user", None)
         if user:
-            attrs[GEN_AI_REQUEST_USER] = user
+            attrs[ExtendedGenAIAttributes.GEN_AI_REQUEST_USER] = user
     return attrs
 
 
@@ -141,10 +139,8 @@ def build_prompt_attributes_for_turn(
 ) -> dict[str, Any]:
     """Build gen_ai.prompt.* for the current turn (system at 0 if present, then user)."""
     messages: list[Message] = []
-    idx = 0
     if system_prompt:
         messages.append(Message(role="system", content=system_prompt))
-        idx += 1
     if user_prompt is not None:
         content = user_prompt if capture_content else None
         messages.append(Message(role="user", content=content or None))
