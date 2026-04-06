@@ -94,6 +94,7 @@ response = client.messages.create(
 ## What is instrumented
 
 - `Anthropic.messages.create` and `AsyncAnthropic.messages.create`
+- `Anthropic.messages.stream` and `AsyncAnthropic.messages.stream`
 - Non-streaming and streaming (`stream=True`) calls
 
 ## Semantic Conventions

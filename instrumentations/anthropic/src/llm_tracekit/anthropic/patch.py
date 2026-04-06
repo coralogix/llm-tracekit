@@ -15,6 +15,7 @@
 from __future__ import annotations
 
 from timeit import default_timer
+from types import SimpleNamespace
 from typing import Any
 
 from anthropic._streaming import AsyncStream, Stream
@@ -26,8 +27,6 @@ from opentelemetry.semconv._incubating.attributes import (
 )
 from opentelemetry.trace import Span, SpanKind, Tracer
 from opentelemetry.util.types import AttributeValue
-
-from types import SimpleNamespace
 
 from llm_tracekit.core import (
     Choice,
@@ -485,3 +484,217 @@ class AnthropicAsyncStreamWrapper:
             handle_span_exception(self.span, error)
             self._finalize(type(error).__qualname__)
             raise
+
+
+def messages_stream(
+    tracer: Tracer,
+    instruments: Instruments,
+    capture_content: bool,
+):
+    """Wrap sync `Messages.stream`."""
+
+    def traced_method(wrapped, instance, args, kwargs):
+        span_attributes = dict(
+            get_messages_request_attributes(kwargs, instance, capture_content)
+        )
+        span_name = (
+            f"{span_attributes[GenAIAttributes.GEN_AI_OPERATION_NAME]} "
+            f"{span_attributes[GenAIAttributes.GEN_AI_REQUEST_MODEL]}"
+        )
+        span = tracer.start_span(
+            name=span_name,
+            kind=SpanKind.CLIENT,
+            attributes=span_attributes,
+        )
+        start = default_timer()
+        try:
+            inner_manager = wrapped(*args, **kwargs)
+        except Exception as error:
+            handle_span_exception(span, error)
+            error_type = type(error).__qualname__
+            span.end()
+            _record_metrics(
+                instruments,
+                max(default_timer() - start, 0),
+                None,
+                span_attributes,
+                error_type,
+            )
+            raise
+        return _MessageStreamManagerWrapper(
+            inner_manager, span, capture_content, span_attributes, instruments, start
+        )
+
+    return traced_method
+
+
+def async_messages_stream(
+    tracer: Tracer,
+    instruments: Instruments,
+    capture_content: bool,
+):
+    """Wrap `AsyncMessages.stream` (the method itself is not a coroutine)."""
+
+    def traced_method(wrapped, instance, args, kwargs):
+        span_attributes = dict(
+            get_messages_request_attributes(kwargs, instance, capture_content)
+        )
+        span_name = (
+            f"{span_attributes[GenAIAttributes.GEN_AI_OPERATION_NAME]} "
+            f"{span_attributes[GenAIAttributes.GEN_AI_REQUEST_MODEL]}"
+        )
+        span = tracer.start_span(
+            name=span_name,
+            kind=SpanKind.CLIENT,
+            attributes=span_attributes,
+        )
+        start = default_timer()
+        try:
+            inner_manager = wrapped(*args, **kwargs)
+        except Exception as error:
+            handle_span_exception(span, error)
+            error_type = type(error).__qualname__
+            span.end()
+            _record_metrics(
+                instruments,
+                max(default_timer() - start, 0),
+                None,
+                span_attributes,
+                error_type,
+            )
+            raise
+        return _AsyncMessageStreamManagerWrapper(
+            inner_manager, span, capture_content, span_attributes, instruments, start
+        )
+
+    return traced_method
+
+
+class _MessageStreamManagerWrapper:
+    """Wraps `MessageStreamManager` to finalize the span via `get_final_message()`."""
+
+    def __init__(
+        self,
+        inner: Any,
+        span: Span,
+        capture_content: bool,
+        span_attributes: dict[str, Any],
+        instruments: Instruments,
+        start_time: float,
+    ) -> None:
+        self._inner = inner
+        self._span = span
+        self._capture_content = capture_content
+        self._span_attributes = span_attributes
+        self._instruments = instruments
+        self._start_time = start_time
+        self._stream: Any = None
+
+    def __enter__(self) -> Any:
+        try:
+            self._stream = self._inner.__enter__()
+            return self._stream
+        except Exception as error:
+            handle_span_exception(self._span, error)
+            self._span.end()
+            _record_metrics(
+                self._instruments,
+                max(default_timer() - self._start_time, 0),
+                None,
+                self._span_attributes,
+                type(error).__qualname__,
+            )
+            raise
+
+    def __exit__(self, exc_type, exc_val, exc_tb) -> None:
+        error_type = None
+        final_msg = None
+        try:
+            if exc_type is not None and exc_val is not None:
+                handle_span_exception(self._span, exc_val)
+                error_type = type(exc_val).__qualname__
+            elif self._stream is not None and self._span.is_recording():
+                try:
+                    final_msg = self._stream.get_final_message()
+                    self._span.set_attributes(
+                        get_message_response_attributes(
+                            final_msg, self._capture_content
+                        )
+                    )
+                except Exception:
+                    pass
+        finally:
+            self._inner.__exit__(exc_type, exc_val, exc_tb)
+            self._span.end()
+            _record_metrics(
+                self._instruments,
+                max(default_timer() - self._start_time, 0),
+                final_msg,
+                self._span_attributes,
+                error_type,
+            )
+
+
+class _AsyncMessageStreamManagerWrapper:
+    """Wraps `AsyncMessageStreamManager` to finalize the span via `get_final_message()`."""
+
+    def __init__(
+        self,
+        inner: Any,
+        span: Span,
+        capture_content: bool,
+        span_attributes: dict[str, Any],
+        instruments: Instruments,
+        start_time: float,
+    ) -> None:
+        self._inner = inner
+        self._span = span
+        self._capture_content = capture_content
+        self._span_attributes = span_attributes
+        self._instruments = instruments
+        self._start_time = start_time
+        self._stream: Any = None
+
+    async def __aenter__(self) -> Any:
+        try:
+            self._stream = await self._inner.__aenter__()
+            return self._stream
+        except Exception as error:
+            handle_span_exception(self._span, error)
+            self._span.end()
+            _record_metrics(
+                self._instruments,
+                max(default_timer() - self._start_time, 0),
+                None,
+                self._span_attributes,
+                type(error).__qualname__,
+            )
+            raise
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb) -> None:
+        error_type = None
+        final_msg = None
+        try:
+            if exc_type is not None and exc_val is not None:
+                handle_span_exception(self._span, exc_val)
+                error_type = type(exc_val).__qualname__
+            elif self._stream is not None and self._span.is_recording():
+                try:
+                    final_msg = await self._stream.get_final_message()
+                    self._span.set_attributes(
+                        get_message_response_attributes(
+                            final_msg, self._capture_content
+                        )
+                    )
+                except Exception:
+                    pass
+        finally:
+            await self._inner.__aexit__(exc_type, exc_val, exc_tb)
+            self._span.end()
+            _record_metrics(
+                self._instruments,
+                max(default_timer() - self._start_time, 0),
+                final_msg,
+                self._span_attributes,
+                error_type,
+            )

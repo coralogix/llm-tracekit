@@ -28,7 +28,12 @@ from wrapt import wrap_function_wrapper
 
 from llm_tracekit.core import Instruments, is_content_enabled
 from llm_tracekit.anthropic.package import _instruments
-from llm_tracekit.anthropic.patch import async_messages_create, messages_create
+from llm_tracekit.anthropic.patch import (
+    async_messages_create,
+    async_messages_stream,
+    messages_create,
+    messages_stream,
+)
 
 
 class AnthropicInstrumentor(BaseInstrumentor):
@@ -64,10 +69,22 @@ class AnthropicInstrumentor(BaseInstrumentor):
         )
         wrap_function_wrapper(
             module="anthropic.resources.messages.messages",
+            name="Messages.stream",
+            wrapper=messages_stream(tracer, instruments, capture_content),
+        )
+        wrap_function_wrapper(
+            module="anthropic.resources.messages.messages",
             name="AsyncMessages.create",
             wrapper=async_messages_create(tracer, instruments, capture_content),
+        )
+        wrap_function_wrapper(
+            module="anthropic.resources.messages.messages",
+            name="AsyncMessages.stream",
+            wrapper=async_messages_stream(tracer, instruments, capture_content),
         )
 
     def _uninstrument(self, **kwargs) -> None:
         unwrap(Messages, "create")
+        unwrap(Messages, "stream")
         unwrap(AsyncMessages, "create")
+        unwrap(AsyncMessages, "stream")
