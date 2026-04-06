@@ -15,6 +15,7 @@ jobs:
           - llm-tracekit-openai
           - llm-tracekit-bedrock
           - llm-tracekit-gemini
+          - llm-tracekit-anthropic
           - llm-tracekit-litellm
           - llm-tracekit-openai-agents
           - llm-tracekit-langchain
