@@ -2478,7 +2478,7 @@ dev = [
 
 [[package]]
 name = "llm-tracekit-core"
-version = "1.2.0"
+version = "1.2.1"
 source = { editable = "core" }
 dependencies = [
     { name = "opentelemetry-api" },
