@@ -1,6 +1,6 @@
 [project]
 name = "llm-tracekit-google-adk"
-version = "1.1.0"
+version = "1.2.0"
 description = "OpenTelemetry instrumentation for Google ADK (Agent Development Kit)."
 readme = "README.md"
 authors = [

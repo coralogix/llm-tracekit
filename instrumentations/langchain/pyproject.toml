@@ -1,6 +1,6 @@
 [project]
 name = "llm-tracekit-langchain"
-version = "1.3.0"
+version = "1.4.0"
 description = "OpenTelemetry instrumentation for LangChain."
 readme = "README.md"
 authors = [
