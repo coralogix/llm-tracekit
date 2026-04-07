@@ -93,7 +93,7 @@ response = client.chat.completions.create(
 ```
 
 ### Responses API
-The instrumentor wraps `client.responses.create` and `client.responses.parse` (sync and async). The `.parse` method makes its own HTTP call (not through `.create`) and returns a `ParsedResponse[T]` with a typed `.output_parsed` field for structured outputs. The `.stream(...)` method internally calls `.create(stream=True)`, so it is covered by the `.create` wrapper.
+The instrumentor wraps `client.responses.create` (sync and async). The `.stream(...)` method internally calls `.create(stream=True)`, so it is covered by the `.create` wrapper.
 
 Spans use the same `gen_ai.*` attributes as chat completions: string or structured `input` and optional `instructions` are mapped to `gen_ai.prompt.*`, and the response `output` to `gen_ai.completion.*`. Token usage is read from `usage.input_tokens` / `usage.output_tokens`.
 

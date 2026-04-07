@@ -633,7 +633,7 @@ def get_responses_request_attributes(
     client_instance: Any,
     capture_content: bool,
 ) -> dict[str, Any]:
-    """Build span attributes for `client.responses.create` / `parse`."""
+    """Build span attributes for `client.responses.create`."""
     instructions = kwargs.get("instructions")
     if instructions is NOT_GIVEN:
         instructions = None
