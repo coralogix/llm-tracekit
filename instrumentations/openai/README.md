@@ -93,20 +93,35 @@ response = client.chat.completions.create(
 ```
 
 ### Responses API
-The instrumentor wraps `client.responses.create` (sync and async). The `.stream(...)` method internally calls `.create(stream=True)`, so it is covered by the `.create` wrapper.
+#### Example Response API call
 
-Spans use the same `gen_ai.*` attributes as chat completions: string or structured `input` and optional `instructions` are mapped to `gen_ai.prompt.*`, and the response `output` to `gen_ai.completion.*`. Token usage is read from `usage.input_tokens` / `usage.output_tokens`.
+```python
+from openai import OpenAI
 
-The Responses API uses server-sent events (SSE) for streaming, which differs from Chat Completions delta-accumulation. The span is finalized when a `response.completed` or `response.failed` event arrives.
+client = OpenAI()
+response = client.responses.create(
+    model="gpt-4o-mini",
+    input="Write a haiku about OpenTelemetry.",
+)
+```
+
+```python
+from openai import OpenAI
+
+client = OpenAI()
+with client.responses.stream(
+    model="gpt-4o-mini",
+    input="Write a haiku about OpenTelemetry.",
+) as stream:
+    for event in stream:
+        pass
+    response = stream.get_final_response()
+```
 
 ### Changes from OpenTelemetry
 #### General
 * The `user` parameter in the OpenAI Chat Completions API is now recorded in the span as the `gen_ai.request.user` attribute
 * User prompts and model responses are captured as span attributes instead of log events (see [Semantic Conventions](#semantic-conventions) below)
-* **Responses API**: `previous_response_id` and conversation id (when provided) are recorded as `gen_ai.openai.request.previous_response_id` and `gen_ai.openai.request.conversation_id`
-#### For OpenAI Agents SDK
-* Agent & Tool Spans: Creates dedicated spans for each agent execution and for each tool call, providing clear visibility into the agent's inner workings.
-* Enriched Spans: Automatically adds agent-specific attributes like the agent's `name` to the relevant spans.
 
 ## Semantic Conventions
 | Attribute | Type | Description | Examples
