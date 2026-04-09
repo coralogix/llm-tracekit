@@ -197,6 +197,9 @@ def scrub_response_headers(response):
     """
     This scrubs sensitive response headers. Note they are case-sensitive!
     """
-    response["headers"]["openai-organization"] = "test_openai_org_id"
-    response["headers"]["Set-Cookie"] = "test_set_cookie"
+    headers = response["headers"]
+    headers["openai-organization"] = "test_openai_org_id"
+    headers["Set-Cookie"] = "test_set_cookie"
+    if "openai-project" in headers:
+        headers["openai-project"] = "test_openai_project_id"
     return response

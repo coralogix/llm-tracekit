@@ -1,0 +1,78 @@
+interactions:
+- request:
+    body: |-
+      {
+        "input": "Say this is a test",
+        "model": "gpt-4o-mini"
+      }
+    headers:
+      accept:
+      - application/json
+      accept-encoding:
+      - gzip, deflate, br, zstd
+      authorization:
+      - Bearer test_openai_api_key
+      connection:
+      - keep-alive
+      content-type:
+      - application/json
+      host:
+      - api.openai.com
+    method: POST
+    uri: https://api.openai.com/v1/responses
+  response:
+    body:
+      string: |-
+        {
+          "id": "resp_vcr_sync_with_content",
+          "object": "response",
+          "created_at": 1731368630,
+          "model": "gpt-4o-mini-2024-07-18",
+          "output": [
+            {
+              "type": "message",
+              "id": "msg_vcr_sync_1",
+              "role": "assistant",
+              "status": "completed",
+              "content": [
+                {
+                  "type": "output_text",
+                  "text": "This is a test.",
+                  "annotations": []
+                }
+              ]
+            }
+          ],
+          "parallel_tool_calls": true,
+          "tool_choice": "auto",
+          "tools": [],
+          "status": "completed",
+          "service_tier": "default",
+          "usage": {
+            "input_tokens": 12,
+            "output_tokens": 5,
+            "total_tokens": 17,
+            "input_tokens_details": {
+              "cached_tokens": 0
+            },
+            "output_tokens_details": {
+              "reasoning_tokens": 0
+            }
+          }
+        }
+    headers:
+      Connection:
+      - keep-alive
+      Content-Type:
+      - application/json
+      Date:
+      - Sun, 22 Mar 2026 21:56:41 GMT
+      Server:
+      - cloudflare
+      Set-Cookie: test_set_cookie
+      openai-organization: test_openai_org_id
+      openai-project: test_openai_project_id
+    status:
+      code: 200
+      message: OK
+version: 1

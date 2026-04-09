@@ -92,13 +92,36 @@ response = client.chat.completions.create(
 )
 ```
 
+### Responses API
+#### Example Response API call
+
+```python
+from openai import OpenAI
+
+client = OpenAI()
+response = client.responses.create(
+    model="gpt-4o-mini",
+    input="Write a haiku about OpenTelemetry.",
+)
+```
+
+```python
+from openai import OpenAI
+
+client = OpenAI()
+with client.responses.stream(
+    model="gpt-4o-mini",
+    input="Write a haiku about OpenTelemetry.",
+) as stream:
+    for event in stream:
+        pass
+    response = stream.get_final_response()
+```
+
 ### Changes from OpenTelemetry
 #### General
 * The `user` parameter in the OpenAI Chat Completions API is now recorded in the span as the `gen_ai.request.user` attribute
 * User prompts and model responses are captured as span attributes instead of log events (see [Semantic Conventions](#semantic-conventions) below)
-#### For OpenAI Agents SDK
-* Agent & Tool Spans: Creates dedicated spans for each agent execution and for each tool call, providing clear visibility into the agent's inner workings.
-* Enriched Spans: Automatically adds agent-specific attributes like the agent's `name` to the relevant spans.
 
 ## Semantic Conventions
 | Attribute | Type | Description | Examples

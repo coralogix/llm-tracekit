@@ -39,6 +39,8 @@ from llm_tracekit.openai.utils import (
     get_embedding_response_attributes,
     get_llm_request_attributes,
     get_llm_response_attributes,
+    get_responses_request_attributes,
+    get_responses_response_attributes,
     is_streaming,
 )
 
@@ -246,6 +248,128 @@ def async_embeddings_create(
     return traced_method
 
 
+def responses_create(
+    tracer: Tracer,
+    instruments: Instruments,
+    capture_content: bool,
+):
+    """Wrap `Responses.create` for OpenTelemetry tracing."""
+
+    def traced_method(wrapped, instance, args, kwargs):
+        span_attributes = {
+            **get_responses_request_attributes(dict(kwargs), instance, capture_content)
+        }
+
+        span_name = f"{span_attributes[GenAIAttributes.GEN_AI_OPERATION_NAME]} {span_attributes[GenAIAttributes.GEN_AI_REQUEST_MODEL]}"
+        with tracer.start_as_current_span(
+            name=span_name,
+            kind=SpanKind.CLIENT,
+            attributes=span_attributes,
+            end_on_exit=False,
+        ) as span:
+            start = default_timer()
+            result = None
+            error_type = None
+            try:
+                result = wrapped(*args, **kwargs)
+                if is_streaming(kwargs):
+                    return ResponsesStreamWrapper(result, span, capture_content)
+
+                if span.is_recording():
+                    span.set_attributes(
+                        get_responses_response_attributes(result, capture_content)
+                    )
+
+                span.end()
+                return result
+
+            except Exception as error:
+                error_type = type(error).__qualname__
+                handle_span_exception(span, error)
+                raise
+            finally:
+                duration = max((default_timer() - start), 0)
+                _record_metrics(
+                    instruments,
+                    duration,
+                    result,
+                    span_attributes,
+                    error_type,
+                )
+
+    return traced_method
+
+
+def async_responses_create(
+    tracer: Tracer,
+    instruments: Instruments,
+    capture_content: bool,
+):
+    """Wrap `AsyncResponses.create` for OpenTelemetry tracing."""
+
+    async def traced_method(wrapped, instance, args, kwargs):
+        span_attributes = {
+            **get_responses_request_attributes(dict(kwargs), instance, capture_content)
+        }
+
+        span_name = f"{span_attributes[GenAIAttributes.GEN_AI_OPERATION_NAME]} {span_attributes[GenAIAttributes.GEN_AI_REQUEST_MODEL]}"
+        with tracer.start_as_current_span(
+            name=span_name,
+            kind=SpanKind.CLIENT,
+            attributes=span_attributes,
+            end_on_exit=False,
+        ) as span:
+            start = default_timer()
+            result = None
+            error_type = None
+            try:
+                result = await wrapped(*args, **kwargs)
+                if is_streaming(kwargs):
+                    return AsyncResponsesStreamWrapper(result, span, capture_content)
+
+                if span.is_recording():
+                    span.set_attributes(
+                        get_responses_response_attributes(result, capture_content)
+                    )
+
+                span.end()
+                return result
+
+            except Exception as error:
+                error_type = type(error).__qualname__
+                handle_span_exception(span, error)
+                raise
+            finally:
+                duration = max((default_timer() - start), 0)
+                _record_metrics(
+                    instruments,
+                    duration,
+                    result,
+                    span_attributes,
+                    error_type,
+                )
+
+    return traced_method
+
+
+def _usage_prompt_and_completion_tokens(result: Any) -> tuple[int | None, int | None]:
+    """Read token counts from Chat Completions or Responses usage objects."""
+    if result is None:
+        return None, None
+    usage = getattr(result, "usage", None)
+    if usage is None:
+        return None, None
+    # Chat Completions API
+    prompt = getattr(usage, "prompt_tokens", None)
+    completion = getattr(usage, "completion_tokens", None)
+    if prompt is not None or completion is not None:
+        return prompt, completion
+    # Responses API
+    input_tok = getattr(usage, "input_tokens", None)
+    output_tok = getattr(usage, "output_tokens", None)
+    return input_tok, output_tok
+
+
 def _record_metrics(
     instruments: Instruments,
     duration: float,
@@ -292,22 +416,24 @@ def _record_metrics(
         attributes=common_attributes,
     )
 
-    if result and getattr(result, "usage", None):
+    prompt_tokens, completion_tokens = _usage_prompt_and_completion_tokens(result)
+    if prompt_tokens is not None:
         input_attributes = {
             **common_attributes,
             GenAIAttributes.GEN_AI_TOKEN_TYPE: GenAIAttributes.GenAiTokenTypeValues.INPUT.value,
         }
         instruments.token_usage_histogram.record(
-            result.usage.prompt_tokens,
+            prompt_tokens,
             attributes=input_attributes,
         )
 
+    if completion_tokens is not None:
         completion_attributes = {
             **common_attributes,
             GenAIAttributes.GEN_AI_TOKEN_TYPE: GenAIAttributes.GenAiTokenTypeValues.COMPLETION.value,
         }
         instruments.token_usage_histogram.record(
-            result.usage.completion_tokens,
+            completion_tokens,
             attributes=completion_attributes,
         )
 
@@ -610,3 +736,137 @@ class AsyncStreamWrapper(BaseStreamWrapper):
 
     def parse(self):
         return self.stream.parse()
+
+
+class ResponsesStreamWrapper:
+    """Wrap Responses API SSE streams; finalize span on `response.completed`."""
+
+    def __init__(self, stream: Stream, span: Span, capture_content: bool) -> None:
+        self.stream = stream
+        self.span = span
+        self.capture_content = capture_content
+        self._final_response: Any = None
+        self._stream_error: Any = None
+        self._span_finalized = False
+
+    def process_event(self, event: Any) -> None:
+        etype = getattr(event, "type", None)
+        if etype == "response.completed":
+            self._final_response = getattr(event, "response", None)
+        elif etype == "response.failed":
+            self._final_response = getattr(event, "response", None)
+        elif etype == "error":
+            self._stream_error = event
+
+    def cleanup(self) -> None:
+        if self._span_finalized:
+            return
+        self._span_finalized = True
+        if self._stream_error is not None:
+            msg = getattr(self._stream_error, "message", str(self._stream_error))
+            handle_span_exception(self.span, RuntimeError(msg))
+        elif self._final_response is not None and self.span.is_recording():
+            self.span.set_attributes(
+                get_responses_response_attributes(
+                    self._final_response, self.capture_content
+                )
+            )
+        self.span.end()
+
+    def __enter__(self) -> "ResponsesStreamWrapper":
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb) -> bool:
+        try:
+            if exc_type is not None:
+                handle_span_exception(self.span, exc_val)
+        finally:
+            self.cleanup()
+        return False
+
+    def close(self) -> None:
+        self.stream.close()
+        self.cleanup()
+
+    def __iter__(self) -> "ResponsesStreamWrapper":
+        return self
+
+    def __next__(self) -> Any:
+        try:
+            event = next(self.stream)
+            self.process_event(event)
+            return event
+        except StopIteration:
+            self.cleanup()
+            raise
+        except Exception as error:
+            handle_span_exception(self.span, error)
+            self.cleanup()
+            raise
+
+
+class AsyncResponsesStreamWrapper:
+    """Async variant of `ResponsesStreamWrapper`."""
+
+    def __init__(self, stream: AsyncStream, span: Span, capture_content: bool) -> None:
+        self.stream = stream
+        self.span = span
+        self.capture_content = capture_content
+        self._final_response: Any = None
+        self._stream_error: Any = None
+        self._span_finalized = False
+
+    def process_event(self, event: Any) -> None:
+        etype = getattr(event, "type", None)
+        if etype == "response.completed":
+            self._final_response = getattr(event, "response", None)
+        elif etype == "response.failed":
+            self._final_response = getattr(event, "response", None)
+        elif etype == "error":
+            self._stream_error = event
+
+    def cleanup(self) -> None:
+        if self._span_finalized:
+            return
+        self._span_finalized = True
+        if self._stream_error is not None:
+            msg = getattr(self._stream_error, "message", str(self._stream_error))
+            handle_span_exception(self.span, RuntimeError(msg))
+        elif self._final_response is not None and self.span.is_recording():
+            self.span.set_attributes(
+                get_responses_response_attributes(
+                    self._final_response, self.capture_content
+                )
+            )
+        self.span.end()
+
+    async def __aenter__(self) -> "AsyncResponsesStreamWrapper":
+        return self
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb) -> bool:
+        try:
+            if exc_type is not None:
+                handle_span_exception(self.span, exc_val)
+        finally:
+            self.cleanup()
+        return False
+
+    async def aclose(self) -> None:
+        await self.stream.close()
+        self.cleanup()
+
+    def __aiter__(self) -> "AsyncResponsesStreamWrapper":
+        return self
+
+    async def __anext__(self) -> Any:
+        try:
+            event = await self.stream.__anext__()
+            self.process_event(event)
+            return event
+        except StopAsyncIteration:
+            self.cleanup()
+            raise
+        except Exception as error:
+            handle_span_exception(self.span, error)
+            self.cleanup()
+            raise
