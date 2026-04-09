@@ -1,0 +1,95 @@
+interactions:
+- request:
+    body: |-
+      {
+        "include": [],
+        "input": [
+          {
+            "content": "Say 'This is a test.'",
+            "role": "user"
+          }
+        ],
+        "instructions": "Be a helpful assistant",
+        "model": "gpt-4o-mini",
+        "tools": []
+      }
+    headers:
+      accept:
+      - application/json
+      accept-encoding:
+      - gzip, deflate, br, zstd
+      connection:
+      - keep-alive
+      content-length:
+      - '147'
+      content-type:
+      - application/json
+      cookie:
+      - redacted_cookie
+      host:
+      - api.openai.com
+      x-stainless-async:
+      - async:asyncio
+      x-stainless-read-timeout:
+      - '600'
+      x-stainless-retry-count:
+      - '0'
+    method: POST
+    uri: https://api.openai.com/v1/responses
+  response:
+    body:
+      string: |-
+        b'\x1b\x19\x06\x00d\x9b\x8a\xed^&\x9d\xe6\x14\xdc1c\x96\xf5\x0b\'\x83\\\xde\x05\x1eD\xd2\xff\xff\xc3\xbdy\x18\x80\xbe\xd5Z87\xady_c\x0e\x0b\x17\x95f\x85i\xc2q\'\xab\xffUU\xc6\x81\x04\x0f\xda\x83\x13\xd7M\x92~[\x07/\xf8U\x01\xe0\xee\xd1\x00&\xce\xd1\xaaN\xf55\xd5}74\xfd\xd2\xea^\xa9a\x9ag\xaf\x9b~\xe1I\xebz\xea\xe7A\xebi\xe9\x9ayj\x86\xde\x93\xc7\x87\n\x00\xc3\xfc\x8f\x9d\xa0\x01\xd4*E\x8c^\xc3\xfc\x01\xf6\x96\x04\r\xd4\xe3\xd8N\xb5n\xba\xc1O(\x0bI\xc9T"!\xccszn\n\x1aX\xe8\xcc\x0c\xd1k\xc8[W4\xa0\xfc-\x00\x8c\xf4\xc1\t\r\xe0)\x16~\xac\x00~\x06\xa7\xb4\xf9?W9\xa5\x90\xd0\xc0]\xce\x93\xff\xd1%\xf1\xff\xc2\xb7\xfb\xb0\x91o:\xe5\x03\r\xa8\'\x85\x83\xf6P\xd8m\xdd\xaa\xb27\x97\x88\'\xd0\x00\xbe0\x10l|\xc6\xa5\x9c@9\xefY\xe8\x96\xc9}}\xd1\xbb\rEb\x11+\xe1\xe0\x9b\xec#\x17\xbd[\t\xe1\xb4\x8e\xcea\x9e\xbd\x82\xe7\x13\r\xe0\x1a\xe5\xb1\x0b\x8f\xd7~\xef\x8f\x8dj\xbaG5>\xd6\x9a\x1fs\xdb\xd0\xc0\xaf\x00\xe10\xb1\x04/x\xe5\xf5)\x18\x06\xed\xdc]\xd2\x9a\x07\xc7j\xe9\xdd\xec\xc9O\x0f\xc4d\x93\x8f\xc8\xaf=\x9c3\xad\x0c\x16\x94H\xe4\t\xf6\x0b\xa4\xc28q<5\r\x8c\x89\xdf\x85\x01\x8d\rZ\xe2`F\x03\xbf\xfe\x18\x9cv\x865\xa60\xbf\x11\xd9\xa4\x01\xdc\xe4 \x8b@8\xcb\x13\xda\xc9\x7f&\xc7\\m\x98\xc2)\x07\xa4MQ\x19#\xc3K0R\xa2\xf3\xe43QzI\xa5B\xb9_\xf1\xd8\xcfq\x11\xd1u@a\xfbCj\x13\xc3\xb2\xff\xefb\nW\x14\xeb\xc8ml\x0f\xfe\xc0\xcf%\x16\xbee\x0f\xb7\x15\xb8i[\xbe9\xc0\r\xe0\xc2#\x13\x00s\xb9.J\xfc\xacW"3-,\x1fv\xff\xc1\xe9e\xe7\xce`{\x18\xea\xac`\n\\u\xb1\xc1\x96\x84\xc4QH\x16\xbe"\'\x92\x02\xc9\xeb\x00\x90t\x10u;KH\x17}\x07\xab\x0b\xd9"\xb9\xf2\x1f\xd5\xc1\xaf\x9c\xe6\x90\xf7~\xdc\x87\x17\xfb\xbd\\=\x8e\xbb\xc5\xbe\x85\xdde\xceU$ \x08\xaab\x17%D[+J\x05TE\x9d\x81TnG\xc1U\xe0\xfa\x89{KZj\x9eM\xa2{\xbf;xN\xd3<`p\xa9`SEI\xac\xf0\xce]\xaa\x9an\xce\x85\xa1\xee\x80\xe5\xa5f\x05\xd0\x88=\xc0\x1f\xa6\x005+u\x14{\x94\x9c\xf0[\x17\x0by\x12B\x03_?\xd5\x0f'
+    headers:
+      CF-RAY:
+      - 9debfe8cbfd22481-KBP
+      Connection:
+      - keep-alive
+      Content-Encoding:
+      - br
+      Content-Type:
+      - application/json
+      Date:
+      - Thu, 19 Mar 2026 11:04:06 GMT
+      Server:
+      - cloudflare
+      Strict-Transport-Security:
+      - max-age=31536000; includeSubDomains; preload
+      Transfer-Encoding:
+      - chunked
+      X-Content-Type-Options:
+      - nosniff
+      alt-svc:
+      - h3=":443"; ma=86400
+      cf-cache-status:
+      - DYNAMIC
+      openai-organization:
+      - test_openai_org_id
+      openai-processing-ms:
+      - '675'
+      openai-project:
+      - test_openai_project
+      openai-version:
+      - '2020-10-01'
+      set-cookie:
+      - __cf_bm=0fMj2eXzMmZ35zmicmkVfl9LtR4xB9e2l7aAsXg2KLg-1773918245.884063-1.0.1.1-aZZWrLvLVETXZ1NI0zu1hzPd8kFS5Gj3IEyXohV5m0CsbWvebXOfKBFr20nZri80.SIPdaczLfTONrWIqbZRsWNXe51zec0iEQd8qwTkzyYIIsdCqd7JEm6_NId7Vuyx;
+        HttpOnly; Secure; Path=/; Domain=api.openai.com; Expires=Thu, 19 Mar 2026
+        11:34:06 GMT
+      x-ratelimit-limit-requests:
+      - '30000'
+      x-ratelimit-limit-tokens:
+      - '150000000'
+      x-ratelimit-remaining-requests:
+      - '29999'
+      x-ratelimit-remaining-tokens:
+      - '149999960'
+      x-ratelimit-reset-requests:
+      - 2ms
+      x-ratelimit-reset-tokens:
+      - 0s
+      x-request-id:
+      - req_6fd65afc534f41fd8f952ab621f56f96
+    status:
+      code: 200
+      message: OK
+version: 1

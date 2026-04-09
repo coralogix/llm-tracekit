@@ -174,6 +174,10 @@ class LitellmCallback(OpenTelemetry):
             if tool_attributes:
                 attributes.update(tool_attributes)
 
+            user = optional_params.get("user")
+            if user is not None:
+                attributes[ExtendedGenAIAttributes.GEN_AI_REQUEST_USER] = str(user)
+
             for key, value in attributes.items():
                 if value is not None:
                     self.safe_set_attribute(

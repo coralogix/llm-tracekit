@@ -180,6 +180,7 @@ class _TraceState:
     open_spans: dict[str, tuple[OTELSpan, Token]] = field(default_factory=dict)
     agents: dict[str, Agent] = field(default_factory=dict)
     last_agent: Agent | None = None
+    metadata: dict[str, Any] | None = None
 
 
 @dataclass
@@ -416,6 +417,12 @@ class OpenAIAgentsTracingProcessor(TracingProcessor):
             ),
             **active_agent.generate_attributes(),
         }
+
+        user = _get_object_value(span_data.response, "user") if span_data.response else None
+        if user is None and state.metadata is not None:
+            user = state.metadata.get("user") or state.metadata.get("user_id")
+        if user is not None:
+            attributes[ExtendedGenAIAttributes.GEN_AI_REQUEST_USER] = str(user)
         return attributes
 
     def _process_guardrail_span(self, span_data: GuardrailSpanData) -> dict[str, Any]:
@@ -439,6 +446,11 @@ class OpenAIAgentsTracingProcessor(TracingProcessor):
         if self.disabled:
             return
         state = self._get_or_create_state(trace.trace_id)
+
+        # Store trace metadata for user ID extraction
+        trace_metadata = getattr(trace, "metadata", None)
+        if isinstance(trace_metadata, dict):
+            state.metadata = trace_metadata
 
         state.parent_span = self.tracer.start_span(
             name="openai.agent",

@@ -1,0 +1,81 @@
+interactions:
+- request:
+    body: |-
+      {
+        "messages": [
+          {
+            "role": "user",
+            "content": [
+              {
+                "text": "say this is a test"
+              }
+            ]
+          }
+        ]
+      }
+    headers:
+      Authorization:
+      - test-auth
+      Content-Length:
+      - '77'
+      Content-Type:
+      - !!binary |
+        YXBwbGljYXRpb24vanNvbg==
+      User-Agent:
+      - !!binary |
+        Qm90bzMvMS4zNi4wIG1kL0JvdG9jb3JlIzEuMzYuMjYgdWEvMi4wIG9zL3dpbmRvd3MjMTAgbWQv
+        YXJjaCNhbWQ2NCBsYW5nL3B5dGhvbiMzLjExLjUgbWQvcHlpbXBsI0NQeXRob24gY2ZnL3JldHJ5
+        LW1vZGUjbGVnYWN5IEJvdG9jb3JlLzEuMzYuMjY=
+      X-Amz-Date:
+      - !!binary |
+        MjAyNjAzMTlUMTExOTI4Wg==
+      X-Amz-Security-Token:
+      - test-security-token
+      amz-sdk-invocation-id:
+      - !!binary |
+        ZWRkY2FmOGMtYzE3Yi00YWRjLWIwMTItOTdiYzNjN2QyNDA1
+      amz-sdk-request:
+      - !!binary |
+        YXR0ZW1wdD0x
+    method: POST
+    uri: https://bedrock-runtime.us-east-1.amazonaws.com/model/amazon.nova-lite-v1%3A0/converse
+  response:
+    body:
+      string: |-
+        {
+          "metrics": {
+            "latencyMs": 537
+          },
+          "output": {
+            "message": {
+              "content": [
+                {
+                  "text": "This is a test. If you're checking if your message is being received or if you're trying out a system, you can confirm that your message has been successfully sent and received. If you need help with something specific, feel free to ask!"
+                }
+              ],
+              "role": "assistant"
+            }
+          },
+          "stopReason": "end_turn",
+          "usage": {
+            "inputTokens": 5,
+            "outputTokens": 53,
+            "serverToolUsage": {},
+            "totalTokens": 58
+          }
+        }
+    headers:
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '438'
+      Content-Type:
+      - application/json
+      Date:
+      - Thu, 19 Mar 2026 11:19:29 GMT
+      x-amzn-RequestId:
+      - 09b4ec8f-8ac3-4759-be1b-bb6f87a92925
+    status:
+      code: 200
+      message: OK
+version: 1

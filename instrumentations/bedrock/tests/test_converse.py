@@ -19,6 +19,7 @@ import boto3
 import pytest
 from botocore.exceptions import ClientError
 
+import llm_tracekit.core._extended_gen_ai_attributes as ExtendedGenAIAttributes
 from .utils import (
     IMAGE_DATA,
     assert_attributes_in_span,
@@ -744,3 +745,52 @@ def test_converse_stream_unsupported_content_blocks(
     assert_messages_in_span(
         span=spans[0], expected_messages=expected_messages, expect_content=True
     )
+
+
+@pytest.mark.vcr()
+def test_converse_user_from_request_metadata(
+    bedrock_client_with_content, span_exporter
+):
+    bedrock_client_with_content.converse(
+        modelId="amazon.nova-lite-v1:0",
+        messages=[{"role": "user", "content": [{"text": "say this is a test"}]}],
+        requestMetadata={"user": "test-user-123"},
+    )
+
+    spans = span_exporter.get_finished_spans()
+    assert len(spans) == 1
+    assert (
+        spans[0].attributes[ExtendedGenAIAttributes.GEN_AI_REQUEST_USER]
+        == "test-user-123"
+    )
+
+
+@pytest.mark.vcr()
+def test_converse_user_id_key_from_request_metadata(
+    bedrock_client_with_content, span_exporter
+):
+    bedrock_client_with_content.converse(
+        modelId="amazon.nova-lite-v1:0",
+        messages=[{"role": "user", "content": [{"text": "say this is a test"}]}],
+        requestMetadata={"userId": "uid-456"},
+    )
+
+    spans = span_exporter.get_finished_spans()
+    assert len(spans) == 1
+    assert (
+        spans[0].attributes[ExtendedGenAIAttributes.GEN_AI_REQUEST_USER] == "uid-456"
+    )
+
+
+@pytest.mark.vcr()
+def test_converse_no_user_attribute_when_missing(
+    bedrock_client_with_content, span_exporter
+):
+    bedrock_client_with_content.converse(
+        modelId="amazon.nova-lite-v1:0",
+        messages=[{"role": "user", "content": [{"text": "say this is a test"}]}],
+    )
+
+    spans = span_exporter.get_finished_spans()
+    assert len(spans) == 1
+    assert ExtendedGenAIAttributes.GEN_AI_REQUEST_USER not in spans[0].attributes

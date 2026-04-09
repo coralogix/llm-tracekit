@@ -83,7 +83,28 @@ OpenAIAgentsInstrumentor().instrument()
 
 # Example OpenAI Agents Usage
 agent = Agent(name="Assistant", instructions="You are a helpful assistant.")
+
+# Option 1: Pass user identifier via ModelSettings extra_args (per-agent)
+from agents import Agent, ModelSettings
+agent = Agent(
+    name="Assistant",
+    instructions="You are a helpful assistant.",
+    model_settings=ModelSettings(extra_args={"user": "user@company.com"}),
+)
 result = Runner.run_sync(agent, input="Write a short poem on open telemetry.")
+
+# Option 2: Pass user identifier via trace metadata (per-trace)
+from agents import trace
+with trace("my-trace", metadata={"user": "user@company.com"}):
+    result = Runner.run_sync(agent, input="Write a short poem on open telemetry.")
+
+# Option 3: Pass user identifier via RunConfig (per-run)
+from agents import RunConfig
+result = Runner.run_sync(
+    agent,
+    input="Write a short poem on open telemetry.",
+    run_config=RunConfig(trace_metadata={"user": "user@company.com"}),
+)
 print(result.final_output)
 ```
 
@@ -108,6 +129,7 @@ print(result.final_output)
 | `gen_ai.request.tools.<tool_number>.function.name` | string | Name of the tool/function exposed to the model | `get_current_weather`
 | `gen_ai.request.tools.<tool_number>.function.description` | string | Description of the tool/function when provided by the SDK response payload | `Get current weather for a city.` |
 | `gen_ai.request.tools.<tool_number>.function.parameters` | string | JSON schema describing the tool/function parameters passed with the request | `{"type": "object", "properties": {"city": {"type": "string"}}}`
+| `gen_ai.request.user` | string | A unique identifier representing the end-user (from `ModelSettings(extra_args={"user": "..."})`, `trace(metadata={"user": "..."})`, or `RunConfig(trace_metadata={"user": "..."})`) | `user@company.com`
 
 ### OpenAI Agents SDK specific attributes
 

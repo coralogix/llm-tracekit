@@ -15,6 +15,7 @@
 import pytest
 import asyncio
 import litellm
+import llm_tracekit.core._extended_gen_ai_attributes as ExtendedGenAIAttributes
 from .utils import (
     assert_attributes,
     find_last_response_span,
@@ -267,3 +268,39 @@ async def test_litellm_async_completion(instrument, litellm_span_exporter):
         },
     }
     assert_choices_in_span(span=span, expected_choices=[choice], expect_content=True)
+
+
+@pytest.mark.vcr()
+def test_litellm_user_from_optional_params(instrument, litellm_span_exporter):
+    litellm_span_exporter.clear()
+    model = "gpt-4o-mini"
+    messages = [{"role": "user", "content": "Say this is a test"}]
+
+    litellm.completion(model=model, messages=messages, user="test-user-123")
+
+    time.sleep(1)
+
+    spans = litellm_span_exporter.get_finished_spans()
+    assert len(spans) > 0
+    span = find_last_response_span(spans)
+
+    assert (
+        span.attributes[ExtendedGenAIAttributes.GEN_AI_REQUEST_USER] == "test-user-123"
+    )
+
+
+@pytest.mark.vcr()
+def test_litellm_no_user_attribute_when_missing(instrument, litellm_span_exporter):
+    litellm_span_exporter.clear()
+    model = "gpt-4o-mini"
+    messages = [{"role": "user", "content": "Say this is a test"}]
+
+    litellm.completion(model=model, messages=messages)
+
+    time.sleep(1)
+
+    spans = litellm_span_exporter.get_finished_spans()
+    assert len(spans) > 0
+    span = find_last_response_span(spans)
+
+    assert ExtendedGenAIAttributes.GEN_AI_REQUEST_USER not in span.attributes
