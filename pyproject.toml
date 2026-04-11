@@ -1,6 +1,6 @@
 [project]
 name = "llm-tracekit"
-version = "2.5.2"
+version = "2.5.3"
 description = "Meta-package for LLM Tracekit - OpenTelemetry instrumentations for LLM providers."
 readme = "README.md"
 authors = [
@@ -36,6 +36,7 @@ google-adk = ["llm-tracekit-google-adk>=1.0.0"]
 langgraph = ["llm-tracekit-langgraph>=1.0.0"]
 litellm = ["llm-tracekit-litellm>=1.0.0"]
 strands = ["llm-tracekit-strands>=1.0.0"]
+anthropic = ["llm-tracekit-anthropic>=1.0.0"]
 
 
 [project.urls]
@@ -82,6 +83,7 @@ members = [
     "instrumentations/litellm",
     "instrumentations/google-adk",
     "instrumentations/strands",
+    "instrumentations/anthropic",
 ]
 
 [tool.uv.sources]
@@ -96,10 +98,11 @@ llm-tracekit-langchain = { workspace = true }
 llm-tracekit-langgraph = { workspace = true }
 llm-tracekit-litellm = { workspace = true }
 llm-tracekit-strands = { workspace = true }
+llm-tracekit-anthropic = { workspace = true }
 
 [tool.mypy]
 ignore_missing_imports = true
 namespace_packages = true
 explicit_package_bases = true
-mypy_path = "core/src:instrumentations/openai/src:instrumentations/bedrock/src:instrumentations/gemini/src:instrumentations/langchain/src:instrumentations/langgraph/src:instrumentations/litellm/src:instrumentations/openai-agents/src:instrumentations/google-adk/src:instrumentations/strands/src:guardrails/src"
+mypy_path = "core/src:instrumentations/openai/src:instrumentations/bedrock/src:instrumentations/gemini/src:instrumentations/langchain/src:instrumentations/langgraph/src:instrumentations/litellm/src:instrumentations/openai-agents/src:instrumentations/google-adk/src:instrumentations/strands/src:instrumentations/anthropic/src:guardrails/src"
 exclude = ["tests/"]
