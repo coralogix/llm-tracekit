@@ -2,6 +2,7 @@
 OpenTelemetry instrumentation for the [Anthropic Python SDK](https://github.com/anthropics/anthropic-sdk-python) (Messages API), designed to simplify LLM application development and production tracing and debugging.
 
 ## Installation
+#### Anthropic
 ```bash
 pip install "llm-tracekit-anthropic"
 ```
@@ -91,11 +92,11 @@ response = client.messages.create(
 )
 ```
 
-## What is instrumented
-
-- `Anthropic.messages.create` and `AsyncAnthropic.messages.create`
-- `Anthropic.messages.stream` and `AsyncAnthropic.messages.stream`
-- Non-streaming and streaming (`stream=True`) calls
+## Changes from OpenTelemetry
+#### General
+* Instruments sync and async `messages.create` (including `stream=True`) and `messages.stream` / `AsyncMessages.stream`.
+* The `metadata.user_id` request field is recorded as the `gen_ai.request.user` attribute.
+* User prompts and model responses are captured as span attributes instead of log events (see [Semantic Conventions](#semantic-conventions) below).
 
 ## Semantic Conventions
 | Attribute | Type | Description | Examples
@@ -119,11 +120,3 @@ response = client.messages.create(
 | `gen_ai.request.tools.<tool_number>.function.description` | string | Description of the function | `Get the current weather in a given location`
 | `gen_ai.request.tools.<tool_number>.function.parameters` | string | JSON describing the schema of the function parameters | `{"type": "object", "properties": {"location": {"type": "string"}}, "required": ["location"]}`
 | `gen_ai.request.user` | string | A unique identifier representing the end-user (from `metadata.user_id`) | `user@company.com`
-
-## Framework stacking
-
-If you also use `llm-tracekit-langchain` with `ChatAnthropic`, you may see **nested or duplicate spans** when both instrumentations are enabled. Disable one layer if you need a single trace per call.
-
-## OpenTelemetry entry point
-
-The package registers the `opentelemetry_instrumentor` entry point `anthropic` for auto-instrumentation loaders.
