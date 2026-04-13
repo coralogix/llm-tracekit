@@ -10,7 +10,6 @@ jobs:
     strategy:
       matrix:
         package:
-          - llm-tracekit
           - llm-tracekit-core
           - llm-tracekit-openai
           - llm-tracekit-bedrock
@@ -23,6 +22,7 @@ jobs:
           - llm-tracekit-strands
           - llm-tracekit-google-adk
           - cx-guardrails
+          - llm-tracekit
     steps:
       - uses: actions/checkout@v4
       - name: Set up Python

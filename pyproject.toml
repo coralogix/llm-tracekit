@@ -1,6 +1,6 @@
 [project]
 name = "llm-tracekit"
-version = "2.6.1"
+version = "2.6.2"
 description = "Meta-package for LLM Tracekit - OpenTelemetry instrumentations for LLM providers."
 readme = "README.md"
 authors = [
