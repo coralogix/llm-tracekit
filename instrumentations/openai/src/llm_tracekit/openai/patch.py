@@ -13,7 +13,7 @@
 # limitations under the License.
 
 from timeit import default_timer
-from typing import Any
+from typing import Any, Literal
 
 from openai import AsyncStream, Stream
 from opentelemetry.semconv._incubating.attributes import (
@@ -776,7 +776,7 @@ class ResponsesStreamWrapper:
     def __enter__(self) -> "ResponsesStreamWrapper":
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb) -> bool:
+    def __exit__(self, exc_type, exc_val, exc_tb) -> Literal[False]:
         try:
             if exc_type is not None:
                 handle_span_exception(self.span, exc_val)

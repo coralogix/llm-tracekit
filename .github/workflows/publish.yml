@@ -21,6 +21,7 @@ jobs:
           - llm-tracekit-langchain
           - llm-tracekit-langgraph
           - llm-tracekit-strands
+          - llm-tracekit-google-adk
           - cx-guardrails
     steps:
       - uses: actions/checkout@v4
