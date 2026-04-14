@@ -1,6 +1,6 @@
 [project]
 name = "llm-tracekit"
-version = "2.6.2"
+version = "2.7.0"
 description = "Meta-package for LLM Tracekit - OpenTelemetry instrumentations for LLM providers."
 readme = "README.md"
 authors = [
@@ -33,6 +33,7 @@ openai-agents = ["llm-tracekit-openai-agents>=1.1.0"]
 guardrails = ["cx-guardrails>=1.0.0"]
 langchain = ["llm-tracekit-langchain>=1.1.0"]
 google-adk = ["llm-tracekit-google-adk>=1.0.0"]
+claude-agent-sdk = ["llm-tracekit-claude-agent-sdk>=1.0.0"]
 langgraph = ["llm-tracekit-langgraph>=1.0.0"]
 litellm = ["llm-tracekit-litellm>=1.0.0"]
 strands = ["llm-tracekit-strands>=1.0.0"]
@@ -82,6 +83,7 @@ members = [
     "instrumentations/langgraph",
     "instrumentations/litellm",
     "instrumentations/google-adk",
+    "instrumentations/claude-agent-sdk",
     "instrumentations/strands",
     "instrumentations/anthropic",
 ]
@@ -93,6 +95,7 @@ llm-tracekit-bedrock = { workspace = true }
 llm-tracekit-gemini = { workspace = true }
 llm-tracekit-openai-agents = { workspace = true }
 llm-tracekit-google-adk = { workspace = true }
+llm-tracekit-claude-agent-sdk = { workspace = true }
 cx-guardrails = { workspace = true }
 llm-tracekit-langchain = { workspace = true }
 llm-tracekit-langgraph = { workspace = true }
@@ -104,5 +107,5 @@ llm-tracekit-anthropic = { workspace = true }
 ignore_missing_imports = true
 namespace_packages = true
 explicit_package_bases = true
-mypy_path = "core/src:instrumentations/openai/src:instrumentations/bedrock/src:instrumentations/gemini/src:instrumentations/langchain/src:instrumentations/langgraph/src:instrumentations/litellm/src:instrumentations/openai-agents/src:instrumentations/google-adk/src:instrumentations/strands/src:instrumentations/anthropic/src:guardrails/src"
+mypy_path = "core/src:instrumentations/openai/src:instrumentations/bedrock/src:instrumentations/gemini/src:instrumentations/langchain/src:instrumentations/langgraph/src:instrumentations/litellm/src:instrumentations/openai-agents/src:instrumentations/google-adk/src:instrumentations/strands/src:instrumentations/anthropic/src:instrumentations/claude-agent-sdk/src:guardrails/src"
 exclude = ["tests/"]

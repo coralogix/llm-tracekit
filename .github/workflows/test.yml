@@ -66,6 +66,10 @@ jobs:
               - 'instrumentations/anthropic/**'
               - 'core/**'
               - 'pyproject.toml'
+            claude-agent-sdk:
+              - 'instrumentations/claude-agent-sdk/**'
+              - 'core/**'
+              - 'pyproject.toml'
 
   test:
     needs: detect-changes
