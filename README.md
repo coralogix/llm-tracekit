@@ -96,6 +96,7 @@ For detailed documentation on each instrumentation, see the individual READMEs:
 - [OpenAI](./instrumentations/openai/README.md)
 - [AWS Bedrock](./instrumentations/bedrock/README.md)
 - [Google Gemini](./instrumentations/gemini/README.md)
+- [Anthropic](./instrumentations/anthropic/README.md)
 - [Google ADK](./instrumentations/google-adk/README.md)
 - [LiteLLM](./instrumentations/litellm/README.md)
 - [LangChain](./instrumentations/langchain/README.md)

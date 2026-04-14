@@ -45,7 +45,8 @@ To instrument all usage of the Claude Agent SDK, call the `instrument` method
 ```python
 from llm_tracekit.claude_agent_sdk import ClaudeAgentSDKInstrumentor
 
-ClaudeAgentSDKInstrumentor().instrument()
+instrumentor = ClaudeAgentSDKInstrumentor()
+instrumentor.instrument()
 ```
 
 Both `query()` (one-off calls) and `ClaudeSDKClient` (multi-turn sessions) are instrumented automatically.
@@ -61,7 +62,7 @@ Most Coralogix AI evaluations will not work without message contents, so it is h
 ### Uninstrument
 To uninstrument, call the `uninstrument` method:
 ```python
-ClaudeAgentSDKInstrumentor().uninstrument()
+instrumentor.uninstrument()
 ```
 
 ### Full Example (standalone query)
@@ -162,6 +163,15 @@ asyncio.run(main())
 | `gen_ai.claude_agent_sdk.result.num_turns` | int | Number of agentic turns taken | `3`
 | `gen_ai.claude_agent_sdk.result.total_cost_usd` | float | Estimated cost of the run in USD | `0.0042`
 | `gen_ai.claude_agent_sdk.result.session_id` | string | Session ID assigned by the SDK subprocess | `sess_01Abc...`
+
+## Metrics
+
+The instrumentation records the following OpenTelemetry metrics:
+
+| Metric | Type | Description |
+| ------ | ---- | ----------- |
+| `gen_ai.client.operation.duration` | Histogram | Duration of the operation in seconds |
+| `gen_ai.client.token.usage` | Histogram | Token usage per request, with `gen_ai.token.type` attribute (`input` or `completion`) |
 
 ## Limitations
 - **Conversation history**: Each span captures only the current turn (system prompt + current user message). The full conversation history lives inside the CLI subprocess and is not exposed to Python by the SDK.
