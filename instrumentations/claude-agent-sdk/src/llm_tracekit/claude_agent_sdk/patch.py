@@ -21,6 +21,7 @@ from typing import Any
 
 from opentelemetry.trace import SpanKind, Tracer
 
+from llm_tracekit.core._metrics import Instruments
 from llm_tracekit.claude_agent_sdk.span_attrs import (
     _extract_system_prompt,
     build_prompt_attributes_for_turn,
@@ -36,6 +37,7 @@ from llm_tracekit.claude_agent_sdk.wrappers import (
 def create_wrapped_query(
     original_query: Any,
     tracer: Tracer,
+    instruments: Instruments,
     capture_content: bool,
 ) -> Any:
     """Return a wrapped query() that starts a span and wraps the returned stream."""
@@ -64,7 +66,9 @@ def create_wrapped_query(
             )
             span.set_attributes(prompt_attrs)
         stream = original_query(prompt=prompt, options=options, transport=transport)
-        return QueryStreamWrapper(stream, span, capture_content=capture_content)
+        return QueryStreamWrapper(
+            stream, span, instruments=instruments, capture_content=capture_content
+        )
 
     return wrapped_query
 
@@ -87,6 +91,7 @@ def create_wrapped_client_query(original_query: Any) -> Any:
 def create_wrapped_receive_response(
     original_receive_response: Any,
     tracer: Tracer,
+    instruments: Instruments,
     capture_content: bool,
 ) -> Any:
     """Wrap ClaudeSDKClient.receive_response to run inside a span per turn."""
@@ -105,6 +110,7 @@ def create_wrapped_receive_response(
         return ClientReceiveResponseWrapper(
             stream,
             tracer,
+            instruments=instruments,
             turn_prompt=turn_prompt,
             system_prompt=system_prompt,
             model=model,

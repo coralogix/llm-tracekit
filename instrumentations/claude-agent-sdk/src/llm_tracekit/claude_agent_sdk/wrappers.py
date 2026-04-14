@@ -16,12 +16,17 @@
 
 from __future__ import annotations
 
+import time
 from collections.abc import AsyncIterator
 from typing import Any
 
+from opentelemetry.semconv._incubating.attributes import (
+    gen_ai_attributes as GenAIAttributes,
+)
 from opentelemetry.trace import Span, SpanKind, Tracer
 
 from llm_tracekit.core import handle_span_exception
+from llm_tracekit.core._metrics import Instruments
 from llm_tracekit.claude_agent_sdk.span_attrs import (
     build_completion_attributes,
     build_library_specific_attributes,
@@ -48,14 +53,17 @@ class QueryStreamWrapper(AsyncIterator[Any]):
         stream: AsyncIterator[Any],
         span: Span,
         *,
+        instruments: Instruments,
         capture_content: bool,
     ) -> None:
         self._stream = stream
         self._span = span
+        self._instruments = instruments
         self._capture_content = capture_content
         self._assistant_messages: list[Any] = []
         self._result_message: Any = None
         self._finalized = False
+        self._start_time = time.perf_counter()
 
     def __aiter__(self) -> QueryStreamWrapper:
         return self
@@ -81,6 +89,7 @@ class QueryStreamWrapper(AsyncIterator[Any]):
         if self._finalized:
             return
         self._finalized = True
+        duration = time.perf_counter() - self._start_time
         try:
             if self._span.is_recording():
                 comp = build_completion_attributes(
@@ -93,8 +102,42 @@ class QueryStreamWrapper(AsyncIterator[Any]):
                 self._span.set_attributes(resp)
                 lib_attrs = build_library_specific_attributes(self._result_message)
                 self._span.set_attributes(lib_attrs)
+            self._record_metrics(duration)
         finally:
             self._span.end()
+
+    def _record_metrics(self, duration: float) -> None:
+        common_attrs = {
+            GenAIAttributes.GEN_AI_OPERATION_NAME: GenAIAttributes.GenAiOperationNameValues.CHAT.value,
+            GenAIAttributes.GEN_AI_SYSTEM: "claude.agent_sdk",
+        }
+        self._instruments.operation_duration_histogram.record(duration, attributes=common_attrs)
+
+        if self._result_message is not None:
+            usage = getattr(self._result_message, "usage", None) or {}
+            if isinstance(usage, dict):
+                input_tokens = usage.get("input_tokens")
+                output_tokens = usage.get("output_tokens")
+            else:
+                input_tokens = getattr(usage, "input_tokens", None)
+                output_tokens = getattr(usage, "output_tokens", None)
+
+            if input_tokens is not None:
+                self._instruments.token_usage_histogram.record(
+                    input_tokens,
+                    attributes={
+                        **common_attrs,
+                        GenAIAttributes.GEN_AI_TOKEN_TYPE: GenAIAttributes.GenAiTokenTypeValues.INPUT.value,
+                    },
+                )
+            if output_tokens is not None:
+                self._instruments.token_usage_histogram.record(
+                    output_tokens,
+                    attributes={
+                        **common_attrs,
+                        GenAIAttributes.GEN_AI_TOKEN_TYPE: GenAIAttributes.GenAiTokenTypeValues.COMPLETION.value,
+                    },
+                )
 
     def _finalize_on_error(self, error: Exception) -> None:
         if self._finalized:
@@ -117,6 +160,7 @@ class ClientReceiveResponseWrapper(AsyncIterator[Any]):
         stream: AsyncIterator[Any],
         tracer: Tracer,
         *,
+        instruments: Instruments,
         turn_prompt: str | None,
         system_prompt: str | None,
         model: str | None,
@@ -125,6 +169,7 @@ class ClientReceiveResponseWrapper(AsyncIterator[Any]):
     ) -> None:
         self._stream = stream
         self._tracer = tracer
+        self._instruments = instruments
         self._turn_prompt = turn_prompt
         self._system_prompt = system_prompt
         self._model = model
@@ -135,6 +180,7 @@ class ClientReceiveResponseWrapper(AsyncIterator[Any]):
         self._result_message: Any = None
         self._finalized = False
         self._started = False
+        self._start_time: float | None = None
 
     def __aiter__(self) -> ClientReceiveResponseWrapper:
         return self
@@ -142,6 +188,7 @@ class ClientReceiveResponseWrapper(AsyncIterator[Any]):
     async def __anext__(self) -> Any:
         if not self._started:
             self._started = True
+            self._start_time = time.perf_counter()
             self._span = self._tracer.start_span(
                 f"chat {self._model or 'claude'}",
                 kind=SpanKind.CLIENT,
@@ -178,6 +225,7 @@ class ClientReceiveResponseWrapper(AsyncIterator[Any]):
         if self._finalized or self._span is None:
             return
         self._finalized = True
+        duration = time.perf_counter() - self._start_time if self._start_time else 0.0
         try:
             if self._span.is_recording():
                 comp = build_completion_attributes(
@@ -190,8 +238,45 @@ class ClientReceiveResponseWrapper(AsyncIterator[Any]):
                 self._span.set_attributes(resp)
                 lib_attrs = build_library_specific_attributes(self._result_message)
                 self._span.set_attributes(lib_attrs)
+            self._record_metrics(duration)
         finally:
             self._span.end()
+
+    def _record_metrics(self, duration: float) -> None:
+        common_attrs = {
+            GenAIAttributes.GEN_AI_OPERATION_NAME: GenAIAttributes.GenAiOperationNameValues.CHAT.value,
+            GenAIAttributes.GEN_AI_SYSTEM: "claude.agent_sdk",
+        }
+        if self._model:
+            common_attrs[GenAIAttributes.GEN_AI_REQUEST_MODEL] = self._model
+
+        self._instruments.operation_duration_histogram.record(duration, attributes=common_attrs)
+
+        if self._result_message is not None:
+            usage = getattr(self._result_message, "usage", None) or {}
+            if isinstance(usage, dict):
+                input_tokens = usage.get("input_tokens")
+                output_tokens = usage.get("output_tokens")
+            else:
+                input_tokens = getattr(usage, "input_tokens", None)
+                output_tokens = getattr(usage, "output_tokens", None)
+
+            if input_tokens is not None:
+                self._instruments.token_usage_histogram.record(
+                    input_tokens,
+                    attributes={
+                        **common_attrs,
+                        GenAIAttributes.GEN_AI_TOKEN_TYPE: GenAIAttributes.GenAiTokenTypeValues.INPUT.value,
+                    },
+                )
+            if output_tokens is not None:
+                self._instruments.token_usage_histogram.record(
+                    output_tokens,
+                    attributes={
+                        **common_attrs,
+                        GenAIAttributes.GEN_AI_TOKEN_TYPE: GenAIAttributes.GenAiTokenTypeValues.COMPLETION.value,
+                    },
+                )
 
     def _finalize_on_error(self, error: Exception) -> None:
         if self._finalized or self._span is None:
