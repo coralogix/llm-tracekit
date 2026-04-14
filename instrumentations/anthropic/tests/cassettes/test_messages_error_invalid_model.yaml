@@ -1,0 +1,83 @@
+interactions:
+- request:
+    body: |-
+      {
+        "max_tokens": 10,
+        "messages": [
+          {
+            "role": "user",
+            "content": "Hi"
+          }
+        ],
+        "model": "claude-invalid-model-xyz-00000000"
+      }
+    headers:
+      Accept:
+      - application/json
+      Connection:
+      - keep-alive
+      Content-Type:
+      - application/json
+      Host:
+      - api.anthropic.com
+      X-Stainless-Lang:
+      - python
+      X-Stainless-Runtime:
+      - CPython
+      anthropic-version:
+      - '2023-06-01'
+      x-stainless-timeout:
+      - '600'
+    method: POST
+    uri: https://api.anthropic.com/v1/messages
+  response:
+    body:
+      string: |-
+        {
+          "type": "error",
+          "error": {
+            "type": "authentication_error",
+            "message": "invalid x-api-key"
+          },
+          "request_id": "req_011CZVgdoqmCwHVtSVfCoWba"
+        }
+    headers:
+      CF-RAY:
+      - 9e3787e1cace24a4-KBP
+      Connection:
+      - keep-alive
+      Content-Security-Policy:
+      - default-src 'none'; frame-ancestors 'none'
+      Content-Type:
+      - application/json
+      Date:
+      - Sat, 28 Mar 2026 15:05:03 GMT
+      Server:
+      - cloudflare
+      Transfer-Encoding:
+      - chunked
+      X-Robots-Tag:
+      - none
+      cf-cache-status:
+      - DYNAMIC
+      content-length:
+      - '130'
+      request-id:
+      - req_011CZVgdoqmCwHVtSVfCoWba
+      server-timing:
+      - x-originResponse;dur=18
+      set-cookie:
+      - _cfuvid=42NFnbm3cIuetSCz_nUJJke3wY0XfPGLLe071XT9mzg-1774710303.0117204-1.0.1.1-oW1fYdv73MGuwSp4vEIRVQmkMIIc661hTkHEmqD0A7w;
+        HttpOnly; SameSite=None; Secure; Path=/; Domain=api.anthropic.com
+      strict-transport-security:
+      - max-age=31536000; includeSubDomains; preload
+      vary:
+      - Accept-Encoding
+      x-envoy-upstream-service-time:
+      - '16'
+      x-should-retry:
+      - 'false'
+    status:
+      code: 401
+      message: Unauthorized
+version: 1

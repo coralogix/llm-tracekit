@@ -14,6 +14,7 @@
 
 import pytest
 
+import llm_tracekit.core._extended_gen_ai_attributes as ExtendedGenAIAttributes
 from .utils import (
     assert_attributes,
     assert_choices_in_span,
@@ -21,7 +22,7 @@ from .utils import (
     assert_request_tools_in_span,
 )
 
-from agents import Agent, Runner, function_tool
+from agents import Agent, Runner, RunConfig, function_tool, trace
 
 
 @pytest.mark.vcr()
@@ -413,3 +414,77 @@ async def test_agent_nested_agent(span_exporter, instrument):
         response_model="gpt-4o-mini-2024-07-18",
         agent_name=main_agent.name,
     )
+
+
+@pytest.mark.vcr()
+@pytest.mark.asyncio()
+async def test_agent_user_from_trace_metadata(span_exporter, instrument):
+    simple_agent = Agent(
+        name="SimpleAgent",
+        model="gpt-4o-mini",
+        instructions="Be a helpful assistant",
+    )
+
+    with trace("test-trace", metadata={"user": "trace-user-123"}):
+        await Runner.run(simple_agent, "Say 'This is a test.'")
+
+    spans = span_exporter.get_finished_spans()
+
+    final_response_span = next(
+        (s for s in spans if s.name == "Response"), None
+    )
+    assert final_response_span is not None
+
+    assert (
+        final_response_span.attributes[ExtendedGenAIAttributes.GEN_AI_REQUEST_USER]
+        == "trace-user-123"
+    )
+
+
+@pytest.mark.vcr()
+@pytest.mark.asyncio()
+async def test_agent_user_from_run_config_metadata(span_exporter, instrument):
+    simple_agent = Agent(
+        name="SimpleAgent",
+        model="gpt-4o-mini",
+        instructions="Be a helpful assistant",
+    )
+
+    await Runner.run(
+        simple_agent,
+        "Say 'This is a test.'",
+        run_config=RunConfig(trace_metadata={"user": "runconfig-user-456"}),
+    )
+
+    spans = span_exporter.get_finished_spans()
+
+    final_response_span = next(
+        (s for s in spans if s.name == "Response"), None
+    )
+    assert final_response_span is not None
+
+    assert (
+        final_response_span.attributes[ExtendedGenAIAttributes.GEN_AI_REQUEST_USER]
+        == "runconfig-user-456"
+    )
+
+
+@pytest.mark.vcr()
+@pytest.mark.asyncio()
+async def test_agent_no_user_attribute_when_missing(span_exporter, instrument):
+    simple_agent = Agent(
+        name="SimpleAgent",
+        model="gpt-4o-mini",
+        instructions="Be a helpful assistant",
+    )
+
+    await Runner.run(simple_agent, "Say 'This is a test.'")
+
+    spans = span_exporter.get_finished_spans()
+
+    final_response_span = next(
+        (s for s in spans if s.name == "Response"), None
+    )
+    assert final_response_span is not None
+
+    assert ExtendedGenAIAttributes.GEN_AI_REQUEST_USER not in final_response_span.attributes

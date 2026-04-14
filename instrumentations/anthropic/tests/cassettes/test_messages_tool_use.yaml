@@ -1,0 +1,89 @@
+interactions:
+- request:
+    body: |-
+      {
+        "max_tokens": 256,
+        "messages": [
+          {
+            "role": "user",
+            "content": "You must use the report_city tool with city Tokyo."
+          }
+        ],
+        "model": "claude-haiku-4-5-20251001",
+        "temperature": 0,
+        "tool_choice": {
+          "type": "any"
+        },
+        "tools": [
+          {
+            "name": "report_city",
+            "description": "Report a city name the user cares about.",
+            "input_schema": {
+              "type": "object",
+              "properties": {
+                "city": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "city"
+              ]
+            }
+          }
+        ]
+      }
+    headers:
+      accept:
+      - application/json
+      anthropic-version:
+      - '2023-06-01'
+      connection:
+      - keep-alive
+      content-type:
+      - application/json
+      host:
+      - api.anthropic.com
+      x-stainless-lang:
+      - python
+      x-stainless-runtime:
+      - CPython
+    method: POST
+    uri: https://api.anthropic.com/v1/messages
+  response:
+    body:
+      string: |-
+        {
+          "model": "claude-haiku-4-5-20251001",
+          "id": "msg_toolu_anthropic_test",
+          "type": "message",
+          "role": "assistant",
+          "content": [
+            {
+              "type": "tool_use",
+              "id": "toolu_01ReportCityTokyo",
+              "name": "report_city",
+              "input": {"city": "Tokyo"}
+            }
+          ],
+          "stop_reason": "tool_use",
+          "stop_sequence": null,
+          "usage": {
+            "input_tokens": 120,
+            "cache_creation_input_tokens": 0,
+            "cache_read_input_tokens": 0,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 0,
+              "ephemeral_1h_input_tokens": 0
+            },
+            "output_tokens": 40,
+            "service_tier": "standard",
+            "inference_geo": "not_available"
+          }
+        }
+    headers:
+      Content-Type:
+      - application/json
+    status:
+      code: 200
+      message: OK
+version: 1

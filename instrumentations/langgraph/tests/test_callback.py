@@ -21,6 +21,7 @@ from uuid import uuid4
 import pytest
 from opentelemetry.trace import StatusCode
 
+import llm_tracekit.core._extended_gen_ai_attributes as ExtendedGenAIAttributes
 from llm_tracekit.langgraph.callback import LangGraphCallbackHandler
 from llm_tracekit.langgraph.span_manager import GLOBAL_SPAN_NAME
 from llm_tracekit.langgraph.utils import LangGraphSpanAttributes
@@ -201,3 +202,37 @@ def test_path_with_more_than_two_segments_skips_node_span(
     spans = span_exporter.get_finished_spans()
     node_spans = [s for s in spans if s.name.startswith("LangGraph Node ")]
     assert len(node_spans) == 0
+
+
+def test_node_span_has_user_from_metadata(
+    handler: LangGraphCallbackHandler, langgraph_metadata, span_exporter
+):
+    """Node span records gen_ai.request.user when metadata contains a 'user' key."""
+    run_id = uuid4()
+    metadata_with_user = {**langgraph_metadata, "user": "test-user-123"}
+    _start_node(handler, run_id=run_id, metadata=metadata_with_user)
+    handler.on_chain_end(outputs={}, run_id=run_id)
+
+    spans = span_exporter.get_finished_spans()
+    node_spans = [s for s in spans if s.name == "LangGraph Node ingest_messages"]
+    assert len(node_spans) == 1
+    span = node_spans[0]
+    assert (
+        span.attributes.get(ExtendedGenAIAttributes.GEN_AI_REQUEST_USER)
+        == "test-user-123"
+    )
+
+
+def test_node_span_no_user_attribute_when_missing(
+    handler: LangGraphCallbackHandler, langgraph_metadata, span_exporter
+):
+    """Node span has no gen_ai.request.user when metadata contains no 'user' key."""
+    run_id = uuid4()
+    _start_node(handler, run_id=run_id, metadata=langgraph_metadata)
+    handler.on_chain_end(outputs={}, run_id=run_id)
+
+    spans = span_exporter.get_finished_spans()
+    node_spans = [s for s in spans if s.name == "LangGraph Node ingest_messages"]
+    assert len(node_spans) == 1
+    span = node_spans[0]
+    assert ExtendedGenAIAttributes.GEN_AI_REQUEST_USER not in (span.attributes or {})

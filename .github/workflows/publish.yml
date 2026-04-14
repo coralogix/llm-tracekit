@@ -10,18 +10,20 @@ jobs:
     strategy:
       matrix:
         package:
-          - llm-tracekit
           - llm-tracekit-core
           - llm-tracekit-openai
           - llm-tracekit-bedrock
           - llm-tracekit-gemini
+          - llm-tracekit-anthropic
           - llm-tracekit-litellm
           - llm-tracekit-openai-agents
           - llm-tracekit-langchain
           - llm-tracekit-langgraph
           - llm-tracekit-strands
+          - llm-tracekit-google-adk
           - llm-tracekit-claude-agent-sdk
           - cx-guardrails
+          - llm-tracekit
     steps:
       - uses: actions/checkout@v4
       - name: Set up Python

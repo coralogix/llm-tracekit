@@ -78,6 +78,12 @@ def generate_attributes_from_invoke_agent_input(
         ),
     }
 
+    session_state = kwargs.get("sessionState") or {}
+    session_attributes = session_state.get("sessionAttributes") or {}
+    user = session_attributes.get("userId") or session_attributes.get("user")
+    if user is not None:
+        attributes[ExtendedGenAIAttributes.GEN_AI_REQUEST_USER] = str(user)
+
     return attributes
 
 

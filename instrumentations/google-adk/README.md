@@ -133,3 +133,4 @@ if __name__ == "__main__":
 | `gen_ai.request.tools.<tool_number>.type` | string | Type of tool entry in tools list | `function`
 | `gen_ai.request.tools.<tool_number>.function.name` | string | The name of the function to use in tool calls | `get_current_weather`
 | `gen_ai.request.tools.<tool_number>.function.description` | string | Description of the function | `Get the current weather in a given location`
+| `gen_ai.request.user` | string | A unique identifier representing the end-user (from the `user_id` passed to `session_service.create_session(...)`) | `user@company.com`

@@ -50,7 +50,7 @@ def create_wrapped_trace_call_llm(original_func, capture_content: bool):
 
         try:
             attributes = _build_semantic_attributes(
-                llm_request, llm_response, capture_content
+                invocation_context, llm_request, llm_response, capture_content
             )
             span.set_attributes(attributes)
         except Exception:
@@ -61,10 +61,14 @@ def create_wrapped_trace_call_llm(original_func, capture_content: bool):
 
 
 def _build_semantic_attributes(
-    llm_request, llm_response, capture_content: bool
+    invocation_context, llm_request, llm_response, capture_content: bool
 ) -> dict[str, Any]:
     """Build semantic convention attributes from LLM request and response."""
     attributes: dict[str, Any] = {}
+
+    user_id = getattr(invocation_context, "user_id", None)
+    if user_id:
+        attributes[ExtendedGenAIAttributes.GEN_AI_REQUEST_USER] = str(user_id)
 
     if llm_request is not None:
         attributes.update(_process_request(llm_request, capture_content))

@@ -87,6 +87,7 @@ response = bedrock.converse(
     modelId="anthropic.claude-3-sonnet-20240229-v1:0",
     messages=[{"role": "user", "content": [{"text": "Write a short poem on open telemetry."}]}],
     system=[{"text": "You are a helpful assistant."}],
+    requestMetadata={"user": "user@company.com"},
 )
 ```
 
@@ -111,6 +112,8 @@ response = bedrock.converse(
 | `gen_ai.request.tools.<tool_number>.function.name` | string | Name of the tool/function exposed to the model | `get_current_weather`
 | `gen_ai.request.tools.<tool_number>.function.description` | string | Description of the tool/function | `Get the current weather in a given location`
 | `gen_ai.request.tools.<tool_number>.function.parameters` | string | JSON schema describing the tool/function parameters | `{"type": "object", "properties": {"location": {"type": "string"}}, "required": ["location"]}`
+
+| `gen_ai.request.user` | string | A unique identifier representing the end-user (from `requestMetadata={"user": "..."}` for converse API, or `sessionState={"sessionAttributes": {"userId": "..."}}` for invoke_agent API) | `user@company.com`
 
 ### Bedrock specific attributes
 | Attribute | Type | Description | Examples

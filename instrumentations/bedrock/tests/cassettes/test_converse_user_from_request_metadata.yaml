@@ -1,0 +1,84 @@
+interactions:
+- request:
+    body: |-
+      {
+        "messages": [
+          {
+            "role": "user",
+            "content": [
+              {
+                "text": "say this is a test"
+              }
+            ]
+          }
+        ],
+        "requestMetadata": {
+          "user": "test-user-123"
+        }
+      }
+    headers:
+      Authorization:
+      - test-auth
+      Content-Length:
+      - '123'
+      Content-Type:
+      - !!binary |
+        YXBwbGljYXRpb24vanNvbg==
+      User-Agent:
+      - !!binary |
+        Qm90bzMvMS4zNi4wIG1kL0JvdG9jb3JlIzEuMzYuMjYgdWEvMi4wIG9zL3dpbmRvd3MjMTAgbWQv
+        YXJjaCNhbWQ2NCBsYW5nL3B5dGhvbiMzLjExLjUgbWQvcHlpbXBsI0NQeXRob24gY2ZnL3JldHJ5
+        LW1vZGUjbGVnYWN5IEJvdG9jb3JlLzEuMzYuMjY=
+      X-Amz-Date:
+      - !!binary |
+        MjAyNjAzMTlUMTExOTI1Wg==
+      X-Amz-Security-Token:
+      - test-security-token
+      amz-sdk-invocation-id:
+      - !!binary |
+        Mjg3MmViZjAtZThiNS00YTRmLWE2MWYtMzkzMzE1MWZlZDA0
+      amz-sdk-request:
+      - !!binary |
+        YXR0ZW1wdD0x
+    method: POST
+    uri: https://bedrock-runtime.us-east-1.amazonaws.com/model/amazon.nova-lite-v1%3A0/converse
+  response:
+    body:
+      string: |-
+        {
+          "metrics": {
+            "latencyMs": 601
+          },
+          "output": {
+            "message": {
+              "content": [
+                {
+                  "text": "This appears to be a simple statement confirming that something is being treated as a test. If you have any specific questions or need assistance with something related to testing, feel free to provide more details, and I'll do my best to help! Whether it's about software testing, a trial run of a process, or any other kind of test, just let me know how I can assist you."
+                }
+              ],
+              "role": "assistant"
+            }
+          },
+          "stopReason": "end_turn",
+          "usage": {
+            "inputTokens": 5,
+            "outputTokens": 82,
+            "serverToolUsage": {},
+            "totalTokens": 87
+          }
+        }
+    headers:
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '574'
+      Content-Type:
+      - application/json
+      Date:
+      - Thu, 19 Mar 2026 11:19:27 GMT
+      x-amzn-RequestId:
+      - 73fa867a-1ed8-466c-bea1-5db062d29111
+    status:
+      code: 200
+      message: OK
+version: 1
