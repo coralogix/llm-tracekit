@@ -9,16 +9,17 @@ LLM Tracekit is a set of OpenTelemetry instrumentations that gives you complete 
 Install the instrumentation for your LLM provider:
 
 ```bash
-pip install llm-tracekit-openai        # For OpenAI
-pip install llm-tracekit-bedrock       # For AWS Bedrock
-pip install llm-tracekit-gemini        # For Google Gemini
-pip install llm-tracekit-google-adk    # For Google ADK
-pip install llm-tracekit-litellm       # For LiteLLM
-pip install llm-tracekit-langchain     # For LangChain
-pip install llm-tracekit-langgraph     # For LangGraph
-pip install llm-tracekit-openai-agents # For OpenAI Agents SDK
-pip install llm-tracekit-strands      # For Strands Agents
-pip install llm-tracekit-anthropic    # For Anthropic (Claude API)
+pip install llm-tracekit-openai             # For OpenAI
+pip install llm-tracekit-bedrock            # For AWS Bedrock
+pip install llm-tracekit-gemini             # For Google Gemini
+pip install llm-tracekit-google-adk         # For Google ADK
+pip install llm-tracekit-litellm            # For LiteLLM
+pip install llm-tracekit-langchain          # For LangChain
+pip install llm-tracekit-langgraph          # For LangGraph
+pip install llm-tracekit-openai-agents      # For OpenAI Agents SDK
+pip install llm-tracekit-strands            # For Strands Agents
+pip install llm-tracekit-anthropic          # For Anthropic (Claude API)
+pip install llm-tracekit-microsoft-foundry  # For Microsoft Foundry
 ```
 
 Then instrument your code:
@@ -51,6 +52,7 @@ response = client.chat.completions.create(
 | [AWS Bedrock](https://aws.amazon.com/bedrock/) | `llm-tracekit-bedrock` | `BedrockInstrumentor` |
 | [Google Gemini](https://ai.google.dev/) | `llm-tracekit-gemini` | `GeminiInstrumentor` |
 | [Anthropic](https://www.anthropic.com/) | `llm-tracekit-anthropic` | `AnthropicInstrumentor` |
+| [Microsoft Foundry](https://ai.azure.com/) | `llm-tracekit-microsoft-foundry` | `MicrosoftFoundryInstrumentor` |
 
 ### Frameworks
 
@@ -100,6 +102,8 @@ For detailed documentation on each instrumentation, see the individual READMEs:
 - [LangGraph](./instrumentations/langgraph/README.md)
 - [OpenAI Agents SDK](./instrumentations/openai-agents/README.md)
 - [Strands Agents](./instrumentations/strands/README.md)
+- [Anthropic](./instrumentations/anthropic/README.md)
+- [Microsoft Foundry](./instrumentations/microsoft-foundry/README.md)
 
 ## 📜 License
 

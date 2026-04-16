@@ -21,6 +21,7 @@ jobs:
           - llm-tracekit-langgraph
           - llm-tracekit-strands
           - llm-tracekit-google-adk
+          - llm-tracekit-microsoft-foundry
           - cx-guardrails
           - llm-tracekit
     steps:

@@ -21,6 +21,7 @@ members = [
     "llm-tracekit-langchain",
     "llm-tracekit-langgraph",
     "llm-tracekit-litellm",
+    "llm-tracekit-microsoft-foundry",
     "llm-tracekit-openai",
     "llm-tracekit-openai-agents",
     "llm-tracekit-strands",
@@ -289,6 +290,23 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/bb/9b/b1661026ff24bc641b76b78c5222d614776b0c085bcfdac9bd15a1cb4b35/authlib-1.6.6.tar.gz", hash = "sha256:45770e8e056d0f283451d9996fbb59b70d45722b45d854d58f32878d0a40c38e", size = 164894, upload-time = "2025-12-12T08:01:41.464Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/54/51/321e821856452f7386c4e9df866f196720b1ad0c5ea1623ea7399969ae3b/authlib-1.6.6-py2.py3-none-any.whl", hash = "sha256:7d9e9bc535c13974313a87f53e8430eb6ea3d1cf6ae4f6efcd793f2e949143fd", size = 244005, upload-time = "2025-12-12T08:01:40.209Z" },
+]
+
+[[package]]
+name = "azure-ai-projects"
+version = "2.0.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "azure-core" },
+    { name = "azure-identity" },
+    { name = "azure-storage-blob" },
+    { name = "isodate" },
+    { name = "openai" },
+    { name = "typing-extensions" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/86/f9/a15c8a16e35e6d620faebabc6cc4f9e2f4b7f1d962cc6f58931c46947e24/azure_ai_projects-2.0.1.tar.gz", hash = "sha256:c8c64870aa6b89903af69a4ff28b4eff3df9744f14615ea572cae87394946a0c", size = 491774, upload-time = "2026-03-12T19:59:02.712Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/8d/f7/290ca39501c06c6e23b46ba9f7f3dfb05ecc928cde105fed85d6845060dd/azure_ai_projects-2.0.1-py3-none-any.whl", hash = "sha256:dfda540d256e67a52bf81c75418b6bf92b811b96693fe45787e154a888ad2396", size = 236560, upload-time = "2026-03-12T19:59:04.249Z" },
 ]
 
 [[package]]
@@ -2346,7 +2364,7 @@ wheels = [
 
 [[package]]
 name = "llm-tracekit"
-version = "2.7.1"
+version = "2.8.0"
 source = { editable = "." }
 dependencies = [
     { name = "llm-tracekit-core" },
@@ -2376,6 +2394,9 @@ langgraph = [
 ]
 litellm = [
     { name = "llm-tracekit-litellm" },
+]
+microsoft-foundry = [
+    { name = "llm-tracekit-microsoft-foundry" },
 ]
 openai = [
     { name = "llm-tracekit-openai" },
@@ -2415,11 +2436,12 @@ requires-dist = [
     { name = "llm-tracekit-langchain", marker = "extra == 'langchain'", editable = "instrumentations/langchain" },
     { name = "llm-tracekit-langgraph", marker = "extra == 'langgraph'", editable = "instrumentations/langgraph" },
     { name = "llm-tracekit-litellm", marker = "extra == 'litellm'", editable = "instrumentations/litellm" },
+    { name = "llm-tracekit-microsoft-foundry", marker = "extra == 'microsoft-foundry'", editable = "instrumentations/microsoft-foundry" },
     { name = "llm-tracekit-openai", marker = "extra == 'openai'", editable = "instrumentations/openai" },
     { name = "llm-tracekit-openai-agents", marker = "extra == 'openai-agents'", editable = "instrumentations/openai-agents" },
     { name = "llm-tracekit-strands", marker = "extra == 'strands'", editable = "instrumentations/strands" },
 ]
-provides-extras = ["openai", "bedrock", "gemini", "openai-agents", "guardrails", "langchain", "google-adk", "langgraph", "litellm", "strands", "anthropic"]
+provides-extras = ["openai", "bedrock", "gemini", "openai-agents", "guardrails", "langchain", "google-adk", "langgraph", "litellm", "strands", "anthropic", "microsoft-foundry"]
 
 [package.metadata.requires-dev]
 dev = [
@@ -2760,6 +2782,51 @@ requires-dist = [
 dev = [
     { name = "assertpy", specifier = ">=1.1" },
     { name = "brotli", specifier = ">=1.0.0" },
+    { name = "mypy", specifier = ">=1.14.1" },
+    { name = "pytest", specifier = ">=8.3.4" },
+    { name = "pytest-asyncio", specifier = ">=1.0.0" },
+    { name = "pytest-vcr", specifier = ">=1.0.2" },
+    { name = "pyyaml", specifier = ">=6.0.2" },
+    { name = "ruff", specifier = ">=0.9.7" },
+]
+
+[[package]]
+name = "llm-tracekit-microsoft-foundry"
+version = "1.0.0"
+source = { editable = "instrumentations/microsoft-foundry" }
+dependencies = [
+    { name = "azure-ai-projects" },
+    { name = "llm-tracekit-core" },
+    { name = "opentelemetry-instrumentation" },
+    { name = "wrapt" },
+]
+
+[package.dev-dependencies]
+dev = [
+    { name = "assertpy" },
+    { name = "azure-identity" },
+    { name = "brotli" },
+    { name = "mypy" },
+    { name = "pytest" },
+    { name = "pytest-asyncio" },
+    { name = "pytest-vcr" },
+    { name = "pyyaml" },
+    { name = "ruff" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "azure-ai-projects", specifier = ">=2.0.0" },
+    { name = "llm-tracekit-core", editable = "core" },
+    { name = "opentelemetry-instrumentation", specifier = ">=0.60b0" },
+    { name = "wrapt", specifier = ">=1.0.0" },
+]
+
+[package.metadata.requires-dev]
+dev = [
+    { name = "assertpy", specifier = ">=1.1" },
+    { name = "azure-identity", specifier = ">=1.15.0" },
+    { name = "brotli", specifier = ">=1.1.0" },
     { name = "mypy", specifier = ">=1.14.1" },
     { name = "pytest", specifier = ">=8.3.4" },
     { name = "pytest-asyncio", specifier = ">=1.0.0" },
