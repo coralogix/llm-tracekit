@@ -27,8 +27,11 @@ from opentelemetry.trace import SpanKind, Tracer
 
 from llm_tracekit.gemini.state import GeminiOperationState, GeminiSpanContext
 from llm_tracekit.gemini.utils import (
+    build_embed_request_details,
+    build_embed_response_details,
     build_request_details,
     build_response_details,
+    GeminiEmbedResponseDetails,
 )
 from llm_tracekit.core import handle_span_exception, Instruments
 
@@ -505,9 +508,180 @@ def _get_argument(args, kwargs, name: str, position: int | None = None):
     return None
 
 
+def embed_content_wrapper(
+    tracer: Tracer,
+    instruments: Instruments,
+    capture_content: bool,
+):
+    """Wrap the `embed_content` method of the `Models` class to trace it."""
+    config = _WrapperConfig(
+        tracer=tracer, instruments=instruments, capture_content=capture_content
+    )
+
+    def traced_method(wrapped, instance, args, kwargs):
+        model = _get_argument(args, kwargs, name="model", position=0)
+        contents = _get_argument(args, kwargs, name="contents", position=1)
+        config_payload = _get_argument(args, kwargs, name="config", position=2)
+
+        request_details = build_embed_request_details(
+            model=model,
+            contents=contents,
+            config=config_payload,
+            capture_content=config.capture_content,
+        )
+
+        span_attributes = dict(request_details.span_attributes)
+        start_time_ns = perf_counter_ns()
+
+        with config.tracer.start_as_current_span(
+            name=request_details.span_name,
+            kind=SpanKind.CLIENT,
+            attributes=span_attributes,
+            end_on_exit=False,
+        ) as span:
+            error_type = None
+            response_details = None
+            try:
+                result = wrapped(*args, **kwargs)
+                response_details = build_embed_response_details(
+                    response=result,
+                    capture_content=config.capture_content,
+                )
+
+                if span.is_recording():
+                    span.set_attributes(response_details.span_attributes)
+
+                span.end()
+                return result
+            except Exception as error:
+                error_type = type(error).__qualname__
+                handle_span_exception(span, error)
+                raise
+            finally:
+                _record_embed_metrics(
+                    instruments=config.instruments,
+                    start_time_ns=start_time_ns,
+                    request_attributes=span_attributes,
+                    response_details=response_details,
+                    error_type=error_type,
+                )
+
+    return traced_method
+
+
+def async_embed_content_wrapper(
+    tracer: Tracer,
+    instruments: Instruments,
+    capture_content: bool,
+):
+    """Wrap the `embed_content` method of the `AsyncModels` class to trace it."""
+    config = _WrapperConfig(
+        tracer=tracer, instruments=instruments, capture_content=capture_content
+    )
+
+    async def traced_method(wrapped, instance, args, kwargs):
+        model = _get_argument(args, kwargs, name="model", position=0)
+        contents = _get_argument(args, kwargs, name="contents", position=1)
+        config_payload = _get_argument(args, kwargs, name="config", position=2)
+
+        request_details = build_embed_request_details(
+            model=model,
+            contents=contents,
+            config=config_payload,
+            capture_content=config.capture_content,
+        )
+
+        span_attributes = dict(request_details.span_attributes)
+        start_time_ns = perf_counter_ns()
+
+        with config.tracer.start_as_current_span(
+            name=request_details.span_name,
+            kind=SpanKind.CLIENT,
+            attributes=span_attributes,
+            end_on_exit=False,
+        ) as span:
+            error_type = None
+            response_details = None
+            try:
+                result = await wrapped(*args, **kwargs)
+                response_details = build_embed_response_details(
+                    response=result,
+                    capture_content=config.capture_content,
+                )
+
+                if span.is_recording():
+                    span.set_attributes(response_details.span_attributes)
+
+                span.end()
+                return result
+            except Exception as error:
+                error_type = type(error).__qualname__
+                handle_span_exception(span, error)
+                raise
+            finally:
+                _record_embed_metrics(
+                    instruments=config.instruments,
+                    start_time_ns=start_time_ns,
+                    request_attributes=span_attributes,
+                    response_details=response_details,
+                    error_type=error_type,
+                )
+
+    return traced_method
+
+
+def _record_embed_metrics(
+    instruments: Instruments,
+    start_time_ns: int,
+    request_attributes: dict[str, Any],
+    response_details: GeminiEmbedResponseDetails | None,
+    error_type: str | None,
+) -> None:
+    """Record metrics for embed_content operations."""
+    if instruments is None:
+        return
+
+    duration_ns = perf_counter_ns() - start_time_ns
+    duration_s = max(duration_ns / 1_000_000_000, 0.0)
+
+    common_attributes = {
+        GenAIAttributes.GEN_AI_OPERATION_NAME: GenAIAttributes.GenAiOperationNameValues.EMBEDDINGS.value,
+        GenAIAttributes.GEN_AI_SYSTEM: _GEMINI_SYSTEM_VALUE,
+    }
+
+    request_model = request_attributes.get(GenAIAttributes.GEN_AI_REQUEST_MODEL)
+    if request_model is not None:
+        common_attributes[GenAIAttributes.GEN_AI_REQUEST_MODEL] = request_model
+
+    if response_details is not None and response_details.model is not None:
+        common_attributes[GenAIAttributes.GEN_AI_RESPONSE_MODEL] = response_details.model
+
+    if error_type is not None:
+        common_attributes["error.type"] = error_type
+
+    instruments.operation_duration_histogram.record(
+        duration_s,
+        attributes=common_attributes,
+    )
+
+    if response_details is not None:
+        usage = response_details.usage
+        if usage.prompt_tokens is not None:
+            input_attributes = dict(common_attributes)
+            input_attributes[GenAIAttributes.GEN_AI_TOKEN_TYPE] = (
+                GenAIAttributes.GenAiTokenTypeValues.INPUT.value
+            )
+            instruments.token_usage_histogram.record(
+                usage.prompt_tokens,
+                attributes=input_attributes,
+            )
+
+
 __all__ = [
     "generate_content_wrapper",
     "generate_content_stream_wrapper",
     "async_generate_content_wrapper",
     "async_generate_content_stream_wrapper",
+    "embed_content_wrapper",
+    "async_embed_content_wrapper",
 ]
