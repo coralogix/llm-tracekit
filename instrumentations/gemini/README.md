@@ -138,12 +138,6 @@ print(f"Reduced dimensions: {len(response.embeddings[0].values)}")
 ### Text Generation Attributes
 | Attribute | Type | Description | Examples
 | --------- | ---- | ----------- | --------
-| `gen_ai.operation.name` | string | The operation being performed | `chat`
-| `gen_ai.system` | string | The AI system being used | `gemini`
-| `gen_ai.request.model` | string | The model requested | `gemini-2.0-flash`
-| `gen_ai.response.model` | string | The model that responded | `gemini-2.0-flash`
-| `gen_ai.usage.input_tokens` | int | Number of input tokens | `25`
-| `gen_ai.usage.output_tokens` | int | Number of output tokens | `150`
 | `gen_ai.prompt.<message_number>.role` | string | Role of message author for user message <message_number> | `system`, `user`, `assistant`, `tool`
 | `gen_ai.prompt.<message_number>.content` | string | Contents of user message <message_number> | `What's the weather in Paris?`
 | `gen_ai.prompt.<message_number>.tool_calls.<tool_call_number>.id` | string | ID of tool call in user message <message_number> | `call_O8NOz8VlxosSASEsOY7LDUcP`
@@ -166,12 +160,5 @@ print(f"Reduced dimensions: {len(response.embeddings[0].values)}")
 ### Embeddings Attributes
 | Attribute | Type | Description | Examples
 | --------- | ---- | ----------- | --------
-| `gen_ai.operation.name` | string | The operation being performed | `embeddings`
-| `gen_ai.system` | string | The AI system being used | `gemini`
-| `gen_ai.request.model` | string | The embedding model requested | `gemini-embedding-001`
-| `gen_ai.response.model` | string | The embedding model that responded | `gemini-embedding-001`
-| `gen_ai.usage.input_tokens` | int | Number of input tokens | `10`
-| `gen_ai.prompt.<n>.role` | string | Role for input content (always `user` for embeddings) | `user`
-| `gen_ai.prompt.<n>.content` | string | The text content being embedded | `What is machine learning?`
 | `gen_ai.embeddings.dimension.count` | int | Requested output dimensionality | `256`
 | `gen_ai.embeddings.<n>.vector` | array | The embedding vector values (when content capture enabled) | `[0.1, 0.2, ...]`

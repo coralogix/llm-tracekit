@@ -118,6 +118,18 @@ with client.responses.stream(
     response = stream.get_final_response()
 ```
 
+### Embeddings Example
+```python
+from openai import OpenAI
+
+client = OpenAI()
+response = client.embeddings.create(
+    model="text-embedding-3-small",
+    input="What is machine learning?",
+)
+print(f"Embedding dimensions: {len(response.data[0].embedding)}")
+```
+
 ### Changes from OpenTelemetry
 #### General
 * The `user` parameter in the OpenAI Chat Completions API is now recorded in the span as the `gen_ai.request.user` attribute
@@ -145,6 +157,8 @@ with client.responses.stream(
 | `gen_ai.request.tools.<tool_number>.function.description` | string | Description of the function | `Get the current weather in a given location`
 | `gen_ai.request.tools.<tool_number>.function.parameters` | string | JSON describing the schema of the function parameters | `{"type": "object", "properties": {"location": {"type": "string", "description": "The city and state, e.g. San Francisco, CA"}, "unit": {"type": "string", "enum": ["celsius", "fahrenheit"]}}, "required": ["location"]}`
 | `gen_ai.request.user` | string | A unique identifier representing the end-user | `user@company.com`
+| `gen_ai.embeddings.dimension.count` | int | Requested output dimensionality for embeddings | `256`
+| `gen_ai.embeddings.<n>.vector` | array | The embedding vector values (when content capture enabled) | `[0.1, 0.2, ...]`
 
 #### Function spans
 These spans represent the execution of a tool (a Python function).
