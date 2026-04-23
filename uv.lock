@@ -2346,7 +2346,7 @@ wheels = [
 
 [[package]]
 name = "llm-tracekit"
-version = "2.7.0"
+version = "2.7.1"
 source = { editable = "." }
 dependencies = [
     { name = "llm-tracekit-core" },
@@ -2729,7 +2729,7 @@ dev = [
 
 [[package]]
 name = "llm-tracekit-litellm"
-version = "1.3.0"
+version = "1.3.1"
 source = { editable = "instrumentations/litellm" }
 dependencies = [
     { name = "litellm", extra = ["proxy"] },
