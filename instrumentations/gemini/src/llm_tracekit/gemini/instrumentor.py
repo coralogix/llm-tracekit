@@ -29,8 +29,10 @@ from wrapt import wrap_function_wrapper
 from llm_tracekit.core import is_content_enabled, Instruments
 from llm_tracekit.gemini.package import _instruments
 from llm_tracekit.gemini.patch import (
+    async_embed_content_wrapper,
     async_generate_content_stream_wrapper,
     async_generate_content_wrapper,
+    embed_content_wrapper,
     generate_content_stream_wrapper,
     generate_content_wrapper,
 )
@@ -91,10 +93,23 @@ class GeminiInstrumentor(BaseInstrumentor):
             ),
         )
 
+        wrap_function_wrapper(
+            module="google.genai.models",
+            name="Models.embed_content",
+            wrapper=embed_content_wrapper(tracer, instruments, capture_content),
+        )
+        wrap_function_wrapper(
+            module="google.genai.models",
+            name="AsyncModels.embed_content",
+            wrapper=async_embed_content_wrapper(tracer, instruments, capture_content),
+        )
+
     def _uninstrument(self, **kwargs) -> None:
         from google.genai.models import AsyncModels, Models
 
         unwrap(Models, "generate_content")
         unwrap(Models, "generate_content_stream")
+        unwrap(Models, "embed_content")
         unwrap(AsyncModels, "generate_content")
         unwrap(AsyncModels, "generate_content_stream")
+        unwrap(AsyncModels, "embed_content")

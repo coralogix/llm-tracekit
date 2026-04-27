@@ -1,6 +1,10 @@
 # LLM Tracekit - Gemini
 OpenTelemetry instrumentation for [Google Gemini](https://ai.google.dev/), designed to simplify LLM application development and production tracing and debugging.
 
+## Supported Operations
+- **Text Generation**: `client.models.generate_content()` and `generate_content_stream()` (sync and async)
+- **Embeddings**: `client.models.embed_content()` (sync and async)
+
 ## Installation
 ```bash
 pip install "llm-tracekit-gemini"
@@ -62,7 +66,7 @@ To uninstrument clients, call the `uninstrument` method:
 GeminiInstrumentor().uninstrument()
 ```
 
-### Full Example
+### Full Example - Text Generation
 ```python
 from google import genai
 from llm_tracekit.gemini import GeminiInstrumentor, setup_export_to_coralogix
@@ -89,7 +93,49 @@ response = client.models.generate_content(
 )
 ```
 
+### Full Example - Embeddings
+```python
+from google import genai
+from google.genai import types
+from llm_tracekit.gemini import GeminiInstrumentor, setup_export_to_coralogix
+
+setup_export_to_coralogix(
+    service_name="ai-service",
+    application_name="ai-application",
+    subsystem_name="ai-subsystem",
+    capture_content=True,
+)
+
+GeminiInstrumentor().instrument()
+
+client = genai.Client()
+
+# Single content embedding
+response = client.models.embed_content(
+    model="gemini-embedding-001",
+    contents="What is machine learning?",
+)
+print(f"Embedding dimensions: {len(response.embeddings[0].values)}")
+
+# Batch embedding
+response = client.models.embed_content(
+    model="gemini-embedding-001",
+    contents=["First text", "Second text", "Third text"],
+)
+print(f"Number of embeddings: {len(response.embeddings)}")
+
+# With dimensionality reduction
+response = client.models.embed_content(
+    model="gemini-embedding-001",
+    contents="What is quantum computing?",
+    config=types.EmbedContentConfig(output_dimensionality=256),
+)
+print(f"Reduced dimensions: {len(response.embeddings[0].values)}")
+```
+
 ## Semantic Conventions
+
+### Text Generation Attributes
 | Attribute | Type | Description | Examples
 | --------- | ---- | ----------- | --------
 | `gen_ai.prompt.<message_number>.role` | string | Role of message author for user message <message_number> | `system`, `user`, `assistant`, `tool`
@@ -110,3 +156,9 @@ response = client.models.generate_content(
 | `gen_ai.request.tools.<tool_number>.function.name` | string | Name of the tool/function exposed to the model | `get_current_weather`
 | `gen_ai.request.tools.<tool_number>.function.description` | string | Description of the tool/function | `Get the current weather in a given location`
 | `gen_ai.request.tools.<tool_number>.function.parameters` | string | JSON schema describing the tool/function parameters passed with the request | `{"type": "object", "properties": {"city": {"type": "string"}}}`
+
+### Embeddings Attributes
+| Attribute | Type | Description | Examples
+| --------- | ---- | ----------- | --------
+| `gen_ai.embeddings.dimension.count` | int | Requested output dimensionality | `256`
+| `gen_ai.embeddings.<n>.vector` | array | The embedding vector values (when content capture enabled) | `[0.1, 0.2, ...]`

@@ -37,7 +37,8 @@ from llm_tracekit.core import (
 from llm_tracekit.core import _extended_gen_ai_attributes as ExtendedGenAIAttributes
 
 _GOOGLE_GENAI_SYSTEM = GenAIAttributes.GenAiSystemValues.GEMINI.value
-_OPERATION_NAME_VALUE = GenAIAttributes.GenAiOperationNameValues.CHAT.value
+_OPERATION_NAME_CHAT = GenAIAttributes.GenAiOperationNameValues.CHAT.value
+_OPERATION_NAME_EMBEDDINGS = GenAIAttributes.GenAiOperationNameValues.EMBEDDINGS.value
 
 
 @dataclass
@@ -296,7 +297,7 @@ def build_request_details(
     if tool_attributes:
         attributes.update(tool_attributes)
 
-    span_name = f"{_OPERATION_NAME_VALUE}"
+    span_name = f"{_OPERATION_NAME_CHAT}"
 
     return GeminiRequestDetails(
         span_name=span_name,
@@ -871,3 +872,124 @@ def _extract_model_name(value: Any) -> str | None:
             return model_candidate
 
     return None
+
+
+@dataclass
+class GeminiEmbedRequestDetails:
+    span_name: str
+    span_attributes: dict[str, Any]
+    model: str | None
+
+
+@dataclass
+class GeminiEmbedResponseDetails:
+    span_attributes: dict[str, Any]
+    model: str | None
+    usage: GeminiUsage
+
+
+def build_embed_request_details(
+    model: str | None,
+    contents: Any,
+    config: Any,
+    capture_content: bool,
+) -> GeminiEmbedRequestDetails:
+    """Build request details for embed_content operations."""
+    messages = _embed_contents_to_messages(contents)
+
+    attributes: dict[str, Any] = {
+        **generate_base_attributes(system=_GOOGLE_GENAI_SYSTEM),
+        GenAIAttributes.GEN_AI_OPERATION_NAME: _OPERATION_NAME_EMBEDDINGS,
+        GenAIAttributes.GEN_AI_REQUEST_MODEL: model,
+    }
+
+    message_attributes = generate_message_attributes(
+        messages=messages,
+        capture_content=capture_content,
+    )
+    attributes.update(message_attributes)
+
+    output_dimensionality = _safe_get(config, "output_dimensionality")
+    if output_dimensionality is not None:
+        attributes[ExtendedGenAIAttributes.GEN_AI_EMBEDDINGS_DIMENSION_COUNT] = (
+            output_dimensionality
+        )
+
+    span_name = f"{_OPERATION_NAME_EMBEDDINGS} {model}" if model else _OPERATION_NAME_EMBEDDINGS
+
+    return GeminiEmbedRequestDetails(
+        span_name=span_name,
+        span_attributes=attributes,
+        model=model,
+    )
+
+
+def build_embed_response_details(
+    response: Any,
+    capture_content: bool,
+) -> GeminiEmbedResponseDetails:
+    """Build response details for embed_content operations."""
+    attributes: dict[str, Any] = {}
+
+    model = _extract_model_name(response)
+    if model is not None:
+        attributes[GenAIAttributes.GEN_AI_RESPONSE_MODEL] = model
+
+    usage = _extract_embed_usage(response)
+    if usage.prompt_tokens is not None:
+        attributes[GenAIAttributes.GEN_AI_USAGE_INPUT_TOKENS] = usage.prompt_tokens
+
+    if capture_content:
+        embeddings = _safe_get(response, "embeddings")
+        for index, embedding in enumerate(_iter_sequence(embeddings)):
+            values = _safe_get(embedding, "values")
+            if values is not None:
+                attributes[
+                    ExtendedGenAIAttributes.GEN_AI_EMBEDDING_VECTOR.format(
+                        embedding_index=index
+                    )
+                ] = list(values) if not isinstance(values, list) else values
+
+    return GeminiEmbedResponseDetails(
+        span_attributes=attributes,
+        model=model,
+        usage=usage,
+    )
+
+
+def _embed_contents_to_messages(contents: Any) -> list[Message]:
+    """Convert embed_content contents to messages for attribute generation."""
+    messages: list[Message] = []
+
+    if contents is None:
+        return messages
+
+    if isinstance(contents, str):
+        messages.append(Message(role="user", content=contents))
+        return messages
+
+    for entry in _iter_sequence(contents):
+        if entry is None:
+            continue
+        if isinstance(entry, str):
+            messages.append(Message(role="user", content=entry))
+        else:
+            text_value = _stringify_value(entry)
+            messages.append(Message(role="user", content=text_value))
+
+    return messages
+
+
+def _extract_embed_usage(response: Any) -> GeminiUsage:
+    """Extract usage metadata from embed_content response."""
+    usage_metadata = _safe_get(response, "usage_metadata")
+    if usage_metadata is not None:
+        return extract_usage_metadata(response)
+
+    metadata = _safe_get(response, "metadata")
+    if metadata is not None:
+        token_count = _as_int(_safe_get(metadata, "billable_character_count"))
+        if token_count is not None:
+            return GeminiUsage(prompt_tokens=token_count)
+
+    return GeminiUsage()
