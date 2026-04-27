@@ -1,0 +1,182 @@
+interactions:
+- request:
+    body: |-
+      {
+        "messages": [
+          {
+            "role": "system",
+            "content": "You are a helpful assistant."
+          },
+          {
+            "role": "user",
+            "content": "My name is Alice."
+          },
+          {
+            "role": "assistant",
+            "content": "Hello Alice! How can I help you today?"
+          },
+          {
+            "role": "user",
+            "content": "What is my name?"
+          }
+        ],
+        "model": "gpt-4o"
+      }
+    headers:
+      accept:
+      - application/json
+      accept-encoding:
+      - gzip, deflate, br, zstd
+      authorization:
+      - Bearer test_token
+      connection:
+      - keep-alive
+      content-length:
+      - '253'
+      content-type:
+      - application/json
+      host:
+      - test-resource.services.ai.azure.com
+      user-agent:
+      - AIProjectClient OpenAI/Python 2.14.0
+      x-stainless-arch:
+      - other:amd64
+      x-stainless-async:
+      - 'false'
+      x-stainless-lang:
+      - python
+      x-stainless-os:
+      - Windows
+      x-stainless-package-version:
+      - 2.14.0
+      x-stainless-read-timeout:
+      - '600'
+      x-stainless-retry-count:
+      - '0'
+      x-stainless-runtime:
+      - CPython
+      x-stainless-runtime-version:
+      - 3.11.5
+    method: POST
+    uri: https://test-resource.services.ai.azure.com/api/projects/test-project/openai/v1/chat/completions
+  response:
+    body:
+      string: |-
+        {
+          "choices": [
+            {
+              "content_filter_results": {
+                "hate": {
+                  "filtered": false,
+                  "severity": "safe"
+                },
+                "protected_material_code": {
+                  "filtered": false,
+                  "detected": false
+                },
+                "protected_material_text": {
+                  "filtered": false,
+                  "detected": false
+                },
+                "self_harm": {
+                  "filtered": false,
+                  "severity": "safe"
+                },
+                "sexual": {
+                  "filtered": false,
+                  "severity": "safe"
+                },
+                "violence": {
+                  "filtered": false,
+                  "severity": "safe"
+                }
+              },
+              "finish_reason": "stop",
+              "index": 0,
+              "logprobs": null,
+              "message": {
+                "annotations": [],
+                "content": "Your name is Alice! \ud83d\ude0a",
+                "refusal": null,
+                "role": "assistant"
+              }
+            }
+          ],
+          "created": 1776315877,
+          "id": "chatcmpl-DV9C1T5tchjiDdMqTMmV0KKhDw7s7",
+          "model": "gpt-4o-2024-11-20",
+          "object": "chat.completion",
+          "prompt_filter_results": [
+            {
+              "prompt_index": 0,
+              "content_filter_results": {
+                "hate": {
+                  "filtered": false,
+                  "severity": "safe"
+                },
+                "jailbreak": {
+                  "filtered": false,
+                  "detected": false
+                },
+                "self_harm": {
+                  "filtered": false,
+                  "severity": "safe"
+                },
+                "sexual": {
+                  "filtered": false,
+                  "severity": "safe"
+                },
+                "violence": {
+                  "filtered": false,
+                  "severity": "safe"
+                }
+              }
+            }
+          ],
+          "service_tier": "default",
+          "system_fingerprint": "fp_af7f7349a4",
+          "usage": {
+            "completion_tokens": 7,
+            "completion_tokens_details": {
+              "accepted_prediction_tokens": 0,
+              "audio_tokens": 0,
+              "reasoning_tokens": 0,
+              "rejected_prediction_tokens": 0
+            },
+            "prompt_tokens": 45,
+            "prompt_tokens_details": {
+              "audio_tokens": 0,
+              "cached_tokens": 0
+            },
+            "total_tokens": 52
+          }
+        }
+    headers:
+      Content-Length:
+      - '1254'
+      Content-Type:
+      - application/json
+      Date:
+      - Thu, 16 Apr 2026 05:04:37 GMT
+      Strict-Transport-Security:
+      - max-age=31536000; includeSubDomains; preload
+      apim-request-id: test_value
+      azureml-model-session: test_value
+      skip-error-remapping:
+      - 'true'
+      x-accel-buffering:
+      - 'no'
+      x-content-type-options:
+      - nosniff
+      x-ms-client-request-id: test_value
+      x-ms-is-spilled-over:
+      - 'false'
+      x-ms-rai-invoked:
+      - 'true'
+      x-ms-region:
+      - Sweden Central
+      x-request-id: test_value
+    status:
+      code: 200
+      message: OK
+version: 1

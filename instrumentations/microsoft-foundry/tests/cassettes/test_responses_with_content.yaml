@@ -1,0 +1,146 @@
+interactions:
+- request:
+    body: |-
+      {
+        "input": "Say hello",
+        "model": "gpt-4o"
+      }
+    headers:
+      accept:
+      - application/json
+      accept-encoding:
+      - gzip, deflate, br, zstd
+      authorization:
+      - Bearer test_token
+      connection:
+      - keep-alive
+      content-length:
+      - '38'
+      content-type:
+      - application/json
+      host:
+      - test-resource.services.ai.azure.com
+      user-agent:
+      - AIProjectClient OpenAI/Python 2.14.0
+      x-stainless-arch:
+      - other:amd64
+      x-stainless-async:
+      - 'false'
+      x-stainless-lang:
+      - python
+      x-stainless-os:
+      - Windows
+      x-stainless-package-version:
+      - 2.14.0
+      x-stainless-read-timeout:
+      - '600'
+      x-stainless-retry-count:
+      - '0'
+      x-stainless-runtime:
+      - CPython
+      x-stainless-runtime-version:
+      - 3.11.5
+    method: POST
+    uri: https://test-resource.services.ai.azure.com/api/projects/test-project/openai/v1/responses
+  response:
+    body:
+      string: |-
+        {
+          "metadata": {},
+          "top_logprobs": 0,
+          "temperature": 1,
+          "top_p": 1,
+          "service_tier": "default",
+          "model": "gpt-4o",
+          "reasoning": {},
+          "background": false,
+          "text": {
+            "format": {
+              "type": "text"
+            },
+            "verbosity": "medium"
+          },
+          "tools": [],
+          "tool_choice": "auto",
+          "truncation": "disabled",
+          "id": "resp_023c1ce6a6dac8490069e06de911e481909fb7e8002e034dab",
+          "object": "response",
+          "status": "completed",
+          "created_at": 1776315881,
+          "completed_at": 1776315881,
+          "error": null,
+          "incomplete_details": null,
+          "output": [
+            {
+              "type": "message",
+              "id": "msg_023c1ce6a6dac8490069e06de95940819097d79f7d1271e1f8",
+              "response_id": "resp_023c1ce6a6dac8490069e06de911e481909fb7e8002e034dab",
+              "role": "assistant",
+              "content": [
+                {
+                  "type": "output_text",
+                  "text": "Hello! \ud83d\ude0a How can I assist you today?",
+                  "annotations": [],
+                  "logprobs": []
+                }
+              ],
+              "status": "completed"
+            }
+          ],
+          "instructions": null,
+          "usage": {
+            "input_tokens": 9,
+            "input_tokens_details": {
+              "cached_tokens": 0
+            },
+            "output_tokens": 11,
+            "output_tokens_details": {
+              "reasoning_tokens": 0
+            },
+            "total_tokens": 20
+          },
+          "parallel_tool_calls": true,
+          "agent_reference": null
+        }
+    headers:
+      Content-Type:
+      - application/json
+      Date:
+      - Thu, 16 Apr 2026 05:04:40 GMT
+      Strict-Transport-Security:
+      - max-age=31536000; includeSubDomains; preload
+      Transfer-Encoding:
+      - chunked
+      api-supported-versions:
+      - 1.0,2025-05-15-preview,2025-11-15-preview
+      apim-request-id: test_value
+      azureml-internal-forward-count:
+      - '1'
+      azureml-served-by-cluster:
+      - hyena-swedencentral-02,hyena-swedencentral-01
+      openai-client-partition-id: test_value
+      openai-organization: test_value
+      openai-processing-ms:
+      - '593'
+      openai-project: test_value
+      openai-version:
+      - '2020-10-01'
+      request-context:
+      - appId=
+      skip-error-remapping:
+      - 'true'
+      vary:
+      - Accept-Encoding
+      x-content-type-options:
+      - nosniff
+      x-ms-is-spilled-over:
+      - 'false'
+      x-ms-region:
+      - Sweden Central
+      x-ms-response-type:
+      - standard
+      x-request-id: test_value
+    status:
+      code: 200
+      message: OK
+version: 1

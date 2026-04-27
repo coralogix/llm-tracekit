@@ -1,0 +1,170 @@
+interactions:
+- request:
+    body: |-
+      {
+        "messages": [
+          {
+            "role": "user",
+            "content": "Say hello"
+          }
+        ],
+        "model": "gpt-4o"
+      }
+    headers:
+      accept:
+      - application/json
+      accept-encoding:
+      - gzip, deflate, br, zstd
+      authorization:
+      - Bearer test_token
+      connection:
+      - keep-alive
+      content-length:
+      - '69'
+      content-type:
+      - application/json
+      host:
+      - test-resource.services.ai.azure.com
+      user-agent:
+      - AIProjectClient OpenAI/Python 2.14.0
+      x-stainless-arch:
+      - other:amd64
+      x-stainless-async:
+      - 'false'
+      x-stainless-lang:
+      - python
+      x-stainless-os:
+      - Windows
+      x-stainless-package-version:
+      - 2.14.0
+      x-stainless-read-timeout:
+      - '600'
+      x-stainless-retry-count:
+      - '0'
+      x-stainless-runtime:
+      - CPython
+      x-stainless-runtime-version:
+      - 3.11.5
+    method: POST
+    uri: https://test-resource.services.ai.azure.com/api/projects/test-project/openai/v1/chat/completions
+  response:
+    body:
+      string: |-
+        {
+          "choices": [
+            {
+              "content_filter_results": {
+                "hate": {
+                  "filtered": false,
+                  "severity": "safe"
+                },
+                "protected_material_code": {
+                  "filtered": false,
+                  "detected": false
+                },
+                "protected_material_text": {
+                  "filtered": false,
+                  "detected": false
+                },
+                "self_harm": {
+                  "filtered": false,
+                  "severity": "safe"
+                },
+                "sexual": {
+                  "filtered": false,
+                  "severity": "safe"
+                },
+                "violence": {
+                  "filtered": false,
+                  "severity": "safe"
+                }
+              },
+              "finish_reason": "stop",
+              "index": 0,
+              "logprobs": null,
+              "message": {
+                "annotations": [],
+                "content": "Hello! How can I assist you today? \ud83d\ude0a",
+                "refusal": null,
+                "role": "assistant"
+              }
+            }
+          ],
+          "created": 1776315865,
+          "id": "chatcmpl-DV9BpFzJXnT1hqFdGJgqn5OPVBzSX",
+          "model": "gpt-4o-2024-11-20",
+          "object": "chat.completion",
+          "prompt_filter_results": [
+            {
+              "prompt_index": 0,
+              "content_filter_results": {
+                "hate": {
+                  "filtered": false,
+                  "severity": "safe"
+                },
+                "jailbreak": {
+                  "filtered": false,
+                  "detected": false
+                },
+                "self_harm": {
+                  "filtered": false,
+                  "severity": "safe"
+                },
+                "sexual": {
+                  "filtered": false,
+                  "severity": "safe"
+                },
+                "violence": {
+                  "filtered": false,
+                  "severity": "safe"
+                }
+              }
+            }
+          ],
+          "service_tier": "default",
+          "system_fingerprint": "fp_af7f7349a4",
+          "usage": {
+            "completion_tokens": 11,
+            "completion_tokens_details": {
+              "accepted_prediction_tokens": 0,
+              "audio_tokens": 0,
+              "reasoning_tokens": 0,
+              "rejected_prediction_tokens": 0
+            },
+            "prompt_tokens": 9,
+            "prompt_tokens_details": {
+              "audio_tokens": 0,
+              "cached_tokens": 0
+            },
+            "total_tokens": 20
+          }
+        }
+    headers:
+      Content-Length:
+      - '1269'
+      Content-Type:
+      - application/json
+      Date:
+      - Thu, 16 Apr 2026 05:04:25 GMT
+      Strict-Transport-Security:
+      - max-age=31536000; includeSubDomains; preload
+      apim-request-id: test_value
+      azureml-model-session: test_value
+      skip-error-remapping:
+      - 'true'
+      x-accel-buffering:
+      - 'no'
+      x-content-type-options:
+      - nosniff
+      x-ms-client-request-id: test_value
+      x-ms-is-spilled-over:
+      - 'false'
+      x-ms-rai-invoked:
+      - 'true'
+      x-ms-region:
+      - Sweden Central
+      x-request-id: test_value
+    status:
+      code: 200
+      message: OK
+version: 1
