@@ -19,7 +19,7 @@ from opentelemetry.instrumentation.instrumentor import (  # type: ignore[attr-de
     BaseInstrumentor,
 )
 
-from llm_tracekit.core import generate_exporter_config, is_content_enabled
+from llm_tracekit.core import generate_exporter_config
 from llm_tracekit.litellm.package import _instruments
 from llm_tracekit.litellm.callback import LitellmCallback
 
@@ -53,7 +53,6 @@ class LiteLLMInstrumentor(BaseInstrumentor):
             config = None
 
         self._custom_handler = LitellmCallback(
-            capture_content=is_content_enabled(),
             config=config,
             tracer_provider=tracer_provider,
         )

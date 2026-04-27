@@ -14,9 +14,6 @@
 
 
 from litellm.integrations.opentelemetry import OpenTelemetry, OpenTelemetryConfig
-from litellm.types.utils import (
-    StandardLoggingPayload,
-)
 
 from opentelemetry.semconv._incubating.attributes import (
     gen_ai_attributes as GenAIAttributes,
@@ -35,18 +32,18 @@ from llm_tracekit.core import (
     generate_message_attributes,
     generate_request_attributes,
     generate_response_attributes,
+    is_content_enabled,
 )
 from llm_tracekit.core import _extended_gen_ai_attributes as ExtendedGenAIAttributes
+
 
 class LitellmCallback(OpenTelemetry):
     def __init__(
         self,
-        capture_content: bool,
         config: OpenTelemetryConfig | None,
         tracer_provider: Any | None = None,
     ):
         super().__init__(config=config, tracer_provider=tracer_provider)
-        self.capture_content = capture_content
 
     def parse_messages(self, raw_messages: list[dict[str, Any]]) -> list[Message]:
         messages: list[Message] = []
@@ -120,11 +117,6 @@ class LitellmCallback(OpenTelemetry):
         try:
             optional_params = kwargs.get("optional_params", {})
             litellm_params = kwargs.get("litellm_params", {}) or {}
-            standard_logging_payload: StandardLoggingPayload | None = kwargs.get(
-                "standard_logging_object"
-            )
-            if standard_logging_payload is None:
-                raise ValueError("standard_logging_object not found in kwargs")
 
             messages: list[Message] = []
             choices: list[Choice] = []
@@ -135,17 +127,22 @@ class LitellmCallback(OpenTelemetry):
                 messages = self.parse_messages(kwargs.get("messages"))
 
             if response_obj is not None:
+                usage = response_obj.get("usage")
                 response_attributes = generate_response_attributes(
                     model=response_obj.get("model"),
                     id=response_obj.get("id"),
-                    usage_input_tokens=response_obj.get("usage").get("prompt_tokens"),
-                    usage_output_tokens=response_obj.get("usage").get(
-                        "completion_tokens"
-                    ),
+                    usage_input_tokens=usage.get("prompt_tokens")
+                    if usage is not None
+                    else None,
+                    usage_output_tokens=usage.get("completion_tokens")
+                    if usage is not None
+                    else None,
                 )
                 if "choices" in response_obj:
                     raw_choices = response_obj.get("choices")
                     choices = self.parse_choices(raw_choices)
+
+            capture_content = is_content_enabled()
 
             attributes = {
                 **generate_base_attributes(
@@ -159,10 +156,10 @@ class LitellmCallback(OpenTelemetry):
                     max_tokens=optional_params.get("max_tokens"),
                 ),
                 **generate_message_attributes(
-                    messages=messages, capture_content=self.capture_content
+                    messages=messages, capture_content=capture_content
                 ),
                 **generate_choice_attributes(
-                    choices=choices, capture_content=self.capture_content
+                    choices=choices, capture_content=capture_content
                 ),
                 **response_attributes,
             }
