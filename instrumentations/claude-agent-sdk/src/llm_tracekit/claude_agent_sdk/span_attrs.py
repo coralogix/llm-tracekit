@@ -19,6 +19,7 @@ from __future__ import annotations
 import json
 from typing import Any
 
+from claude_agent_sdk import TextBlock, ToolUseBlock
 from opentelemetry.semconv._incubating.attributes import (
     gen_ai_attributes as GenAIAttributes,
 )
@@ -34,19 +35,6 @@ from llm_tracekit.core import (
     generate_response_attributes,
 )
 from llm_tracekit.core import _extended_gen_ai_attributes as ExtendedGenAIAttributes
-
-# Library-specific attribute prefixes
-GEN_AI_CLAUDE_AGENT_SDK_RESULT_DURATION_MS = (
-    "gen_ai.claude_agent_sdk.result.duration_ms"
-)
-GEN_AI_CLAUDE_AGENT_SDK_RESULT_DURATION_API_MS = (
-    "gen_ai.claude_agent_sdk.result.duration_api_ms"
-)
-GEN_AI_CLAUDE_AGENT_SDK_RESULT_NUM_TURNS = "gen_ai.claude_agent_sdk.result.num_turns"
-GEN_AI_CLAUDE_AGENT_SDK_RESULT_TOTAL_COST_USD = (
-    "gen_ai.claude_agent_sdk.result.total_cost_usd"
-)
-GEN_AI_CLAUDE_AGENT_SDK_RESULT_SESSION_ID = "gen_ai.claude_agent_sdk.result.session_id"
 
 DEFAULT_SYSTEM = "claude.agent_sdk"
 
@@ -74,11 +62,10 @@ def _blocks_to_content_and_tool_calls(
     text_parts = []
     tool_calls: list[ToolCall] = []
     for block in blocks:
-        cls_name = type(block).__name__
-        if cls_name == "TextBlock":
+        if isinstance(block, TextBlock):
             if capture_content:
                 text_parts.append(block.text)
-        elif cls_name == "ToolUseBlock":
+        elif isinstance(block, ToolUseBlock):
             args_str = None
             if capture_content and getattr(block, "input", None):
                 args_str = (
@@ -168,11 +155,6 @@ def build_tools_attributes_from_options(options: Any | None) -> dict[str, Any]:
                 tool_index=i
             )
         ] = name
-        attrs[
-            ExtendedGenAIAttributes.GEN_AI_REQUEST_TOOLS_FUNCTION_DESCRIPTION.format(
-                tool_index=i
-            )
-        ] = ""
     return attrs
 
 
@@ -234,11 +216,17 @@ def build_library_specific_attributes(result_message: Any | None) -> dict[str, A
         return {}
     attrs: dict[str, Any] = {}
     for key, attr_name in [
-        ("duration_ms", GEN_AI_CLAUDE_AGENT_SDK_RESULT_DURATION_MS),
-        ("duration_api_ms", GEN_AI_CLAUDE_AGENT_SDK_RESULT_DURATION_API_MS),
-        ("num_turns", GEN_AI_CLAUDE_AGENT_SDK_RESULT_NUM_TURNS),
-        ("total_cost_usd", GEN_AI_CLAUDE_AGENT_SDK_RESULT_TOTAL_COST_USD),
-        ("session_id", GEN_AI_CLAUDE_AGENT_SDK_RESULT_SESSION_ID),
+        ("duration_ms", ExtendedGenAIAttributes.GEN_AI_CLAUDE_AGENT_SDK_RESULT_DURATION_MS),
+        (
+            "duration_api_ms",
+            ExtendedGenAIAttributes.GEN_AI_CLAUDE_AGENT_SDK_RESULT_DURATION_API_MS,
+        ),
+        ("num_turns", ExtendedGenAIAttributes.GEN_AI_CLAUDE_AGENT_SDK_RESULT_NUM_TURNS),
+        (
+            "total_cost_usd",
+            ExtendedGenAIAttributes.GEN_AI_CLAUDE_AGENT_SDK_RESULT_TOTAL_COST_USD,
+        ),
+        ("session_id", ExtendedGenAIAttributes.GEN_AI_CLAUDE_AGENT_SDK_RESULT_SESSION_ID),
     ]:
         val = getattr(result_message, key, None)
         if val is not None:

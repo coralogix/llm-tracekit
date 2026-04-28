@@ -176,6 +176,7 @@ The instrumentation records the following OpenTelemetry metrics:
 ## Limitations
 - **Conversation history**: Each span captures only the current turn (system prompt + current user message). The full conversation history lives inside the CLI subprocess and is not exposed to Python by the SDK.
 - **`gen_ai.response.model`**: Not set — the SDK's `ResultMessage` does not expose the model name used inside the subprocess.
-- **Tool schemas**: `gen_ai.request.tools.<n>.function.description` is always an empty string and `.function.parameters` is never set, because `ClaudeAgentOptions.allowed_tools` contains only tool names without schema definitions.
+- **Tool schemas**: Tool schema metadata is not captured because `ClaudeAgentOptions.allowed_tools` contains only tool names (no descriptions or parameter schemas).
+- **Concurrent turns on one client**: `ClaudeSDKClient.query()` plus `receive_response()` is modeled as one in-flight turn at a time. Calling `query()` again before the previous `receive_response()` stream finishes can mis-attribute the stored prompt to the wrong span. Use sequential query/receive pairs per client.
 - **`gen_ai.request.user` on Windows**: The instrumentation correctly extracts the `user` field, but the SDK passes it to `subprocess.Popen(user=...)`, which is unsupported on Windows. Using this option on Windows raises a `ValueError` from the SDK itself. This works correctly on Linux/macOS.
 - **Sync APIs**: The SDK is async-only; there is no sync instrumentation.

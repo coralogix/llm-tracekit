@@ -67,7 +67,11 @@ def create_wrapped_query(
             span.set_attributes(prompt_attrs)
         stream = original_query(prompt=prompt, options=options, transport=transport)
         return QueryStreamWrapper(
-            stream, span, instruments=instruments, capture_content=capture_content
+            stream,
+            span,
+            instruments=instruments,
+            capture_content=capture_content,
+            model=model,
         )
 
     return wrapped_query

@@ -50,6 +50,41 @@ GEN_AI_BEDROCK_AGENT_ALIAS_ID: Final = "gen_ai.bedrock.agent_alias.id"
 The ID of the Bedrock agent alias.
 """
 
+GEN_AI_CLAUDE_AGENT_SDK_RESULT_DURATION_MS: Final = (
+    "gen_ai.claude_agent_sdk.result.duration_ms"
+)
+"""
+Wall-clock duration of the Claude Agent SDK agent run (milliseconds).
+"""
+
+GEN_AI_CLAUDE_AGENT_SDK_RESULT_DURATION_API_MS: Final = (
+    "gen_ai.claude_agent_sdk.result.duration_api_ms"
+)
+"""
+Time spent in API calls during the agent run (milliseconds).
+"""
+
+GEN_AI_CLAUDE_AGENT_SDK_RESULT_NUM_TURNS: Final = (
+    "gen_ai.claude_agent_sdk.result.num_turns"
+)
+"""
+Number of agentic turns in the run.
+"""
+
+GEN_AI_CLAUDE_AGENT_SDK_RESULT_TOTAL_COST_USD: Final = (
+    "gen_ai.claude_agent_sdk.result.total_cost_usd"
+)
+"""
+Estimated total cost in USD from the SDK result message.
+"""
+
+GEN_AI_CLAUDE_AGENT_SDK_RESULT_SESSION_ID: Final = (
+    "gen_ai.claude_agent_sdk.result.session_id"
+)
+"""
+Session ID assigned by the Claude Agent SDK subprocess.
+"""
+
 GEN_AI_PROMPT_ROLE: Final = "gen_ai.prompt.{prompt_index}.role"
 """
 The role of the prompt.
