@@ -29,6 +29,9 @@ from llm_tracekit.strands.patch import (
 )
 
 
+LIBRARY_NAME = "llm_tracekit.strands"
+
+
 class StrandsInstrumentor(BaseInstrumentor):
     """Instrumentor for Strands Agents SDK that adds semantic convention attributes to spans.
 
@@ -47,6 +50,8 @@ class StrandsInstrumentor(BaseInstrumentor):
         self._original_start_model_invoke_span = None
         self._original_end_model_invoke_span = None
         self._original_stream_messages = None
+        self._original_inner_tracer = None
+        self._original_service_name: str | None = None
 
     def instrumentation_dependencies(self) -> Collection[str]:
         return _instruments
@@ -91,6 +96,17 @@ class StrandsInstrumentor(BaseInstrumentor):
         except (ImportError, AttributeError):
             pass
 
+        # Replace the strands tracer's internal tracer so that spans are created
+        # with otel.library.name containing "llm_tracekit" instead of
+        # "strands.telemetry.tracer"
+        strands_tracer_instance = tracer_module.get_tracer()
+        self._original_inner_tracer = strands_tracer_instance.tracer
+        self._original_service_name = strands_tracer_instance.service_name
+        strands_tracer_instance.service_name = LIBRARY_NAME
+        strands_tracer_instance.tracer = (
+            strands_tracer_instance.tracer_provider.get_tracer(LIBRARY_NAME)
+        )
+
     def _uninstrument(self, **kwargs):
         """Disable Strands instrumentation."""
         if self._original_start_model_invoke_span is not None:
@@ -122,3 +138,12 @@ class StrandsInstrumentor(BaseInstrumentor):
                 pass
 
             self._original_stream_messages = None
+
+        if self._original_inner_tracer is not None:
+            import strands.telemetry.tracer as tracer_module
+
+            strands_tracer_instance = tracer_module.get_tracer()
+            strands_tracer_instance.service_name = self._original_service_name
+            strands_tracer_instance.tracer = self._original_inner_tracer
+            self._original_inner_tracer = None
+            self._original_service_name = None
