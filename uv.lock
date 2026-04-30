@@ -2364,7 +2364,7 @@ wheels = [
 
 [[package]]
 name = "llm-tracekit"
-version = "2.8.0"
+version = "2.8.1"
 source = { editable = "." }
 dependencies = [
     { name = "llm-tracekit-core" },
@@ -2917,7 +2917,7 @@ dev = [
 
 [[package]]
 name = "llm-tracekit-strands"
-version = "1.1.0"
+version = "1.1.1"
 source = { editable = "instrumentations/strands" }
 dependencies = [
     { name = "llm-tracekit-core" },
