@@ -682,8 +682,10 @@ class TestGuardrailModel:
         assert_that(GuardrailModel.CLAUDE_SONNET_5.value).is_equal_to("claude-sonnet-5")
         assert_that(GuardrailModel.O3_2025_04_16.value).is_equal_to("o3-2025-04-16")
 
-    def test_model_has_21_members(self):
-        assert_that(len(GuardrailModel)).is_equal_to(21)
+    def test_model_has_expected_members(self):
+        # Forced-reasoning models (gpt-5.4-mini, gpt-5.4-nano, gemini-3.1-pro)
+        # are excluded from the guardrail judge allow-list.
+        assert_that(len(GuardrailModel)).is_equal_to(18)
 
     def test_custom_guardrail_default_model(self):
         custom = Custom(
