@@ -31,6 +31,10 @@ class GuardrailsAPIResponseError(GuardrailsError):
         super().__init__(self.message)
 
 
+class GuardrailsModelNotSupportedError(GuardrailsAPIResponseError):
+    """Requested LLM model does not exist / is not supported."""
+
+
 class GuardrailViolation(GuardrailsError):
     """A guardrail detected a violation."""
 

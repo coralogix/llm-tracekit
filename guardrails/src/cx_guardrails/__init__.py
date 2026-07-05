@@ -5,6 +5,7 @@ from .models._models import (
     GuardrailsTarget,
     GuardrailType,
     GuardrailCategory,
+    GuardrailModel,
 )
 from .models.request import (
     PII,
@@ -25,6 +26,7 @@ from .error import (
     GuardrailsAPIConnectionError,
     GuardrailsAPITimeoutError,
     GuardrailsAPIResponseError,
+    GuardrailsModelNotSupportedError,
     GuardrailViolation,
     GuardrailsTriggered,
 )
@@ -50,10 +52,12 @@ __all__ = [
     "GuardrailsTarget",
     "GuardrailType",
     "GuardrailCategory",
+    "GuardrailModel",
     "GuardrailsError",
     "GuardrailsAPIConnectionError",
     "GuardrailsAPITimeoutError",
     "GuardrailsAPIResponseError",
+    "GuardrailsModelNotSupportedError",
     "GuardrailsTriggered",
     "GuardrailViolation",
     "setup_export_to_coralogix",

@@ -27,6 +27,7 @@ from cx_guardrails import (
     PIICategory,
     GuardrailType,
     GuardrailCategory,
+    GuardrailModel,
     Role,
     GuardrailsTarget,
     GuardrailsResultBase,
@@ -233,6 +234,37 @@ class TestCustom:
         assert_that(custom.violates).is_equal_to("Content violates company policy")
         assert_that(custom.safe).is_equal_to("Content is compliant with company policy")
         assert_that(custom.examples).is_none()
+        assert_that(custom.model).is_none()
+
+    def test_custom_guardrail_with_model_enum(self):
+        custom = Custom(
+            name="test",
+            instructions="test {response}",
+            violates="bad",
+            safe="good",
+            model=GuardrailModel.GPT_5_MINI,
+        )
+        assert_that(custom.model).is_equal_to(GuardrailModel.GPT_5_MINI)
+
+    def test_custom_guardrail_with_model_string(self):
+        custom = Custom(
+            name="test",
+            instructions="test {response}",
+            violates="bad",
+            safe="good",
+            model="gpt-5-mini",
+        )
+        assert_that(custom.model).is_equal_to(GuardrailModel.GPT_5_MINI)
+
+    def test_custom_guardrail_invalid_model_string(self):
+        with pytest.raises(ValidationError):
+            Custom(
+                name="test",
+                instructions="test {response}",
+                violates="bad",
+                safe="good",
+                model="not-a-model",
+            )
 
     def test_custom_guardrail_with_threshold(self):
         custom = Custom(
@@ -641,6 +673,57 @@ class TestGuardrailCategory:
         }
         result = CustomResult.model_validate(data)
         assert_that(result.category).is_none()
+
+
+class TestGuardrailModel:
+    def test_model_values(self):
+        assert_that(GuardrailModel.GPT_5.value).is_equal_to("gpt-5")
+        assert_that(GuardrailModel.GPT_5_MINI.value).is_equal_to("gpt-5-mini")
+        assert_that(GuardrailModel.CLAUDE_SONNET_5.value).is_equal_to("claude-sonnet-5")
+        assert_that(GuardrailModel.O3_2025_04_16.value).is_equal_to("o3-2025-04-16")
+
+    def test_model_has_21_members(self):
+        assert_that(len(GuardrailModel)).is_equal_to(21)
+
+    def test_custom_guardrail_default_model(self):
+        custom = Custom(
+            name="test",
+            instructions="Check {response}",
+            violates="bad",
+            safe="good",
+        )
+        assert_that(custom.model).is_none()
+
+    def test_custom_guardrail_model_coercion(self):
+        custom = Custom(
+            name="test",
+            instructions="Check {response}",
+            violates="bad",
+            safe="good",
+            model="claude-sonnet-5",
+        )
+        assert_that(custom.model).is_equal_to(GuardrailModel.CLAUDE_SONNET_5)
+
+    def test_custom_guardrail_model_serialization(self):
+        custom = Custom(
+            name="test",
+            instructions="Check {response}",
+            violates="bad",
+            safe="good",
+            model=GuardrailModel.GPT_5_MINI,
+        )
+        data = custom.model_dump(mode="json")
+        assert_that(data["model"]).is_equal_to("gpt-5-mini")
+
+    def test_custom_guardrail_model_omitted_when_unset(self):
+        custom = Custom(
+            name="test",
+            instructions="Check {response}",
+            violates="bad",
+            safe="good",
+        )
+        data = custom.model_dump(mode="json", exclude_none=True)
+        assert_that("model" in data).is_false()
 
 
 class TestSpanAttributes:

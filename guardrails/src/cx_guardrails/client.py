@@ -1,3 +1,4 @@
+import json
 import os
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
@@ -29,6 +30,7 @@ from .error import (
     GuardrailsAPIResponseError,
     GuardrailsAPIConnectionError,
     GuardrailsAPITimeoutError,
+    GuardrailsModelNotSupportedError,
     GuardrailViolation,
     GuardrailsTriggered,
 )
@@ -290,6 +292,21 @@ class GuardrailRequestSender:
         self, response: httpx.Response, span: Span, target: GuardrailsTarget
     ) -> GuardrailsResponse:
         if not response.is_success:
+            body: dict[str, Any] | None = None
+            try:
+                parsed = json.loads(response.text)
+                if isinstance(parsed, dict):
+                    body = parsed
+            except (json.JSONDecodeError, ValueError):
+                body = None
+
+            if body is not None and body.get("code") == "model_not_found":
+                raise GuardrailsModelNotSupportedError(
+                    status_code=response.status_code,
+                    body=response.text,
+                    message=body.get("error"),
+                )
+
             raise GuardrailsAPIResponseError(
                 status_code=response.status_code,
                 body=response.text,

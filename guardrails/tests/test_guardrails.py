@@ -21,12 +21,14 @@ from cx_guardrails import (
     Guardrails,
     PII,
     PromptInjection,
+    Custom,
     TestPolicy,
     PIICategory,
     GuardrailsTriggered,
     GuardrailsAPITimeoutError,
     GuardrailsAPIConnectionError,
     GuardrailsAPIResponseError,
+    GuardrailsModelNotSupportedError,
     GuardrailType,
 )
 
@@ -382,6 +384,58 @@ class TestGuardrailsErrorHandling:
             assert_that(exc_info.value.message).contains("Got invalid response")
 
     @pytest.mark.asyncio
+    async def test_model_not_found_error_raises_dedicated_exception(
+        self, guardrails_client
+    ):
+        mock_response = httpx.Response(
+            400,
+            json={"error": "model 'x' does not exist", "code": "model_not_found"},
+        )
+
+        with patch.object(
+            httpx.AsyncClient, "post", new_callable=AsyncMock
+        ) as mock_post:
+            mock_post.return_value = mock_response
+
+            with pytest.raises(GuardrailsModelNotSupportedError) as exc_info:
+                async with guardrails_client.guarded_session():
+                    await guardrails_client.guard_prompt(
+                        guardrails=[PII()],
+                        prompt="Hello",
+                    )
+
+            assert_that(exc_info.value.status_code).is_equal_to(400)
+            assert_that(exc_info.value.message).is_equal_to(
+                "model 'x' does not exist"
+            )
+
+    @pytest.mark.asyncio
+    async def test_plain_400_without_code_raises_generic_error(
+        self, guardrails_client
+    ):
+        mock_response = httpx.Response(
+            400,
+            json={"error": "bad request"},
+        )
+
+        with patch.object(
+            httpx.AsyncClient, "post", new_callable=AsyncMock
+        ) as mock_post:
+            mock_post.return_value = mock_response
+
+            with pytest.raises(GuardrailsAPIResponseError) as exc_info:
+                async with guardrails_client.guarded_session():
+                    await guardrails_client.guard_prompt(
+                        guardrails=[PII()],
+                        prompt="Hello",
+                    )
+
+            assert_that(
+                isinstance(exc_info.value, GuardrailsModelNotSupportedError)
+            ).is_false()
+            assert_that(exc_info.value.status_code).is_equal_to(400)
+
+    @pytest.mark.asyncio
     async def test_empty_response_returns_empty_results(self, guardrails_client):
         mock_response = httpx.Response(200, text="")
 
@@ -474,6 +528,59 @@ class TestGuardrailsRequestFormat:
             call_args = mock_post.call_args
             assert_that(call_args.kwargs["url"]).is_equal_to(
                 "https://test.example.com/api/v1/guardrails/guard"
+            )
+
+    @pytest.mark.asyncio
+    async def test_request_omits_model_when_unset(self, guardrails_client):
+        mock_response = httpx.Response(200, json={"results": []})
+
+        with patch.object(
+            httpx.AsyncClient, "post", new_callable=AsyncMock
+        ) as mock_post:
+            mock_post.return_value = mock_response
+
+            async with guardrails_client.guarded_session():
+                await guardrails_client.guard_prompt(
+                    guardrails=[
+                        Custom(
+                            name="test",
+                            instructions="Check {prompt}",
+                            violates="bad",
+                            safe="good",
+                        )
+                    ],
+                    prompt="Hello",
+                )
+
+            request_body = mock_post.call_args.kwargs["json"]
+            assert_that("model" in request_body["guardrails"][0]).is_false()
+
+    @pytest.mark.asyncio
+    async def test_request_includes_model_when_set(self, guardrails_client):
+        mock_response = httpx.Response(200, json={"results": []})
+
+        with patch.object(
+            httpx.AsyncClient, "post", new_callable=AsyncMock
+        ) as mock_post:
+            mock_post.return_value = mock_response
+
+            async with guardrails_client.guarded_session():
+                await guardrails_client.guard_prompt(
+                    guardrails=[
+                        Custom(
+                            name="test",
+                            instructions="Check {prompt}",
+                            violates="bad",
+                            safe="good",
+                            model="gpt-5-mini",
+                        )
+                    ],
+                    prompt="Hello",
+                )
+
+            request_body = mock_post.call_args.kwargs["json"]
+            assert_that(request_body["guardrails"][0]["model"]).is_equal_to(
+                "gpt-5-mini"
             )
 
 
