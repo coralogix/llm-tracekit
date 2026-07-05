@@ -291,18 +291,9 @@ class GuardrailRequestSender:
         self, response: httpx.Response, span: Span, target: GuardrailsTarget
     ) -> GuardrailsResponse:
         if not response.is_success:
-            message = None
-            try:
-                parsed = json.loads(response.text)
-                if isinstance(parsed, dict):
-                    message = parsed.get("error")
-            except (json.JSONDecodeError, ValueError):
-                message = None
-
             raise GuardrailsAPIResponseError(
                 status_code=response.status_code,
                 body=response.text,
-                message=message,
             )
 
         if not response.text or not response.text.strip():
