@@ -26,7 +26,6 @@ from .error import (
     GuardrailsAPIConnectionError,
     GuardrailsAPITimeoutError,
     GuardrailsAPIResponseError,
-    GuardrailsModelNotSupportedError,
     GuardrailViolation,
     GuardrailsTriggered,
 )
@@ -57,7 +56,6 @@ __all__ = [
     "GuardrailsAPIConnectionError",
     "GuardrailsAPITimeoutError",
     "GuardrailsAPIResponseError",
-    "GuardrailsModelNotSupportedError",
     "GuardrailsTriggered",
     "GuardrailViolation",
     "setup_export_to_coralogix",

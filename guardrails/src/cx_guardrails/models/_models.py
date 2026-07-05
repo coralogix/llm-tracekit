@@ -34,17 +34,17 @@ class GuardrailCategory(str, Enum):
 
 
 class GuardrailModel(str, Enum):
-    GPT_4O_2024_11_20 = "gpt-4o-2024-11-20"
-    GPT_4_1_2025_04_14 = "gpt-4.1-2025-04-14"
-    GPT_4_1_MINI_2025_04_14 = "gpt-4.1-mini-2025-04-14"
+    GPT_4O = "gpt-4o-2024-11-20"
+    GPT_4_1 = "gpt-4.1-2025-04-14"
+    GPT_4_1_MINI = "gpt-4.1-mini-2025-04-14"
     GPT_5 = "gpt-5"
     GPT_5_MINI = "gpt-5-mini"
-    GPT_5_1_2025_11_13 = "gpt-5.1-2025-11-13"
+    GPT_5_1 = "gpt-5.1-2025-11-13"
     GPT_5_2 = "gpt-5.2"
     GPT_5_4 = "gpt-5.4"
     GPT_5_4_MINI = "gpt-5.4-mini"
     GPT_5_5 = "gpt-5.5"
-    O3_2025_04_16 = "o3-2025-04-16"
+    O3 = "o3-2025-04-16"
     GEMINI_3_FLASH_PREVIEW = "gemini-3-flash-preview"
     GEMINI_3_1_FLASH_LITE_PREVIEW = "gemini-3.1-flash-lite-preview"
     CLAUDE_SONNET_4_5 = "claude-sonnet-4-5"

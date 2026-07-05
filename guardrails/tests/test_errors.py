@@ -20,7 +20,6 @@ from cx_guardrails.error import (
     GuardrailsAPIConnectionError,
     GuardrailsAPITimeoutError,
     GuardrailsAPIResponseError,
-    GuardrailsModelNotSupportedError,
     GuardrailViolation,
     GuardrailsTriggered,
 )
@@ -68,25 +67,6 @@ class TestGuardrailsAPIResponseError:
         )
         assert_that(error.status_code).is_equal_to(404)
         assert_that(error.message).is_equal_to("Resource not found")
-
-
-class TestGuardrailsModelNotSupportedError:
-    def test_model_not_supported_error(self):
-        error = GuardrailsModelNotSupportedError(
-            status_code=400,
-            body='{"error": "model \'x\' does not exist", "code": "model_not_found"}',
-            message="model 'x' does not exist",
-        )
-        assert_that(error.status_code).is_equal_to(400)
-        assert_that(error.message).is_equal_to("model 'x' does not exist")
-        assert_that(error).is_instance_of(GuardrailsAPIResponseError)
-        assert_that(error).is_instance_of(GuardrailsError)
-
-    def test_model_not_supported_error_default_message(self):
-        error = GuardrailsModelNotSupportedError(status_code=400)
-        assert_that(error.message).is_equal_to(
-            "Request failed with HTTP status_code=400"
-        )
 
 
 class TestGuardrailViolation:

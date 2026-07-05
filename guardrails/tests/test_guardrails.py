@@ -28,7 +28,6 @@ from cx_guardrails import (
     GuardrailsAPITimeoutError,
     GuardrailsAPIConnectionError,
     GuardrailsAPIResponseError,
-    GuardrailsModelNotSupportedError,
     GuardrailType,
 )
 
@@ -384,12 +383,12 @@ class TestGuardrailsErrorHandling:
             assert_that(exc_info.value.message).contains("Got invalid response")
 
     @pytest.mark.asyncio
-    async def test_model_not_found_error_raises_dedicated_exception(
+    async def test_model_not_found_error_raises_generic_api_error(
         self, guardrails_client
     ):
         mock_response = httpx.Response(
             400,
-            json={"error": "model 'x' does not exist", "code": "model_not_found"},
+            json={"error": "model 'x' does not exist"},
         )
 
         with patch.object(
@@ -397,7 +396,7 @@ class TestGuardrailsErrorHandling:
         ) as mock_post:
             mock_post.return_value = mock_response
 
-            with pytest.raises(GuardrailsModelNotSupportedError) as exc_info:
+            with pytest.raises(GuardrailsAPIResponseError) as exc_info:
                 async with guardrails_client.guarded_session():
                     await guardrails_client.guard_prompt(
                         guardrails=[PII()],
@@ -430,9 +429,6 @@ class TestGuardrailsErrorHandling:
                         prompt="Hello",
                     )
 
-            assert_that(
-                isinstance(exc_info.value, GuardrailsModelNotSupportedError)
-            ).is_false()
             assert_that(exc_info.value.status_code).is_equal_to(400)
 
     @pytest.mark.asyncio

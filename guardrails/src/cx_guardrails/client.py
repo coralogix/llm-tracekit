@@ -30,7 +30,6 @@ from .error import (
     GuardrailsAPIResponseError,
     GuardrailsAPIConnectionError,
     GuardrailsAPITimeoutError,
-    GuardrailsModelNotSupportedError,
     GuardrailViolation,
     GuardrailsTriggered,
 )
@@ -292,24 +291,18 @@ class GuardrailRequestSender:
         self, response: httpx.Response, span: Span, target: GuardrailsTarget
     ) -> GuardrailsResponse:
         if not response.is_success:
-            body: dict[str, Any] | None = None
+            message = None
             try:
                 parsed = json.loads(response.text)
                 if isinstance(parsed, dict):
-                    body = parsed
+                    message = parsed.get("error")
             except (json.JSONDecodeError, ValueError):
-                body = None
-
-            if body is not None and body.get("code") == "model_not_found":
-                raise GuardrailsModelNotSupportedError(
-                    status_code=response.status_code,
-                    body=response.text,
-                    message=body.get("error"),
-                )
+                message = None
 
             raise GuardrailsAPIResponseError(
                 status_code=response.status_code,
                 body=response.text,
+                message=message,
             )
 
         if not response.text or not response.text.strip():

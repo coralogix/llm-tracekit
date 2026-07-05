@@ -680,7 +680,7 @@ class TestGuardrailModel:
         assert_that(GuardrailModel.GPT_5.value).is_equal_to("gpt-5")
         assert_that(GuardrailModel.GPT_5_MINI.value).is_equal_to("gpt-5-mini")
         assert_that(GuardrailModel.CLAUDE_SONNET_5.value).is_equal_to("claude-sonnet-5")
-        assert_that(GuardrailModel.O3_2025_04_16.value).is_equal_to("o3-2025-04-16")
+        assert_that(GuardrailModel.O3.value).is_equal_to("o3-2025-04-16")
 
     def test_model_has_expected_members(self):
         # Excluded because reasoning can't be disabled: gpt-5.4-nano (not deployed)
