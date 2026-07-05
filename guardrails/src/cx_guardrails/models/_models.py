@@ -42,6 +42,7 @@ class GuardrailModel(str, Enum):
     GPT_5_1_2025_11_13 = "gpt-5.1-2025-11-13"
     GPT_5_2 = "gpt-5.2"
     GPT_5_4 = "gpt-5.4"
+    GPT_5_4_MINI = "gpt-5.4-mini"
     GPT_5_5 = "gpt-5.5"
     O3_2025_04_16 = "o3-2025-04-16"
     GEMINI_3_FLASH_PREVIEW = "gemini-3-flash-preview"
