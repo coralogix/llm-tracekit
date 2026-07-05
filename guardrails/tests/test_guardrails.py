@@ -404,9 +404,10 @@ class TestGuardrailsErrorHandling:
                     )
 
             assert_that(exc_info.value.status_code).is_equal_to(400)
-            assert_that(exc_info.value.message).is_equal_to(
-                "model 'x' does not exist"
-            )
+            # message comes straight from response.text, like every other
+            # GuardrailsAPIResponseError -- no special JSON parsing for models.
+            assert_that(exc_info.value.message).is_equal_to(mock_response.text)
+            assert_that(exc_info.value.message).contains("model 'x' does not exist")
 
     @pytest.mark.asyncio
     async def test_plain_400_without_code_raises_generic_error(
