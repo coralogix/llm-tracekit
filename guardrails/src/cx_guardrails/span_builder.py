@@ -19,6 +19,7 @@ from .span_attributes import (
     APPLICATION_NAME,
     SUBSYSTEM_NAME,
     GUARDRAILS_TRIGGERED,
+    GEN_AI_PROVIDER_NAME,
 )
 
 
@@ -30,6 +31,7 @@ def generate_base_attributes(
     responses: list[str] | None = None,
 ):
     attributes: dict[str, Any] = {
+        GEN_AI_PROVIDER_NAME: "coralogix",
         APPLICATION_NAME: application_name,
         SUBSYSTEM_NAME: subsystem_name,
     }

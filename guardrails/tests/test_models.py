@@ -817,3 +817,15 @@ class TestSpanAttributes:
         assert_that(attrs["gen_ai.response.guardrails.pii.score"]).is_equal_to(0.1)
         # No custom keys should exist
         assert_that("gen_ai.response.guardrails.custom.0.name" in attrs).is_false()
+
+    def test_generate_base_attributes_includes_provider_name(self):
+        from cx_guardrails.span_builder import generate_base_attributes
+
+        attrs = generate_base_attributes(
+            application_name="test-app",
+            subsystem_name="test-subsystem",
+        )
+
+        assert_that(attrs["gen_ai.provider.name"]).is_equal_to("coralogix")
+        assert_that(attrs["cx.application.name"]).is_equal_to("test-app")
+        assert_that(attrs["cx.subsystem.name"]).is_equal_to("test-subsystem")
