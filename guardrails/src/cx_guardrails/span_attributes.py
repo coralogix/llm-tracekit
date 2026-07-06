@@ -74,6 +74,13 @@ GEN_AI_PROVIDER_NAME: Final = "gen_ai.provider.name"
 The Gen AI provider handling this guardrail evaluation. Always "coralogix".
 """
 
+GEN_AI_OPERATION_NAME: Final = "gen_ai.operation.name"
+"""
+The Gen AI operation this span represents. Always "guardrails" -- no standard
+GenAiOperationNameValues member (chat, embeddings, etc.) fits a guardrail
+evaluation.
+"""
+
 APPLICATION_NAME: Final = "cx.application.name"
 """
 The application name.
