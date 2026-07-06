@@ -33,7 +33,7 @@ def test_responses_with_content(
     span_exporter, project_client, instrument_with_content
 ):
     with project_client.get_openai_client() as openai_client:
-        response = openai_client.responses.create(
+        openai_client.responses.create(
             model=MODEL,
             input="Say hello",
         )
@@ -65,7 +65,7 @@ def test_responses_no_content(
     span_exporter, project_client, instrument_no_content
 ):
     with project_client.get_openai_client() as openai_client:
-        response = openai_client.responses.create(
+        openai_client.responses.create(
             model=MODEL,
             input="Say hello",
         )
@@ -93,7 +93,7 @@ def test_responses_with_instructions(
     span_exporter, project_client, instrument_with_content
 ):
     with project_client.get_openai_client() as openai_client:
-        response = openai_client.responses.create(
+        openai_client.responses.create(
             model=MODEL,
             instructions="You are a pirate. Respond in pirate speak.",
             input="Say hello",

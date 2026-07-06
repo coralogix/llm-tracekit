@@ -33,7 +33,7 @@ def test_chat_completion_with_content(
     span_exporter, project_client, instrument_with_content
 ):
     with project_client.get_openai_client() as openai_client:
-        response = openai_client.chat.completions.create(
+        openai_client.chat.completions.create(
             model=MODEL,
             messages=[{"role": "user", "content": "Say hello"}],
         )
@@ -65,7 +65,7 @@ def test_chat_completion_no_content(
     span_exporter, project_client, instrument_no_content
 ):
     with project_client.get_openai_client() as openai_client:
-        response = openai_client.chat.completions.create(
+        openai_client.chat.completions.create(
             model=MODEL,
             messages=[{"role": "user", "content": "Say hello"}],
         )
@@ -142,7 +142,7 @@ def test_chat_completion_with_tools(
     ]
 
     with project_client.get_openai_client() as openai_client:
-        response = openai_client.chat.completions.create(
+        openai_client.chat.completions.create(
             model=MODEL,
             messages=[{"role": "user", "content": "What's the weather in Paris?"}],
             tools=tools,
@@ -169,7 +169,7 @@ def test_chat_completion_multi_turn(
     ]
 
     with project_client.get_openai_client() as openai_client:
-        response = openai_client.chat.completions.create(
+        openai_client.chat.completions.create(
             model=MODEL,
             messages=messages,
         )
