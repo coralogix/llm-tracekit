@@ -819,14 +819,24 @@ class TestSpanAttributes:
         assert_that("gen_ai.response.guardrails.custom.0.name" in attrs).is_false()
 
     def test_generate_base_attributes_includes_provider_and_operation_name(self):
-        from cx_guardrails.span_builder import generate_base_attributes
+        from cx_guardrails.span_attributes import (
+            APPLICATION_NAME,
+            GEN_AI_OPERATION_NAME,
+            GEN_AI_PROVIDER_NAME,
+            SUBSYSTEM_NAME,
+        )
+        from cx_guardrails.span_builder import (
+            OPERATION_NAME,
+            PROVIDER_NAME,
+            generate_base_attributes,
+        )
 
         attrs = generate_base_attributes(
             application_name="test-app",
             subsystem_name="test-subsystem",
         )
 
-        assert_that(attrs["gen_ai.provider.name"]).is_equal_to("coralogix")
-        assert_that(attrs["gen_ai.operation.name"]).is_equal_to("guardrails")
-        assert_that(attrs["cx.application.name"]).is_equal_to("test-app")
-        assert_that(attrs["cx.subsystem.name"]).is_equal_to("test-subsystem")
+        assert_that(attrs[GEN_AI_PROVIDER_NAME]).is_equal_to(PROVIDER_NAME)
+        assert_that(attrs[GEN_AI_OPERATION_NAME]).is_equal_to(OPERATION_NAME)
+        assert_that(attrs[APPLICATION_NAME]).is_equal_to("test-app")
+        assert_that(attrs[SUBSYSTEM_NAME]).is_equal_to("test-subsystem")
