@@ -13,6 +13,7 @@ dependencies = [
     "llm-tracekit-core>=1.0.0",
     "opentelemetry-instrumentation>=0.60b0",
     "azure-ai-projects>=2.0.0",
+    "aiohttp>=3.9.0",
     "wrapt>=1.0.0",
 ]
 classifiers = [

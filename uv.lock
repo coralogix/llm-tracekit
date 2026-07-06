@@ -2795,6 +2795,7 @@ name = "llm-tracekit-microsoft-foundry"
 version = "1.0.0"
 source = { editable = "instrumentations/microsoft-foundry" }
 dependencies = [
+    { name = "aiohttp" },
     { name = "azure-ai-projects" },
     { name = "llm-tracekit-core" },
     { name = "opentelemetry-instrumentation" },
@@ -2816,6 +2817,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
+    { name = "aiohttp", specifier = ">=3.9.0" },
     { name = "azure-ai-projects", specifier = ">=2.0.0" },
     { name = "llm-tracekit-core", editable = "core" },
     { name = "opentelemetry-instrumentation", specifier = ">=0.60b0" },
