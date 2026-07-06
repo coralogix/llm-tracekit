@@ -27,6 +27,7 @@ from cx_guardrails import (
     PIICategory,
     GuardrailType,
     GuardrailCategory,
+    GuardrailModel,
     Role,
     GuardrailsTarget,
     GuardrailsResultBase,
@@ -233,6 +234,37 @@ class TestCustom:
         assert_that(custom.violates).is_equal_to("Content violates company policy")
         assert_that(custom.safe).is_equal_to("Content is compliant with company policy")
         assert_that(custom.examples).is_none()
+        assert_that(custom.model).is_none()
+
+    def test_custom_guardrail_with_model_enum(self):
+        custom = Custom(
+            name="test",
+            instructions="test {response}",
+            violates="bad",
+            safe="good",
+            model=GuardrailModel.GPT_5_MINI,
+        )
+        assert_that(custom.model).is_equal_to(GuardrailModel.GPT_5_MINI)
+
+    def test_custom_guardrail_with_model_string(self):
+        custom = Custom(
+            name="test",
+            instructions="test {response}",
+            violates="bad",
+            safe="good",
+            model="gpt-5-mini",
+        )
+        assert_that(custom.model).is_equal_to(GuardrailModel.GPT_5_MINI)
+
+    def test_custom_guardrail_invalid_model_string(self):
+        with pytest.raises(ValidationError):
+            Custom(
+                name="test",
+                instructions="test {response}",
+                violates="bad",
+                safe="good",
+                model="not-a-model",
+            )
 
     def test_custom_guardrail_with_threshold(self):
         custom = Custom(
@@ -643,6 +675,60 @@ class TestGuardrailCategory:
         assert_that(result.category).is_none()
 
 
+class TestGuardrailModel:
+    def test_model_values(self):
+        assert_that(GuardrailModel.GPT_5.value).is_equal_to("gpt-5")
+        assert_that(GuardrailModel.GPT_5_MINI.value).is_equal_to("gpt-5-mini")
+        assert_that(GuardrailModel.CLAUDE_SONNET_5.value).is_equal_to("claude-sonnet-5")
+        assert_that(GuardrailModel.O3.value).is_equal_to("o3-2025-04-16")
+
+    def test_model_has_expected_members(self):
+        # Excluded because reasoning can't be disabled: gpt-5.4-nano (not deployed)
+        # and gemini-3.1-pro (Google forces thinking). gpt-5.4-mini stays: it
+        # disables reasoning by omitting reasoning_effort.
+        assert_that(len(GuardrailModel)).is_equal_to(19)
+
+    def test_custom_guardrail_default_model(self):
+        custom = Custom(
+            name="test",
+            instructions="Check {response}",
+            violates="bad",
+            safe="good",
+        )
+        assert_that(custom.model).is_none()
+
+    def test_custom_guardrail_model_coercion(self):
+        custom = Custom(
+            name="test",
+            instructions="Check {response}",
+            violates="bad",
+            safe="good",
+            model="claude-sonnet-5",
+        )
+        assert_that(custom.model).is_equal_to(GuardrailModel.CLAUDE_SONNET_5)
+
+    def test_custom_guardrail_model_serialization(self):
+        custom = Custom(
+            name="test",
+            instructions="Check {response}",
+            violates="bad",
+            safe="good",
+            model=GuardrailModel.GPT_5_MINI,
+        )
+        data = custom.model_dump(mode="json")
+        assert_that(data["model"]).is_equal_to("gpt-5-mini")
+
+    def test_custom_guardrail_model_omitted_when_unset(self):
+        custom = Custom(
+            name="test",
+            instructions="Check {response}",
+            violates="bad",
+            safe="good",
+        )
+        data = custom.model_dump(mode="json", exclude_none=True)
+        assert_that("model" in data).is_false()
+
+
 class TestSpanAttributes:
     def test_generate_guardrail_response_attributes_custom_guardrails_index_schema(self):
         from cx_guardrails.span_builder import generate_guardrail_response_attributes
@@ -731,3 +817,26 @@ class TestSpanAttributes:
         assert_that(attrs["gen_ai.response.guardrails.pii.score"]).is_equal_to(0.1)
         # No custom keys should exist
         assert_that("gen_ai.response.guardrails.custom.0.name" in attrs).is_false()
+
+    def test_generate_base_attributes_includes_provider_and_operation_name(self):
+        from cx_guardrails.span_attributes import (
+            APPLICATION_NAME,
+            GEN_AI_OPERATION_NAME,
+            GEN_AI_PROVIDER_NAME,
+            SUBSYSTEM_NAME,
+        )
+        from cx_guardrails.span_builder import (
+            OPERATION_NAME,
+            PROVIDER_NAME,
+            generate_base_attributes,
+        )
+
+        attrs = generate_base_attributes(
+            application_name="test-app",
+            subsystem_name="test-subsystem",
+        )
+
+        assert_that(attrs[GEN_AI_PROVIDER_NAME]).is_equal_to(PROVIDER_NAME)
+        assert_that(attrs[GEN_AI_OPERATION_NAME]).is_equal_to(OPERATION_NAME)
+        assert_that(attrs[APPLICATION_NAME]).is_equal_to("test-app")
+        assert_that(attrs[SUBSYSTEM_NAME]).is_equal_to("test-subsystem")

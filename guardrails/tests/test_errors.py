@@ -60,6 +60,9 @@ class TestGuardrailsAPIResponseError:
         error = GuardrailsAPIResponseError(status_code=400, body="Bad request")
         assert_that(error.status_code).is_equal_to(400)
         assert_that(error.body).is_equal_to("Bad request")
+        # No explicit message -> defaults to the raw body, like every other
+        # non-2xx error (no per-field JSON parsing).
+        assert_that(error.message).is_equal_to("Bad request")
 
     def test_response_error_with_message(self):
         error = GuardrailsAPIResponseError(

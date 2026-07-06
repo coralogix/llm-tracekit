@@ -5,6 +5,7 @@ from .models._models import (
     GuardrailsTarget,
     GuardrailType,
     GuardrailCategory,
+    GuardrailModel,
 )
 from .models.request import (
     PII,
@@ -50,6 +51,7 @@ __all__ = [
     "GuardrailsTarget",
     "GuardrailType",
     "GuardrailCategory",
+    "GuardrailModel",
     "GuardrailsError",
     "GuardrailsAPIConnectionError",
     "GuardrailsAPITimeoutError",

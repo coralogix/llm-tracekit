@@ -34,7 +34,7 @@ async def test_async_chat_completion_with_content(
     span_exporter, async_project_client, instrument_with_content
 ):
     async with async_project_client.get_openai_client() as openai_client:
-        response = await openai_client.chat.completions.create(
+        await openai_client.chat.completions.create(
             model=MODEL,
             messages=[{"role": "user", "content": "Say hello"}],
         )

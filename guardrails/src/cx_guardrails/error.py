@@ -26,6 +26,8 @@ class GuardrailsAPIResponseError(GuardrailsError):
         self.body = body
         if message:
             self.message = message
+        elif body:
+            self.message = body
         else:
             self.message = f"Request failed with HTTP {status_code=}"
         super().__init__(self.message)

@@ -7,7 +7,7 @@ from pydantic import BaseModel, Field, field_validator
 
 from ._constants import DEFAULT_THRESHOLD
 from ._models import GuardrailsTarget, PIICategory, Role
-from ._models import GuardrailCategory
+from ._models import GuardrailCategory, GuardrailModel
 
 
 class GuardrailRequest(BaseModel):
@@ -48,6 +48,7 @@ class Custom(BaseGuardrailConfig):
     examples: list[CustomEvaluationExample] | None = None
     should_include_system_prompt: bool = False
     category: GuardrailCategory = GuardrailCategory.QUALITY
+    model: GuardrailModel | None = None
 
     @field_validator("instructions", mode="after")
     @classmethod
