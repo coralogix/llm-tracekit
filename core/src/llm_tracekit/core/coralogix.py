@@ -14,10 +14,11 @@
 
 import os
 import logging
-from typing import Any
+from typing import Any, Final
 from dataclasses import dataclass
 
 from opentelemetry import trace
+from opentelemetry._logs import set_logger_provider
 from opentelemetry.sdk.resources import SERVICE_NAME, Resource
 from opentelemetry.sdk.trace import TracerProvider, SpanLimits
 from opentelemetry.sdk.trace.export import (
@@ -25,11 +26,24 @@ from opentelemetry.sdk.trace.export import (
     SimpleSpanProcessor,
     SpanProcessor,
 )
+from opentelemetry.sdk._logs import LoggerProvider
+from opentelemetry.sdk._logs.export import (
+    BatchLogRecordProcessor,
+    SimpleLogRecordProcessor,
+)
 from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
+from opentelemetry.exporter.otlp.proto.grpc._log_exporter import OTLPLogExporter
 
 from llm_tracekit.core._config import enable_capture_content
 
 logger = logging.getLogger(__name__)
+
+# Coralogix routes logs carrying these resource attributes to the
+# default/ai.evaluations dataset.
+INTEGRATION_SOURCE_TYPE_KEY: Final = "cx.integration.source.type"
+INTEGRATION_SOURCE_TYPE_VALUE: Final = "ai_agent"
+INTEGRATION_SOURCE_VERSION_KEY: Final = "cx.integration.source.version"
+INTEGRATION_SOURCE_VERSION_VALUE: Final = "1.0.0"
 
 
 @dataclass
@@ -74,7 +88,7 @@ def setup_export_to_coralogix(
     span_attribute_count_limit: int = 512,
 ):
     """
-    Setup OpenAI spans to be exported to Coralogix.
+    Setup OpenAI spans and guardrail evaluation logs to be exported to Coralogix.
 
     Args:
         service_name: The service name.
@@ -148,3 +162,31 @@ def setup_export_to_coralogix(
     # add the span processor to the tracer provider
     tracer_provider.add_span_processor(span_processor)
     trace.set_tracer_provider(tracer_provider)
+
+    # set up a logger provider, with its own resource, to send guardrail
+    # evaluation result logs to coralogix.
+    logger_provider = LoggerProvider(
+        resource=Resource.create(
+            {
+                SERVICE_NAME: service_name,
+                INTEGRATION_SOURCE_TYPE_KEY: INTEGRATION_SOURCE_TYPE_VALUE,
+                INTEGRATION_SOURCE_VERSION_KEY: INTEGRATION_SOURCE_VERSION_VALUE,
+            }
+        )
+    )
+
+    # set up an OTLP exporter to send logs to coralogix directly.
+    log_exporter = OTLPLogExporter(
+        endpoint=exporter_config.endpoint, headers=exporter_config.headers
+    )
+
+    # set up a log record processor to send logs to the exporter
+    log_record_processor = (
+        BatchLogRecordProcessor(log_exporter)
+        if use_batch_processor
+        else SimpleLogRecordProcessor(log_exporter)
+    )
+
+    # add the log record processor to the logger provider
+    logger_provider.add_log_record_processor(log_record_processor)
+    set_logger_provider(logger_provider)

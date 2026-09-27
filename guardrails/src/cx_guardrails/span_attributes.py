@@ -90,3 +90,53 @@ SUBSYSTEM_NAME: Final = "cx.subsystem.name"
 """
 The subsystem name.
 """
+
+EVENT_NAME: Final = "event.name"
+"""
+The log record attribute identifying the kind of event being emitted.
+"""
+
+EVALUATION_RESULT_EVENT: Final = "gen_ai.evaluation.result"
+"""
+The event name for a guardrail evaluation result log record.
+"""
+
+EVALUATION_NAME: Final = "gen_ai.evaluation.name"
+"""
+The name of the evaluation -- the guardrail type, or the custom guardrail's name.
+"""
+
+EVALUATION_SCORE_VALUE: Final = "gen_ai.evaluation.score.value"
+"""
+The evaluation score.
+"""
+
+EVALUATION_SCORE_LABEL: Final = "gen_ai.evaluation.score.label"
+"""
+The evaluation score label (e.g. "p1"), when provided by the guardrails service.
+"""
+
+EVALUATION_TARGET: Final = "cx.evaluation.target"
+"""
+What was evaluated -- "prompt" or "response".
+"""
+
+EVALUATION_TRACE_ID: Final = "cx.evaluation.trace_id"
+"""
+The trace ID of the span the evaluation was performed on.
+"""
+
+EVALUATION_SPAN_ID: Final = "cx.evaluation.span_id"
+"""
+The span ID of the span the evaluation was performed on.
+"""
+
+EVALUATION_POLICY_TYPE: Final = "cx.evaluation.policy_type"
+"""
+The evaluation policy category -- "security" or "quality".
+"""
+
+EVALUATION_USER_ID: Final = "cx.evaluation.user_id"
+"""
+Optional end-user id, attached to the evaluation logs when provided.
+"""

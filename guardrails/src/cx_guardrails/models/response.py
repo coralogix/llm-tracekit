@@ -13,6 +13,7 @@ class GuardrailsResultBase(BaseModel):
     detected: bool
     threshold: float = Field(default=DEFAULT_THRESHOLD, ge=0.0, le=1.0)
     score: float = Field(ge=0.0, le=1.0)
+    label: str | None = None
 
     @field_validator("type", mode="before")
     @classmethod
