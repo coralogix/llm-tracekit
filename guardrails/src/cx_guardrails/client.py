@@ -7,7 +7,7 @@ from urllib.parse import urlparse, urlunparse
 import httpx
 from opentelemetry import trace
 from opentelemetry.trace import SpanKind, Status, StatusCode, Span
-from opentelemetry._logs import get_logger, LogRecord, SeverityNumber
+from opentelemetry._logs import LogRecord, SeverityNumber
 
 from .models._constants import (
     DEFAULT_TIMEOUT,
@@ -22,12 +22,13 @@ from .models.request import (
 )
 from .models._models import GuardrailsTarget, Role
 from .models.response import GuardrailsResponse
-from .span_attributes import EVALUATION_RESULT_EVENT
+from .log_attributes import EVALUATION_RESULT_EVENT
 from .span_builder import (
     generate_guardrail_response_attributes,
     generate_base_attributes,
-    generate_evaluation_log_attributes,
 )
+from .log_builder import generate_evaluation_log_attributes
+from .evaluation_logger import get_evaluation_logger
 from .error import (
     GuardrailsAPIResponseError,
     GuardrailsAPIConnectionError,
@@ -38,7 +39,6 @@ from .error import (
 
 
 tracer = trace.get_tracer(__name__)
-evaluation_logger = get_logger(__name__)
 
 
 @dataclass
@@ -328,13 +328,10 @@ class GuardrailRequestSender:
         span.set_attributes(
             generate_guardrail_response_attributes(results, target.value)
         )
-        # Emitted while the guardrail span is current, so the log record's
-        # trace context attaches automatically alongside the explicit
-        # cx.evaluation.trace_id/span_id attributes below.
         for evaluation_attributes in generate_evaluation_log_attributes(
             results, target.value, span.get_span_context(), user_id=user_id
         ):
-            evaluation_logger.emit(
+            get_evaluation_logger().emit(
                 LogRecord(
                     event_name=EVALUATION_RESULT_EVENT,
                     severity_number=SeverityNumber.INFO,

@@ -31,7 +31,7 @@ from cx_guardrails import (
     GuardrailsAPIResponseError,
     GuardrailType,
 )
-from cx_guardrails.span_attributes import (
+from cx_guardrails.log_attributes import (
     EVALUATION_NAME,
     EVALUATION_POLICY_TYPE,
     EVALUATION_RESULT_EVENT,
@@ -343,8 +343,9 @@ class TestGuardrailsEvaluationLogs:
 
         with patch.object(
             httpx.AsyncClient, "post", new_callable=AsyncMock
-        ) as mock_post, patch("cx_guardrails.client.evaluation_logger") as mock_evaluation_logger:
+        ) as mock_post, patch("cx_guardrails.client.get_evaluation_logger") as mock_get_evaluation_logger:
             mock_post.return_value = mock_response
+            mock_evaluation_logger = mock_get_evaluation_logger.return_value
 
             with pytest.raises(GuardrailsTriggered):
                 async with guardrails_client.guarded_session():
@@ -384,8 +385,9 @@ class TestGuardrailsEvaluationLogs:
 
         with patch.object(
             httpx.AsyncClient, "post", new_callable=AsyncMock
-        ) as mock_post, patch("cx_guardrails.client.evaluation_logger") as mock_evaluation_logger:
+        ) as mock_post, patch("cx_guardrails.client.get_evaluation_logger") as mock_get_evaluation_logger:
             mock_post.return_value = mock_response
+            mock_evaluation_logger = mock_get_evaluation_logger.return_value
 
             async with guardrails_client.guarded_session():
                 await guardrails_client.guard_prompt(

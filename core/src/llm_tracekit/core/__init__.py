@@ -19,6 +19,8 @@ from llm_tracekit.core._utils import (
 from llm_tracekit.core.coralogix import (
     setup_export_to_coralogix as setup_export_to_coralogix,
     generate_exporter_config as generate_exporter_config,
+    setup_span_exporter as setup_span_exporter,
+    setup_log_exporter as setup_log_exporter,
     ExportConfig as ExportConfig,
 )
 from llm_tracekit.core._config import (

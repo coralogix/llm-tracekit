@@ -34,6 +34,7 @@ from cx_guardrails import (
     GuardrailsResponse,
 )
 from cx_guardrails.models.response import CustomResult
+from cx_guardrails.models._models import GUARDRAIL_TYPE_POLICY
 
 from cx_guardrails.models._constants import DEFAULT_THRESHOLD
 
@@ -844,32 +845,30 @@ class TestSpanAttributes:
 
 class TestGuardrailPolicyType:
     def test_pii_is_security(self):
-        from cx_guardrails.span_builder import guardrail_policy_type
-
         result = GuardrailsResultBase.model_validate(
             {"type": "pii", "detected": True, "score": 0.9}
         )
-        assert_that(guardrail_policy_type(result)).is_equal_to(GuardrailCategory.SECURITY.value)
+        assert_that(result.policy_type).is_equal_to(GuardrailCategory.SECURITY)
 
     def test_prompt_injection_is_security(self):
-        from cx_guardrails.span_builder import guardrail_policy_type
-
         result = GuardrailsResultBase.model_validate(
             {"type": "prompt_injection", "detected": True, "score": 0.9}
         )
-        assert_that(guardrail_policy_type(result)).is_equal_to(GuardrailCategory.SECURITY.value)
+        assert_that(result.policy_type).is_equal_to(GuardrailCategory.SECURITY)
+
+    def test_prompt_injection_parsed_via_response_union_is_security(self):
+        response = GuardrailsResponse.model_validate(
+            {"results": [{"type": "prompt_injection", "detected": True, "score": 0.9}]}
+        )
+        assert_that(response.results[0].policy_type).is_equal_to(GuardrailCategory.SECURITY)
 
     def test_toxicity_is_quality(self):
-        from cx_guardrails.span_builder import guardrail_policy_type
-
         result = GuardrailsResultBase.model_validate(
             {"type": "toxicity", "detected": False, "score": 0.1}
         )
-        assert_that(guardrail_policy_type(result)).is_equal_to(GuardrailCategory.QUALITY.value)
+        assert_that(result.policy_type).is_equal_to(GuardrailCategory.QUALITY)
 
     def test_custom_with_security_category(self):
-        from cx_guardrails.span_builder import guardrail_policy_type
-
         result = CustomResult.model_validate(
             {
                 "type": "custom",
@@ -879,11 +878,9 @@ class TestGuardrailPolicyType:
                 "category": "security",
             }
         )
-        assert_that(guardrail_policy_type(result)).is_equal_to(GuardrailCategory.SECURITY.value)
+        assert_that(result.policy_type).is_equal_to(GuardrailCategory.SECURITY)
 
     def test_custom_without_category_defaults_to_quality(self):
-        from cx_guardrails.span_builder import guardrail_policy_type
-
         result = CustomResult.model_validate(
             {
                 "type": "custom",
@@ -892,7 +889,21 @@ class TestGuardrailPolicyType:
                 "name": "my-policy",
             }
         )
-        assert_that(guardrail_policy_type(result)).is_equal_to(GuardrailCategory.QUALITY.value)
+        assert_that(result.policy_type).is_equal_to(GuardrailCategory.QUALITY)
+
+    def test_policy_type_is_not_serialized(self):
+        result = GuardrailsResultBase.model_validate(
+            {"type": "pii", "detected": True, "score": 0.9}
+        )
+        assert_that(result.model_dump()).does_not_contain_key("policy_type")
+
+    def test_every_non_custom_type_has_a_policy(self):
+        non_custom_types = [
+            guardrail_type
+            for guardrail_type in GuardrailType
+            if guardrail_type != GuardrailType.CUSTOM
+        ]
+        assert_that(GUARDRAIL_TYPE_POLICY).contains_key(*non_custom_types)
 
 
 class TestGenerateEvaluationLogAttributes:
@@ -903,7 +914,7 @@ class TestGenerateEvaluationLogAttributes:
         return SpanContext(trace_id=0x1234567890ABCDEF1234567890ABCDEF, span_id=0x1234567890ABCDEF, is_remote=False)
 
     def test_builtin_guardrail_attributes(self):
-        from cx_guardrails.span_attributes import (
+        from cx_guardrails.log_attributes import (
             EVALUATION_NAME,
             EVALUATION_POLICY_TYPE,
             EVALUATION_SCORE_LABEL,
@@ -914,7 +925,7 @@ class TestGenerateEvaluationLogAttributes:
             EVENT_NAME,
             EVALUATION_RESULT_EVENT,
         )
-        from cx_guardrails.span_builder import generate_evaluation_log_attributes
+        from cx_guardrails.log_builder import generate_evaluation_log_attributes
         from opentelemetry.trace import format_span_id, format_trace_id
 
         span_context = self._span_context()
@@ -937,8 +948,8 @@ class TestGenerateEvaluationLogAttributes:
             assert_that(EVALUATION_SCORE_LABEL in attributes).is_false()
 
     def test_custom_guardrail_uses_name(self):
-        from cx_guardrails.span_attributes import EVALUATION_NAME
-        from cx_guardrails.span_builder import generate_evaluation_log_attributes
+        from cx_guardrails.log_attributes import EVALUATION_NAME
+        from cx_guardrails.log_builder import generate_evaluation_log_attributes
 
         response = GuardrailsResponse.model_validate(
             {
@@ -958,8 +969,8 @@ class TestGenerateEvaluationLogAttributes:
         assert_that(log_attributes[0][EVALUATION_NAME]).is_equal_to("company_policy")
 
     def test_label_included_when_present(self):
-        from cx_guardrails.span_attributes import EVALUATION_SCORE_LABEL
-        from cx_guardrails.span_builder import generate_evaluation_log_attributes
+        from cx_guardrails.log_attributes import EVALUATION_SCORE_LABEL
+        from cx_guardrails.log_builder import generate_evaluation_log_attributes
 
         response = GuardrailsResponse.model_validate(
             {
@@ -974,8 +985,8 @@ class TestGenerateEvaluationLogAttributes:
         assert_that(log_attributes[0][EVALUATION_SCORE_LABEL]).is_equal_to("p1")
 
     def test_label_omitted_when_none(self):
-        from cx_guardrails.span_attributes import EVALUATION_SCORE_LABEL
-        from cx_guardrails.span_builder import generate_evaluation_log_attributes
+        from cx_guardrails.log_attributes import EVALUATION_SCORE_LABEL
+        from cx_guardrails.log_builder import generate_evaluation_log_attributes
 
         response = GuardrailsResponse.model_validate(
             {"results": [{"type": "toxicity", "detected": False, "score": 0.1}]}
@@ -986,8 +997,8 @@ class TestGenerateEvaluationLogAttributes:
         assert_that(EVALUATION_SCORE_LABEL in log_attributes[0]).is_false()
 
     def test_user_id_included_when_given(self):
-        from cx_guardrails.span_attributes import EVALUATION_USER_ID
-        from cx_guardrails.span_builder import generate_evaluation_log_attributes
+        from cx_guardrails.log_attributes import EVALUATION_USER_ID
+        from cx_guardrails.log_builder import generate_evaluation_log_attributes
 
         response = GuardrailsResponse.model_validate(
             {"results": [{"type": "pii", "detected": True, "score": 0.9}]}
@@ -1000,8 +1011,8 @@ class TestGenerateEvaluationLogAttributes:
         assert_that(log_attributes[0][EVALUATION_USER_ID]).is_equal_to("user-1")
 
     def test_user_id_omitted_when_none(self):
-        from cx_guardrails.span_attributes import EVALUATION_USER_ID
-        from cx_guardrails.span_builder import generate_evaluation_log_attributes
+        from cx_guardrails.log_attributes import EVALUATION_USER_ID
+        from cx_guardrails.log_builder import generate_evaluation_log_attributes
 
         response = GuardrailsResponse.model_validate(
             {"results": [{"type": "pii", "detected": True, "score": 0.9}]}

@@ -1,3 +1,4 @@
+from typing import Final
 from enum import Enum
 
 
@@ -31,6 +32,15 @@ class Role(str, Enum):
 class GuardrailCategory(str, Enum):
     SECURITY = "security"
     QUALITY = "quality"
+
+
+# CUSTOM is omitted: custom results carry their own category.
+GUARDRAIL_TYPE_POLICY: Final[dict[GuardrailType, GuardrailCategory]] = {
+    GuardrailType.PII: GuardrailCategory.SECURITY,
+    GuardrailType.PROMPT_INJECTION: GuardrailCategory.SECURITY,
+    GuardrailType.TOXICITY: GuardrailCategory.QUALITY,
+    GuardrailType.TEST_POLICY: GuardrailCategory.QUALITY,
+}
 
 
 class GuardrailModel(str, Enum):

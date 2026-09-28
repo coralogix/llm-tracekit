@@ -202,6 +202,8 @@ export CX_APPLICATION_NAME="my-app"      # Optional
 export CX_SUBSYSTEM_NAME="my-subsystem"  # Optional
 ```
 
+Guardrail evaluation logs are exported using `CX_TOKEN`/`CX_ENDPOINT` when `setup_export_to_coralogix` has been called.
+
 ### Client Configuration
 
 ```python
