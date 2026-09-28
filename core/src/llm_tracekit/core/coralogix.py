@@ -25,7 +25,13 @@ from opentelemetry.sdk.trace.export import (
     SimpleSpanProcessor,
     SpanProcessor,
 )
+from opentelemetry.sdk._logs import LoggerProvider
+from opentelemetry.sdk._logs.export import (
+    BatchLogRecordProcessor,
+    SimpleLogRecordProcessor,
+)
 from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
+from opentelemetry.exporter.otlp.proto.grpc._log_exporter import OTLPLogExporter
 
 from llm_tracekit.core._config import enable_capture_content
 
@@ -60,6 +66,43 @@ def generate_exporter_config(
     }
 
     return ExportConfig(endpoint=coralogix_endpoint, headers=headers)
+
+
+def setup_span_exporter(
+    tracer_provider: TracerProvider,
+    exporter_config: ExportConfig,
+    use_batch_processor: bool = True,
+) -> None:
+    # set up an OTLP exporter to send spans to coralogix directly.
+    exporter = OTLPSpanExporter(
+        endpoint=exporter_config.endpoint, headers=exporter_config.headers
+    )
+
+    # set up a span processor to send spans to the exporter
+    span_processor = (
+        BatchSpanProcessor(exporter)
+        if use_batch_processor
+        else SimpleSpanProcessor(exporter)
+    )
+
+    # add the span processor to the tracer provider
+    tracer_provider.add_span_processor(span_processor)
+
+
+def setup_log_exporter(
+    logger_provider: LoggerProvider,
+    exporter_config: ExportConfig,
+    use_batch_processor: bool = True,
+) -> None:
+    exporter = OTLPLogExporter(
+        endpoint=exporter_config.endpoint, headers=exporter_config.headers
+    )
+    log_record_processor = (
+        BatchLogRecordProcessor(exporter)
+        if use_batch_processor
+        else SimpleLogRecordProcessor(exporter)
+    )
+    logger_provider.add_log_record_processor(log_record_processor)
 
 
 def setup_export_to_coralogix(
@@ -133,18 +176,5 @@ def setup_export_to_coralogix(
         for span_processor in processors:
             tracer_provider.add_span_processor(span_processor)
 
-    # set up an OTLP exporter to send spans to coralogix directly.
-    exporter = OTLPSpanExporter(
-        endpoint=exporter_config.endpoint, headers=exporter_config.headers
-    )
-
-    # set up a span processor to send spans to the exporter
-    span_processor = (
-        BatchSpanProcessor(exporter)
-        if use_batch_processor
-        else SimpleSpanProcessor(exporter)
-    )
-
-    # add the span processor to the tracer provider
-    tracer_provider.add_span_processor(span_processor)
+    setup_span_exporter(tracer_provider, exporter_config, use_batch_processor)
     trace.set_tracer_provider(tracer_provider)

@@ -7,6 +7,7 @@ from urllib.parse import urlparse, urlunparse
 import httpx
 from opentelemetry import trace
 from opentelemetry.trace import SpanKind, Status, StatusCode, Span
+from opentelemetry._logs import LogRecord, SeverityNumber
 
 from .models._constants import (
     DEFAULT_TIMEOUT,
@@ -21,10 +22,13 @@ from .models.request import (
 )
 from .models._models import GuardrailsTarget, Role
 from .models.response import GuardrailsResponse
+from .log_attributes import EVALUATION_RESULT_EVENT
 from .span_builder import (
     generate_guardrail_response_attributes,
     generate_base_attributes,
 )
+from .log_builder import generate_evaluation_log_attributes
+from .evaluation_logger import get_evaluation_logger
 from .error import (
     GuardrailsAPIResponseError,
     GuardrailsAPIConnectionError,
@@ -88,6 +92,7 @@ class Guardrails:
         guardrails: list[GuardrailConfigType],
         messages: list[Message | dict[str, Any]],
         target: GuardrailsTarget,
+        user_id: str | None = None,
     ) -> GuardrailsResponse | None:
         """Check a conversation against configured guardrails.
 
@@ -98,6 +103,7 @@ class Guardrails:
             messages: Conversation messages (Message objects or dicts with 'role'/'content').
             guardrails: Guardrail configs to apply (e.g., `PII()`, `PromptInjection()`).
             target: What to check - `GuardrailsTarget.PROMPT` or `GuardrailsTarget.RESPONSE`.
+            user_id: Optional end-user id, attached to the evaluation logs.
 
         Returns:
             GuardrailsResponse with results, or None if inputs are empty.
@@ -117,12 +123,13 @@ class Guardrails:
             raise AttributeError(
                 f"target of {GuardrailsTarget.RESPONSE} was given but last message is not a response"
             )
-        return await self._sender.run(guardrails, target, history)
+        return await self._sender.run(guardrails, target, history, user_id=user_id)
 
     async def guard_prompt(
         self,
         guardrails: list[GuardrailConfigType],
         prompt: str,
+        user_id: str | None = None,
     ) -> GuardrailsResponse | None:
         """Check a user prompt against configured guardrails.
 
@@ -131,6 +138,7 @@ class Guardrails:
         Args:
             prompt: The user's input text to validate.
             guardrails: Guardrail configs to apply (e.g., `PII()`, `PromptInjection()`).
+            user_id: Optional end-user id, attached to the evaluation logs.
 
         Returns:
             GuardrailsResponse with results, or None if prompt is empty.
@@ -145,6 +153,7 @@ class Guardrails:
             guardrails,
             [Message(role=Role.USER, content=prompt)],
             GuardrailsTarget.PROMPT,
+            user_id=user_id,
         )
 
     async def guard_response(
@@ -152,6 +161,7 @@ class Guardrails:
         guardrails: list[GuardrailConfigType],
         response: str,
         prompt: str | None = None,
+        user_id: str | None = None,
     ) -> GuardrailsResponse | None:
         """Check an LLM response against configured guardrails.
 
@@ -161,6 +171,7 @@ class Guardrails:
             guardrails: Guardrail configs to apply (e.g., `PII()`, `PromptInjection()`).
             response: The LLM's response text to validate.
             prompt: Optional original prompt for context-aware detection.
+            user_id: Optional end-user id, attached to the evaluation logs.
 
         Returns:
             GuardrailsResponse with results, or None if response is empty.
@@ -175,7 +186,9 @@ class Guardrails:
         if prompt:
             messages.append(Message(role=Role.USER, content=prompt))
         messages.append(Message(role=Role.ASSISTANT, content=response))
-        return await self.guard(guardrails, messages, GuardrailsTarget.RESPONSE)
+        return await self.guard(
+            guardrails, messages, GuardrailsTarget.RESPONSE, user_id=user_id
+        )
 
     def _to_messages(self, msg: Message | dict[str, Any]) -> Message:
         return msg if isinstance(msg, Message) else Message(msg)
@@ -228,6 +241,7 @@ class GuardrailRequestSender:
         guardrails: list[GuardrailConfigType],
         target: GuardrailsTarget,
         messages: list[Message],
+        user_id: str | None = None,
     ) -> GuardrailsResponse:
         request = GuardrailRequest(
             application=self.config.application_name,
@@ -253,7 +267,7 @@ class GuardrailRequestSender:
             )
             try:
                 http_response = await self._send_request(request)
-                return self._handle_response(http_response, span, target)
+                return self._handle_response(http_response, span, target, user_id=user_id)
             except GuardrailsTriggered:
                 raise
             except Exception as e:
@@ -287,7 +301,11 @@ class GuardrailRequestSender:
         return response
 
     def _handle_response(
-        self, response: httpx.Response, span: Span, target: GuardrailsTarget
+        self,
+        response: httpx.Response,
+        span: Span,
+        target: GuardrailsTarget,
+        user_id: str | None = None,
     ) -> GuardrailsResponse:
         if not response.is_success:
             raise GuardrailsAPIResponseError(
@@ -310,6 +328,17 @@ class GuardrailRequestSender:
         span.set_attributes(
             generate_guardrail_response_attributes(results, target.value)
         )
+        for evaluation_attributes in generate_evaluation_log_attributes(
+            results, target.value, span.get_span_context(), user_id=user_id
+        ):
+            get_evaluation_logger().emit(
+                LogRecord(
+                    event_name=EVALUATION_RESULT_EVENT,
+                    severity_number=SeverityNumber.INFO,
+                    severity_text="INFO",
+                    attributes=evaluation_attributes,
+                )
+            )
         if not self.config.suppress_exceptions:
             violations = [
                 GuardrailViolation(

@@ -13,7 +13,7 @@
 # limitations under the License.
 
 import pytest
-from assertpy import assert_that
+from assertpy import assert_that, soft_assertions
 from unittest.mock import AsyncMock, patch
 import httpx
 
@@ -22,6 +22,7 @@ from cx_guardrails import (
     PII,
     PromptInjection,
     Custom,
+    Toxicity,
     TestPolicy,
     PIICategory,
     GuardrailsTriggered,
@@ -29,6 +30,12 @@ from cx_guardrails import (
     GuardrailsAPIConnectionError,
     GuardrailsAPIResponseError,
     GuardrailType,
+)
+from cx_guardrails.log_attributes import (
+    EVALUATION_NAME,
+    EVALUATION_POLICY_TYPE,
+    EVALUATION_RESULT_EVENT,
+    EVALUATION_USER_ID,
 )
 
 
@@ -299,6 +306,98 @@ class TestGuardrailsGuardResponse:
                 response="",
             )
         assert_that(result).is_none()
+
+
+class TestGuardrailsEvaluationLogs:
+    @pytest.fixture
+    def guardrails_client(self, clear_guardrails_env_vars):
+        return Guardrails(
+            api_key="test-key",
+            application_name="test-app",
+            subsystem_name="test-subsystem",
+            cx_guardrails_endpoint="https://test.example.com",
+        )
+
+    @pytest.mark.asyncio
+    async def test_emits_one_log_record_per_result(self, guardrails_client):
+        mock_response = httpx.Response(
+            200,
+            json={
+                "results": [
+                    {
+                        "type": "pii",
+                        "detected": True,
+                        "score": 0.9,
+                        "threshold": 0.7,
+                        "detected_categories": ["email"],
+                    },
+                    {
+                        "type": "toxicity",
+                        "detected": False,
+                        "score": 0.1,
+                        "threshold": 0.7,
+                    },
+                ]
+            },
+        )
+
+        with patch.object(
+            httpx.AsyncClient, "post", new_callable=AsyncMock
+        ) as mock_post, patch("cx_guardrails.client.get_evaluation_logger") as mock_get_evaluation_logger:
+            mock_post.return_value = mock_response
+            mock_evaluation_logger = mock_get_evaluation_logger.return_value
+
+            with pytest.raises(GuardrailsTriggered):
+                async with guardrails_client.guarded_session():
+                    await guardrails_client.guard_prompt(
+                        guardrails=[PII(categories=[PIICategory.EMAIL_ADDRESS]), Toxicity()],
+                        prompt="My email is test@example.com",
+                    )
+
+            assert_that(mock_evaluation_logger.emit.call_args_list).is_length(2)
+
+            pii_record = mock_evaluation_logger.emit.call_args_list[0].args[0]
+            toxicity_record = mock_evaluation_logger.emit.call_args_list[1].args[0]
+
+            with soft_assertions():
+                assert_that(pii_record.event_name).is_equal_to(EVALUATION_RESULT_EVENT)
+                assert_that(pii_record.attributes[EVALUATION_NAME]).is_equal_to("pii")
+                assert_that(pii_record.attributes[EVALUATION_POLICY_TYPE]).is_equal_to("security")
+                assert_that(toxicity_record.event_name).is_equal_to(EVALUATION_RESULT_EVENT)
+                assert_that(toxicity_record.attributes[EVALUATION_NAME]).is_equal_to("toxicity")
+                assert_that(toxicity_record.attributes[EVALUATION_POLICY_TYPE]).is_equal_to("quality")
+
+    @pytest.mark.asyncio
+    async def test_emits_user_id_when_given(self, guardrails_client):
+        mock_response = httpx.Response(
+            200,
+            json={
+                "results": [
+                    {
+                        "type": "toxicity",
+                        "detected": False,
+                        "score": 0.1,
+                        "threshold": 0.7,
+                    },
+                ]
+            },
+        )
+
+        with patch.object(
+            httpx.AsyncClient, "post", new_callable=AsyncMock
+        ) as mock_post, patch("cx_guardrails.client.get_evaluation_logger") as mock_get_evaluation_logger:
+            mock_post.return_value = mock_response
+            mock_evaluation_logger = mock_get_evaluation_logger.return_value
+
+            async with guardrails_client.guarded_session():
+                await guardrails_client.guard_prompt(
+                    guardrails=[Toxicity()],
+                    prompt="Hello there",
+                    user_id="user-1",
+                )
+
+            toxicity_record = mock_evaluation_logger.emit.call_args_list[0].args[0]
+            assert_that(toxicity_record.attributes[EVALUATION_USER_ID]).is_equal_to("user-1")
 
 
 class TestGuardrailsErrorHandling:

@@ -3,7 +3,7 @@ from typing import Any
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from ._constants import DEFAULT_THRESHOLD
-from ._models import GuardrailType
+from ._models import GUARDRAIL_TYPE_POLICY, GuardrailType
 from ._models import GuardrailCategory
 
 
@@ -13,6 +13,7 @@ class GuardrailsResultBase(BaseModel):
     detected: bool
     threshold: float = Field(default=DEFAULT_THRESHOLD, ge=0.0, le=1.0)
     score: float = Field(ge=0.0, le=1.0)
+    label: str | None = None
 
     @field_validator("type", mode="before")
     @classmethod
@@ -20,6 +21,10 @@ class GuardrailsResultBase(BaseModel):
         if isinstance(v, str):
             return v.lower()
         return v
+
+    @property
+    def policy_type(self) -> GuardrailCategory:
+        return GUARDRAIL_TYPE_POLICY[self.type]
 
 
 class PIIResult(GuardrailsResultBase):
@@ -33,6 +38,14 @@ class PromptInjectionResult(GuardrailsResultBase):
 class CustomResult(GuardrailsResultBase):
     name: str | None = None
     category: GuardrailCategory | None = None
+
+    @property
+    def policy_type(self) -> GuardrailCategory:
+        # The response union parses any result without extra fields (e.g.
+        # prompt_injection) as CustomResult, so only honor category for CUSTOM.
+        if self.type != GuardrailType.CUSTOM:
+            return super().policy_type
+        return self.category or GuardrailCategory.QUALITY
     
 class TestPolicyResult(GuardrailsResultBase):
     pass
