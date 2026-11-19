@@ -28,6 +28,7 @@ from cx_guardrails import (
     GuardrailsAPITimeoutError,
     GuardrailsAPIConnectionError,
     GuardrailsAPIResponseError,
+    GuardrailsQuotaExceededError,
     GuardrailType,
 )
 
@@ -363,6 +364,58 @@ class TestGuardrailsErrorHandling:
                     )
 
             assert_that(exc_info.value.status_code).is_equal_to(500)
+
+    @pytest.mark.asyncio
+    async def test_quota_exceeded_402_raises_quota_error(self, guardrails_client):
+        mock_response = httpx.Response(
+            402,
+            json={
+                "quota_exceeded_reason": "paid_tier_required",
+                "message": "AI Units quota exhausted. Guardrail evaluation was skipped.",
+            },
+        )
+
+        with patch.object(
+            httpx.AsyncClient, "post", new_callable=AsyncMock
+        ) as mock_post:
+            mock_post.return_value = mock_response
+
+            with pytest.raises(GuardrailsQuotaExceededError) as exc_info:
+                async with guardrails_client.guarded_session():
+                    await guardrails_client.guard_prompt(
+                        guardrails=[PII()],
+                        prompt="Hello",
+                    )
+
+            assert_that(exc_info.value).is_instance_of(GuardrailsAPIResponseError)
+            assert_that(exc_info.value.status_code).is_equal_to(402)
+            assert_that(exc_info.value.quota_exceeded_reason).is_equal_to(
+                "paid_tier_required"
+            )
+            assert_that(exc_info.value.message).is_equal_to(
+                "AI Units quota exhausted. Guardrail evaluation was skipped."
+            )
+
+    @pytest.mark.asyncio
+    async def test_402_without_quota_reason_raises_generic_error(
+        self, guardrails_client
+    ):
+        mock_response = httpx.Response(402, text="Payment Required")
+
+        with patch.object(
+            httpx.AsyncClient, "post", new_callable=AsyncMock
+        ) as mock_post:
+            mock_post.return_value = mock_response
+
+            with pytest.raises(GuardrailsAPIResponseError) as exc_info:
+                async with guardrails_client.guarded_session():
+                    await guardrails_client.guard_prompt(
+                        guardrails=[PII()],
+                        prompt="Hello",
+                    )
+
+            assert_that(type(exc_info.value)).is_equal_to(GuardrailsAPIResponseError)
+            assert_that(exc_info.value.status_code).is_equal_to(402)
 
     @pytest.mark.asyncio
     async def test_invalid_json_response(self, guardrails_client):

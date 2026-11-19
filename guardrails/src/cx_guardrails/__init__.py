@@ -26,6 +26,7 @@ from .error import (
     GuardrailsAPIConnectionError,
     GuardrailsAPITimeoutError,
     GuardrailsAPIResponseError,
+    GuardrailsQuotaExceededError,
     GuardrailViolation,
     GuardrailsTriggered,
 )
@@ -56,6 +57,7 @@ __all__ = [
     "GuardrailsAPIConnectionError",
     "GuardrailsAPITimeoutError",
     "GuardrailsAPIResponseError",
+    "GuardrailsQuotaExceededError",
     "GuardrailsTriggered",
     "GuardrailViolation",
     "setup_export_to_coralogix",
