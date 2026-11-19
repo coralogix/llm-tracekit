@@ -36,8 +36,6 @@ from .error import (
 
 
 def _quota_exceeded_body(response: httpx.Response) -> dict[str, Any] | None:
-    if response.status_code != httpx.codes.PAYMENT_REQUIRED:
-        return None
     try:
         body = response.json()
     except ValueError:
@@ -303,8 +301,9 @@ class GuardrailRequestSender:
         self, response: httpx.Response, span: Span, target: GuardrailsTarget
     ) -> GuardrailsResponse:
         if not response.is_success:
-            quota_exceeded = _quota_exceeded_body(response)
-            if quota_exceeded:
+            if response.status_code == httpx.codes.PAYMENT_REQUIRED and (
+                quota_exceeded := _quota_exceeded_body(response)
+            ):
                 raise GuardrailsQuotaExceededError(
                     status_code=response.status_code,
                     body=response.text,
