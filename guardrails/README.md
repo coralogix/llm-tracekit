@@ -220,6 +220,7 @@ from cx_guardrails import (
     GuardrailsAPITimeoutError,
     GuardrailsAPIConnectionError,
     GuardrailsAPIResponseError,
+    GuardrailsQuotaExceededError,
 )
 
 try:
@@ -231,6 +232,8 @@ except GuardrailsAPITimeoutError:
     pass  # Request timed out
 except GuardrailsAPIConnectionError:
     pass  # Network error
+except GuardrailsQuotaExceededError as e:
+    print(f"Out of AI Units: {e.quota_exceeded_reason}")  # Guardrails did not run
 except GuardrailsAPIResponseError as e:
     print(f"HTTP {e.status_code}")
 ```

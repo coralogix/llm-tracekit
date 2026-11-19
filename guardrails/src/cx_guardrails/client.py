@@ -27,11 +27,24 @@ from .span_builder import (
 )
 from .error import (
     GuardrailsAPIResponseError,
+    GuardrailsQuotaExceededError,
     GuardrailsAPIConnectionError,
     GuardrailsAPITimeoutError,
     GuardrailViolation,
     GuardrailsTriggered,
 )
+
+
+def _quota_exceeded_body(response: httpx.Response) -> dict[str, Any] | None:
+    if response.status_code != httpx.codes.PAYMENT_REQUIRED:
+        return None
+    try:
+        body = response.json()
+    except ValueError:
+        return None
+    if isinstance(body, dict) and body.get("quota_exceeded_reason"):
+        return body
+    return None
 
 
 tracer = trace.get_tracer(__name__)
@@ -290,6 +303,14 @@ class GuardrailRequestSender:
         self, response: httpx.Response, span: Span, target: GuardrailsTarget
     ) -> GuardrailsResponse:
         if not response.is_success:
+            quota_exceeded = _quota_exceeded_body(response)
+            if quota_exceeded:
+                raise GuardrailsQuotaExceededError(
+                    status_code=response.status_code,
+                    body=response.text,
+                    quota_exceeded_reason=quota_exceeded["quota_exceeded_reason"],
+                    message=quota_exceeded.get("message"),
+                )
             raise GuardrailsAPIResponseError(
                 status_code=response.status_code,
                 body=response.text,

@@ -33,6 +33,20 @@ class GuardrailsAPIResponseError(GuardrailsError):
         super().__init__(self.message)
 
 
+class GuardrailsQuotaExceededError(GuardrailsAPIResponseError):
+    """The team is out of AI Units, so the guardrails did not run."""
+
+    def __init__(
+        self,
+        status_code: int,
+        body: str,
+        quota_exceeded_reason: str,
+        message: str | None = None,
+    ):
+        self.quota_exceeded_reason = quota_exceeded_reason
+        super().__init__(status_code=status_code, body=body, message=message)
+
+
 class GuardrailViolation(GuardrailsError):
     """A guardrail detected a violation."""
 
